@@ -1,0 +1,22 @@
+# Event Pros NZ Product Requirements Document (PRD)
+
+## Table of Contents
+
+- [Event Pros NZ Product Requirements Document (PRD)](#table-of-contents)
+  - [Goals and Background Context](#goals-and-background-context)
+  - [Requirements](#requirements)
+  - [User Interface Design Goals](#user-interface-design-goals)
+  - [Technical Assumptions](#technical-assumptions)
+  - [Epic List](#epic-list)
+  - [Epic 1: Foundation & Core Infrastructure](#epic-1-foundation-core-infrastructure)
+  - [Epic 2: Vendor Profiles & Discovery](#epic-2-vendor-profiles-discovery)
+  - [Epic 3: User Management & Dashboards](#epic-3-user-management-dashboards)
+  - [Epic 4: Job Management & Communication](#epic-4-job-management-communication)
+  - [Epic 5: Maps Integration & Mobile Optimization](#epic-5-maps-integration-mobile-optimization)
+  - [Epic 6: Payment System & Subscription Management](#epic-6-payment-system-subscription-management)
+  - [Epic 7: Advanced Communication & Collaboration](#epic-7-advanced-communication-collaboration)
+  - [Epic 8: Trust & Safety Features](#epic-8-trust-safety-features)
+  - [Dependencies](#dependencies)
+  - [Next Steps](#next-steps)
+  - [Success Metrics](#success-metrics)
+  - [Risk Assessment](#risk-assessment)
