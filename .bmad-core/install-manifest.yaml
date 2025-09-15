@@ -1,10 +1,9 @@
 version: 4.43.1
-installed_at: '2025-09-13T21:50:29.041Z'
+installed_at: '2025-09-14T23:33:03.616Z'
 install_type: full
 agent: null
 ides_setup:
   - cursor
-  - claude-code
 expansion_packs: []
 files:
   - path: .bmad-core\working-in-the-brownfield.md
@@ -18,12 +17,6 @@ files:
     modified: false
   - path: .bmad-core\core-config.yaml
     hash: 073cf6d2527c545d
-    modified: false
-  - path: .bmad-core\utils\workflow-management.md
-    hash: c2196880f2281f84
-    modified: false
-  - path: .bmad-core\utils\bmad-doc-template.md
-    hash: 34df6ead8b91abfc
     modified: false
   - path: .bmad-core\workflows\greenfield-ui.yaml
     hash: 2b595f235c095790
@@ -42,6 +35,12 @@ files:
     modified: false
   - path: .bmad-core\workflows\brownfield-fullstack.yaml
     hash: 9716ad5956a37037
+    modified: false
+  - path: .bmad-core\utils\workflow-management.md
+    hash: c2196880f2281f84
+    modified: false
+  - path: .bmad-core\utils\bmad-doc-template.md
+    hash: 34df6ead8b91abfc
     modified: false
   - path: .bmad-core\templates\story-tmpl.yaml
     hash: 11e79b87ff700c8f
@@ -118,6 +117,36 @@ files:
   - path: .bmad-core\checklists\architect-checklist.md
     hash: 15ef7d01b0e31c3f
     modified: false
+  - path: .bmad-core\agents\ux-expert.md
+    hash: a99c4d3c839db162
+    modified: false
+  - path: .bmad-core\agents\sm.md
+    hash: b72ae96e97959772
+    modified: false
+  - path: .bmad-core\agents\qa.md
+    hash: fac9822d33ced30b
+    modified: false
+  - path: .bmad-core\agents\po.md
+    hash: 49f7da900a12940d
+    modified: false
+  - path: .bmad-core\agents\pm.md
+    hash: f72074f1f1354871
+    modified: false
+  - path: .bmad-core\agents\dev.md
+    hash: 3e87f6291e5525ff
+    modified: false
+  - path: .bmad-core\agents\bmad-orchestrator.md
+    hash: 374701173ce61d73
+    modified: false
+  - path: .bmad-core\agents\bmad-master.md
+    hash: d344fb86fc65643c
+    modified: false
+  - path: .bmad-core\agents\architect.md
+    hash: 4e7b28055a522dea
+    modified: false
+  - path: .bmad-core\agents\analyst.md
+    hash: 4b50870da75956b0
+    modified: false
   - path: .bmad-core\tasks\validate-next-story.md
     hash: 75e84133d364d973
     modified: false
@@ -186,36 +215,6 @@ files:
     modified: false
   - path: .bmad-core\tasks\advanced-elicitation.md
     hash: d39118bf32237a21
-    modified: false
-  - path: .bmad-core\agents\ux-expert.md
-    hash: a99c4d3c839db162
-    modified: false
-  - path: .bmad-core\agents\sm.md
-    hash: b72ae96e97959772
-    modified: false
-  - path: .bmad-core\agents\qa.md
-    hash: fac9822d33ced30b
-    modified: false
-  - path: .bmad-core\agents\po.md
-    hash: 49f7da900a12940d
-    modified: false
-  - path: .bmad-core\agents\pm.md
-    hash: f72074f1f1354871
-    modified: false
-  - path: .bmad-core\agents\dev.md
-    hash: 3e87f6291e5525ff
-    modified: false
-  - path: .bmad-core\agents\bmad-orchestrator.md
-    hash: 374701173ce61d73
-    modified: false
-  - path: .bmad-core\agents\bmad-master.md
-    hash: d344fb86fc65643c
-    modified: false
-  - path: .bmad-core\agents\architect.md
-    hash: 4e7b28055a522dea
-    modified: false
-  - path: .bmad-core\agents\analyst.md
-    hash: 4b50870da75956b0
     modified: false
   - path: .bmad-core\agent-teams\team-no-ui.yaml
     hash: 00cbffc4106cbe1e
