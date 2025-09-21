@@ -3,8 +3,8 @@
  * Provides optimized queries with caching and performance monitoring
  */
 
-import { DatabaseConnectionPool, getDatabasePool } from './connection-pool';
-import { createClient } from '@supabase/supabase-js';
+import { DatabaseConnectionPool, getDatabasePool } from "./connection-pool";
+import { createClient } from "@supabase/supabase-js";
 
 export interface QueryOptions {
   useCache?: boolean;
@@ -23,8 +23,12 @@ export interface QueryResult<T = any> {
 export class QueryOptimizer {
   private dbPool: DatabaseConnectionPool;
   private supabaseClient: any;
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
-  private queryStats: Map<string, { count: number; totalTime: number; avgTime: number }> = new Map();
+  private cache: Map<string, { data: any; timestamp: number; ttl: number }> =
+    new Map();
+  private queryStats: Map<
+    string,
+    { count: number; totalTime: number; avgTime: number }
+  > = new Map();
 
   constructor(dbPool: DatabaseConnectionPool) {
     this.dbPool = dbPool;
@@ -46,7 +50,7 @@ export class QueryOptimizer {
       useCache = true,
       cacheTTL = 300, // 5 minutes default
       timeout = 30000, // 30 seconds default
-      retries = 3
+      retries = 3,
     } = options;
 
     const cacheKey = this.generateCacheKey(query, params);
@@ -60,7 +64,7 @@ export class QueryOptimizer {
           data: cached,
           executionTime: 0,
           fromCache: true,
-          query
+          query,
         };
       }
     }
@@ -84,12 +88,12 @@ export class QueryOptimizer {
           data: result,
           executionTime,
           fromCache: false,
-          query
+          query,
         };
       } catch (error) {
         lastError = error as Error;
         console.warn(`Query attempt ${attempt} failed:`, error);
-        
+
         if (attempt < retries) {
           // Exponential backoff
           await this.delay(Math.pow(2, attempt) * 1000);
@@ -97,7 +101,9 @@ export class QueryOptimizer {
       }
     }
 
-    throw new Error(`Query failed after ${retries} attempts: ${lastError?.message}`);
+    throw new Error(
+      `Query failed after ${retries} attempts: ${lastError?.message}`
+    );
   }
 
   /**
@@ -114,14 +120,14 @@ export class QueryOptimizer {
     offset?: number;
   }): Promise<QueryResult> {
     const {
-      search = '',
-      location = '',
-      category = '',
+      search = "",
+      location = "",
+      category = "",
       priceMin = 0,
       priceMax = 1000000,
       rating = 0,
       limit = 20,
-      offset = 0
+      offset = 0,
     } = filters;
 
     // Use optimized query with proper indexing
@@ -181,11 +187,15 @@ export class QueryOptimizer {
       LIMIT $4 OFFSET $5
     `;
 
-    return this.executeQuery(query, [search, location, category, limit, offset, rating], {
-      useCache: true,
-      cacheTTL: 60, // 1 minute cache for search results
-      timeout: 10000
-    });
+    return this.executeQuery(
+      query,
+      [search, location, category, limit, offset, rating],
+      {
+        useCache: true,
+        cacheTTL: 60, // 1 minute cache for search results
+        timeout: 10000,
+      }
+    );
   }
 
   /**
@@ -203,13 +213,13 @@ export class QueryOptimizer {
   }): Promise<QueryResult> {
     const {
       userId,
-      eventType = '',
-      location = '',
-      dateFrom = '1900-01-01',
-      dateTo = '2100-12-31',
-      status = '',
+      eventType = "",
+      location = "",
+      dateFrom = "1900-01-01",
+      dateTo = "2100-12-31",
+      status = "",
       limit = 20,
-      offset = 0
+      offset = 0,
     } = filters;
 
     const query = `
@@ -236,11 +246,15 @@ export class QueryOptimizer {
       LIMIT $7 OFFSET $8
     `;
 
-    return this.executeQuery(query, [userId, eventType, location, dateFrom, dateTo, status, limit, offset], {
-      useCache: true,
-      cacheTTL: 120, // 2 minutes cache for event searches
-      timeout: 15000
-    });
+    return this.executeQuery(
+      query,
+      [userId, eventType, location, dateFrom, dateTo, status, limit, offset],
+      {
+        useCache: true,
+        cacheTTL: 120, // 2 minutes cache for event searches
+        timeout: 15000,
+      }
+    );
   }
 
   /**
@@ -248,14 +262,14 @@ export class QueryOptimizer {
    */
   getQueryStats(): Record<string, any> {
     const stats: Record<string, any> = {};
-    
+
     for (const [query, stat] of this.queryStats.entries()) {
       stats[query] = {
         ...stat,
-        avgTime: stat.totalTime / stat.count
+        avgTime: stat.totalTime / stat.count,
       };
     }
-    
+
     return stats;
   }
 
@@ -270,15 +284,18 @@ export class QueryOptimizer {
    * Get cache statistics
    */
   getCacheStats(): { size: number; hitRate: number } {
-    const totalRequests = Array.from(this.queryStats.values())
-      .reduce((sum, stat) => sum + stat.count, 0);
-    
-    const cacheHits = Array.from(this.cache.values())
-      .filter(entry => Date.now() - entry.timestamp < entry.ttl * 1000).length;
-    
+    const totalRequests = Array.from(this.queryStats.values()).reduce(
+      (sum, stat) => sum + stat.count,
+      0
+    );
+
+    const cacheHits = Array.from(this.cache.values()).filter(
+      (entry) => Date.now() - entry.timestamp < entry.ttl * 1000
+    ).length;
+
     return {
       size: this.cache.size,
-      hitRate: totalRequests > 0 ? cacheHits / totalRequests : 0
+      hitRate: totalRequests > 0 ? cacheHits / totalRequests : 0,
     };
   }
 
@@ -288,15 +305,15 @@ export class QueryOptimizer {
 
   private getFromCache<T>(key: string): T[] | null {
     const cached = this.cache.get(key);
-    
+
     if (!cached) return null;
-    
+
     // Check if cache entry is still valid
     if (Date.now() - cached.timestamp > cached.ttl * 1000) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached.data;
   }
 
@@ -304,11 +321,15 @@ export class QueryOptimizer {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
 
-  private async executeWithTimeout(query: string, params: any[], timeout: number): Promise<any[]> {
+  private async executeWithTimeout(
+    query: string,
+    params: any[],
+    timeout: number
+  ): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
       const timer = setTimeout(() => {
         reject(new Error(`Query timeout after ${timeout}ms`));
@@ -326,17 +347,21 @@ export class QueryOptimizer {
   }
 
   private updateQueryStats(query: string, executionTime: number): void {
-    const existing = this.queryStats.get(query) || { count: 0, totalTime: 0, avgTime: 0 };
-    
+    const existing = this.queryStats.get(query) || {
+      count: 0,
+      totalTime: 0,
+      avgTime: 0,
+    };
+
     this.queryStats.set(query, {
       count: existing.count + 1,
       totalTime: existing.totalTime + executionTime,
-      avgTime: (existing.totalTime + executionTime) / (existing.count + 1)
+      avgTime: (existing.totalTime + executionTime) / (existing.count + 1),
     });
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
