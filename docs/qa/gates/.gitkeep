@@ -1,0 +1,3 @@
+# Quality Gates Directory
+# Stores QA gate decisions in YAML format
+# Format: {epic}.{story}-{slug}.yml
