@@ -3957,3 +3957,4377 @@ Connecting New Zealand's best event professionals with event managers to create 
 - **Examples**: Provide clear examples
 - **Training**: Train team on brand usage
 - **Feedback**: Collect and incorporate feedback
+
+## Accessibility Requirements
+
+This section provides comprehensive accessibility standards and implementation guidelines to ensure Event Pros NZ is inclusive and usable by everyone, regardless of their abilities or assistive technologies.
+
+### **Accessibility Standards Compliance**
+
+#### **WCAG 2.1 AA Compliance**
+
+**Level A Requirements:**
+
+- **Perceivable**: Information must be presentable in ways users can perceive
+- **Operable**: Interface components must be operable
+- **Understandable**: Information and UI operation must be understandable
+- **Robust**: Content must be robust enough for various assistive technologies
+
+**Level AA Requirements:**
+
+- **Color Contrast**: 4.5:1 for normal text, 3:1 for large text
+- **Keyboard Accessible**: All functionality available from keyboard
+- **Focus Management**: Clear focus indicators and logical tab order
+- **Error Identification**: Clear error messages and suggestions
+- **Consistent Navigation**: Consistent navigation mechanisms
+
+**Level AAA (Aspirational):**
+
+- **Enhanced Contrast**: 7:1 for normal text, 4.5:1 for large text
+- **No Timing**: No time limits on content
+- **Interruptions**: Users can postpone or suppress interruptions
+- **Animation**: No motion that could cause seizures
+
+#### **Legal Compliance**
+
+**New Zealand Standards:**
+
+- **Human Rights Act 1993**: Prohibits discrimination based on disability
+- **Web Standards**: Follow NZ Government Web Standards
+- **Accessibility Guidelines**: Implement NZ accessibility best practices
+
+**International Standards:**
+
+- **WCAG 2.1**: Web Content Accessibility Guidelines
+- **Section 508**: US federal accessibility requirements
+- **EN 301 549**: European accessibility standard
+
+### **Visual Accessibility**
+
+#### **Color and Contrast**
+
+**Contrast Requirements:**
+
+- **Normal Text**: Minimum 4.5:1 contrast ratio
+- **Large Text**: Minimum 3:1 contrast ratio (18px+ or 14px+ bold)
+- **UI Components**: Minimum 3:1 contrast ratio for interactive elements
+- **Focus Indicators**: Minimum 3:1 contrast ratio for focus states
+
+**Color Independence:**
+
+- **Information**: Never convey information through color alone
+- **Status Indicators**: Use icons, text, or patterns in addition to color
+- **Error States**: Combine color with text and icons
+- **Success States**: Use multiple visual cues
+
+**Color Blindness Support:**
+
+- **Protanopia**: Red-green color blindness support
+- **Deuteranopia**: Green-red color blindness support
+- **Tritanopia**: Blue-yellow color blindness support
+- **Monochromacy**: Complete color blindness support
+
+**High Contrast Mode:**
+
+- **System Support**: Respect user's high contrast preferences
+- **Alternative Styles**: Provide high contrast stylesheet
+- **Icon Visibility**: Ensure icons remain visible in high contrast
+- **Border Enhancement**: Use borders to define elements
+
+#### **Typography and Readability**
+
+**Font Requirements:**
+
+- **Minimum Size**: 16px for body text (prevents zoom on mobile)
+- **Scalable Text**: Support text scaling up to 200%
+- **Font Choice**: Use highly readable fonts (Inter)
+- **Font Weight**: Sufficient contrast between weights
+
+**Line Spacing:**
+
+- **Body Text**: 1.5 line height minimum
+- **Headings**: 1.2 line height for impact
+- **Small Text**: 1.4 line height for readability
+- **Paragraph Spacing**: Adequate spacing between paragraphs
+
+**Text Formatting:**
+
+- **Bold Text**: Use for emphasis, not decoration
+- **Italic Text**: Use sparingly for emphasis
+- **Underlined Text**: Only for links
+- **All Caps**: Avoid for long text blocks
+
+### **Motor Accessibility**
+
+#### **Keyboard Navigation**
+
+**Tab Order:**
+
+- **Logical Flow**: Follow visual reading order
+- **Skip Links**: Provide skip links to main content
+- **Focus Management**: Clear focus indicators
+- **Tab Trapping**: Trap focus within modals
+
+**Keyboard Shortcuts:**
+
+- **Common Actions**: Provide keyboard shortcuts
+- **Documentation**: Document all shortcuts
+- **Consistency**: Use standard shortcuts where possible
+- **Customization**: Allow users to customize shortcuts
+
+**Focus Indicators:**
+
+- **Visibility**: Clear, visible focus indicators
+- **Consistency**: Same style across all elements
+- **High Contrast**: Sufficient contrast with background
+- **Size**: Adequate size for visibility
+
+#### **Touch and Motor Support**
+
+**Touch Targets:**
+
+- **Minimum Size**: 44px × 44px for all interactive elements
+- **Spacing**: Adequate spacing between touch targets
+- **Error Prevention**: Prevent accidental activation
+- **Confirmation**: Require confirmation for destructive actions
+
+**Motor Impairment Support:**
+
+- **Large Targets**: Provide larger touch targets
+- **Drag and Drop**: Alternative methods for drag operations
+- **Hover States**: Don't rely solely on hover
+- **Timing**: Adequate time for interactions
+
+### **Cognitive Accessibility**
+
+#### **Content Structure**
+
+**Clear Navigation:**
+
+- **Consistent**: Same navigation across all pages
+- **Logical**: Logical grouping and hierarchy
+- **Descriptive**: Clear, descriptive labels
+- **Breadcrumbs**: Provide breadcrumb navigation
+
+**Content Organization:**
+
+- **Headings**: Proper heading hierarchy (H1-H6)
+- **Lists**: Use proper list markup
+- **Sections**: Use semantic HTML sections
+- **Landmarks**: Use ARIA landmarks
+
+**Language and Writing:**
+
+- **Plain Language**: Use simple, clear language
+- **Consistent Terms**: Use consistent terminology
+- **Abbreviations**: Define abbreviations on first use
+- **Instructions**: Clear, step-by-step instructions
+
+#### **Error Prevention and Recovery**
+
+**Form Validation:**
+
+- **Real-time**: Validate as user types
+- **Clear Messages**: Specific, helpful error messages
+- **Error Prevention**: Prevent errors where possible
+- **Recovery**: Easy error correction
+
+**Confirmation Dialogs:**
+
+- **Destructive Actions**: Require confirmation
+- **Clear Language**: Use clear, non-technical language
+- **Escape Routes**: Provide cancel options
+- **Focus Management**: Focus on confirmation button
+
+### **Auditory Accessibility**
+
+#### **Audio Content**
+
+**Audio Alternatives:**
+
+- **Transcripts**: Provide text transcripts
+- **Captions**: Synchronized captions for videos
+- **Descriptions**: Audio descriptions for visual content
+- **Sign Language**: Consider sign language interpretation
+
+**Audio Controls:**
+
+- **Volume Control**: User-controlled volume
+- **Pause/Play**: Clear pause and play controls
+- **Speed Control**: Adjustable playback speed
+- **Mute Option**: Ability to mute audio
+
+#### **Notifications and Alerts**
+
+**Visual Alerts:**
+
+- **Screen Reader**: Announce important information
+- **Visual Indicators**: Use visual cues for alerts
+- **Status Updates**: Clear status indicators
+- **Progress Indicators**: Show progress visually
+
+**Audio Alerts:**
+
+- **Optional**: Make audio alerts optional
+- **Visual Alternative**: Provide visual alternatives
+- **Volume Control**: User-controlled volume
+- **Customization**: Allow customization of alerts
+
+### **Assistive Technology Support**
+
+#### **Screen Reader Compatibility**
+
+**Semantic HTML:**
+
+- **Proper Markup**: Use semantic HTML elements
+- **ARIA Labels**: Provide descriptive ARIA labels
+- **Role Attributes**: Use appropriate ARIA roles
+- **State Attributes**: Indicate element states
+
+**Screen Reader Testing:**
+
+- **NVDA**: Test with NVDA screen reader
+- **JAWS**: Test with JAWS screen reader
+- **VoiceOver**: Test with VoiceOver (macOS/iOS)
+- **TalkBack**: Test with TalkBack (Android)
+
+**Content Announcements:**
+
+- **Live Regions**: Use ARIA live regions for dynamic content
+- **Status Updates**: Announce status changes
+- **Error Messages**: Announce error messages
+- **Success Messages**: Announce success messages
+
+#### **Voice Control Support**
+
+**Voice Navigation:**
+
+- **Voice Commands**: Support common voice commands
+- **Element Naming**: Use descriptive element names
+- **Voice Shortcuts**: Provide voice shortcuts
+- **Voice Feedback**: Provide voice feedback
+
+**Voice Input:**
+
+- **Voice Forms**: Support voice input for forms
+- **Voice Search**: Enable voice search functionality
+- **Voice Dictation**: Support voice dictation
+- **Voice Commands**: Support voice commands
+
+### **Technical Implementation**
+
+#### **HTML Semantics**
+
+**Semantic Elements:**
+
+```html
+<!-- Proper heading hierarchy -->
+<h1>Page Title</h1>
+<h2>Section Title</h2>
+<h3>Subsection Title</h3>
+
+<!-- Proper list markup -->
+<ul>
+  <li>List item 1</li>
+  <li>List item 2</li>
+</ul>
+
+<!-- Proper form markup -->
+<label for="email">Email Address</label>
+<input type="email" id="email" name="email" required />
+```
+
+**ARIA Implementation:**
+
+```html
+<!-- Button with expanded state -->
+<button aria-expanded="false" aria-controls="menu">Menu</button>
+
+<!-- Live region for dynamic content -->
+<div aria-live="polite" id="status">Status updates appear here</div>
+
+<!-- Form with error messages -->
+<label for="password">Password</label>
+<input type="password" id="password" aria-describedby="password-error" />
+<div id="password-error" role="alert">
+  Password must be at least 8 characters
+</div>
+```
+
+#### **CSS Accessibility**
+
+**Focus Styles:**
+
+```css
+/* Clear focus indicators */
+*:focus {
+  outline: 2px solid #f18d30;
+  outline-offset: 2px;
+}
+
+/* High contrast focus */
+@media (prefers-contrast: high) {
+  *:focus {
+    outline: 3px solid #000;
+    outline-offset: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+**Color and Contrast:**
+
+```css
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    background-color: #000;
+    color: #fff;
+    border: 2px solid #fff;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+}
+```
+
+#### **JavaScript Accessibility**
+
+**Keyboard Event Handling:**
+
+```javascript
+// Keyboard navigation support
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeModal();
+  }
+  if (event.key === "Enter" || event.key === " ") {
+    activateButton(event.target);
+  }
+});
+
+// Focus management
+function trapFocus(element) {
+  const focusableElements = element.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  element.addEventListener("keydown", (event) => {
+    if (event.key === "Tab") {
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          event.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          event.preventDefault();
+        }
+      }
+    }
+  });
+}
+```
+
+**ARIA Updates:**
+
+```javascript
+// Update ARIA attributes dynamically
+function updateButtonState(button, isExpanded) {
+  button.setAttribute("aria-expanded", isExpanded);
+  button.setAttribute("aria-label", isExpanded ? "Close menu" : "Open menu");
+}
+
+// Announce changes to screen readers
+function announceToScreenReader(message) {
+  const announcement = document.createElement("div");
+  announcement.setAttribute("aria-live", "polite");
+  announcement.setAttribute("aria-atomic", "true");
+  announcement.textContent = message;
+  document.body.appendChild(announcement);
+
+  setTimeout(() => {
+    document.body.removeChild(announcement);
+  }, 1000);
+}
+```
+
+### **Testing and Validation**
+
+#### **Automated Testing**
+
+**Testing Tools:**
+
+- **axe-core**: Automated accessibility testing
+- **Lighthouse**: Google's accessibility audit
+- **WAVE**: Web accessibility evaluation tool
+- **Pa11y**: Command-line accessibility testing
+
+**Testing Integration:**
+
+```javascript
+// Jest test for accessibility
+import { axe, toHaveNoViolations } from "jest-axe";
+
+expect.extend(toHaveNoViolations);
+
+test("should not have accessibility violations", async () => {
+  const { container } = render(<MyComponent />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+```
+
+**CI/CD Integration:**
+
+```yaml
+# GitHub Actions accessibility testing
+- name: Run accessibility tests
+  run: |
+    npm install -g pa11y
+    pa11y http://localhost:3000
+    pa11y http://localhost:3000/contractors
+    pa11y http://localhost:3000/jobs
+```
+
+#### **Manual Testing**
+
+**Keyboard Testing:**
+
+- **Tab Navigation**: Test all interactive elements
+- **Focus Indicators**: Verify clear focus states
+- **Skip Links**: Test skip link functionality
+- **Keyboard Shortcuts**: Test all keyboard shortcuts
+
+**Screen Reader Testing:**
+
+- **Content Reading**: Verify content is read correctly
+- **Navigation**: Test navigation with screen reader
+- **Forms**: Test form completion with screen reader
+- **Dynamic Content**: Test dynamic content announcements
+
+**Visual Testing:**
+
+- **Color Contrast**: Test with contrast checking tools
+- **Zoom Testing**: Test with 200% zoom
+- **High Contrast**: Test with high contrast mode
+- **Color Blindness**: Test with color blindness simulators
+
+#### **User Testing**
+
+**Accessibility User Testing:**
+
+- **Screen Reader Users**: Test with actual screen reader users
+- **Keyboard Users**: Test with keyboard-only users
+- **Motor Impairment**: Test with users with motor impairments
+- **Cognitive Disabilities**: Test with users with cognitive disabilities
+
+**Testing Process:**
+
+- **Recruitment**: Recruit diverse users with disabilities
+- **Task Scenarios**: Create realistic task scenarios
+- **Observation**: Observe users completing tasks
+- **Feedback**: Collect detailed feedback and suggestions
+- **Iteration**: Iterate based on user feedback
+
+### **Accessibility Guidelines by Component**
+
+#### **Navigation Components**
+
+**Header Navigation:**
+
+- **Skip Links**: Provide skip to main content
+- **ARIA Labels**: Label navigation landmarks
+- **Focus Management**: Clear focus indicators
+- **Keyboard Access**: Full keyboard navigation
+
+**Sidebar Navigation:**
+
+- **Collapsible**: Support collapsible navigation
+- **ARIA Expanded**: Indicate expanded/collapsed state
+- **Keyboard Shortcuts**: Provide navigation shortcuts
+- **Screen Reader**: Announce navigation changes
+
+**Breadcrumb Navigation:**
+
+- **Semantic Markup**: Use proper list markup
+- **Current Page**: Indicate current page
+- **Keyboard Access**: Navigate with arrow keys
+- **Screen Reader**: Announce breadcrumb trail
+
+#### **Form Components**
+
+**Input Fields:**
+
+- **Labels**: Proper label association
+- **Error Messages**: Clear error identification
+- **Required Fields**: Indicate required fields
+- **Help Text**: Provide helpful instructions
+
+**Buttons:**
+
+- **Descriptive Text**: Clear, descriptive button text
+- **Loading States**: Indicate loading states
+- **Keyboard Access**: Full keyboard support
+- **Focus Indicators**: Clear focus states
+
+**Select Dropdowns:**
+
+- **Keyboard Navigation**: Arrow key navigation
+- **Screen Reader**: Announce options
+- **Search**: Support search functionality
+- **Multi-select**: Support multi-selection
+
+#### **Card Components**
+
+**Contractor Cards:**
+
+- **Semantic Structure**: Proper heading hierarchy
+- **Image Alt Text**: Descriptive alt text for images
+- **Rating Display**: Accessible rating display
+- **Action Buttons**: Clear action buttons
+
+**Job Cards:**
+
+- **Content Structure**: Logical content organization
+- **Status Indicators**: Clear status indicators
+- **Action Buttons**: Accessible action buttons
+- **Keyboard Access**: Full keyboard navigation
+
+#### **Modal Components**
+
+**Modal Accessibility:**
+
+- **Focus Trap**: Trap focus within modal
+- **Escape Key**: Close with Escape key
+- **Focus Return**: Return focus to trigger
+- **Screen Reader**: Announce modal opening
+
+**Modal Content:**
+
+- **Heading Structure**: Proper heading hierarchy
+- **Form Elements**: Accessible form elements
+- **Action Buttons**: Clear action buttons
+- **Error Handling**: Accessible error messages
+
+### **Accessibility Documentation**
+
+#### **Developer Guidelines**
+
+**Implementation Checklist:**
+
+- [ ] Semantic HTML structure
+- [ ] Proper ARIA attributes
+- [ ] Keyboard navigation support
+- [ ] Screen reader compatibility
+- [ ] Color contrast compliance
+- [ ] Focus management
+- [ ] Error handling
+- [ ] Testing validation
+
+**Code Review Guidelines:**
+
+- **HTML Semantics**: Review semantic markup
+- **ARIA Usage**: Verify proper ARIA implementation
+- **Keyboard Support**: Test keyboard navigation
+- **Screen Reader**: Test with screen readers
+- **Color Contrast**: Verify contrast ratios
+- **Focus Management**: Check focus indicators
+
+#### **User Documentation**
+
+**Accessibility Features:**
+
+- **Keyboard Navigation**: Document keyboard shortcuts
+- **Screen Reader**: Provide screen reader instructions
+- **High Contrast**: Explain high contrast mode
+- **Text Scaling**: Document text scaling options
+
+**Support Resources:**
+
+- **Help Documentation**: Comprehensive help documentation
+- **Video Tutorials**: Accessibility-focused tutorials
+- **Contact Support**: Accessible support channels
+- **Feedback Form**: Accessible feedback mechanism
+
+### **Ongoing Accessibility Maintenance**
+
+#### **Regular Audits**
+
+**Monthly Audits:**
+
+- **Automated Testing**: Run automated accessibility tests
+- **Manual Testing**: Conduct manual accessibility testing
+- **User Feedback**: Review accessibility feedback
+- **Issue Tracking**: Track and resolve accessibility issues
+
+**Quarterly Reviews:**
+
+- **Comprehensive Audit**: Full accessibility audit
+- **User Testing**: Conduct accessibility user testing
+- **Policy Updates**: Review and update accessibility policies
+- **Training Updates**: Update accessibility training materials
+
+#### **Continuous Improvement**
+
+**Feedback Integration:**
+
+- **User Reports**: Address user accessibility reports
+- **Community Input**: Incorporate community feedback
+- **Best Practices**: Stay updated with accessibility best practices
+- **Technology Updates**: Adapt to new assistive technologies
+
+**Training and Education:**
+
+- **Developer Training**: Regular accessibility training for developers
+- **Design Training**: Accessibility training for designers
+- **Content Training**: Accessibility training for content creators
+- **Testing Training**: Accessibility testing training for QA
+
+## Responsiveness Strategy
+
+This section outlines how Event Pros NZ adapts across different devices and screen sizes to provide an optimal user experience on mobile phones, tablets, desktops, and other devices.
+
+### **Mobile-First Design Approach**
+
+#### **Core Principles**
+
+**Mobile-First Philosophy:**
+
+- **Start Small**: Design for mobile devices first, then enhance for larger screens
+- **Progressive Enhancement**: Add features and complexity as screen size increases
+- **Touch-First**: Design for touch interactions as the primary input method
+- **Performance Priority**: Optimize for slower connections and limited resources
+
+**Design Strategy:**
+
+- **Content Priority**: Most important content appears first on mobile
+- **Simplified Navigation**: Streamlined navigation for small screens
+- **Touch Targets**: Minimum 44px × 44px for all interactive elements
+- **Readable Text**: Minimum 16px font size to prevent zoom on mobile
+
+**User Context Strategy:**
+
+- **Event Managers**: Browse on mobile, manage events on desktop
+- **Contractors**: Full functionality across all devices
+- **Admins**: Desktop-first but accessible on all screen sizes
+- **Universal Access**: All users must be able to use the platform on all screen sizes
+
+#### **Breakpoint Strategy**
+
+**Primary Breakpoints:**
+
+- **Mobile**: 320px - 767px (phones)
+- **Tablet**: 768px - 1023px (tablets)
+- **Desktop**: 1024px - 1439px (laptops/small desktops)
+- **Large Desktop**: 1440px+ (large monitors)
+
+**Breakpoint Implementation:**
+
+```css
+/* Mobile First - Base styles */
+.container {
+  width: 100%;
+  padding: 16px;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .container {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    padding: 32px;
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+    padding: 40px;
+  }
+}
+```
+
+### **Device-Specific Considerations**
+
+#### **Mobile Devices (320px - 767px)**
+
+**Layout Adaptations:**
+
+- **Single Column**: All content in a single column layout
+- **Stacked Navigation**: Hamburger menu for main navigation
+- **Full-Width Cards**: Cards take full width of screen
+- **Vertical Scrolling**: Primary navigation method
+
+**Touch Optimizations:**
+
+- **Large Touch Targets**: Minimum 44px × 44px for buttons and links
+- **Adequate Spacing**: 8px minimum spacing between touch targets
+- **Swipe Gestures**: Support for swipe navigation where appropriate
+- **Thumb-Friendly**: Place primary actions within thumb reach
+
+**Content Prioritization:**
+
+- **Above the Fold**: Most important content visible without scrolling
+- **Progressive Disclosure**: Show essential info first, details on demand
+- **Simplified Forms**: Shorter forms with clear input types
+- **Quick Actions**: Primary actions easily accessible
+
+**Performance Considerations:**
+
+- **Optimized Images**: Smaller, compressed images for mobile
+- **Lazy Loading**: Load images and content as needed
+- **Minimal JavaScript**: Reduce JavaScript bundle size
+- **Fast Loading**: Prioritize critical rendering path
+
+#### **Tablet Devices (768px - 1023px)**
+
+**Layout Adaptations:**
+
+- **Two-Column Layout**: Sidebar and main content areas
+- **Grid Systems**: 2-3 column grids for content
+- **Larger Cards**: More space for card content
+- **Horizontal Navigation**: Can accommodate horizontal navigation
+
+**Touch and Mouse Support:**
+
+- **Hybrid Input**: Support both touch and mouse interactions
+- **Hover States**: Include hover effects for mouse users
+- **Touch Gestures**: Support pinch, zoom, and swipe gestures
+- **Precise Interactions**: Support both touch and mouse precision
+
+**Content Enhancements:**
+
+- **More Information**: Show additional details without clicking
+- **Preview Panes**: Show content previews alongside lists
+- **Multi-Column Text**: Use multiple columns for better readability
+- **Enhanced Forms**: More complex forms with better layouts
+
+#### **Desktop Devices (1024px+)**
+
+**Layout Adaptations:**
+
+- **Multi-Column Layout**: Sidebar, main content, and optional right panel
+- **Grid Systems**: 3-4 column grids for optimal content display
+- **Fixed Sidebars**: Persistent navigation and tools
+- **Modal Overlays**: Use modals for secondary actions
+
+**Mouse and Keyboard Support:**
+
+- **Hover Effects**: Rich hover states and interactions
+- **Keyboard Shortcuts**: Full keyboard navigation support
+- **Right-Click Menus**: Context menus for advanced users
+- **Drag and Drop**: Support for drag and drop interactions
+
+**Content Enhancements:**
+
+- **Rich Information**: Show comprehensive information at once
+- **Multiple Panes**: Side-by-side content comparison
+- **Advanced Filters**: Complex filtering and sorting options
+- **Bulk Actions**: Multi-select and bulk operations
+
+### **Interactive Map Responsiveness**
+
+#### **Mobile Map Implementation**
+
+**Collapsible Map Design:**
+
+```css
+/* Mobile: Collapsible map */
+.map-container {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+
+.map-container.expanded {
+  height: 300px;
+}
+
+.map-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #f18d30;
+  color: white;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Tablet and up: Always visible */
+@media (min-width: 768px) {
+  .map-container {
+    height: 400px;
+  }
+
+  .map-toggle {
+    display: none;
+  }
+}
+```
+
+**Touch Interactions:**
+
+```javascript
+// Mobile map touch interactions
+const mapContainer = document.querySelector(".map-container");
+const mapToggle = document.querySelector(".map-toggle");
+
+// Toggle map visibility
+mapToggle.addEventListener("click", () => {
+  mapContainer.classList.toggle("expanded");
+  mapToggle.textContent = mapContainer.classList.contains("expanded")
+    ? "Hide Map"
+    : "Show Map";
+});
+
+// Tappable map pins
+mapContainer.addEventListener("click", (e) => {
+  if (e.target.classList.contains("map-pin")) {
+    const contractorId = e.target.dataset.contractorId;
+    showContractorCard(contractorId);
+  }
+});
+```
+
+**Performance Optimizations:**
+
+```javascript
+// Lazy load map on mobile
+const loadMap = () => {
+  if (window.innerWidth < 768 && !mapLoaded) {
+    // Load lightweight map version
+    import("./MobileMap").then((module) => {
+      module.initializeMobileMap();
+      mapLoaded = true;
+    });
+  } else if (window.innerWidth >= 768) {
+    // Load full map version
+    import("./DesktopMap").then((module) => {
+      module.initializeDesktopMap();
+    });
+  }
+};
+```
+
+### **Contractor Discovery Experience**
+
+#### **Mobile Search Interface**
+
+**Search Bar with Expandable Filters:**
+
+```css
+/* Mobile search interface */
+.search-container {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 100;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #f18d30;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.filters-accordion {
+  margin-top: 12px;
+}
+
+.filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.filters-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.filters-content.expanded {
+  max-height: 500px;
+  padding: 16px 0;
+}
+```
+
+**Card Density Recommendations:**
+
+```css
+/* Mobile: 1 card per row */
+@media (max-width: 767px) {
+  .contractor-card {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .contractor-grid {
+    display: block;
+  }
+}
+
+/* Tablet: 2 cards per row */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .contractor-card {
+    width: calc(50% - 8px);
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .contractor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}
+
+/* Desktop: 3 cards per row */
+@media (min-width: 1024px) {
+  .contractor-card {
+    width: calc(33.333% - 11px);
+  }
+}
+```
+
+**Responsive Image Loading:**
+
+```html
+<!-- Responsive contractor images -->
+<picture class="contractor-photo">
+  <source media="(min-width: 1024px)" srcset="contractor-large.webp" />
+  <source media="(min-width: 768px)" srcset="contractor-medium.webp" />
+  <source media="(max-width: 767px)" srcset="contractor-small.webp" />
+  <img src="contractor-small.jpg" alt="Contractor photo" loading="lazy" />
+</picture>
+```
+
+### **Progressive Web App (PWA) Features**
+
+#### **PWA Implementation**
+
+**Service Worker Setup:**
+
+```javascript
+// Service worker for offline support
+const CACHE_NAME = "event-pros-v1";
+const urlsToCache = [
+  "/",
+  "/contractors",
+  "/jobs",
+  "/static/css/main.css",
+  "/static/js/main.js",
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Return cached version or fetch from network
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+
+**Push Notifications:**
+
+```javascript
+// Push notification setup
+const requestNotificationPermission = async () => {
+  const permission = await Notification.requestPermission();
+  if (permission === "granted") {
+    // Subscribe to push notifications
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: "your-vapid-public-key",
+    });
+
+    // Send subscription to server
+    await fetch("/api/notifications/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription),
+    });
+  }
+};
+```
+
+**App-like Experience:**
+
+```json
+// Web App Manifest
+{
+  "name": "Event Pros NZ",
+  "short_name": "EventPros",
+  "description": "Connect with event professionals in New Zealand",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f18d30",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+### **Performance Optimizations**
+
+#### **Responsive Image Delivery**
+
+**Image Optimization Strategy:**
+
+```javascript
+// Responsive image loading
+const loadResponsiveImage = (img, srcset) => {
+  const isRetina = window.devicePixelRatio > 1;
+  const screenWidth = window.innerWidth;
+
+  let imageSize = "small";
+  if (screenWidth >= 1024) imageSize = "large";
+  else if (screenWidth >= 768) imageSize = "medium";
+
+  if (isRetina) imageSize += "@2x";
+
+  img.src = srcset[imageSize];
+  img.loading = "lazy";
+};
+```
+
+**Code Splitting Recommendations:**
+
+```javascript
+// Mobile-specific bundle
+const MobileBundle = lazy(() => import("./MobileComponents"));
+
+// Desktop-specific bundle
+const DesktopBundle = lazy(() => import("./DesktopComponents"));
+
+// Conditional loading based on screen size
+const ResponsiveApp = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      {isMobile ? <MobileBundle /> : <DesktopBundle />}
+    </Suspense>
+  );
+};
+```
+
+**Caching Strategy:**
+
+```javascript
+// Different caching strategies for mobile vs desktop
+const getCachingStrategy = () => {
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    // Aggressive caching for mobile (limited data)
+    return {
+      cacheFirst: ["/static/css/", "/static/js/", "/images/"],
+      networkFirst: ["/api/contractors", "/api/jobs"],
+      staleWhileRevalidate: ["/api/user/profile"],
+    };
+  } else {
+    // Balanced caching for desktop
+    return {
+      cacheFirst: ["/static/css/", "/static/js/"],
+      networkFirst: ["/api/contractors", "/api/jobs", "/api/events"],
+      staleWhileRevalidate: ["/api/user/profile", "/api/analytics"],
+    };
+  }
+};
+```
+
+### **Touch-Specific Features**
+
+#### **Swipe Actions**
+
+**Swipe-to-Favorite:**
+
+```javascript
+// Swipe to favorite contractor cards
+let startX, startY, currentX, currentY;
+
+const contractorCard = document.querySelector(".contractor-card");
+
+contractorCard.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+contractorCard.addEventListener("touchmove", (e) => {
+  currentX = e.touches[0].clientX;
+  currentY = e.touches[0].clientY;
+
+  const deltaX = currentX - startX;
+  const deltaY = currentY - startY;
+
+  // Horizontal swipe
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > 50) {
+      // Swipe right - show favorite action
+      contractorCard.style.transform = `translateX(${deltaX}px)`;
+      contractorCard.classList.add("swipe-right");
+    } else if (deltaX < -50) {
+      // Swipe left - show more actions
+      contractorCard.style.transform = `translateX(${deltaX}px)`;
+      contractorCard.classList.add("swipe-left");
+    }
+  }
+});
+
+contractorCard.addEventListener("touchend", (e) => {
+  const deltaX = currentX - startX;
+
+  if (deltaX > 100) {
+    // Complete swipe right - favorite
+    addToFavorites(contractorCard.dataset.contractorId);
+    contractorCard.style.transform = "translateX(0)";
+    contractorCard.classList.remove("swipe-right");
+  } else if (deltaX < -100) {
+    // Complete swipe left - show actions
+    showActionMenu(contractorCard.dataset.contractorId);
+    contractorCard.style.transform = "translateX(0)";
+    contractorCard.classList.remove("swipe-left");
+  } else {
+    // Snap back
+    contractorCard.style.transform = "translateX(0)";
+    contractorCard.classList.remove("swipe-right", "swipe-left");
+  }
+});
+```
+
+**Pull-to-Refresh:**
+
+```javascript
+// Pull to refresh contractor listings
+let startY,
+  currentY,
+  isRefreshing = false;
+
+const contractorList = document.querySelector(".contractor-list");
+
+contractorList.addEventListener("touchstart", (e) => {
+  if (contractorList.scrollTop === 0) {
+    startY = e.touches[0].clientY;
+  }
+});
+
+contractorList.addEventListener("touchmove", (e) => {
+  if (contractorList.scrollTop === 0 && startY) {
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+
+    if (deltaY > 0) {
+      // Pull down
+      const pullDistance = Math.min(deltaY * 0.5, 100);
+      contractorList.style.transform = `translateY(${pullDistance}px)`;
+
+      if (pullDistance > 80) {
+        // Show refresh indicator
+        showRefreshIndicator();
+      }
+    }
+  }
+});
+
+contractorList.addEventListener("touchend", (e) => {
+  if (startY && currentY) {
+    const deltaY = currentY - startY;
+
+    if (deltaY > 80) {
+      // Trigger refresh
+      refreshContractorList();
+    }
+
+    // Reset
+    contractorList.style.transform = "translateY(0)";
+    startY = null;
+    currentY = null;
+  }
+});
+```
+
+**Haptic Feedback:**
+
+```javascript
+// Haptic feedback for mobile actions
+const triggerHapticFeedback = (type = "light") => {
+  if ("vibrate" in navigator) {
+    switch (type) {
+      case "light":
+        navigator.vibrate(10);
+        break;
+      case "medium":
+        navigator.vibrate(20);
+        break;
+      case "heavy":
+        navigator.vibrate([10, 10, 10]);
+        break;
+      case "success":
+        navigator.vibrate([10, 5, 10]);
+        break;
+      case "error":
+        navigator.vibrate([50, 50, 50]);
+        break;
+    }
+  }
+};
+
+// Use haptic feedback for actions
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("favorite-btn")) {
+    triggerHapticFeedback("success");
+  } else if (e.target.classList.contains("action-btn")) {
+    triggerHapticFeedback("medium");
+  }
+});
+```
+
+### **Accessibility in Responsive Design**
+
+#### **Screen Reader Navigation**
+
+**Responsive Landmarks:**
+
+```html
+<!-- Mobile: Simplified navigation -->
+<nav aria-label="Main navigation" class="mobile-nav">
+  <button aria-expanded="false" aria-controls="mobile-menu">Menu</button>
+  <ul id="mobile-menu" role="menu" aria-hidden="true">
+    <li role="none"><a href="/dashboard" role="menuitem">Dashboard</a></li>
+    <li role="none"><a href="/contractors" role="menuitem">Contractors</a></li>
+    <li role="none"><a href="/jobs" role="menuitem">Jobs</a></li>
+  </ul>
+</nav>
+
+<!-- Desktop: Full navigation -->
+<nav aria-label="Main navigation" class="desktop-nav">
+  <ul role="menubar">
+    <li role="none"><a href="/dashboard" role="menuitem">Dashboard</a></li>
+    <li role="none"><a href="/contractors" role="menuitem">Contractors</a></li>
+    <li role="none"><a href="/jobs" role="menuitem">Jobs</a></li>
+  </ul>
+</nav>
+```
+
+**Responsive ARIA Labels:**
+
+```javascript
+// Update ARIA labels based on screen size
+const updateResponsiveLabels = () => {
+  const isMobile = window.innerWidth < 768;
+  const mapButton = document.querySelector(".map-toggle");
+
+  if (mapButton) {
+    mapButton.setAttribute(
+      "aria-label",
+      isMobile ? "Show map view" : "Toggle map visibility"
+    );
+  }
+
+  const searchButton = document.querySelector(".search-btn");
+  if (searchButton) {
+    searchButton.setAttribute(
+      "aria-label",
+      isMobile ? "Search contractors" : "Search and filter contractors"
+    );
+  }
+};
+```
+
+#### **Zoom Support (200%+)**
+
+**Fluid Typography:**
+
+```css
+/* Support for 200% zoom */
+html {
+  font-size: 16px;
+}
+
+/* Use relative units for better zoom support */
+.container {
+  max-width: 90vw;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+/* Ensure text remains readable at high zoom */
+body {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.6;
+}
+
+/* Responsive spacing that scales with zoom */
+.section {
+  margin-bottom: clamp(2rem, 8vw, 4rem);
+}
+```
+
+**High Contrast Mode Support:**
+
+```css
+/* High contrast mode responsive design */
+@media (prefers-contrast: high) {
+  .contractor-card {
+    border: 2px solid;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .contractor-card:hover {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /* Ensure visibility at all screen sizes */
+  @media (max-width: 767px) {
+    .contractor-card {
+      border-width: 3px;
+    }
+  }
+}
+```
+
+### **Testing and Validation**
+
+#### **Responsive Testing Strategy**
+
+**Device Testing Matrix:**
+
+- **Mobile**: iPhone SE (375px), iPhone 12 (390px), iPhone 14 Pro Max (430px)
+- **Tablet**: iPad (768px), iPad Pro (1024px), Android tablets (800px-1200px)
+- **Desktop**: 1024px, 1280px, 1440px, 1920px, 2560px
+- **High DPI**: 2x and 3x pixel density testing
+
+**Automated Responsive Testing:**
+
+```javascript
+// Responsive design testing
+describe("Responsive Design", () => {
+  const breakpoints = [320, 375, 768, 1024, 1440, 1920];
+
+  breakpoints.forEach((width) => {
+    test(`renders correctly at ${width}px`, async () => {
+      // Set viewport size
+      await page.setViewport({ width, height: 800 });
+
+      // Navigate to page
+      await page.goto("/contractors");
+
+      // Take screenshot
+      const screenshot = await page.screenshot();
+      expect(screenshot).toMatchSnapshot(`contractors-${width}px.png`);
+
+      // Test touch interactions on mobile
+      if (width < 768) {
+        await page.tap(".contractor-card");
+        await expect(page).toHaveSelector(".contractor-modal");
+      }
+    });
+  });
+});
+```
+
+**Performance Testing:**
+
+```javascript
+// Performance testing across devices
+const testPerformance = async (device) => {
+  const page = await browser.newPage();
+
+  // Emulate device
+  await page.emulate(device);
+
+  // Measure performance
+  const metrics = await page.metrics();
+
+  expect(metrics.JSHeapUsedSize).toBeLessThan(50 * 1024 * 1024); // 50MB
+  expect(metrics.LayoutCount).toBeLessThan(100);
+  expect(metrics.PaintCount).toBeLessThan(50);
+};
+```
+
+### **Future-Proofing**
+
+#### **Emerging Technologies**
+
+**Foldable Device Support:**
+
+```css
+/* Foldable device considerations */
+@media (screen-spanning: single-fold-vertical) {
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (screen-spanning: single-fold-horizontal) {
+  .main-content {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+```
+
+**Container Queries (Future):**
+
+```css
+/* Container-based responsive design */
+.contractor-grid {
+  container-type: inline-size;
+}
+
+@container (min-width: 300px) {
+  .contractor-card {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+@container (min-width: 600px) {
+  .contractor-card {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+  }
+}
+```
+
+**Advanced Touch Features:**
+
+```javascript
+// Advanced touch gesture recognition
+const gestureRecognizer = new GestureRecognizer({
+  gestures: ["swipe", "pinch", "rotate", "pan"],
+  threshold: 10,
+  timeout: 300,
+});
+
+gestureRecognizer.on("swipe", (direction) => {
+  if (direction === "right") {
+    navigateBack();
+  } else if (direction === "left") {
+    navigateForward();
+  }
+});
+```
+
+This comprehensive responsiveness strategy ensures Event Pros NZ provides an optimal experience across all devices while maintaining full functionality and accessibility. The mobile-first approach with progressive enhancement ensures the platform works well for all users, regardless of their device or screen size.
+
+## Performance Considerations
+
+This section outlines the performance optimization strategies and considerations to ensure Event Pros NZ loads quickly, responds smoothly, and provides an excellent user experience across all devices and network conditions.
+
+### **Performance Goals and Metrics**
+
+#### **Core Web Vitals Targets**
+
+**Largest Contentful Paint (LCP):**
+
+- **Target**: < 2.5 seconds
+- **Good**: < 2.5 seconds
+- **Needs Improvement**: 2.5 - 4.0 seconds
+- **Poor**: > 4.0 seconds
+
+**First Input Delay (FID):**
+
+- **Target**: < 100 milliseconds
+- **Good**: < 100 milliseconds
+- **Needs Improvement**: 100 - 300 milliseconds
+- **Poor**: > 300 milliseconds
+
+**Cumulative Layout Shift (CLS):**
+
+- **Target**: < 0.1
+- **Good**: < 0.1
+- **Needs Improvement**: 0.1 - 0.25
+- **Poor**: > 0.25
+
+**First Contentful Paint (FCP):**
+
+- **Target**: < 1.8 seconds
+- **Good**: < 1.8 seconds
+- **Needs Improvement**: 1.8 - 3.0 seconds
+- **Poor**: > 3.0 seconds
+
+#### **Additional Performance Metrics**
+
+**Time to Interactive (TTI):**
+
+- **Target**: < 3.8 seconds
+- **Good**: < 3.8 seconds
+- **Needs Improvement**: 3.8 - 7.3 seconds
+- **Poor**: > 7.3 seconds
+
+**Speed Index:**
+
+- **Target**: < 3.4 seconds
+- **Good**: < 3.4 seconds
+- **Needs Improvement**: 3.4 - 5.8 seconds
+- **Poor**: > 5.8 seconds
+
+**Total Blocking Time (TBT):**
+
+- **Target**: < 200 milliseconds
+- **Good**: < 200 milliseconds
+- **Needs Improvement**: 200 - 600 milliseconds
+- **Poor**: > 600 milliseconds
+
+### **Loading Performance Optimization**
+
+#### **Critical Rendering Path**
+
+**HTML Optimization:**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Critical CSS inline -->
+    <style>
+      /* Critical above-the-fold styles */
+      .header {
+        /* ... */
+      }
+      .hero {
+        /* ... */
+      }
+      .loading {
+        /* ... */
+      }
+    </style>
+
+    <!-- Preload critical resources -->
+    <link
+      rel="preload"
+      href="/fonts/inter.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="preload" href="/images/hero-bg.webp" as="image" />
+
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//api.eventprosnz.com" />
+    <link rel="dns-prefetch" href="//maps.googleapis.com" />
+
+    <!-- Non-critical CSS loaded asynchronously -->
+    <link
+      rel="preload"
+      href="/styles/main.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="/styles/main.css" /></noscript>
+  </head>
+  <body>
+    <!-- Critical content first -->
+    <header class="header">...</header>
+    <main class="hero">...</main>
+
+    <!-- Non-critical content -->
+    <script src="/js/main.js" defer></script>
+  </body>
+</html>
+```
+
+**CSS Optimization:**
+
+```css
+/* Critical CSS - Inline in <head> */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero {
+  background: linear-gradient(135deg, #f18d30, #ff6b35);
+  color: white;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+/* Non-critical CSS - Loaded asynchronously */
+.contractor-card {
+  /* Detailed card styles */
+}
+
+.modal {
+  /* Modal styles */
+}
+
+/* CSS minification and compression */
+/* Remove unused CSS with tools like PurgeCSS */
+```
+
+#### **JavaScript Optimization**
+
+**Code Splitting Strategy:**
+
+```javascript
+// Route-based code splitting
+const HomePage = lazy(() => import("./pages/HomePage"));
+const ContractorDiscovery = lazy(() => import("./pages/ContractorDiscovery"));
+const EventManagerDashboard = lazy(() =>
+  import("./pages/EventManagerDashboard")
+);
+const ContractorDashboard = lazy(() => import("./pages/ContractorDashboard"));
+
+// Component-based code splitting
+const ContractorCard = lazy(() => import("./components/ContractorCard"));
+const InteractiveMap = lazy(() => import("./components/InteractiveMap"));
+const JobBoard = lazy(() => import("./components/JobBoard"));
+
+// Feature-based code splitting
+const Analytics = lazy(() => import("./features/Analytics"));
+const Notifications = lazy(() => import("./features/Notifications"));
+const Messaging = lazy(() => import("./features/Messaging"));
+
+// Dynamic imports for heavy features
+const loadMapFeature = async () => {
+  const { default: Mapbox } = await import("mapbox-gl");
+  const { default: MapComponent } = await import("./components/Map");
+  return { Mapbox, MapComponent };
+};
+
+// Conditional loading based on user role
+const loadAdminFeatures = async () => {
+  if (userRole === "admin") {
+    const { default: AdminPanel } = await import("./admin/AdminPanel");
+    return AdminPanel;
+  }
+  return null;
+};
+```
+
+**Bundle Optimization:**
+
+```javascript
+// webpack.config.js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "all",
+        },
+        common: {
+          name: "common",
+          minChunks: 2,
+          chunks: "all",
+          enforce: true,
+        },
+        mapbox: {
+          test: /[\\/]node_modules[\\/]mapbox-gl[\\/]/,
+          name: "mapbox",
+          chunks: "all",
+        },
+      },
+    },
+  },
+  // Tree shaking for unused code
+  mode: "production",
+  // Minification
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true, // Remove console.log in production
+          },
+        },
+      }),
+    ],
+  },
+};
+```
+
+#### **Image Optimization**
+
+**Responsive Images:**
+
+```html
+<!-- Modern responsive images with WebP support -->
+<picture class="contractor-photo">
+  <source
+    media="(min-width: 1024px)"
+    srcset="contractor-large.webp 1x, contractor-large@2x.webp 2x"
+    type="image/webp"
+  />
+  <source
+    media="(min-width: 768px)"
+    srcset="contractor-medium.webp 1x, contractor-medium@2x.webp 2x"
+    type="image/webp"
+  />
+  <source
+    media="(max-width: 767px)"
+    srcset="contractor-small.webp 1x, contractor-small@2x.webp 2x"
+    type="image/webp"
+  />
+
+  <!-- Fallback for browsers that don't support WebP -->
+  <source
+    media="(min-width: 1024px)"
+    srcset="contractor-large.jpg 1x, contractor-large@2x.jpg 2x"
+  />
+  <source
+    media="(min-width: 768px)"
+    srcset="contractor-medium.jpg 1x, contractor-medium@2x.jpg 2x"
+  />
+  <source
+    media="(max-width: 767px)"
+    srcset="contractor-small.jpg 1x, contractor-small@2x.jpg 2x"
+  />
+
+  <img
+    src="contractor-small.jpg"
+    alt="Contractor photo"
+    loading="lazy"
+    width="280"
+    height="280"
+  />
+</picture>
+```
+
+**Image Loading Strategy:**
+
+```javascript
+// Lazy loading with Intersection Observer
+const imageObserver = new IntersectionObserver(
+  (entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const src = img.dataset.src;
+
+        if (src) {
+          img.src = src;
+          img.classList.remove("lazy");
+          img.classList.add("loaded");
+          observer.unobserve(img);
+        }
+      }
+    });
+  },
+  {
+    rootMargin: "50px 0px", // Start loading 50px before image comes into view
+    threshold: 0.1,
+  }
+);
+
+// Observe all lazy images
+document.querySelectorAll("img[data-src]").forEach((img) => {
+  imageObserver.observe(img);
+});
+
+// Progressive image loading
+const loadProgressiveImage = (img) => {
+  // Load low-quality placeholder first
+  const placeholder = img.dataset.placeholder;
+  if (placeholder) {
+    img.src = placeholder;
+  }
+
+  // Then load high-quality image
+  const highQuality = img.dataset.src;
+  if (highQuality) {
+    const highQualityImg = new Image();
+    highQualityImg.onload = () => {
+      img.src = highQuality;
+      img.classList.add("loaded");
+    };
+    highQualityImg.src = highQuality;
+  }
+};
+```
+
+**Image Compression:**
+
+```javascript
+// Image optimization pipeline
+const optimizeImage = async (file, options = {}) => {
+  const {
+    maxWidth = 1920,
+    maxHeight = 1080,
+    quality = 0.8,
+    format = "webp",
+  } = options;
+
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      // Calculate new dimensions
+      let { width, height } = img;
+      const aspectRatio = width / height;
+
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      }
+
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      }
+
+      // Set canvas dimensions
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(resolve, `image/${format}`, quality);
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+};
+```
+
+### **Runtime Performance Optimization**
+
+#### **React Performance**
+
+**Component Optimization:**
+
+```javascript
+// Memoization for expensive components
+const ContractorCard = React.memo(({ contractor, onFavorite, onContact }) => {
+  const handleFavorite = useCallback(() => {
+    onFavorite(contractor.id);
+  }, [contractor.id, onFavorite]);
+
+  const handleContact = useCallback(() => {
+    onContact(contractor.id);
+  }, [contractor.id, onContact]);
+
+  return (
+    <div className="contractor-card">
+      <img src={contractor.photo} alt={contractor.name} loading="lazy" />
+      <h3>{contractor.name}</h3>
+      <p>{contractor.service}</p>
+      <div className="actions">
+        <button onClick={handleFavorite}>
+          <StarIcon filled={contractor.isFavorite} />
+        </button>
+        <button onClick={handleContact}>Contact</button>
+      </div>
+    </div>
+  );
+});
+
+// Virtual scrolling for large lists
+const VirtualizedContractorList = ({ contractors, height = 400 }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const itemHeight = 320; // Height of each contractor card
+  const visibleCount = Math.ceil(height / itemHeight);
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(startIndex + visibleCount + 1, contractors.length);
+
+  const visibleContractors = contractors.slice(startIndex, endIndex);
+
+  return (
+    <div
+      className="virtual-list"
+      style={{ height, overflow: "auto" }}
+      onScroll={(e) => setScrollTop(e.target.scrollTop)}
+    >
+      <div
+        style={{
+          height: contractors.length * itemHeight,
+          position: "relative",
+        }}
+      >
+        {visibleContractors.map((contractor, index) => (
+          <div
+            key={contractor.id}
+            style={{
+              position: "absolute",
+              top: (startIndex + index) * itemHeight,
+              height: itemHeight,
+              width: "100%",
+            }}
+          >
+            <ContractorCard contractor={contractor} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+**State Management Optimization:**
+
+```javascript
+// Redux optimization with selectors
+const selectContractors = (state) => state.contractors.items;
+const selectContractorFilters = (state) => state.contractors.filters;
+
+const selectFilteredContractors = createSelector(
+  [selectContractors, selectContractorFilters],
+  (contractors, filters) => {
+    return contractors.filter((contractor) => {
+      if (filters.serviceType && contractor.service !== filters.serviceType) {
+        return false;
+      }
+      if (filters.location && !contractor.location.includes(filters.location)) {
+        return false;
+      }
+      if (filters.rating && contractor.rating < filters.rating) {
+        return false;
+      }
+      return true;
+    });
+  }
+);
+
+// Debounced search
+const useDebouncedSearch = (searchTerm, delay = 300) => {
+  const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, delay]);
+
+  return debouncedTerm;
+};
+
+// Optimized search component
+const ContractorSearch = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebouncedSearch(searchTerm);
+  const filteredContractors = useSelector(selectFilteredContractors);
+
+  useEffect(() => {
+    // Trigger search when debounced term changes
+    dispatch(searchContractors(debouncedSearchTerm));
+  }, [debouncedSearchTerm, dispatch]);
+
+  return (
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Search contractors..."
+    />
+  );
+};
+```
+
+#### **Bundle Size Optimization**
+
+**Tree Shaking:**
+
+```javascript
+// Import only what you need
+import { debounce } from "lodash/debounce";
+import { throttle } from "lodash/throttle";
+// Instead of: import _ from 'lodash';
+
+// Use specific icon imports
+import { StarIcon, HeartIcon } from "@heroicons/react/24/outline";
+// Instead of: import * as Icons from '@heroicons/react/24/outline';
+
+// Dynamic imports for heavy libraries
+const loadMapbox = async () => {
+  const mapboxgl = await import("mapbox-gl");
+  return mapboxgl.default;
+};
+
+// Conditional imports based on features
+const loadAnalytics = async () => {
+  if (process.env.NODE_ENV === "production") {
+    const { default: analytics } = await import("./analytics");
+    return analytics;
+  }
+  return null;
+};
+```
+
+**Bundle Analysis:**
+
+```javascript
+// webpack-bundle-analyzer configuration
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+
+module.exports = {
+  plugins: [
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static",
+      openAnalyzer: false,
+      reportFilename: "bundle-report.html",
+    }),
+  ],
+};
+
+// Bundle size monitoring
+const bundleSizeConfig = {
+  maxSize: 250000, // 250KB
+  compression: "gzip",
+  exclude: [/node_modules/],
+  cache: true,
+  cacheDirectory: ".cache/bundle-size",
+};
+```
+
+### **Caching Strategies**
+
+#### **Browser Caching**
+
+**HTTP Caching Headers:**
+
+```javascript
+// Express.js caching configuration
+app.use(
+  express.static("public", {
+    maxAge: "1y", // Cache static assets for 1 year
+    etag: true,
+    lastModified: true,
+  })
+);
+
+// API response caching
+app.get("/api/contractors", (req, res) => {
+  res.set({
+    "Cache-Control": "public, max-age=300", // 5 minutes
+    ETag: generateETag(contractors),
+    "Last-Modified": new Date().toUTCString(),
+  });
+
+  res.json(contractors);
+});
+
+// Service Worker caching
+const CACHE_NAME = "event-pros-v1";
+const urlsToCache = [
+  "/",
+  "/static/css/main.css",
+  "/static/js/main.js",
+  "/images/logo.png",
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Return cached version or fetch from network
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+
+**Application-Level Caching:**
+
+```javascript
+// React Query for server state caching
+const useContractors = (filters) => {
+  return useQuery({
+    queryKey: ["contractors", filters],
+    queryFn: () => fetchContractors(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+  });
+};
+
+// Local storage caching
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`Error reading localStorage key "${key}":`, error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value) => {
+    try {
+      setStoredValue(value);
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error(`Error setting localStorage key "${key}":`, error);
+    }
+  };
+
+  return [storedValue, setValue];
+};
+
+// Memory caching for expensive computations
+const memoize = (fn) => {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+};
+```
+
+#### **CDN and Edge Caching**
+
+**CDN Configuration:**
+
+```javascript
+// Cloudflare configuration
+const cloudflareConfig = {
+  // Cache static assets
+  "/static/*": {
+    cacheLevel: "cache_everything",
+    edgeTtl: 31536000, // 1 year
+    browserTtl: 31536000,
+  },
+
+  // Cache API responses
+  "/api/contractors": {
+    cacheLevel: "cache_everything",
+    edgeTtl: 300, // 5 minutes
+    browserTtl: 60,
+  },
+
+  // Don't cache user-specific content
+  "/api/user/*": {
+    cacheLevel: "bypass",
+  },
+};
+
+// Image optimization with CDN
+const getOptimizedImageUrl = (imagePath, options = {}) => {
+  const { width, height, quality = 80, format = "webp" } = options;
+
+  const params = new URLSearchParams({
+    width: width?.toString(),
+    height: height?.toString(),
+    quality: quality.toString(),
+    format,
+  });
+
+  return `https://cdn.eventprosnz.com/images/${imagePath}?${params}`;
+};
+```
+
+### **Network Performance**
+
+#### **Connection Optimization**
+
+**Resource Hints:**
+
+```html
+<!-- Preconnect to external domains -->
+<link rel="preconnect" href="https://api.eventprosnz.com" />
+<link rel="preconnect" href="https://maps.googleapis.com" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+
+<!-- Prefetch next likely pages -->
+<link rel="prefetch" href="/contractors" />
+<link rel="prefetch" href="/jobs" />
+
+<!-- Preload critical resources -->
+<link
+  rel="preload"
+  href="/fonts/inter.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+<link rel="preload" href="/images/hero-bg.webp" as="image" />
+```
+
+**HTTP/2 and HTTP/3:**
+
+```javascript
+// HTTP/2 server push configuration
+const http2Server = require("http2");
+const fs = require("fs");
+
+const server = http2Server.createSecureServer({
+  key: fs.readFileSync("private-key.pem"),
+  cert: fs.readFileSync("certificate.pem"),
+});
+
+server.on("stream", (stream, headers) => {
+  if (headers[":path"] === "/") {
+    // Push critical CSS
+    stream.pushStream({ ":path": "/static/css/critical.css" }, (pushStream) => {
+      pushStream.respondWithFile("public/static/css/critical.css");
+    });
+
+    // Push critical JavaScript
+    stream.pushStream({ ":path": "/static/js/critical.js" }, (pushStream) => {
+      pushStream.respondWithFile("public/static/js/critical.js");
+    });
+  }
+});
+```
+
+#### **API Performance**
+
+**Request Optimization:**
+
+```javascript
+// Request batching
+const batchRequests = (requests) => {
+  return Promise.all(
+    requests.map((request) =>
+      fetch(request.url, request.options)
+        .then((response) => response.json())
+        .catch((error) => ({ error: error.message }))
+    )
+  );
+};
+
+// Request deduplication
+const requestCache = new Map();
+
+const deduplicatedFetch = async (url, options) => {
+  const key = `${url}-${JSON.stringify(options)}`;
+
+  if (requestCache.has(key)) {
+    return requestCache.get(key);
+  }
+
+  const promise = fetch(url, options).then((response) => response.json());
+  requestCache.set(key, promise);
+
+  // Clear cache after 5 minutes
+  setTimeout(() => requestCache.delete(key), 5 * 60 * 1000);
+
+  return promise;
+};
+
+// Pagination and infinite scrolling
+const useInfiniteScroll = (fetchFunction, options = {}) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+    try {
+      const newData = await fetchFunction(page, options);
+      setData((prev) => [...prev, ...newData.items]);
+      setHasMore(newData.hasMore);
+      setPage((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error loading more data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, loading, hasMore, fetchFunction, options]);
+
+  return { data, loading, hasMore, loadMore };
+};
+```
+
+**GraphQL Optimization:**
+
+```javascript
+// GraphQL query optimization
+const GET_CONTRACTORS = gql`
+  query GetContractors($filters: ContractorFilters, $limit: Int, $offset: Int) {
+    contractors(filters: $filters, limit: $limit, offset: $offset) {
+      id
+      name
+      service
+      rating
+      location
+      photo
+      isVerified
+      responseTime
+    }
+  }
+`;
+
+// Query result caching
+const { data, loading, error } = useQuery(GET_CONTRACTORS, {
+  variables: { filters, limit: 20, offset: 0 },
+  fetchPolicy: "cache-first",
+  notifyOnNetworkStatusChange: true,
+});
+
+// Fragment-based caching
+const CONTRACTOR_FRAGMENT = gql`
+  fragment ContractorInfo on Contractor {
+    id
+    name
+    service
+    rating
+    location
+    photo
+  }
+`;
+```
+
+### **Mobile Performance**
+
+#### **Mobile-Specific Optimizations**
+
+**Touch Performance:**
+
+```javascript
+// Passive event listeners for better scroll performance
+const addPassiveEventListener = (element, event, handler) => {
+  element.addEventListener(event, handler, { passive: true });
+};
+
+// Optimize touch events
+const handleTouchStart = (e) => {
+  // Prevent default only when necessary
+  if (e.touches.length > 1) {
+    e.preventDefault(); // Prevent zoom
+  }
+};
+
+// Use requestAnimationFrame for smooth animations
+const smoothScroll = (targetY) => {
+  const startY = window.pageYOffset;
+  const distance = targetY - startY;
+  const duration = 300;
+  let start = null;
+
+  const animation = (currentTime) => {
+    if (start === null) start = currentTime;
+    const timeElapsed = currentTime - start;
+    const progress = Math.min(timeElapsed / duration, 1);
+
+    const ease = progress * (2 - progress); // easeOutQuad
+    window.scrollTo(0, startY + distance * ease);
+
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
+    }
+  };
+
+  requestAnimationFrame(animation);
+};
+```
+
+**Battery Optimization:**
+
+```javascript
+// Reduce animations on low battery
+const useBatteryOptimization = () => {
+  const [isLowBattery, setIsLowBattery] = useState(false);
+
+  useEffect(() => {
+    if ("getBattery" in navigator) {
+      navigator.getBattery().then((battery) => {
+        const updateBatteryStatus = () => {
+          setIsLowBattery(battery.level < 0.2);
+        };
+
+        updateBatteryStatus();
+        battery.addEventListener("levelchange", updateBatteryStatus);
+
+        return () =>
+          battery.removeEventListener("levelchange", updateBatteryStatus);
+      });
+    }
+  }, []);
+
+  return isLowBattery;
+};
+
+// Reduce background activity
+const useBackgroundOptimization = () => {
+  const [isVisible, setIsVisible] = useState(!document.hidden);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  return isVisible;
+};
+```
+
+### **Performance Monitoring**
+
+#### **Real User Monitoring (RUM)**
+
+**Performance Metrics Collection:**
+
+```javascript
+// Core Web Vitals monitoring
+const measureWebVitals = () => {
+  // LCP
+  new PerformanceObserver((entryList) => {
+    const entries = entryList.getEntries();
+    const lastEntry = entries[entries.length - 1];
+    console.log("LCP:", lastEntry.startTime);
+  }).observe({ entryTypes: ["largest-contentful-paint"] });
+
+  // FID
+  new PerformanceObserver((entryList) => {
+    const entries = entryList.getEntries();
+    entries.forEach((entry) => {
+      console.log("FID:", entry.processingStart - entry.startTime);
+    });
+  }).observe({ entryTypes: ["first-input"] });
+
+  // CLS
+  let clsValue = 0;
+  new PerformanceObserver((entryList) => {
+    const entries = entryList.getEntries();
+    entries.forEach((entry) => {
+      if (!entry.hadRecentInput) {
+        clsValue += entry.value;
+        console.log("CLS:", clsValue);
+      }
+    });
+  }).observe({ entryTypes: ["layout-shift"] });
+};
+
+// Custom performance marks
+const markPerformance = (name) => {
+  performance.mark(name);
+};
+
+const measurePerformance = (name, startMark, endMark) => {
+  performance.measure(name, startMark, endMark);
+  const measure = performance.getEntriesByName(name)[0];
+  console.log(`${name}: ${measure.duration}ms`);
+  return measure.duration;
+};
+
+// Usage example
+markPerformance("contractor-search-start");
+// ... search logic ...
+markPerformance("contractor-search-end");
+measurePerformance(
+  "contractor-search",
+  "contractor-search-start",
+  "contractor-search-end"
+);
+```
+
+**Error Tracking:**
+
+```javascript
+// Error boundary for React
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Log error to monitoring service
+    console.error("Error caught by boundary:", error, errorInfo);
+
+    // Send to error tracking service
+    if (window.gtag) {
+      window.gtag("event", "exception", {
+        description: error.toString(),
+        fatal: false,
+      });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong.</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
+// Global error handler
+window.addEventListener("error", (event) => {
+  console.error("Global error:", event.error);
+  // Send to error tracking service
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+  // Send to error tracking service
+});
+```
+
+#### **Performance Budget**
+
+**Bundle Size Budget:**
+
+```javascript
+// webpack-bundle-analyzer configuration
+const bundleSizeConfig = {
+  maxSize: 250000, // 250KB
+  compression: "gzip",
+  exclude: [/node_modules/],
+  cache: true,
+  cacheDirectory: ".cache/bundle-size",
+};
+
+// Performance budget monitoring
+const performanceBudget = {
+  "first-contentful-paint": 1800, // 1.8s
+  "largest-contentful-paint": 2500, // 2.5s
+  "first-input-delay": 100, // 100ms
+  "cumulative-layout-shift": 0.1,
+  "speed-index": 3400, // 3.4s
+  "total-blocking-time": 200, // 200ms
+};
+
+// CI/CD performance checks
+const checkPerformanceBudget = (metrics) => {
+  const violations = [];
+
+  Object.entries(performanceBudget).forEach(([metric, budget]) => {
+    if (metrics[metric] > budget) {
+      violations.push({
+        metric,
+        actual: metrics[metric],
+        budget,
+        difference: metrics[metric] - budget,
+      });
+    }
+  });
+
+  if (violations.length > 0) {
+    console.error("Performance budget violations:", violations);
+    process.exit(1);
+  }
+};
+```
+
+### **Testing and Validation**
+
+#### **Performance Testing**
+
+**Automated Performance Tests:**
+
+```javascript
+// Lighthouse CI configuration
+const lighthouseConfig = {
+  ci: {
+    collect: {
+      url: ["http://localhost:3000"],
+      numberOfRuns: 3,
+    },
+    assert: {
+      assertions: {
+        "categories:performance": ["error", { minScore: 0.9 }],
+        "categories:accessibility": ["error", { minScore: 0.9 }],
+        "categories:best-practices": ["error", { minScore: 0.9 }],
+        "categories:seo": ["error", { minScore: 0.9 }],
+      },
+    },
+    upload: {
+      target: "temporary-public-storage",
+    },
+  },
+};
+
+// Performance testing with Playwright
+const { test, expect } = require("@playwright/test");
+
+test("homepage performance", async ({ page }) => {
+  await page.goto("/");
+
+  // Measure page load time
+  const loadTime = await page.evaluate(() => {
+    return performance.timing.loadEventEnd - performance.timing.navigationStart;
+  });
+
+  expect(loadTime).toBeLessThan(3000); // 3 seconds
+
+  // Check Core Web Vitals
+  const vitals = await page.evaluate(() => {
+    return new Promise((resolve) => {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        resolve({
+          lcp: entries[entries.length - 1]?.startTime || 0,
+          fid: 0, // Would need user interaction
+          cls: 0, // Would need layout shifts
+        });
+      });
+      observer.observe({ entryTypes: ["largest-contentful-paint"] });
+    });
+  });
+
+  expect(vitals.lcp).toBeLessThan(2500);
+});
+```
+
+**Load Testing:**
+
+```javascript
+// Load testing with Artillery
+const artilleryConfig = {
+  config: {
+    target: "http://localhost:3000",
+    phases: [
+      { duration: "2m", arrivalRate: 10 },
+      { duration: "5m", arrivalRate: 20 },
+      { duration: "2m", arrivalRate: 0 },
+    ],
+  },
+  scenarios: [
+    {
+      name: "Homepage load",
+      weight: 40,
+      flow: [
+        { get: { url: "/" } },
+        { think: 2 },
+        { get: { url: "/contractors" } },
+      ],
+    },
+    {
+      name: "Contractor search",
+      weight: 30,
+      flow: [
+        { get: { url: "/contractors" } },
+        {
+          post: {
+            url: "/api/contractors/search",
+            json: { query: "photographer" },
+          },
+        },
+      ],
+    },
+    {
+      name: "User dashboard",
+      weight: 30,
+      flow: [
+        { get: { url: "/login" } },
+        {
+          post: {
+            url: "/api/auth/login",
+            json: { email: "test@example.com", password: "password" },
+          },
+        },
+        { get: { url: "/dashboard" } },
+      ],
+    },
+  ],
+};
+```
+
+This comprehensive performance considerations section ensures Event Pros NZ delivers fast, responsive, and efficient user experiences across all devices and network conditions. The optimization strategies cover loading performance, runtime performance, caching, network optimization, and continuous monitoring to maintain excellent performance standards.
+
+## Next Steps
+
+This section outlines the implementation roadmap, development phases, and next actions for bringing the Event Pros NZ platform to life based on the comprehensive UI/UX specification.
+
+### **Implementation Roadmap**
+
+#### **Phase 1: Foundation & Core Infrastructure (Weeks 1-4)**
+
+**Week 1-2: Project Setup & Architecture**
+
+- [ ] **Development Environment Setup**
+
+  - Initialize Next.js 14 project with TypeScript
+  - Configure Tailwind CSS + shadcn/ui component library
+  - Set up Supabase backend services (database, auth, real-time)
+  - Configure development tools (ESLint, Prettier, Husky)
+  - Set up version control and CI/CD pipeline
+
+- [ ] **Design System Implementation**
+
+  - Create design tokens and CSS variables
+  - Implement color palette and typography system
+  - Build core component library (buttons, inputs, cards)
+  - Set up icon library (Heroicons/Lucide)
+  - Create spacing and layout utilities
+
+- [ ] **Authentication & User Management**
+  - Implement Supabase authentication
+  - Create user registration/login flows
+  - Set up role-based access control (Event Manager, Contractor, Admin)
+  - Build profile setup wizards
+  - Implement email verification system
+
+**Week 3-4: Core Pages & Navigation**
+
+- [ ] **Public Pages**
+
+  - Homepage with hero section and contractor discovery preview
+  - Contractor discovery page with search and filters
+  - Individual contractor profile pages
+  - Job board (public view)
+  - About, Contact, and Legal pages
+
+- [ ] **Authentication Pages**
+
+  - Login/Register modals
+  - Password reset flow
+  - Email verification pages
+  - Onboarding welcome tour
+
+- [ ] **Navigation & Layout**
+  - Responsive header navigation
+  - Role-specific sidebar navigation
+  - Mobile hamburger menu
+  - Breadcrumb navigation system
+
+#### **Phase 2: User Dashboards & Core Features (Weeks 5-8)**
+
+**Week 5-6: Event Manager Dashboard**
+
+- [ ] **Dashboard Overview**
+
+  - Quick stats and metrics
+  - Recent activity feed
+  - Upcoming events timeline
+  - Quick action buttons
+
+- [ ] **Event Management**
+
+  - Event creation wizard with AI recommendations
+  - Event templates and duplication
+  - Event details management
+  - Event status tracking
+
+- [ ] **Contractor Discovery & Communication**
+  - Advanced search and filtering
+  - Interactive map integration (Mapbox)
+  - Contractor profile viewing
+  - Inquiry system and messaging
+
+**Week 7-8: Contractor Dashboard**
+
+- [ ] **Dashboard Overview**
+
+  - Performance metrics
+  - Recent inquiries summary
+  - Job application status
+  - Profile completion status
+
+- [ ] **Profile Management**
+
+  - Personal and business details
+  - Portfolio gallery management
+  - Service categories and pricing
+  - Verification status tracking
+
+- [ ] **Job Applications**
+  - Job board integration
+  - Application management
+  - Application status tracking
+  - Job search and filtering
+
+#### **Phase 3: Advanced Features & Communication (Weeks 9-12)**
+
+**Week 9-10: Job Management & Posting**
+
+- [ ] **Job Board System**
+
+  - Job posting creation and management
+  - Job templates and duplication
+  - Application management
+  - Job status tracking
+
+- [ ] **Relationship Management**
+  - Contact list and communication history
+  - Inquiry status tracking
+  - Message threading
+  - Testimonial management
+
+**Week 11-12: Admin Panel & Moderation**
+
+- [ ] **Admin Dashboard**
+
+  - Platform analytics and metrics
+  - User management and verification
+  - Content moderation tools
+  - Feature request management
+
+- [ ] **Content Moderation**
+  - Flagged content review
+  - User reporting system
+  - Moderation actions and notifications
+  - Appeal process management
+
+#### **Phase 4: Polish & Optimization (Weeks 13-16)**
+
+**Week 13-14: Performance & Testing**
+
+- [ ] **Performance Optimization**
+
+  - Implement code splitting and lazy loading
+  - Optimize images and assets
+  - Set up caching strategies
+  - Performance monitoring and analytics
+
+- [ ] **Testing & Quality Assurance**
+  - Unit testing for components
+  - Integration testing for user flows
+  - End-to-end testing with Playwright
+  - Accessibility testing and compliance
+
+**Week 15-16: Launch Preparation**
+
+- [ ] **Final Polish**
+
+  - UI/UX refinements based on testing
+  - Animation and micro-interactions
+  - Mobile responsiveness optimization
+  - Cross-browser compatibility
+
+- [ ] **Launch Readiness**
+  - Production deployment setup
+  - Monitoring and alerting systems
+  - Documentation and user guides
+  - Launch marketing materials
+
+### **Development Priorities**
+
+#### **High Priority (MVP Features)**
+
+1. **User Authentication & Onboarding**
+
+   - Registration, login, and profile setup
+   - Role-based access control
+   - Email verification and password reset
+
+2. **Contractor Discovery**
+
+   - Search and filtering functionality
+   - Contractor profile pages
+   - Basic inquiry system
+
+3. **Event Management**
+
+   - Event creation and management
+   - Basic contractor communication
+   - Event status tracking
+
+4. **Job Board**
+   - Job posting and application system
+   - Basic job management
+   - Application status tracking
+
+#### **Medium Priority (Enhanced Features)**
+
+1. **Advanced Search & Filtering**
+
+   - Interactive map integration
+   - AI-powered recommendations
+   - Advanced filter options
+
+2. **Communication System**
+
+   - Real-time messaging
+   - Inquiry management
+   - Notification system
+
+3. **Admin Panel**
+   - User management
+   - Content moderation
+   - Platform analytics
+
+#### **Low Priority (Future Enhancements)**
+
+1. **Advanced Analytics**
+
+   - Detailed performance metrics
+   - User behavior tracking
+   - Business intelligence dashboard
+
+2. **Mobile App**
+
+   - React Native mobile application
+   - Push notifications
+   - Offline functionality
+
+3. **Advanced Features**
+   - Video calling integration
+   - Advanced AI recommendations
+   - Third-party integrations
+
+### **Technical Implementation Guidelines**
+
+#### **Frontend Architecture**
+
+```javascript
+// Project structure
+src/
+├── components/           # Reusable UI components
+│   ├── ui/              # shadcn/ui components
+│   ├── forms/           # Form components
+│   ├── navigation/      # Navigation components
+│   └── layout/          # Layout components
+├── pages/               # Next.js pages
+│   ├── api/            # API routes
+│   ├── auth/           # Authentication pages
+│   ├── dashboard/      # Dashboard pages
+│   └── public/         # Public pages
+├── features/            # Feature-specific modules
+│   ├── auth/           # Authentication logic
+│   ├── contractors/    # Contractor management
+│   ├── events/         # Event management
+│   └── jobs/           # Job management
+├── hooks/              # Custom React hooks
+├── utils/              # Utility functions
+├── types/              # TypeScript type definitions
+└── styles/             # Global styles and themes
+```
+
+#### **Component Development Standards**
+
+```javascript
+// Component structure example
+interface ContractorCardProps {
+  contractor: Contractor;
+  onFavorite: (id: string) => void;
+  onContact: (id: string) => void;
+  className?: string;
+}
+
+export const ContractorCard: React.FC<ContractorCardProps> = ({
+  contractor,
+  onFavorite,
+  onContact,
+  className,
+}) => {
+  // Component logic
+  return (
+    <div className={cn("contractor-card", className)}>
+      {/* Component JSX */}
+    </div>
+  );
+};
+```
+
+#### **State Management Strategy**
+
+```javascript
+// Redux Toolkit setup
+import { configureStore } from "@reduxjs/toolkit";
+import { authSlice } from "./features/auth/authSlice";
+import { contractorsSlice } from "./features/contractors/contractorsSlice";
+import { eventsSlice } from "./features/events/eventsSlice";
+
+export const store = configureStore({
+  reducer: {
+    auth: authSlice.reducer,
+    contractors: contractorsSlice.reducer,
+    events: eventsSlice.reducer,
+  },
+});
+
+// React Query for server state
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
+```
+
+### **Quality Assurance & Testing**
+
+#### **Testing Strategy**
+
+```javascript
+// Component testing with React Testing Library
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ContractorCard } from "./ContractorCard";
+
+describe("ContractorCard", () => {
+  it("renders contractor information correctly", () => {
+    const mockContractor = {
+      id: "1",
+      name: "John Doe",
+      service: "Photography",
+      rating: 4.5,
+      location: "Auckland",
+    };
+
+    render(
+      <ContractorCard
+        contractor={mockContractor}
+        onFavorite={jest.fn()}
+        onContact={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
+    expect(screen.getByText("Photography")).toBeInTheDocument();
+  });
+});
+
+// E2E testing with Playwright
+import { test, expect } from "@playwright/test";
+
+test("contractor discovery flow", async ({ page }) => {
+  await page.goto("/contractors");
+
+  // Search for contractors
+  await page.fill('[data-testid="search-input"]', "photographer");
+  await page.click('[data-testid="search-button"]');
+
+  // Verify results
+  await expect(
+    page.locator('[data-testid="contractor-card"]')
+  ).toHaveCount.greaterThan(0);
+
+  // Click on contractor
+  await page.click('[data-testid="contractor-card"]:first-child');
+  await expect(page).toHaveURL(/\/contractors\/\d+/);
+});
+```
+
+#### **Performance Monitoring**
+
+```javascript
+// Performance monitoring setup
+import { getCLS, getFID, getFCP, getLCP, getTTFB } from "web-vitals";
+
+function sendToAnalytics(metric) {
+  // Send to analytics service
+  gtag("event", metric.name, {
+    value: Math.round(metric.value),
+    event_label: metric.id,
+    non_interaction: true,
+  });
+}
+
+getCLS(sendToAnalytics);
+getFID(sendToAnalytics);
+getFCP(sendToAnalytics);
+getLCP(sendToAnalytics);
+getTTFB(sendToAnalytics);
+```
+
+### **Deployment & Launch Strategy**
+
+#### **Environment Setup**
+
+```yaml
+# Production environment configuration
+production:
+  database: Supabase Production
+  cdn: Cloudflare
+  monitoring: Sentry
+  analytics: Google Analytics 4
+  error_tracking: Sentry
+  performance: Lighthouse CI
+
+staging:
+  database: Supabase Staging
+  cdn: Cloudflare
+  monitoring: Sentry (Staging)
+  analytics: Google Analytics 4 (Staging)
+```
+
+#### **Launch Checklist**
+
+- [ ] **Technical Readiness**
+
+  - [ ] All core features implemented and tested
+  - [ ] Performance optimization completed
+  - [ ] Security audit passed
+  - [ ] Accessibility compliance verified
+  - [ ] Cross-browser compatibility confirmed
+
+- [ ] **Content & Branding**
+
+  - [ ] All copy and content reviewed
+  - [ ] Brand guidelines implemented
+  - [ ] Legal pages (Terms, Privacy) completed
+  - [ ] Help documentation written
+
+- [ ] **Operations**
+  - [ ] Monitoring and alerting configured
+  - [ ] Backup and recovery procedures tested
+  - [ ] Support processes established
+  - [ ] Launch communication plan ready
+
+### **Post-Launch Roadmap**
+
+#### **Month 1-2: User Feedback & Iteration**
+
+- [ ] **User Feedback Collection**
+
+  - Implement user feedback system
+  - Conduct user interviews
+  - Analyze usage analytics
+  - Identify pain points and improvement opportunities
+
+- [ ] **Quick Wins**
+  - Address critical user feedback
+  - Fix identified bugs and issues
+  - Optimize performance bottlenecks
+  - Improve user experience based on data
+
+#### **Month 3-6: Feature Enhancement**
+
+- [ ] **Advanced Features**
+
+  - Implement AI-powered recommendations
+  - Add video calling integration
+  - Enhance mobile experience
+  - Add advanced analytics
+
+- [ ] **Platform Growth**
+  - Implement referral system
+  - Add social features
+  - Enhance search capabilities
+  - Improve matching algorithms
+
+#### **Month 6-12: Scale & Expansion**
+
+- [ ] **Platform Scaling**
+
+  - Optimize for increased user load
+  - Implement advanced caching
+  - Add CDN optimization
+  - Scale database performance
+
+- [ ] **New Features**
+  - Mobile app development
+  - Advanced admin tools
+  - Third-party integrations
+  - API for external developers
+
+### **Success Metrics & KPIs**
+
+#### **User Engagement Metrics**
+
+- **User Registration Rate**: Target 100+ new users per month
+- **User Activation Rate**: 70% of users complete profile setup
+- **User Retention**: 60% monthly active users
+- **Session Duration**: Average 15+ minutes per session
+
+#### **Business Metrics**
+
+- **Contractor Sign-ups**: 50+ verified contractors in first 3 months
+- **Event Creation**: 100+ events created in first 3 months
+- **Job Applications**: 500+ job applications in first 3 months
+- **Revenue**: Break-even within 12 months
+
+#### **Technical Metrics**
+
+- **Page Load Speed**: < 2.5 seconds LCP
+- **Uptime**: 99.9% availability
+- **Error Rate**: < 0.1% error rate
+- **Mobile Performance**: 90+ Lighthouse score
+
+### **Risk Mitigation**
+
+#### **Technical Risks**
+
+- **Performance Issues**: Implement comprehensive monitoring and optimization
+- **Security Vulnerabilities**: Regular security audits and updates
+- **Scalability Challenges**: Design for scale from the beginning
+- **Third-party Dependencies**: Have backup solutions ready
+
+#### **Business Risks**
+
+- **User Adoption**: Focus on user experience and value proposition
+- **Competition**: Differentiate through superior UX and features
+- **Market Fit**: Continuous user feedback and iteration
+- **Funding**: Maintain lean development approach
+
+### **Team & Resources**
+
+#### **Recommended Team Structure**
+
+- **Frontend Developer** (Lead): React/Next.js expertise
+- **Backend Developer**: Supabase and API development
+- **UI/UX Designer**: Design system and user experience
+- **DevOps Engineer**: Infrastructure and deployment
+- **Product Manager**: Feature prioritization and user research
+
+#### **External Resources**
+
+- **Design System**: shadcn/ui + custom components
+- **Backend Services**: Supabase (database, auth, real-time)
+- **Maps**: Mapbox for interactive maps
+- **Analytics**: Google Analytics 4 + custom tracking
+- **Monitoring**: Sentry for error tracking
+- **CDN**: Cloudflare for performance
+
+This comprehensive next steps section provides a clear roadmap for implementing the Event Pros NZ platform, ensuring successful delivery of all specified features while maintaining high quality and performance standards.
+
+## Animation & Micro-interactions
+
+This section defines the motion design and interactive elements that bring Event Pros NZ to life, creating engaging and intuitive user experiences through thoughtful animations and micro-interactions.
+
+### **Animation Principles**
+
+#### **Core Animation Philosophy**
+
+**Purpose-Driven Motion:**
+
+- **Functional**: Every animation serves a clear purpose (feedback, guidance, delight)
+- **Meaningful**: Animations communicate state changes and system responses
+- **Consistent**: Unified timing, easing, and style across all interactions
+- **Accessible**: Respect user preferences for reduced motion
+
+**Performance-First Approach:**
+
+- **Smooth 60fps**: All animations run at 60fps for optimal performance
+- **Hardware Acceleration**: Use transform and opacity properties for smooth animations
+- **Efficient Rendering**: Minimize layout thrashing and repaints
+- **Progressive Enhancement**: Animations enhance but don't block core functionality
+
+#### **Timing and Easing**
+
+**Animation Timing:**
+
+- **Micro-interactions**: 150-300ms (button hovers, toggles, small feedback)
+- **Page Transitions**: 300-500ms (navigation, modal appearances)
+- **Complex Animations**: 500-800ms (card reveals, complex state changes)
+- **Loading States**: Variable duration based on content
+
+**Easing Functions:**
+
+```css
+/* Primary easing curves */
+:root {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+/* Usage examples */
+.button-hover {
+  transition: transform 200ms var(--ease-out-quart);
+}
+
+.modal-enter {
+  transition: all 400ms var(--ease-out-back);
+}
+
+.card-reveal {
+  transition: all 600ms var(--ease-out-elastic);
+}
+```
+
+### **Component Animations**
+
+#### **Button Interactions**
+
+**Primary Button States:**
+
+```css
+/* Base button state */
+.btn-primary {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(241, 141, 48, 0.2);
+  transition: all 200ms var(--ease-out-quart);
+}
+
+/* Hover state */
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(241, 141, 48, 0.3);
+}
+
+/* Active state */
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(241, 141, 48, 0.2);
+  transition: all 100ms var(--ease-out-quart);
+}
+
+/* Loading state */
+.btn-primary.loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn-primary.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+**Secondary Button Animations:**
+
+```css
+/* Ghost button hover effect */
+.btn-ghost {
+  position: relative;
+  overflow: hidden;
+  transition: all 200ms var(--ease-out-quart);
+}
+
+.btn-ghost::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(241, 141, 48, 0.1),
+    transparent
+  );
+  transition: left 400ms var(--ease-out-quart);
+}
+
+.btn-ghost:hover::before {
+  left: 100%;
+}
+```
+
+#### **Card Interactions**
+
+**Contractor Card Animations:**
+
+```css
+/* Base card state */
+.contractor-card {
+  transform: translateY(0) scale(1);
+  transition: all 300ms var(--ease-out-quart);
+  cursor: pointer;
+}
+
+/* Hover state */
+.contractor-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus state for accessibility */
+.contractor-card:focus {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 8px 16px rgba(241, 141, 48, 0.2);
+  outline: 2px solid #f18d30;
+  outline-offset: 2px;
+}
+
+/* Loading skeleton animation */
+.contractor-card.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+```
+
+**Favorite Star Animation:**
+
+```css
+/* Favorite star base state */
+.favorite-star {
+  transition: all 200ms var(--ease-out-back);
+  cursor: pointer;
+}
+
+/* Hover state */
+.favorite-star:hover {
+  transform: scale(1.2);
+}
+
+/* Active/favorited state */
+.favorite-star.active {
+  color: #f18d30;
+  transform: scale(1.3);
+  animation: heartBeat 600ms var(--ease-out-elastic);
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1.3);
+  }
+}
+```
+
+#### **Form Interactions**
+
+**Input Field Animations:**
+
+```css
+/* Floating label animation */
+.form-group {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 12px 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: transparent;
+  transition: all 200ms var(--ease-out-quart);
+}
+
+.form-input:focus {
+  border-color: #f18d30;
+  box-shadow: 0 0 0 3px rgba(241, 141, 48, 0.1);
+  outline: none;
+}
+
+.form-label {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  color: #6b7280;
+  transition: all 200ms var(--ease-out-quart);
+  pointer-events: none;
+  background: white;
+  padding: 0 4px;
+}
+
+.form-input:focus + .form-label,
+.form-input:not(:placeholder-shown) + .form-label {
+  top: -8px;
+  left: 8px;
+  font-size: 12px;
+  color: #f18d30;
+  font-weight: 500;
+}
+
+/* Error state animation */
+.form-input.error {
+  border-color: #ef4444;
+  animation: shake 400ms var(--ease-out-quart);
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+```
+
+**Validation Feedback:**
+
+```css
+/* Success checkmark animation */
+.validation-success {
+  color: #10b981;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: successPop 400ms var(--ease-out-back) forwards;
+}
+
+@keyframes successPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Error message slide-in */
+.validation-error {
+  color: #ef4444;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: errorSlide 300ms var(--ease-out-quart) forwards;
+}
+
+@keyframes errorSlide {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+
+### **Page Transitions**
+
+#### **Navigation Animations**
+
+**Page Enter/Exit:**
+
+```css
+/* Page transition container */
+.page-transition {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Page enter animation */
+.page-enter {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 400ms var(--ease-out-quart);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Page exit animation */
+.page-exit {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 300ms var(--ease-in-out-quart);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+```
+
+**Modal Animations:**
+
+```css
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out-quart);
+  z-index: 1000;
+}
+
+.modal-backdrop.visible {
+  opacity: 1;
+}
+
+/* Modal content */
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transition: all 300ms var(--ease-out-back);
+  z-index: 1001;
+}
+
+.modal-content.visible {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Mobile modal adjustments */
+@media (max-width: 767px) {
+  .modal-content {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(100%);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .modal-content.visible {
+    transform: translateY(0);
+  }
+}
+```
+
+#### **List and Grid Animations**
+
+**Staggered Card Reveals:**
+
+```css
+/* Grid container */
+.contractor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Individual card reveal */
+.contractor-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardReveal 600ms var(--ease-out-quart) forwards;
+}
+
+/* Staggered animation delays */
+.contractor-card:nth-child(1) {
+  animation-delay: 0ms;
+}
+.contractor-card:nth-child(2) {
+  animation-delay: 100ms;
+}
+.contractor-card:nth-child(3) {
+  animation-delay: 200ms;
+}
+.contractor-card:nth-child(4) {
+  animation-delay: 300ms;
+}
+.contractor-card:nth-child(5) {
+  animation-delay: 400ms;
+}
+.contractor-card:nth-child(6) {
+  animation-delay: 500ms;
+}
+
+@keyframes cardReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+
+**Infinite Scroll Loading:**
+
+```css
+/* Loading indicator */
+.infinite-scroll-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 300ms var(--ease-out-quart);
+}
+
+.infinite-scroll-loader.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Spinner animation */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #f18d30;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+```
+
+### **Loading States**
+
+#### **Skeleton Loading**
+
+**Skeleton Components:**
+
+```css
+/* Skeleton base */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton card */
+.skeleton-card {
+  width: 100%;
+  height: 320px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+/* Skeleton text lines */
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 8px;
+}
+
+.skeleton-text.short {
+  width: 60%;
+}
+
+.skeleton-text.medium {
+  width: 80%;
+}
+
+.skeleton-text.long {
+  width: 100%;
+}
+
+/* Skeleton avatar */
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+```
+
+#### **Progressive Loading**
+
+**Image Loading States:**
+
+```css
+/* Image container */
+.image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* Loading placeholder */
+.image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 300ms var(--ease-out-quart);
+}
+
+.image-placeholder.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Image fade-in */
+.image-loaded {
+  opacity: 0;
+  transform: scale(1.05);
+  transition: all 500ms var(--ease-out-quart);
+}
+
+.image-loaded.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+```
+
+### **Micro-interactions**
+
+#### **Feedback Animations**
+
+**Success States:**
+
+```css
+/* Success toast animation */
+.toast-success {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: #10b981;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  transform: translateX(100%);
+  transition: all 400ms var(--ease-out-back);
+  z-index: 2000;
+}
+
+.toast-success.visible {
+  transform: translateX(0);
+}
+
+/* Checkmark animation */
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  margin-right: 12px;
+}
+
+.checkmark::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  width: 6px;
+  height: 10px;
+  border: solid #10b981;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  animation: checkmarkDraw 400ms var(--ease-out-back) 200ms forwards;
+  opacity: 0;
+}
+
+@keyframes checkmarkDraw {
+  to {
+    opacity: 1;
+  }
+}
+```
+
+**Error States:**
+
+```css
+/* Error shake animation */
+.error-shake {
+  animation: errorShake 400ms var(--ease-out-quart);
+}
+
+@keyframes errorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Error pulse */
+.error-pulse {
+  animation: errorPulse 600ms var(--ease-out-quart);
+}
+
+@keyframes errorPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+```
+
+#### **Interactive Elements**
+
+**Hover Effects:**
+
+```css
+/* Subtle hover lift */
+.hover-lift {
+  transition: transform 200ms var(--ease-out-quart);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Glow effect */
+.hover-glow {
+  transition: box-shadow 300ms var(--ease-out-quart);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(241, 141, 48, 0.3);
+}
+
+/* Scale on hover */
+.hover-scale {
+  transition: transform 200ms var(--ease-out-quart);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+```
+
+**Focus States:**
+
+```css
+/* Focus ring animation */
+.focus-ring {
+  position: relative;
+  transition: all 200ms var(--ease-out-quart);
+}
+
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(241, 141, 48, 0.2);
+}
+
+.focus-ring:focus::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid #f18d30;
+  border-radius: inherit;
+  animation: focusPulse 1s infinite;
+}
+
+@keyframes focusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+```
+
+### **Accessibility Considerations**
+
+#### **Reduced Motion Support**
+
+**Respect User Preferences:**
+
+```css
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep essential animations for functionality */
+  .modal-content.visible {
+    transform: translate(-50%, -50%);
+  }
+
+  .toast-success.visible {
+    transform: translateX(0);
+  }
+}
+```
+
+**Essential Animations Only:**
+
+```css
+/* Critical animations that should always run */
+.critical-animation {
+  animation: criticalAnimation 300ms var(--ease-out-quart);
+}
+
+/* Non-essential animations that can be disabled */
+.decorative-animation {
+  animation: decorativeAnimation 500ms var(--ease-out-quart);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decorative-animation {
+    animation: none;
+  }
+}
+```
+
+### **Performance Optimization**
+
+#### **Hardware Acceleration**
+
+**GPU-Accelerated Properties:**
+
+```css
+/* Use transform and opacity for smooth animations */
+.smooth-animation {
+  will-change: transform, opacity;
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Avoid animating layout properties */
+.bad-animation {
+  /* Don't animate these properties */
+  /* width, height, margin, padding, border-width */
+}
+
+.good-animation {
+  /* Animate these instead */
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+```
+
+**Animation Performance:**
+
+```css
+/* Efficient keyframe animations */
+@keyframes efficientAnimation {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+/* Avoid expensive properties in keyframes */
+@keyframes expensiveAnimation {
+  0% {
+    /* Avoid: width, height, margin, padding */
+    width: 100px;
+    height: 100px;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+  }
+}
+```
+
+### **Animation Library Integration**
+
+#### **Framer Motion (React)**
+
+**Component Animations:**
+
+```javascript
+import { motion } from "framer-motion";
+
+// Page transition
+const pageVariants = {
+  initial: { opacity: 0, x: 20 },
+  in: { opacity: 1, x: 0 },
+  out: { opacity: 0, x: -20 },
+};
+
+const pageTransition = {
+  type: "tween",
+  ease: "easeOutQuart",
+  duration: 0.4,
+};
+
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial="initial"
+    animate="in"
+    exit="out"
+    variants={pageVariants}
+    transition={pageTransition}
+  >
+    {children}
+  </motion.div>
+);
+
+// Card hover animation
+const cardVariants = {
+  rest: { scale: 1, y: 0 },
+  hover: {
+    scale: 1.02,
+    y: -8,
+    transition: {
+      type: "tween",
+      ease: "easeOutQuart",
+      duration: 0.2,
+    },
+  },
+};
+
+const ContractorCard = ({ contractor }) => (
+  <motion.div
+    variants={cardVariants}
+    initial="rest"
+    whileHover="hover"
+    className="contractor-card"
+  >
+    {/* Card content */}
+  </motion.div>
+);
+```
+
+**Staggered Animations:**
+
+```javascript
+// Staggered list animation
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "tween",
+      ease: "easeOutQuart",
+      duration: 0.4,
+    },
+  },
+};
+
+const ContractorGrid = ({ contractors }) => (
+  <motion.div
+    variants={containerVariants}
+    initial="hidden"
+    animate="visible"
+    className="contractor-grid"
+  >
+    {contractors.map((contractor, index) => (
+      <motion.div
+        key={contractor.id}
+        variants={itemVariants}
+        className="contractor-card"
+      >
+        {/* Card content */}
+      </motion.div>
+    ))}
+  </motion.div>
+);
+```
+
+#### **CSS Animation Utilities**
+
+**Utility Classes:**
+
+```css
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 400ms var(--ease-out-quart);
+}
+
+.animate-slide-up {
+  animation: slideUp 500ms var(--ease-out-quart);
+}
+
+.animate-bounce-in {
+  animation: bounceIn 600ms var(--ease-out-back);
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Hover animation utilities */
+.hover-lift:hover {
+  transform: translateY(-4px);
+  transition: transform 200ms var(--ease-out-quart);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+  transition: transform 200ms var(--ease-out-quart);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(241, 141, 48, 0.3);
+  transition: box-shadow 300ms var(--ease-out-quart);
+}
+```
+
+### **Testing and Validation**
+
+#### **Animation Testing**
+
+**Performance Testing:**
+
+```javascript
+// Animation performance testing
+const testAnimationPerformance = () => {
+  const element = document.querySelector(".animated-element");
+  const startTime = performance.now();
+
+  element.addEventListener("animationend", () => {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+
+    // Ensure animation completes within expected time
+    expect(duration).toBeLessThan(1000); // 1 second max
+  });
+
+  // Trigger animation
+  element.classList.add("animate");
+};
+```
+
+**Accessibility Testing:**
+
+```javascript
+// Test reduced motion support
+const testReducedMotion = () => {
+  // Simulate reduced motion preference
+  Object.defineProperty(window, "matchMedia", {
+    value: jest.fn().mockImplementation((query) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    })),
+  });
+
+  // Test that animations are disabled
+  const animatedElement = document.querySelector(".animated");
+  expect(animatedElement.style.animationDuration).toBe("0.01ms");
+};
+```
+
+This comprehensive animation and micro-interactions section ensures Event Pros NZ provides engaging, accessible, and performant user experiences through thoughtful motion design. The animations enhance usability while respecting user preferences and maintaining optimal performance across all devices.
