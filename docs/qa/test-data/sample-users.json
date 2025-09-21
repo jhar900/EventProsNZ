@@ -1,0 +1,89 @@
+{
+  "eventManagers": [
+    {
+      "id": "em-001",
+      "email": "sarah.wedding@example.com",
+      "role": "event_manager",
+      "profile": {
+        "first_name": "Sarah",
+        "last_name": "Johnson",
+        "phone": "+64 21 123 4567",
+        "address": "123 Queen Street, Auckland 1010",
+        "bio": "Passionate wedding planner with 5 years experience"
+      },
+      "is_verified": true
+    },
+    {
+      "id": "em-002",
+      "email": "corporate.events@example.com",
+      "role": "event_manager",
+      "profile": {
+        "first_name": "Michael",
+        "last_name": "Chen",
+        "phone": "+64 9 876 5432",
+        "address": "456 Lambton Quay, Wellington 6011",
+        "bio": "Corporate event specialist managing conferences and business functions"
+      },
+      "is_verified": true
+    }
+  ],
+  "contractors": [
+    {
+      "id": "c-001",
+      "email": "dj.mike@example.com",
+      "role": "contractor",
+      "profile": {
+        "first_name": "Mike",
+        "last_name": "Thompson",
+        "phone": "+64 22 987 6543",
+        "address": "789 Papanui Road, Christchurch 8053",
+        "bio": "Professional DJ with 10+ years experience in weddings and corporate events"
+      },
+      "business_profile": {
+        "company_name": "Mike's Music Magic",
+        "business_address": "789 Papanui Road, Christchurch 8053",
+        "nzbn": "1234567890123",
+        "description": "Professional DJ services for all occasions",
+        "service_areas": ["Canterbury", "Otago", "Southland"],
+        "is_verified": true
+      },
+      "is_verified": true
+    },
+    {
+      "id": "c-002",
+      "email": "photography@example.com",
+      "role": "contractor",
+      "profile": {
+        "first_name": "Emma",
+        "last_name": "Williams",
+        "phone": "+64 27 555 1234",
+        "address": "321 Karangahape Road, Auckland 1010",
+        "bio": "Award-winning photographer specializing in weddings and events"
+      },
+      "business_profile": {
+        "company_name": "Emma Williams Photography",
+        "business_address": "321 Karangahape Road, Auckland 1010",
+        "nzbn": "9876543210987",
+        "description": "Professional photography services for weddings, corporate events, and special occasions",
+        "service_areas": ["Auckland", "Northland", "Waikato"],
+        "is_verified": true
+      },
+      "is_verified": true
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin-001",
+      "email": "admin@eventprosnz.co.nz",
+      "role": "admin",
+      "profile": {
+        "first_name": "Admin",
+        "last_name": "User",
+        "phone": "+64 9 123 4567",
+        "address": "Event Pros NZ HQ, Auckland",
+        "bio": "Platform administrator"
+      },
+      "is_verified": true
+    }
+  ]
+}
