@@ -79,7 +79,6 @@ export class ErrorHandler {
       stack: error.stack,
       context: {
         ...context,
-        correlationId,
       },
       correlationId,
       resolved: false,
