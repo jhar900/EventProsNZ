@@ -15,7 +15,7 @@ export interface ErrorContext {
 export interface ErrorLog {
   id: string;
   timestamp: number;
-  level: 'error' | 'warning' | 'info' | 'debug';
+  level: "error" | "warning" | "info" | "debug";
   message: string;
   stack?: string;
   context: ErrorContext;
@@ -36,7 +36,7 @@ export interface RetryConfig {
 export class ErrorHandler {
   private errorLogs: Map<string, ErrorLog> = new Map();
   private retryConfig: RetryConfig;
-  private correlationId: string = '';
+  private correlationId: string = "";
 
   constructor(retryConfig: Partial<RetryConfig> = {}) {
     this.retryConfig = {
@@ -45,11 +45,11 @@ export class ErrorHandler {
       maxDelay: retryConfig.maxDelay || 30000,
       backoffMultiplier: retryConfig.backoffMultiplier || 2,
       retryableErrors: retryConfig.retryableErrors || [
-        'NETWORK_ERROR',
-        'TIMEOUT',
-        'RATE_LIMIT',
-        'SERVICE_UNAVAILABLE',
-        'DATABASE_CONNECTION_ERROR',
+        "NETWORK_ERROR",
+        "TIMEOUT",
+        "RATE_LIMIT",
+        "SERVICE_UNAVAILABLE",
+        "DATABASE_CONNECTION_ERROR",
       ],
     };
 
@@ -74,7 +74,7 @@ export class ErrorHandler {
     const errorLog: ErrorLog = {
       id: errorId,
       timestamp: Date.now(),
-      level: 'error',
+      level: "error",
       message: error.message,
       stack: error.stack,
       context: {
@@ -89,8 +89,8 @@ export class ErrorHandler {
     this.errorLogs.set(errorId, errorLog);
 
     // Log to console (in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error handled:', {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error handled:", {
         id: errorId,
         message: error.message,
         context,
@@ -132,16 +132,20 @@ export class ErrorHandler {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        
+
         // Handle the error
-        const errorLog = await this.handleError(error, {
-          ...context,
-          attempt,
-        }, {
-          retry: attempt < this.retryConfig.maxAttempts,
-          fallback: options.fallback,
-          notify: options.notify,
-        });
+        const errorLog = await this.handleError(
+          error as Error,
+          {
+            ...context,
+            attempt,
+          },
+          {
+            retry: attempt < this.retryConfig.maxAttempts,
+            fallback: options.fallback,
+            notify: options.notify,
+          }
+        );
 
         // If this is the last attempt, try fallback or throw
         if (attempt === this.retryConfig.maxAttempts) {
@@ -151,7 +155,7 @@ export class ErrorHandler {
             } catch (fallbackError) {
               await this.handleError(fallbackError, {
                 ...context,
-                attempt: 'fallback',
+                attempt: "fallback",
               });
               throw fallbackError;
             }
@@ -173,7 +177,10 @@ export class ErrorHandler {
    */
   createErrorBoundary() {
     return class ErrorBoundary extends React.Component<
-      { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },
+      {
+        children: React.ReactNode;
+        fallback?: React.ComponentType<{ error: Error }>;
+      },
       { hasError: boolean; error: Error | null }
     > {
       constructor(props: any) {
@@ -188,7 +195,7 @@ export class ErrorHandler {
       componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         this.handleError(error, {
           component: errorInfo.componentStack,
-          action: 'component_did_catch',
+          action: "component_did_catch",
         });
       }
 
@@ -221,7 +228,7 @@ export class ErrorHandler {
   } {
     const errors = Array.from(this.errorLogs.values());
     const recentErrors = errors
-      .filter(error => Date.now() - error.timestamp < 24 * 60 * 60 * 1000) // Last 24 hours
+      .filter((error) => Date.now() - error.timestamp < 24 * 60 * 60 * 1000) // Last 24 hours
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);
 
@@ -231,14 +238,14 @@ export class ErrorHandler {
     }, {} as Record<string, number>);
 
     const errorsByComponent = errors.reduce((acc, error) => {
-      const component = error.context.component || 'unknown';
+      const component = error.context.component || "unknown";
       acc[component] = (acc[component] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return {
       totalErrors: errors.length,
-      unresolvedErrors: errors.filter(error => !error.resolved).length,
+      unresolvedErrors: errors.filter((error) => !error.resolved).length,
       errorsByLevel,
       errorsByComponent,
       recentErrors,
@@ -258,36 +265,45 @@ export class ErrorHandler {
 
   private setupGlobalErrorHandlers(): void {
     // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
-      await this.handleError(error, {
-        component: 'process',
-        action: 'uncaught_exception',
-      }, {
-        notify: true,
-      });
-      
+    process.on("uncaughtException", async (error) => {
+      await this.handleError(
+        error,
+        {
+          component: "process",
+          action: "uncaught_exception",
+        },
+        {
+          notify: true,
+        }
+      );
+
       // Exit process after handling
       process.exit(1);
     });
 
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', async (reason, promise) => {
-      const error = reason instanceof Error ? reason : new Error(String(reason));
-      await this.handleError(error, {
-        component: 'process',
-        action: 'unhandled_rejection',
-        metadata: { promise: promise.toString() },
-      }, {
-        notify: true,
-      });
+    process.on("unhandledRejection", async (reason, promise) => {
+      const error =
+        reason instanceof Error ? reason : new Error(String(reason));
+      await this.handleError(
+        error,
+        {
+          component: "process",
+          action: "unhandled_rejection",
+          metadata: { promise: promise.toString() },
+        },
+        {
+          notify: true,
+        }
+      );
     });
 
     // Handle window errors (browser)
-    if (typeof window !== 'undefined') {
-      window.addEventListener('error', async (event) => {
+    if (typeof window !== "undefined") {
+      window.addEventListener("error", async (event) => {
         await this.handleError(new Error(event.message), {
-          component: 'window',
-          action: 'error',
+          component: "window",
+          action: "error",
           metadata: {
             filename: event.filename,
             lineno: event.lineno,
@@ -296,19 +312,25 @@ export class ErrorHandler {
         });
       });
 
-      window.addEventListener('unhandledrejection', async (event) => {
-        const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+      window.addEventListener("unhandledrejection", async (event) => {
+        const error =
+          event.reason instanceof Error
+            ? event.reason
+            : new Error(String(event.reason));
         await this.handleError(error, {
-          component: 'window',
-          action: 'unhandled_rejection',
+          component: "window",
+          action: "unhandled_rejection",
         });
       });
     }
   }
 
-  private async scheduleRetry(errorLog: ErrorLog, fallback?: () => Promise<any>): Promise<ErrorLog> {
+  private async scheduleRetry(
+    errorLog: ErrorLog,
+    fallback?: () => Promise<any>
+  ): Promise<ErrorLog> {
     const delay = this.calculateRetryDelay(errorLog.retryCount + 1);
-    
+
     setTimeout(async () => {
       try {
         // This would contain the retry logic
@@ -332,13 +354,17 @@ export class ErrorHandler {
   }
 
   private isRetryableError(error: Error): boolean {
-    return this.retryConfig.retryableErrors.some(retryableError =>
-      error.message.includes(retryableError) || error.name.includes(retryableError)
+    return this.retryConfig.retryableErrors.some(
+      (retryableError) =>
+        error.message.includes(retryableError) ||
+        error.name.includes(retryableError)
     );
   }
 
   private calculateRetryDelay(attempt: number): number {
-    const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
+    const delay =
+      this.retryConfig.baseDelay *
+      Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
     return Math.min(delay, this.retryConfig.maxDelay);
   }
 
@@ -346,24 +372,24 @@ export class ErrorHandler {
     // This would integrate with your logging service (e.g., Sentry, LogRocket, etc.)
     if (process.env.SENTRY_DSN) {
       // Send to Sentry
-      console.log('Sending error to Sentry:', errorLog.id);
+      console.log("Sending error to Sentry:", errorLog.id);
     }
-    
+
     // Send to custom logging endpoint
     try {
-      await fetch('/api/logs/error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/logs/error", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(errorLog),
       });
     } catch (error) {
-      console.error('Failed to send error to logging service:', error);
+      console.error("Failed to send error to logging service:", error);
     }
   }
 
   private async notifyError(errorLog: ErrorLog): Promise<void> {
     // This would integrate with your notification service (e.g., Slack, email, etc.)
-    console.log('Notifying about error:', errorLog.id);
+    console.log("Notifying about error:", errorLog.id);
   }
 
   private generateErrorId(): string {
@@ -372,13 +398,15 @@ export class ErrorHandler {
 
   private getCorrelationId(): string {
     if (!this.correlationId) {
-      this.correlationId = `corr_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      this.correlationId = `corr_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 8)}`;
     }
     return this.correlationId;
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // Singleton pattern
@@ -397,15 +425,13 @@ const DefaultErrorFallback: React.FC<{ error: Error }> = ({ error }) => (
   <div className="error-boundary">
     <h2>Something went wrong</h2>
     <p>We're sorry, but something unexpected happened.</p>
-    {process.env.NODE_ENV === 'development' && (
+    {process.env.NODE_ENV === "development" && (
       <details>
         <summary>Error details</summary>
         <pre>{error.stack}</pre>
       </details>
     )}
-    <button onClick={() => window.location.reload()}>
-      Reload page
-    </button>
+    <button onClick={() => window.location.reload()}>Reload page</button>
   </div>
 );
 
