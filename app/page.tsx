@@ -10,7 +10,23 @@ export default function Home() {
           <p className="mb-4">🚀 Next.js 14 + Supabase + TypeScript</p>
           <p className="mb-4">✅ Database schema applied</p>
           <p className="mb-4">✅ Vercel deployment ready</p>
-          <p className="text-green-600 font-semibold">Ready for development!</p>
+          <p className="mb-6 text-green-600 font-semibold">
+            Ready for development!
+          </p>
+          <div className="space-x-4">
+            <a
+              href="/demo"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Test External Services
+            </a>
+            <a
+              href="/maps-demo"
+              className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Maps Demo
+            </a>
+          </div>
         </div>
       </div>
     </main>
