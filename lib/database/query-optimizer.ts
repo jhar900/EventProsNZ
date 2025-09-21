@@ -3,7 +3,7 @@
  * Provides optimized queries with caching and performance monitoring
  */
 
-import { DatabaseConnectionPool } from './connection-pool';
+import { DatabaseConnectionPool, getDatabasePool } from './connection-pool';
 import { createClient } from '@supabase/supabase-js';
 
 export interface QueryOptions {
