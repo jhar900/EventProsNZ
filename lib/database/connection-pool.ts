@@ -3,7 +3,6 @@
  * Implements connection pooling for optimal database performance
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Pool, PoolClient } from 'pg';
 
 export interface DatabaseConfig {
@@ -19,7 +18,6 @@ export interface DatabaseConfig {
 
 export class DatabaseConnectionPool {
   private pool: Pool;
-  private supabaseClient: SupabaseClient;
   private isHealthy: boolean = true;
   private lastHealthCheck: number = 0;
   private readonly HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
@@ -40,14 +38,8 @@ export class DatabaseConnectionPool {
       keepAliveInitialDelayMillis: 10000,
     });
 
-    // Initialize Supabase client for fallback
-    this.supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
     // Set up error handling
-    this.pool.on('error', (err) => {
+    this.pool.on('error', err => {
       console.error('Unexpected error on idle client', err);
       this.isHealthy = false;
     });
@@ -66,15 +58,15 @@ export class DatabaseConnectionPool {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const client = await this.pool.connect();
-        
+
         // Test the connection
         await client.query('SELECT 1');
-        
+
         return client;
       } catch (error) {
         lastError = error as Error;
         console.warn(`Connection attempt ${attempt} failed:`, error);
-        
+
         if (attempt < maxRetries) {
           // Exponential backoff
           await this.delay(Math.pow(2, attempt) * 1000);
@@ -82,7 +74,9 @@ export class DatabaseConnectionPool {
       }
     }
 
-    throw new Error(`Failed to get database connection after ${maxRetries} attempts: ${lastError?.message}`);
+    throw new Error(
+      `Failed to get database connection after ${maxRetries} attempts: ${lastError?.message}`
+    );
   }
 
   /**
@@ -90,7 +84,7 @@ export class DatabaseConnectionPool {
    */
   async query<T = any>(text: string, params?: any[]): Promise<T[]> {
     const client = await this.getConnection();
-    
+
     try {
       const result = await client.query(text, params);
       return result.rows;
@@ -102,9 +96,11 @@ export class DatabaseConnectionPool {
   /**
    * Execute a transaction with automatic rollback on error
    */
-  async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    callback: (client: PoolClient) => Promise<T>
+  ): Promise<T> {
     const client = await this.getConnection();
-    
+
     try {
       await client.query('BEGIN');
       const result = await callback(client);
@@ -126,7 +122,7 @@ export class DatabaseConnectionPool {
       const client = await this.pool.connect();
       await client.query('SELECT 1');
       client.release();
-      
+
       this.isHealthy = true;
       this.lastHealthCheck = Date.now();
       return true;
@@ -181,7 +177,9 @@ export function getDatabasePool(): DatabaseConnectionPool {
       password: process.env.DB_PASSWORD || '',
       maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
       idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
-      connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '10000'),
+      connectionTimeoutMillis: parseInt(
+        process.env.DB_CONNECTION_TIMEOUT || '10000'
+      ),
     };
 
     dbPool = new DatabaseConnectionPool(config);

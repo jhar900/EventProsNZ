@@ -3,8 +3,7 @@
  * Provides optimized queries with caching and performance monitoring
  */
 
-import { DatabaseConnectionPool, getDatabasePool } from "./connection-pool";
-import { createClient } from "@supabase/supabase-js";
+import { DatabaseConnectionPool, getDatabasePool } from './connection-pool';
 
 export interface QueryOptions {
   useCache?: boolean;
@@ -22,7 +21,6 @@ export interface QueryResult<T = any> {
 
 export class QueryOptimizer {
   private dbPool: DatabaseConnectionPool;
-  private supabaseClient: any;
   private cache: Map<string, { data: any; timestamp: number; ttl: number }> =
     new Map();
   private queryStats: Map<
@@ -32,10 +30,6 @@ export class QueryOptimizer {
 
   constructor(dbPool: DatabaseConnectionPool) {
     this.dbPool = dbPool;
-    this.supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
   }
 
   /**
@@ -120,11 +114,11 @@ export class QueryOptimizer {
     offset?: number;
   }): Promise<QueryResult> {
     const {
-      search = "",
-      location = "",
-      category = "",
-      priceMin = 0,
-      priceMax = 1000000,
+      search = '',
+      location = '',
+      category = '',
+      priceMin: _priceMin = 0,
+      priceMax: _priceMax = 1000000,
       rating = 0,
       limit = 20,
       offset = 0,
@@ -213,11 +207,11 @@ export class QueryOptimizer {
   }): Promise<QueryResult> {
     const {
       userId,
-      eventType = "",
-      location = "",
-      dateFrom = "1900-01-01",
-      dateTo = "2100-12-31",
-      status = "",
+      eventType = '',
+      location = '',
+      dateFrom = '1900-01-01',
+      dateTo = '2100-12-31',
+      status = '',
       limit = 20,
       offset = 0,
     } = filters;
@@ -290,7 +284,7 @@ export class QueryOptimizer {
     );
 
     const cacheHits = Array.from(this.cache.values()).filter(
-      (entry) => Date.now() - entry.timestamp < entry.ttl * 1000
+      entry => Date.now() - entry.timestamp < entry.ttl * 1000
     ).length;
 
     return {
@@ -361,7 +355,7 @@ export class QueryOptimizer {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

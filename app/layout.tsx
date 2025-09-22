@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { AuthProvider } from '@/components/features/auth/AuthProvider';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Event Pros NZ - New Zealand's Event Ecosystem",
   description:
-    "Connect event managers with qualified contractors. The complete event planning platform for New Zealand.",
+    'Connect event managers with qualified contractors. The complete event planning platform for New Zealand.',
 };
 
 export default function RootLayout({
@@ -19,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <GoogleAnalytics />
-        <div className="min-h-screen bg-background">{children}</div>
+        <AuthProvider>
+          <GoogleAnalytics />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

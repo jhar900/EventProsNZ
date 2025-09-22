@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = createClient();
+
+    // Get the current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || userData?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const contractorId = params.id;
+    const body = await request.json();
+    const { admin_notes, reason } = body;
+
+    if (!reason) {
+      return NextResponse.json(
+        { error: 'Rejection reason is required' },
+        { status: 400 }
+      );
+    }
+
+    // Update contractor onboarding status
+    const { error: updateError } = await supabase
+      .from('contractor_onboarding_status')
+      .update({
+        approval_status: 'rejected',
+        approval_date: new Date().toISOString(),
+        admin_notes: admin_notes || reason,
+      })
+      .eq('user_id', contractorId);
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Failed to reject contractor' },
+        { status: 500 }
+      );
+    }
+
+    // TODO: Send rejection notification email to contractor
+    console.log(`Contractor rejected: ${contractorId}, reason: ${reason}`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Contractor rejected successfully',
+    });
+  } catch (error) {
+    console.error('Contractor rejection error:', error);
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+      },
+      { status: 500 }
+    );
+  }
+}

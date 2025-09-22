@@ -3,11 +3,11 @@
  * Test page for Mapbox integration
  */
 
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import React, { useState, useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function MapsDemoPage() {
   const [isConfigured, setIsConfigured] = useState(false);
@@ -15,7 +15,7 @@ export default function MapsDemoPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -24,11 +24,11 @@ export default function MapsDemoPage() {
   useEffect(() => {
     const checkConfiguration = async () => {
       try {
-        const response = await fetch("/api/maps/check-config");
+        const response = await fetch('/api/maps/check-config');
         const data = await response.json();
         setIsConfigured(data.configured);
       } catch (error) {
-        console.error("Error checking configuration:", error);
+        console.error('Error checking configuration:', error);
         setIsConfigured(false);
       } finally {
         setIsLoading(false);
@@ -45,43 +45,43 @@ export default function MapsDemoPage() {
         if (mapContainer.current) {
           try {
             mapboxgl.accessToken = mapboxToken;
-            addResult("🔄 Initializing map...");
+            addResult('🔄 Initializing map...');
 
             const newMap = new mapboxgl.Map({
               container: mapContainer.current,
-              style: "mapbox://styles/mapbox/streets-v12",
+              style: 'mapbox://styles/mapbox/streets-v12',
               center: [174.7633, -36.8485], // Auckland, New Zealand
               zoom: 10,
             });
 
-            newMap.on("load", () => {
+            newMap.on('load', () => {
               setMapLoaded(true);
-              addResult("✅ Map loaded successfully!");
+              addResult('✅ Map loaded successfully!');
             });
 
-            newMap.on("error", (e) => {
+            newMap.on('error', e => {
               addResult(
-                "❌ Map error: " + (e.error?.message || "Unknown error")
+                '❌ Map error: ' + (e.error?.message || 'Unknown error')
               );
-              console.error("Mapbox error:", e);
+              console.error('Mapbox error:', e);
             });
 
-            newMap.on("style.load", () => {
-              addResult("✅ Map style loaded!");
+            newMap.on('style.load', () => {
+              addResult('✅ Map style loaded!');
             });
 
             setMap(newMap);
 
             // Add navigation controls
-            newMap.addControl(new mapboxgl.NavigationControl(), "top-right");
+            newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
           } catch (error) {
             addResult(
-              "❌ Map initialization error: " + (error as Error).message
+              '❌ Map initialization error: ' + (error as Error).message
             );
-            console.error("Map initialization error:", error);
+            console.error('Map initialization error:', error);
           }
         } else {
-          addResult("❌ Map container not found");
+          addResult('❌ Map container not found');
         }
       }, 100);
 
@@ -92,6 +92,8 @@ export default function MapsDemoPage() {
         }
       };
     }
+
+    return undefined;
   }, [isConfigured, mapboxToken, map]);
 
   // Geocoding function
@@ -107,7 +109,7 @@ export default function MapsDemoPage() {
       const data = await response.json();
       setSuggestions(data.features || []);
     } catch (error) {
-      addResult("❌ Geocoding error: " + (error as Error).message);
+      addResult('❌ Geocoding error: ' + (error as Error).message);
     }
   };
 
@@ -143,23 +145,23 @@ export default function MapsDemoPage() {
   };
 
   const addResult = (message: string) => {
-    setTestResults((prev) => [
+    setTestResults(prev => [
       ...prev,
       `${new Date().toLocaleTimeString()}: ${message}`,
     ]);
   };
 
   const handleTestMapbox = () => {
-    addResult("Testing Mapbox integration...");
+    addResult('Testing Mapbox integration...');
     if (isConfigured) {
-      addResult("✅ Mapbox token is configured and ready to use!");
+      addResult('✅ Mapbox token is configured and ready to use!');
     } else {
-      addResult("❌ Mapbox token is NOT configured.");
+      addResult('❌ Mapbox token is NOT configured.');
     }
   };
 
   const handleTestMapRendering = () => {
-    addResult("Testing map rendering...");
+    addResult('Testing map rendering...');
     addResult(`Map container exists: ${!!mapContainer.current}`);
     addResult(`Map instance exists: ${!!map}`);
     addResult(`Map loaded: ${mapLoaded}`);
@@ -171,21 +173,21 @@ export default function MapsDemoPage() {
     }
 
     if (mapLoaded) {
-      addResult("✅ Map is rendered and interactive!");
+      addResult('✅ Map is rendered and interactive!');
     } else if (map) {
-      addResult("⏳ Map is loading...");
+      addResult('⏳ Map is loading...');
     } else {
-      addResult("❌ Map failed to render.");
+      addResult('❌ Map failed to render.');
     }
   };
 
   const handleTestGeocoding = () => {
-    addResult("Testing geocoding API...");
+    addResult('Testing geocoding API...');
     if (searchQuery.length > 2) {
       searchAddress(searchQuery);
-      addResult("✅ Geocoding request sent!");
+      addResult('✅ Geocoding request sent!');
     } else {
-      addResult("❌ Please enter a search query first.");
+      addResult('❌ Please enter a search query first.');
     }
   };
 
@@ -208,19 +210,19 @@ export default function MapsDemoPage() {
             <div
               className={`w-3 h-3 rounded-full ${
                 isLoading
-                  ? "bg-gray-400"
+                  ? 'bg-gray-400'
                   : isConfigured
-                  ? "bg-green-500"
-                  : "bg-red-500"
+                    ? 'bg-green-500'
+                    : 'bg-red-500'
               }`}
             ></div>
             <span className="text-sm">
               Mapbox (
               {isLoading
-                ? "Checking..."
+                ? 'Checking...'
                 : isConfigured
-                ? "Configured"
-                : "Not Configured"}
+                  ? 'Configured'
+                  : 'Not Configured'}
               )
             </span>
           </div>
@@ -310,9 +312,9 @@ export default function MapsDemoPage() {
                 ref={mapContainer}
                 className="w-full h-96 rounded-md border border-gray-300"
                 style={{
-                  minHeight: "384px",
-                  width: "100%",
-                  height: "384px",
+                  minHeight: '384px',
+                  width: '100%',
+                  height: '384px',
                 }}
               />
               {selectedLocation && (
@@ -324,7 +326,7 @@ export default function MapsDemoPage() {
                     {selectedLocation.place_name}
                   </p>
                   <p className="text-xs text-blue-600">
-                    Coordinates: {selectedLocation.center[1].toFixed(4)},{" "}
+                    Coordinates: {selectedLocation.center[1].toFixed(4)},{' '}
                     {selectedLocation.center[0].toFixed(4)}
                   </p>
                 </div>
@@ -338,43 +340,43 @@ export default function MapsDemoPage() {
                 <div className="flex items-center space-x-2">
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      isConfigured ? "bg-green-500" : "bg-red-500"
+                      isConfigured ? 'bg-green-500' : 'bg-red-500'
                     }`}
                   ></div>
                   <span className="text-sm">
-                    Token: {isConfigured ? "Configured" : "Not configured"}
+                    Token: {isConfigured ? 'Configured' : 'Not configured'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div
                     className={`w-3 h-3 rounded-full ${
                       mapLoaded
-                        ? "bg-green-500"
+                        ? 'bg-green-500'
                         : map
-                        ? "bg-yellow-500"
-                        : "bg-gray-400"
+                          ? 'bg-yellow-500'
+                          : 'bg-gray-400'
                     }`}
                   ></div>
                   <span className="text-sm">
-                    Map:{" "}
+                    Map:{' '}
                     {mapLoaded
-                      ? "Loaded"
+                      ? 'Loaded'
                       : map
-                      ? "Loading..."
-                      : "Not initialized"}
+                        ? 'Loading...'
+                        : 'Not initialized'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      suggestions.length > 0 ? "bg-green-500" : "bg-gray-400"
+                      suggestions.length > 0 ? 'bg-green-500' : 'bg-gray-400'
                     }`}
                   ></div>
                   <span className="text-sm">
-                    Geocoding:{" "}
+                    Geocoding:{' '}
                     {suggestions.length > 0
                       ? `${suggestions.length} results`
-                      : "No search"}
+                      : 'No search'}
                   </span>
                 </div>
               </div>
