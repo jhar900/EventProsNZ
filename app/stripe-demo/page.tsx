@@ -16,10 +16,9 @@ export default function StripeDemoPage() {
   useEffect(() => {
     const checkConfiguration = async () => {
       try {
-        // Check if Stripe keys are configured
-        const hasPublicKey = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-        const hasSecretKey = !!process.env.STRIPE_SECRET_KEY;
-        setIsConfigured(hasPublicKey && hasSecretKey);
+        const response = await fetch("/api/stripe/check-config");
+        const data = await response.json();
+        setIsConfigured(data.configured);
       } catch (error) {
         console.error("Error checking Stripe configuration:", error);
         setIsConfigured(false);
@@ -37,20 +36,29 @@ export default function StripeDemoPage() {
     ]);
   };
 
-  const handleTestStripeConfig = () => {
+  const handleTestStripeConfig = async () => {
     addResult("Testing Stripe configuration...");
-    if (isConfigured) {
-      addResult("✅ Stripe keys are configured and ready to use!");
-      addResult(
-        "✅ Public key: " +
-          (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 20) +
-            "...")
-      );
-    } else {
-      addResult("❌ Stripe keys are NOT configured.");
-      addResult(
-        "❌ Please set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
-      );
+    try {
+      const response = await fetch("/api/stripe/check-config");
+      const data = await response.json();
+
+      if (data.configured) {
+        addResult("✅ Stripe keys are configured and ready to use!");
+        addResult("✅ Public key: " + data.publicKeyPreview);
+        addResult(
+          "✅ Secret key: " + (data.hasSecretKey ? "Configured" : "Missing")
+        );
+      } else {
+        addResult("❌ Stripe keys are NOT configured.");
+        addResult(
+          "❌ Secret key: " + (data.hasSecretKey ? "Configured" : "Missing")
+        );
+        addResult(
+          "❌ Public key: " + (data.hasPublicKey ? "Configured" : "Missing")
+        );
+      }
+    } catch (error) {
+      addResult("❌ Error checking configuration: " + (error as Error).message);
     }
   };
 

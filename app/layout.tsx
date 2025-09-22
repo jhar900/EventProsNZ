@@ -1,26 +1,27 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Event Pros NZ - New Zealand\'s Event Ecosystem',
-  description: 'Connect event managers with qualified contractors. The complete event planning platform for New Zealand.',
-}
+  title: "Event Pros NZ - New Zealand's Event Ecosystem",
+  description:
+    "Connect event managers with qualified contractors. The complete event planning platform for New Zealand.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-background">
-          {children}
-        </div>
+        <GoogleAnalytics />
+        <div className="min-h-screen bg-background">{children}</div>
       </body>
     </html>
-  )
+  );
 }

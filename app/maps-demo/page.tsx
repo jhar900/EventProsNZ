@@ -88,7 +88,7 @@ export default function MapsDemoPage() {
       return () => {
         clearTimeout(timer);
         if (map) {
-          map.remove();
+          (map as any).remove();
         }
       };
     }

@@ -6,6 +6,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import {
+  trackPageView,
+  trackEvent,
+  trackPurchase,
+  trackConversion,
+} from "@/lib/analytics/google-analytics";
 
 export default function AnalyticsDemoPage() {
   const [isConfigured, setIsConfigured] = useState(false);
@@ -16,9 +22,9 @@ export default function AnalyticsDemoPage() {
   useEffect(() => {
     const checkConfiguration = async () => {
       try {
-        // Check if Google Analytics ID is configured
-        const hasAnalyticsId = !!process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
-        setIsConfigured(hasAnalyticsId);
+        const response = await fetch("/api/analytics/check-config");
+        const data = await response.json();
+        setIsConfigured(data.configured);
       } catch (error) {
         console.error("Error checking Analytics configuration:", error);
         setIsConfigured(false);
@@ -36,40 +42,32 @@ export default function AnalyticsDemoPage() {
     ]);
   };
 
-  const handleTestAnalyticsConfig = () => {
+  const handleTestAnalyticsConfig = async () => {
     addResult("Testing Google Analytics configuration...");
-    if (isConfigured) {
-      addResult("✅ Google Analytics ID is configured and ready to use!");
-      addResult(
-        "✅ Analytics ID: " + process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
-      );
-    } else {
-      addResult("❌ Google Analytics ID is NOT configured.");
-      addResult(
-        "❌ Please set NEXT_PUBLIC_GOOGLE_ANALYTICS_ID environment variable"
-      );
+    try {
+      const response = await fetch("/api/analytics/check-config");
+      const data = await response.json();
+
+      if (data.configured) {
+        addResult("✅ Google Analytics ID is configured and ready to use!");
+        addResult("✅ Analytics ID: " + data.analyticsId);
+      } else {
+        addResult("❌ Google Analytics ID is NOT configured.");
+        addResult(
+          "❌ Please set NEXT_PUBLIC_GOOGLE_ANALYTICS_ID environment variable"
+        );
+      }
+    } catch (error) {
+      addResult("❌ Error checking configuration: " + (error as Error).message);
     }
   };
 
   const handleTestPageView = () => {
     addResult("Testing Google Analytics page view tracking...");
     try {
-      // Simulate page view tracking
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag(
-          "config",
-          process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID,
-          {
-            page_title: "Analytics Demo Page",
-            page_location: window.location.href,
-          }
-        );
-        addResult("✅ Page view tracked successfully!");
-        setAnalyticsStatus("Page view tracked");
-      } else {
-        addResult("❌ Google Analytics gtag not loaded");
-        setAnalyticsStatus("Google Analytics not loaded");
-      }
+      trackPageView(window.location.href, "Analytics Demo Page");
+      addResult("✅ Page view tracked successfully!");
+      setAnalyticsStatus("Page view tracked");
     } catch (error) {
       addResult("❌ Error tracking page view: " + (error as Error).message);
       setAnalyticsStatus("Error tracking page view");
@@ -79,18 +77,9 @@ export default function AnalyticsDemoPage() {
   const handleTestCustomEvent = () => {
     addResult("Testing Google Analytics custom event tracking...");
     try {
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "demo_button_click", {
-          event_category: "Demo",
-          event_label: "Analytics Demo Page",
-          value: 1,
-        });
-        addResult("✅ Custom event tracked successfully!");
-        setAnalyticsStatus("Custom event tracked");
-      } else {
-        addResult("❌ Google Analytics gtag not loaded");
-        setAnalyticsStatus("Google Analytics not loaded");
-      }
+      trackEvent("demo_button_click", "Demo", "Analytics Demo Page", 1);
+      addResult("✅ Custom event tracked successfully!");
+      setAnalyticsStatus("Custom event tracked");
     } catch (error) {
       addResult("❌ Error tracking custom event: " + (error as Error).message);
       setAnalyticsStatus("Error tracking custom event");
@@ -100,27 +89,17 @@ export default function AnalyticsDemoPage() {
   const handleTestEcommerceEvent = () => {
     addResult("Testing Google Analytics ecommerce event tracking...");
     try {
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "purchase", {
-          transaction_id: "demo-transaction-123",
-          value: 25.0,
-          currency: "NZD",
-          items: [
-            {
-              item_id: "demo-item-1",
-              item_name: "Demo Event Service",
-              category: "Event Services",
-              quantity: 1,
-              price: 25.0,
-            },
-          ],
-        });
-        addResult("✅ Ecommerce event tracked successfully!");
-        setAnalyticsStatus("Ecommerce event tracked");
-      } else {
-        addResult("❌ Google Analytics gtag not loaded");
-        setAnalyticsStatus("Google Analytics not loaded");
-      }
+      trackPurchase("demo-transaction-123", 25.0, "NZD", [
+        {
+          item_id: "demo-item-1",
+          item_name: "Demo Event Service",
+          category: "Event Services",
+          quantity: 1,
+          price: 25.0,
+        },
+      ]);
+      addResult("✅ Ecommerce event tracked successfully!");
+      setAnalyticsStatus("Ecommerce event tracked");
     } catch (error) {
       addResult(
         "❌ Error tracking ecommerce event: " + (error as Error).message
@@ -132,19 +111,9 @@ export default function AnalyticsDemoPage() {
   const handleTestConversionEvent = () => {
     addResult("Testing Google Analytics conversion event tracking...");
     try {
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "conversion", {
-          send_to:
-            process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID + "/demo-conversion",
-          value: 1.0,
-          currency: "NZD",
-        });
-        addResult("✅ Conversion event tracked successfully!");
-        setAnalyticsStatus("Conversion event tracked");
-      } else {
-        addResult("❌ Google Analytics gtag not loaded");
-        setAnalyticsStatus("Google Analytics not loaded");
-      }
+      trackConversion("demo-conversion", 1.0, "NZD");
+      addResult("✅ Conversion event tracked successfully!");
+      setAnalyticsStatus("Conversion event tracked");
     } catch (error) {
       addResult(
         "❌ Error tracking conversion event: " + (error as Error).message
