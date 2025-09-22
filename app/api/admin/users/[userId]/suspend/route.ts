@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/middleware';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const { supabase } = createClient(request);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || userData?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { userId } = params;
+    const body = await request.json();
+    const { reason } = body;
+
+    if (!reason || reason.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Suspension reason is required' },
+        { status: 400 }
+      );
+    }
+
+    // Prevent admin from suspending themselves
+    if (userId === user.id) {
+      return NextResponse.json(
+        { error: 'Cannot suspend your own account' },
+        { status: 400 }
+      );
+    }
+
+    // Suspend the user
+    const { data: suspendedUser, error: suspendError } = await supabase
+      .from('users')
+      .update({
+        status: 'suspended',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (suspendError) {
+      return NextResponse.json(
+        { error: 'Failed to suspend user', details: suspendError.message },
+        { status: 500 }
+      );
+    }
+
+    // Log admin action
+    await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'admin_suspend_user',
+      details: {
+        target_user_id: userId,
+        reason: reason,
+        admin_user_id: user.id,
+      },
+      ip_address:
+        request.headers.get('x-forwarded-for') ||
+        request.headers.get('x-real-ip'),
+      user_agent: request.headers.get('user-agent'),
+    });
+
+    return NextResponse.json({
+      message: 'User suspended successfully',
+      user: suspendedUser,
+    });
+  } catch (error) {
+    console.error('Suspend user error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

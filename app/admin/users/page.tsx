@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/features/auth/AuthGuard';
 import RoleGuard from '@/components/features/auth/RoleGuard';
@@ -25,6 +26,7 @@ interface User {
 }
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,12 +37,17 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [roleFilter, statusFilter, searchTerm]);
 
   const loadUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/users');
+      const params = new URLSearchParams();
+      if (roleFilter !== 'all') params.append('role', roleFilter);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
       const result = await response.json();
 
       if (response.ok) {
@@ -55,27 +62,77 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.profiles?.first_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      user.profiles?.last_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      user.business_profiles?.company_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const handleVerifyUser = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/verify`, {
+        method: 'POST',
+      });
+      const result = await response.json();
 
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'verified' && user.is_verified) ||
-      (statusFilter === 'unverified' && !user.is_verified);
+      if (response.ok) {
+        await loadUsers(); // Reload users
+        alert('User verified successfully');
+      } else {
+        throw new Error(result.error || 'Failed to verify user');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to verify user');
+    }
+  };
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const handleSuspendUser = async (userId: string) => {
+    const reason = prompt('Enter suspension reason:');
+    if (!reason) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        await loadUsers(); // Reload users
+        alert('User suspended successfully');
+      } else {
+        throw new Error(result.error || 'Failed to suspend user');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to suspend user');
+    }
+  };
+
+  const handleChangeRole = async (userId: string, currentRole: string) => {
+    const newRole = prompt(
+      `Current role: ${currentRole}\nEnter new role (admin, event_manager, contractor):`
+    );
+    if (
+      !newRole ||
+      !['admin', 'event_manager', 'contractor'].includes(newRole)
+    ) {
+      alert('Invalid role');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        await loadUsers(); // Reload users
+        alert('User role updated successfully');
+      } else {
+        throw new Error(result.error || 'Failed to update user role');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update user role');
+    }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -258,15 +315,48 @@ export default function AdminUsersPage() {
                                   ).toLocaleDateString()}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button
-                                    onClick={() => {
-                                      // Handle user actions
-                                      console.log('User action for:', user.id);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-900"
-                                  >
-                                    View Details
-                                  </button>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() =>
+                                        router.push(`/admin/users/${user.id}`)
+                                      }
+                                      className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                    >
+                                      View Details
+                                    </button>
+                                    <button
+                                      onClick={() => handleVerifyUser(user.id)}
+                                      disabled={user.is_verified}
+                                      className={`px-2 py-1 text-xs rounded ${
+                                        user.is_verified
+                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                          : 'bg-green-100 text-green-800 hover:bg-green-200'
+                                      }`}
+                                    >
+                                      {user.is_verified ? 'Verified' : 'Verify'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleSuspendUser(user.id)}
+                                      disabled={user.status === 'suspended'}
+                                      className={`px-2 py-1 text-xs rounded ${
+                                        user.status === 'suspended'
+                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                          : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                      }`}
+                                    >
+                                      {user.status === 'suspended'
+                                        ? 'Suspended'
+                                        : 'Suspend'}
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleChangeRole(user.id, user.role)
+                                      }
+                                      className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800 hover:bg-purple-200"
+                                    >
+                                      Change Role
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
