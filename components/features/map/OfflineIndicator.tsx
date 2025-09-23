@@ -40,7 +40,7 @@ export const OfflineIndicator: React.FC = () => {
   const handleCleanupExpired = async () => {
     const cleaned = await cleanupExpiredTiles();
     if (cleaned > 0) {
-      console.log(`Cleaned up ${cleaned} expired tiles`);
+      // Tiles cleaned up successfully
     }
   };
 

@@ -200,8 +200,8 @@ export const MobileMapControls: React.FC<MobileMapControlsProps> = ({
           {/* Center Map Button */}
           <button
             onClick={() => {
-              // This would center the map on user's location
-              console.log('Center map on location');
+              // Center the map on user's location
+              onCenterMap?.();
             }}
             className="w-12 h-12 bg-white bg-opacity-90 rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:bg-opacity-100 transition-all"
           >
@@ -230,8 +230,8 @@ export const MobileMapControls: React.FC<MobileMapControlsProps> = ({
           <div className="flex flex-col space-y-1">
             <button
               onClick={() => {
-                // This would zoom in
-                console.log('Zoom in');
+                // Zoom in
+                onZoomIn?.();
               }}
               className="w-10 h-10 bg-white bg-opacity-90 rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:bg-opacity-100 transition-all"
             >
@@ -251,8 +251,8 @@ export const MobileMapControls: React.FC<MobileMapControlsProps> = ({
             </button>
             <button
               onClick={() => {
-                // This would zoom out
-                console.log('Zoom out');
+                // Zoom out
+                onZoomOut?.();
               }}
               className="w-10 h-10 bg-white bg-opacity-90 rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:bg-opacity-100 transition-all"
             >

@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 // Suppress React act() warnings for async state updates in useEffect
 const originalError = console.error;
 beforeAll(() => {
+  // eslint-disable-next-line no-console
   console.error = (...args) => {
     if (
       typeof args[0] === 'string' &&
@@ -19,6 +20,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
+  // eslint-disable-next-line no-console
   console.error = originalError;
 });
 

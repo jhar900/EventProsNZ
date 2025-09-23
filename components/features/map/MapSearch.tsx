@@ -41,7 +41,7 @@ export const MapSearch: React.FC = () => {
 
   const handleResultClick = (result: any) => {
     // Handle result selection
-    console.log('Selected result:', result);
+    onResultSelect?.(result);
   };
 
   return (

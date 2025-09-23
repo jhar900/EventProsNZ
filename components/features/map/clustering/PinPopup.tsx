@@ -104,13 +104,13 @@ export const PinPopup: React.FC<PinPopupProps> = ({
   };
 
   const handleContact = () => {
-    // In a real implementation, this would open a contact modal or redirect to contact page
-    console.log('Contact contractor:', contractor.id);
+    // Open contact modal or redirect to contact page
+    onContact?.(contractor.id);
   };
 
   const handleAddToFavorites = () => {
-    // In a real implementation, this would add to favorites
-    console.log('Add to favorites:', contractor.id);
+    // Add to favorites
+    onAddToFavorites?.(contractor.id);
   };
 
   return (

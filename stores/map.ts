@@ -242,7 +242,7 @@ export const useMapStore = create<MapStore>()(
           const results = await mapService.searchMap(query, get().bounds);
           set({ searchResults: results });
         } catch (error) {
-          console.error('Search error:', error);
+          // Handle search error silently
           set({ searchResults: [] });
         }
       },
@@ -264,7 +264,7 @@ export const useMapStore = create<MapStore>()(
           const stats = await mapCacheService.getCacheStats();
           set({ cacheStats: stats });
         } catch (error) {
-          console.error('Error updating cache stats:', error);
+          // Handle cache stats error silently
         }
       },
 
@@ -273,7 +273,7 @@ export const useMapStore = create<MapStore>()(
           await mapCacheService.clearCache();
           await get().updateCacheStats();
         } catch (error) {
-          console.error('Error clearing cache:', error);
+          // Handle cache clear error silently
         }
       },
 
@@ -283,7 +283,7 @@ export const useMapStore = create<MapStore>()(
           await get().updateCacheStats();
           return cleanedCount;
         } catch (error) {
-          console.error('Error cleaning up expired tiles:', error);
+          // Handle cleanup error silently
           return 0;
         }
       },

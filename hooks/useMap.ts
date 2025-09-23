@@ -112,7 +112,7 @@ export function useMap(initialBounds?: MapBounds) {
           const results = await mapService.searchMap(query, state.bounds);
           setState(prev => ({ ...prev, searchResults: results }));
         } catch (error) {
-          console.error('Search error:', error);
+          // Handle search error silently
           setState(prev => ({ ...prev, searchResults: [] }));
         }
       }, 300);
@@ -167,7 +167,7 @@ export function useMap(initialBounds?: MapBounds) {
   // Load initial contractors
   useEffect(() => {
     loadContractors(state.bounds, state.filters);
-  }, []); // Only run once on mount
+  }, [loadContractors, state.bounds, state.filters]); // Include all dependencies
 
   // Cleanup timeout on unmount
   useEffect(() => {

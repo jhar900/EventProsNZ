@@ -83,7 +83,7 @@ class MapService {
       const data = await response.json();
       return data.contractors || [];
     } catch (error) {
-      console.error('Error fetching contractors:', error);
+      // Re-throw error without logging
       throw error;
     }
   }
@@ -107,7 +107,7 @@ class MapService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching contractor location:', error);
+      // Re-throw error without logging
       throw error;
     }
   }
@@ -139,7 +139,7 @@ class MapService {
       const data = await response.json();
       return data.results || [];
     } catch (error) {
-      console.error('Error searching map:', error);
+      // Re-throw error without logging
       throw error;
     }
   }
@@ -175,7 +175,7 @@ class MapService {
 
       return null;
     } catch (error) {
-      console.error('Error geocoding address:', error);
+      // Handle geocoding error silently
       return null;
     }
   }
@@ -208,7 +208,7 @@ class MapService {
 
       return null;
     } catch (error) {
-      console.error('Error reverse geocoding:', error);
+      // Handle reverse geocoding error silently
       return null;
     }
   }

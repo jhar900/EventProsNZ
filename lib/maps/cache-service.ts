@@ -66,7 +66,7 @@ class MapCacheService {
 
       await cache.put(key, response);
     } catch (error) {
-      console.error('Error caching tile:', error);
+      // Handle caching error silently
     }
   }
 
@@ -100,7 +100,7 @@ class MapCacheService {
 
       return await response.arrayBuffer();
     } catch (error) {
-      console.error('Error retrieving cached tile:', error);
+      // Handle retrieval error silently
       return null;
     }
   }
@@ -131,7 +131,7 @@ class MapCacheService {
 
       return true;
     } catch (error) {
-      console.error('Error checking cached tile:', error);
+      // Handle check error silently
       return false;
     }
   }
@@ -154,7 +154,7 @@ class MapCacheService {
         }
       }
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      // Handle cache clear error silently
     }
   }
 
@@ -202,7 +202,7 @@ class MapCacheService {
         newestTile,
       };
     } catch (error) {
-      console.error('Error getting cache stats:', error);
+      // Handle stats error silently
       return {
         totalTiles: 0,
         totalSize: 0,
@@ -238,7 +238,7 @@ class MapCacheService {
         }
       }
     } catch (error) {
-      console.error('Error cleaning up expired tiles:', error);
+      // Handle cleanup error silently
     }
 
     return cleanedCount;
@@ -298,7 +298,7 @@ class MapCacheService {
         }
       }
     } catch (error) {
-      console.error('Error managing cache size:', error);
+      // Handle cache size management error silently
     }
   }
 
