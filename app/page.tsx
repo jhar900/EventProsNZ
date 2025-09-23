@@ -109,161 +109,460 @@ export default function Home() {
             Pros NZ
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Core Pages */}
-            <Link
-              href="/dashboard"
-              className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">📊</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">
-                  Dashboard
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">Main user dashboard</p>
-            </Link>
+          <div className="space-y-6">
+            {/* Core User Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                👤 Core User Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/dashboard"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main user dashboard</p>
+                </Link>
 
-            <Link
-              href="/profile"
-              className="group block bg-green-50 hover:bg-green-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">👤</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-green-600">
-                  Profile
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">User profile management</p>
-            </Link>
+                <Link
+                  href="/profile"
+                  className="group block bg-green-50 hover:bg-green-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👤</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-green-600">
+                      Profile
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    User profile management
+                  </p>
+                </Link>
 
-            {/* Demo Pages */}
-            <Link
-              href="/demo"
-              className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">🧪</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-purple-600">
-                  Demo Hub
-                </h3>
+                <Link
+                  href="/profile/edit"
+                  className="group block bg-green-50 hover:bg-green-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✏️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-green-600">
+                      Edit Profile
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Edit user profile</p>
+                </Link>
               </div>
-              <p className="text-sm text-gray-600">
-                All external service demos
-              </p>
-            </Link>
+            </div>
 
-            <Link
-              href="/maps-demo"
-              className="group block bg-orange-50 hover:bg-orange-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">🗺️</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-orange-600">
-                  Maps Demo
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">Mapbox integration test</p>
-            </Link>
+            {/* Contractor Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🔧 Contractor Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/contractors"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Contractor Directory
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Browse all contractors
+                  </p>
+                </Link>
 
-            <Link
-              href="/analytics-demo"
-              className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">📊</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-yellow-600">
-                  Analytics Demo
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">Google Analytics test</p>
-            </Link>
+                <Link
+                  href="/contractors/search"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Search Contractors
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Advanced contractor search
+                  </p>
+                </Link>
 
-            <Link
-              href="/sendgrid-demo"
-              className="group block bg-pink-50 hover:bg-pink-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">📧</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-pink-600">
-                  Email Demo
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">SendGrid integration test</p>
-            </Link>
+                <Link
+                  href="/contractors/map"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🗺️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Contractor Map
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Interactive contractor map
+                  </p>
+                </Link>
 
-            <Link
-              href="/stripe-demo"
-              className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">💳</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600">
-                  Payment Demo
-                </h3>
+                <Link
+                  href="/contractors/map/proximity"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Proximity Search
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Find contractors by location
+                  </p>
+                </Link>
+
+                <Link
+                  href="/contractors/favorites"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">❤️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Favorite Contractors
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Your saved contractors
+                  </p>
+                </Link>
               </div>
-              <p className="text-sm text-gray-600">Stripe integration test</p>
-            </Link>
+            </div>
+
+            {/* Event Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🎉 Event Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/events/create"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✨</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Create Event
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Event creation wizard</p>
+                </Link>
+
+                <Link
+                  href="/events/templates"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📋</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Templates
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Pre-built event templates
+                  </p>
+                </Link>
+              </div>
+            </div>
 
             {/* Onboarding Pages */}
-            <Link
-              href="/onboarding/contractor"
-              className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">🔧</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">
-                  Contractor Onboarding
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Contractor registration flow
-              </p>
-            </Link>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🚀 Onboarding Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/onboarding/contractor"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Contractor Onboarding
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Contractor registration flow
+                  </p>
+                </Link>
 
-            <Link
-              href="/onboarding/event-manager"
-              className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">🎯</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-teal-600">
-                  Event Manager Onboarding
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Event manager registration flow
-              </p>
-            </Link>
+                <Link
+                  href="/onboarding/event-manager"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🎯</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Event Manager Onboarding
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Event manager registration
+                  </p>
+                </Link>
 
-            {/* Admin Pages (if user is admin) */}
-            <Link
-              href="/admin/users"
-              className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">👥</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-red-600">
-                  User Management
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600">Admin user management</p>
-            </Link>
+                <Link
+                  href="/onboarding/complete"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Onboarding Complete
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Onboarding completion page
+                  </p>
+                </Link>
 
-            <Link
-              href="/admin/verification"
-              className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-3">✅</span>
-                <h3 className="font-semibold text-gray-900 group-hover:text-amber-600">
-                  Verification System
-                </h3>
+                <Link
+                  href="/onboarding/tutorial"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📚</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Platform Tutorial
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Learn how to use the platform
+                  </p>
+                </Link>
               </div>
-              <p className="text-sm text-gray-600">
-                Admin verification workflow
-              </p>
-            </Link>
+            </div>
+
+            {/* Admin Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                👑 Admin Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/admin/dashboard"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Admin Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main admin dashboard</p>
+                </Link>
+
+                <Link
+                  href="/admin/users"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👥</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      User Management
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Manage all users</p>
+                </Link>
+
+                <Link
+                  href="/admin/contractors"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Contractor Management
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Manage contractors</p>
+                </Link>
+
+                <Link
+                  href="/admin/verification"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Verification System
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    User verification workflow
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/analytics"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📈</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Platform analytics</p>
+                </Link>
+
+                <Link
+                  href="/admin/reports"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📋</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Reports
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">System reports</p>
+                </Link>
+
+                <Link
+                  href="/admin/content"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Content Moderation
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Moderate platform content
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/system"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⚙️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      System Health
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">System monitoring</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Demo & Testing Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🧪 Demo & Testing Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/demo"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🧪</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Demo Hub
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    All external service demos
+                  </p>
+                </Link>
+
+                <Link
+                  href="/maps-demo"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🗺️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Maps Demo
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Mapbox integration test
+                  </p>
+                </Link>
+
+                <Link
+                  href="/analytics-demo"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Analytics Demo
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Google Analytics test</p>
+                </Link>
+
+                <Link
+                  href="/sendgrid-demo"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Email Demo
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    SendGrid integration test
+                  </p>
+                </Link>
+
+                <Link
+                  href="/stripe-demo"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💳</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Payment Demo
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Stripe integration test
+                  </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Search & History Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🔍 Search & History Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/search/history"
+                  className="group block bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🕒</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-gray-600">
+                      Search History
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View search history</p>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
