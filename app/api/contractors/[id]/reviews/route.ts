@@ -10,9 +10,10 @@ export async function GET(
     const contractorId = params.id;
     const { searchParams } = new URL(request.url);
 
-    // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const rating = searchParams.get('rating');
+
     const offset = (page - 1) * limit;
 
     if (!contractorId) {
@@ -38,64 +39,68 @@ export async function GET(
       );
     }
 
-    // Get contractor testimonials/reviews
-    const {
-      data: reviews,
-      error: reviewsError,
-      count,
-    } = await supabase
+    // Build query for reviews
+    let query = supabase
       .from('contractor_testimonials')
       .select(
         `
-        id,
-        client_name,
-        rating,
-        comment,
-        event_title,
-        event_date,
-        is_verified,
-        created_at
-      `
+        *,
+        event_managers:event_manager_id(
+          profiles(first_name, last_name)
+        )
+      `,
+        { count: 'exact' }
       )
       .eq('contractor_id', contractorId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
+    // Apply rating filter if provided
+    if (rating) {
+      const ratingNum = parseInt(rating);
+      if (ratingNum >= 1 && ratingNum <= 5) {
+        query = query.eq('rating', ratingNum);
+      }
+    }
+
+    const { data: reviews, error: reviewsError, count } = await query;
+
     if (reviewsError) {
-      console.error('Contractor reviews fetch error:', reviewsError);
+      console.error('Reviews fetch error:', reviewsError);
       return NextResponse.json(
-        { error: 'Failed to fetch contractor reviews' },
+        { error: 'Failed to fetch reviews' },
         { status: 500 }
       );
     }
 
     // Calculate average rating
-    const { data: ratingData, error: ratingError } = await supabase
+    const { data: ratingStats } = await supabase
       .from('contractor_testimonials')
       .select('rating')
-      .eq('contractor_id', contractorId)
-      .not('rating', 'is', null);
-
-    if (ratingError) {
-      console.error('Rating calculation error:', ratingError);
-    }
+      .eq('contractor_id', contractorId);
 
     const averageRating =
-      ratingData?.length > 0
-        ? ratingData.reduce((sum, review) => sum + (review.rating || 0), 0) /
-          ratingData.length
+      ratingStats?.length > 0
+        ? ratingStats.reduce((sum, r) => sum + r.rating, 0) / ratingStats.length
         : 0;
+
+    // Get rating distribution
+    const ratingDistribution = [1, 2, 3, 4, 5].map(star => ({
+      rating: star,
+      count: ratingStats?.filter(r => r.rating === star).length || 0,
+    }));
 
     return NextResponse.json({
       reviews: reviews || [],
       total: count || 0,
-      averageRating: Math.round(averageRating * 10) / 10,
       page,
       limit,
       totalPages: Math.ceil((count || 0) / limit),
+      averageRating: Math.round(averageRating * 10) / 10,
+      ratingDistribution,
     });
   } catch (error) {
-    console.error('Contractor reviews API error:', error);
+    console.error('Reviews API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -27,8 +27,24 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log('useAuth hook called, isLoading:', isLoading, 'user:', user);
+  console.log('Environment check:', {
+    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    isPlaceholder:
+      process.env.NEXT_PUBLIC_SUPABASE_URL ===
+      'https://placeholder.supabase.co',
+  });
+
   const refreshUser = async () => {
     try {
+      // Check if Supabase is properly configured
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        console.warn('Supabase not configured - running in demo mode');
+        setUser(null);
+        return;
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -162,9 +178,22 @@ export function useAuth() {
   };
 
   useEffect(() => {
+    console.log(
+      'useEffect called, NEXT_PUBLIC_SUPABASE_URL:',
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+    );
+
     // Check for existing session on mount
     const checkSession = async () => {
       try {
+        // Check if Supabase is properly configured
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          console.warn('Supabase not configured - running in demo mode');
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -174,6 +203,7 @@ export function useAuth() {
         }
       } catch (error) {
         console.error('Error checking session:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -181,19 +211,27 @@ export function useAuth() {
 
     checkSession();
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await refreshUser();
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
+    // Listen for auth changes (only if Supabase is configured)
+    let subscription;
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const {
+        data: { subscription: authSubscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          await refreshUser();
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+        setIsLoading(false);
+      });
+      subscription = authSubscription;
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   return {

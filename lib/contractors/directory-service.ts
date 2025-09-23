@@ -9,6 +9,41 @@ import {
 
 const API_BASE_URL = '/api/contractors';
 
+// Profile caching configuration
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const profileCache = new Map<string, { data: any; timestamp: number }>();
+
+// Cache management utilities
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_TTL;
+}
+
+function getCachedProfile(id: string): any | null {
+  const cached = profileCache.get(id);
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+  // Remove expired cache entry
+  if (cached) {
+    profileCache.delete(id);
+  }
+  return null;
+}
+
+function setCachedProfile(id: string, data: any): void {
+  profileCache.set(id, { data, timestamp: Date.now() });
+}
+
+// Clean up expired cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of profileCache.entries()) {
+    if (now - value.timestamp >= CACHE_TTL) {
+      profileCache.delete(key);
+    }
+  }
+}, CACHE_TTL);
+
 export class ContractorDirectoryService {
   /**
    * Fetch contractors with optional filters and pagination
@@ -84,11 +119,17 @@ export class ContractorDirectoryService {
   }
 
   /**
-   * Fetch contractor details by ID
+   * Fetch contractor details by ID with caching
    */
   static async getContractorDetails(
     id: string
   ): Promise<ContractorDetailsResponse> {
+    // Check cache first
+    const cached = getCachedProfile(id);
+    if (cached) {
+      return cached;
+    }
+
     const response = await fetch(`${API_BASE_URL}/${id}`);
 
     if (!response.ok) {
@@ -100,7 +141,12 @@ export class ContractorDirectoryService {
       );
     }
 
-    return response.json();
+    const data = await response.json();
+
+    // Cache the result
+    setCachedProfile(id, data);
+
+    return data;
   }
 
   /**
@@ -224,5 +270,29 @@ export class ContractorDirectoryService {
       contractor.businessAddress ||
       'Location not specified'
     );
+  }
+
+  /**
+   * Invalidate cache for a specific contractor
+   */
+  static invalidateCache(id: string): void {
+    profileCache.delete(id);
+  }
+
+  /**
+   * Clear all cached profiles
+   */
+  static clearCache(): void {
+    profileCache.clear();
+  }
+
+  /**
+   * Get cache statistics for monitoring
+   */
+  static getCacheStats(): { size: number; entries: string[] } {
+    return {
+      size: profileCache.size,
+      entries: Array.from(profileCache.keys()),
+    };
   }
 }

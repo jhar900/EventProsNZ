@@ -1,7 +1,12 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ContractorDetails } from '@/components/features/contractors/ContractorDetails';
+import { ContractorProfile } from '@/components/features/contractors/profile/ContractorProfile';
 import { ContractorDirectoryService } from '@/lib/contractors/directory-service';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
+// Enable static generation with revalidation and caching
+export const revalidate = 300; // Revalidate every 5 minutes
+export const dynamic = 'force-dynamic'; // Ensure dynamic rendering for real-time data
 
 interface ContractorPageProps {
   params: {
@@ -54,7 +59,27 @@ export default async function ContractorPage({ params }: ContractorPageProps) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          <ContractorDetails contractor={contractor} />
+          <ErrorBoundary
+            fallback={
+              <div className="text-center py-12">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                  Profile Unavailable
+                </h1>
+                <p className="text-gray-600 mb-6">
+                  There was an error loading this contractor&apos;s profile.
+                  Please try again later.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Refresh Page
+                </button>
+              </div>
+            }
+          >
+            <ContractorProfile contractor={contractor} />
+          </ErrorBoundary>
         </div>
       </div>
     );

@@ -6,6 +6,8 @@ import Link from 'next/link';
 export default function Home() {
   const { user, isLoading } = useAuth();
 
+  console.log('Home component rendering, isLoading:', isLoading, 'user:', user);
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
