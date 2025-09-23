@@ -37,8 +37,8 @@ import {
 import { EventTemplate, EVENT_TYPES } from '@/types/events';
 
 interface EventTemplatesProps {
-  onSelect: (template: EventTemplate) => void;
-  onClose: () => void;
+  onSelect?: (template: EventTemplate) => void;
+  onClose?: () => void;
 }
 
 const eventTypeIcons = {
@@ -77,7 +77,7 @@ export function EventTemplates({ onSelect, onClose }: EventTemplatesProps) {
 
   const handleTemplateSelect = (template: EventTemplate) => {
     loadTemplate(template);
-    onSelect(template);
+    onSelect?.(template);
   };
 
   const getEventTypeIcon = (eventType: string) => {
@@ -108,7 +108,7 @@ export function EventTemplates({ onSelect, onClose }: EventTemplatesProps) {
               Start with a pre-built template or create your own custom event
             </CardDescription>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={() => onClose?.()}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
@@ -289,7 +289,7 @@ export function EventTemplates({ onSelect, onClose }: EventTemplatesProps) {
                 <p className="text-sm text-muted-foreground mb-4">
                   Create a custom event from scratch with your own requirements
                 </p>
-                <Button variant="outline" onClick={onClose}>
+                <Button variant="outline" onClick={() => onClose?.()}>
                   Create Custom Event
                 </Button>
               </CardContent>

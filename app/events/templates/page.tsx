@@ -27,7 +27,7 @@ export default function EventTemplatesPage() {
           </p>
         </div>
 
-        <EventTemplates onSelect={() => {}} onClose={() => {}} />
+        <EventTemplates />
       </div>
     </div>
   );
