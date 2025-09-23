@@ -9,7 +9,7 @@ interface RoleGuardProps {
   fallback?: React.ReactNode;
 }
 
-export default function RoleGuard({
+function RoleGuard({
   children,
   allowedRoles,
   fallback = (
@@ -17,7 +17,7 @@ export default function RoleGuard({
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
         <p className="text-gray-600">
-          You don't have permission to access this page.
+          You don&apos;t have permission to access this page.
         </p>
       </div>
     </div>
@@ -46,3 +46,6 @@ export default function RoleGuard({
 
   return <>{children}</>;
 }
+
+export { RoleGuard };
+export default RoleGuard;

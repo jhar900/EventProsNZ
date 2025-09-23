@@ -10,7 +10,7 @@ interface AuthGuardProps {
   redirectTo?: string;
 }
 
-export default function AuthGuard({
+function AuthGuard({
   children,
   requireAuth = true,
   redirectTo = '/login',
@@ -57,3 +57,6 @@ export default function AuthGuard({
 
   return <>{children}</>;
 }
+
+export { AuthGuard };
+export default AuthGuard;

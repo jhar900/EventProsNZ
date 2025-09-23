@@ -8,10 +8,10 @@ import ProfileForm from '@/components/features/user/ProfileForm';
 import AvatarUpload from '@/components/features/user/AvatarUpload';
 import BusinessProfileForm from '@/components/features/user/BusinessProfileForm';
 import UserSettings from '@/components/features/user/UserSettings';
-import ServicesEditor from '@/components/features/profile/ServicesEditor';
-import PortfolioManager from '@/components/features/profile/PortfolioManager';
-import PrivacySettings from '@/components/features/profile/PrivacySettings';
-import ProfilePreview from '@/components/features/profile/ProfilePreview';
+import { ServicesEditor } from '@/components/features/profile/ServicesEditor';
+import { PortfolioManager } from '@/components/features/profile/PortfolioManager';
+import { PrivacySettings } from '@/components/features/profile/PrivacySettings';
+import { ProfilePreview } from '@/components/features/profile/ProfilePreview';
 import ProfileCompletionTracker from '@/components/features/profile/ProfileCompletionTracker';
 
 export default function ProfilePage() {
@@ -25,7 +25,7 @@ export default function ProfilePage() {
   };
 
   const handleError = (error: string) => {
-    console.error('Profile error:', error);
+    // console.error('Profile error:', error);
   };
 
   const tabs = [

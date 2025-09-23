@@ -11,7 +11,7 @@ interface PageLayoutProps {
   showFooter?: boolean;
 }
 
-export default function PageLayout({
+function PageLayout({
   children,
   className = '',
   showFooter = true,
@@ -26,3 +26,6 @@ export default function PageLayout({
     </div>
   );
 }
+
+export { PageLayout };
+export default PageLayout;

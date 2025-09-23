@@ -8,8 +8,8 @@ import { ContractorList } from './ContractorList';
 import { ViewToggle } from './ViewToggle';
 import { PaginationControls } from './PaginationControls';
 import { ContractorFilters as ContractorFiltersComponent } from './ContractorFilters';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import ErrorBoundary from '@/components/ui/error-boundary';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { default as ErrorBoundary } from '@/components/ui/error-boundary';
 
 interface ContractorDirectoryProps {
   initialFilters?: ContractorFilters;

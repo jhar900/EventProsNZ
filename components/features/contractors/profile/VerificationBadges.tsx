@@ -9,7 +9,7 @@ import {
   PhotoIcon,
   StarIcon,
   CogIcon,
-  CrownIcon,
+  StarIcon as CrownIcon,
   ClockIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
