@@ -262,6 +262,21 @@ export default function Home() {
                 </Link>
 
                 <Link
+                  href="/events/create/services"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🤖</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      AI Service Recommendations
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    AI-powered service suggestions
+                  </p>
+                </Link>
+
+                <Link
                   href="/events/templates"
                   className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
                 >
@@ -274,6 +289,104 @@ export default function Home() {
                   <p className="text-sm text-gray-600">
                     Pre-built event templates
                   </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* AI Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🤖 AI Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/ai/recommendations"
+                  className="group block bg-pink-50 hover:bg-pink-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🎯</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-pink-600">
+                      AI Recommendations
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    AI-powered service recommendations
+                  </p>
+                </Link>
+
+                <Link
+                  href="/ai/analytics"
+                  className="group block bg-pink-50 hover:bg-pink-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-pink-600">
+                      AI Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    AI recommendation analytics
+                  </p>
+                </Link>
+
+                <Link
+                  href="/ai/templates"
+                  className="group block bg-pink-50 hover:bg-pink-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-pink-600">
+                      Service Templates
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">AI service templates</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Authentication Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🔐 Authentication Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/login"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔑</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Login
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">User login page</p>
+                </Link>
+
+                <Link
+                  href="/register"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Register
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">User registration</p>
+                </Link>
+
+                <Link
+                  href="/forgot-password"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔒</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Forgot Password
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Password reset</p>
                 </Link>
               </div>
             </div>
@@ -458,6 +571,66 @@ export default function Home() {
                     </h4>
                   </div>
                   <p className="text-sm text-gray-600">System monitoring</p>
+                </Link>
+
+                <Link
+                  href="/admin/activity"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      User Activity
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    User activity monitoring
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/alerts"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚨</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      System Alerts
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    System alerts management
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/verification/analytics"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📈</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Verification Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Verification analytics
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/verification/guidelines"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📋</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Verification Guidelines
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Verification guidelines
+                  </p>
                 </Link>
               </div>
             </div>
