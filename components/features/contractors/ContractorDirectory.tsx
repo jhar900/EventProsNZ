@@ -46,7 +46,7 @@ export function ContractorDirectory({
   // Load contractors on mount
   useEffect(() => {
     fetchContractors(initialFilters);
-  }, [fetchContractors, initialFilters]);
+  }, []); // Remove dependencies to prevent infinite loops
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -101,17 +101,36 @@ export function ContractorDirectory({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-red-600 text-center">
+        <div className="text-red-600 text-center max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold mb-2">
             Error Loading Contractors
           </h3>
-          <p className="mb-4">{error}</p>
-          <button
-            onClick={clearError}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-          >
-            Try Again
-          </button>
+          <p className="mb-4 text-sm">
+            {error === 'Failed to fetch'
+              ? 'Unable to connect to the server. Please check your internet connection and try again.'
+              : error}
+          </p>
+          <div className="space-x-2">
+            <button
+              onClick={() => {
+                clearError();
+                fetchContractors(initialFilters);
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                clearError();
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       </div>
     );

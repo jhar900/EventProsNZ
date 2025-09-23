@@ -81,6 +81,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
           isLoading: false,
         }));
       } catch (error) {
+        console.error('Error fetching contractors:', error);
         setState(prev => ({
           ...prev,
           error:
@@ -91,7 +92,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
         }));
       }
     },
-    [state.filters, state.pagination.limit]
+    [] // Remove dependencies to prevent infinite loops
   );
 
   const searchContractors = useCallback(
@@ -120,6 +121,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
           isLoading: false,
         }));
       } catch (error) {
+        console.error('Error searching contractors:', error);
         setState(prev => ({
           ...prev,
           error:
@@ -130,7 +132,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
         }));
       }
     },
-    [state.filters, state.pagination.limit]
+    [] // Remove dependencies to prevent infinite loops
   );
 
   const fetchFeaturedContractors = useCallback(async () => {
@@ -219,7 +221,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
   useEffect(() => {
     fetchContractors();
     fetchFeaturedContractors();
-  }, [fetchContractors, fetchFeaturedContractors]);
+  }, []); // Remove dependencies to prevent infinite loops
 
   return {
     ...state,

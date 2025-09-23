@@ -136,6 +136,11 @@ export async function GET(request: NextRequest) {
         ),
       })) || [];
 
+    // If no contractors found, return empty array instead of error
+    if (transformedContractors.length === 0) {
+      console.log('No contractors found in database');
+    }
+
     return NextResponse.json({
       contractors: transformedContractors,
       total: count || 0,
