@@ -226,11 +226,11 @@ export async function GET(request: NextRequest) {
         })) || [];
 
       // Record performance metrics
-      const responseTime = Date.now() - startTime;
+      const searchResponseTime = Date.now() - startTime;
       await searchAnalyticsService.recordPerformanceMetric({
         metric_type: 'search',
         metric_name: 'response_time',
-        metric_value: responseTime,
+        metric_value: searchResponseTime,
         metadata: {
           query: q,
           filters_count: Object.keys(filters).length,
@@ -369,11 +369,11 @@ export async function GET(request: NextRequest) {
       })) || [];
 
     // Record performance metrics for basic search
-    const responseTime = Date.now() - startTime;
+    const basicSearchResponseTime = Date.now() - startTime;
     await searchAnalyticsService.recordPerformanceMetric({
       metric_type: 'search',
       metric_name: 'response_time',
-      metric_value: responseTime,
+      metric_value: basicSearchResponseTime,
       metadata: {
         query: q,
         search_type: 'basic',
