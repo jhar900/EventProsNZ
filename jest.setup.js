@@ -196,3 +196,35 @@ global.Headers = class Headers {
 
 // Mock fetch
 global.fetch = jest.fn();
+
+// Mock NextRequest
+global.NextRequest = class NextRequest {
+  constructor(input, init) {
+    this.url = input;
+    this.method = init?.method || 'GET';
+    this.headers = new Headers(init?.headers);
+    this.body = init?.body;
+  }
+
+  async json() {
+    return JSON.parse(this.body);
+  }
+
+  async text() {
+    return this.body;
+  }
+};
+
+// Mock NextResponse
+global.NextResponse = {
+  json: (data, init) => ({
+    json: () => Promise.resolve(data),
+    status: init?.status || 200,
+  }),
+};
+
+// Mock next/server module globally
+jest.mock('next/server', () => ({
+  NextRequest: global.NextRequest,
+  NextResponse: global.NextResponse,
+}));
