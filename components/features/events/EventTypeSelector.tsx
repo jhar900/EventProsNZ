@@ -12,7 +12,7 @@ import {
   Users,
   GraduationCap,
   Wrench,
-  PresentationChart,
+  BarChart3,
   Music,
   Calendar,
   Trophy,
@@ -64,7 +64,7 @@ const eventTypeConfig = {
   },
   [EVENT_TYPES.EXHIBITION]: {
     label: 'Exhibition',
-    icon: PresentationChart,
+    icon: BarChart3,
     description: 'Trade shows and exhibitions',
     color: 'text-cyan-600',
   },
