@@ -1,10 +1,6 @@
-import { Metadata } from 'next';
-import { ServiceTemplates } from '@/components/features/ai/ServiceTemplates';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Service Templates | Event Pros NZ',
-  description: 'Browse and create service templates for your events.',
-};
+import { ServiceTemplates } from '@/components/features/ai/ServiceTemplates';
 
 export default function ServiceTemplatesPage() {
   return (

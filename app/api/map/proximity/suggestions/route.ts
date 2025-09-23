@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mapService } from '@/lib/maps/map-service';
 
+export const dynamic = 'force-dynamic';
+
 export interface LocationSuggestion {
   id: string;
   name: string;

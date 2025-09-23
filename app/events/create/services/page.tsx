@@ -1,11 +1,6 @@
-import { Metadata } from 'next';
-import { ServiceRecommendations } from '@/components/features/ai/ServiceRecommendations';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'AI Service Recommendations | Event Pros NZ',
-  description:
-    'Get intelligent service recommendations for your event using AI-powered suggestions.',
-};
+import { ServiceRecommendations } from '@/components/features/ai/ServiceRecommendations';
 
 export default function ServiceRecommendationsPage() {
   return (

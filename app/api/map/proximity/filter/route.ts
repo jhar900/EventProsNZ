@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { mapService } from '@/lib/maps/map-service';
 
+export const dynamic = 'force-dynamic';
+
 export interface ProximityContractor {
   id: string;
   company_name: string;

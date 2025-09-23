@@ -1,10 +1,6 @@
-import { Metadata } from 'next';
-import { RecommendationAnalytics } from '@/components/features/ai/RecommendationAnalytics';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'AI Analytics | Event Pros NZ',
-  description: 'View analytics and insights for AI-powered recommendations.',
-};
+import { RecommendationAnalytics } from '@/components/features/ai/RecommendationAnalytics';
 
 export default function AIAnalyticsPage() {
   return (

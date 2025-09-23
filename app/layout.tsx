@@ -8,6 +8,9 @@ import { ReactQueryProvider } from '@/lib/react-query';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'https://event-pros-nz.vercel.app'
+  ),
   title: "Event Pros NZ - New Zealand's Event Ecosystem",
   description:
     'Connect event managers with qualified contractors. The complete event planning platform for New Zealand.',
