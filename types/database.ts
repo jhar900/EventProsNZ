@@ -146,7 +146,14 @@ export interface Database {
           location: string | null;
           budget_min: number | null;
           budget_max: number | null;
+          event_type: string | null;
+          duration_hours: number | null;
+          attendee_count: number | null;
+          budget_total: number | null;
+          location_data: any | null;
+          special_requirements: string | null;
           status:
+            | 'draft'
             | 'planning'
             | 'confirmed'
             | 'in_progress'
@@ -164,7 +171,14 @@ export interface Database {
           location?: string | null;
           budget_min?: number | null;
           budget_max?: number | null;
+          event_type?: string | null;
+          duration_hours?: number | null;
+          attendee_count?: number | null;
+          budget_total?: number | null;
+          location_data?: any | null;
+          special_requirements?: string | null;
           status?:
+            | 'draft'
             | 'planning'
             | 'confirmed'
             | 'in_progress'
@@ -182,7 +196,14 @@ export interface Database {
           location?: string | null;
           budget_min?: number | null;
           budget_max?: number | null;
+          event_type?: string | null;
+          duration_hours?: number | null;
+          attendee_count?: number | null;
+          budget_total?: number | null;
+          location_data?: any | null;
+          special_requirements?: string | null;
           status?:
+            | 'draft'
             | 'planning'
             | 'confirmed'
             | 'in_progress'
@@ -450,6 +471,214 @@ export interface Database {
           admin_notes?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      event_templates: {
+        Row: {
+          id: string;
+          name: string;
+          event_type: string;
+          template_data: any;
+          is_public: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          event_type: string;
+          template_data: any;
+          is_public?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          event_type?: string;
+          template_data?: any;
+          is_public?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      event_versions: {
+        Row: {
+          id: string;
+          event_id: string;
+          version_number: number;
+          changes: any;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          version_number: number;
+          changes: any;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          version_number?: number;
+          changes?: any;
+          created_by?: string | null;
+          created_at?: string;
+        };
+      };
+      event_drafts: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_data: any;
+          step_number: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_data: any;
+          step_number?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_data?: any;
+          step_number?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      event_service_requirements: {
+        Row: {
+          id: string;
+          event_id: string;
+          service_category: string;
+          service_type: string;
+          description: string | null;
+          priority: 'low' | 'medium' | 'high';
+          estimated_budget: number | null;
+          is_required: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          service_category: string;
+          service_type: string;
+          description?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          estimated_budget?: number | null;
+          is_required?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          service_category?: string;
+          service_type?: string;
+          description?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          estimated_budget?: number | null;
+          is_required?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      event_contractor_matches: {
+        Row: {
+          id: string;
+          event_id: string;
+          contractor_id: string;
+          service_requirement_id: string | null;
+          match_score: number;
+          status: 'pending' | 'contacted' | 'interested' | 'declined' | 'hired';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          contractor_id: string;
+          service_requirement_id?: string | null;
+          match_score?: number;
+          status?:
+            | 'pending'
+            | 'contacted'
+            | 'interested'
+            | 'declined'
+            | 'hired';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          contractor_id?: string;
+          service_requirement_id?: string | null;
+          match_score?: number;
+          status?:
+            | 'pending'
+            | 'contacted'
+            | 'interested'
+            | 'declined'
+            | 'hired';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      event_notifications: {
+        Row: {
+          id: string;
+          event_id: string;
+          contractor_id: string;
+          notification_type:
+            | 'event_created'
+            | 'event_updated'
+            | 'event_cancelled'
+            | 'service_requirement_added'
+            | 'service_requirement_updated';
+          message: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          contractor_id: string;
+          notification_type:
+            | 'event_created'
+            | 'event_updated'
+            | 'event_cancelled'
+            | 'service_requirement_added'
+            | 'service_requirement_updated';
+          message: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          contractor_id?: string;
+          notification_type?:
+            | 'event_created'
+            | 'event_updated'
+            | 'event_cancelled'
+            | 'service_requirement_added'
+            | 'service_requirement_updated';
+          message?: string;
+          is_read?: boolean;
+          created_at?: string;
         };
       };
     };
