@@ -81,16 +81,27 @@ export async function POST(request: NextRequest) {
 
         if (createUserError) {
           console.error('Failed to create user record:', createUserError);
-          return NextResponse.json(
-            {
-              error: 'Failed to create user profile',
-              details: createUserError.message,
-            },
-            { status: 500 }
-          );
+
+          // Check if it's a duplicate key error (user already exists)
+          if (
+            createUserError.code === '23505' ||
+            createUserError.message.includes('duplicate key')
+          ) {
+            console.log('User already exists, continuing with login...');
+            // Continue with the login process even if user creation failed
+          } else {
+            return NextResponse.json(
+              {
+                error: 'Failed to create user profile',
+                details: createUserError.message,
+                code: createUserError.code,
+              },
+              { status: 500 }
+            );
+          }
         }
 
-        // Create profile record
+        // Create profile record (only if user creation succeeded or was duplicate)
         const { error: createProfileError } = await supabaseAdmin
           .from('profiles')
           .insert({
@@ -107,7 +118,19 @@ export async function POST(request: NextRequest) {
 
         if (createProfileError) {
           console.error('Failed to create profile:', createProfileError);
-          // Don't fail login for profile creation error
+          // Check if it's a duplicate key error (profile already exists)
+          if (
+            createProfileError.code === '23505' ||
+            createProfileError.message.includes('duplicate key')
+          ) {
+            console.log('Profile already exists, continuing with login...');
+          } else {
+            console.error(
+              'Profile creation failed with non-duplicate error:',
+              createProfileError
+            );
+            // Don't fail login for profile creation error, but log it
+          }
         }
 
         // Retry fetching the user profile
@@ -137,10 +160,32 @@ export async function POST(request: NextRequest) {
             'Failed to fetch user profile after creation:',
             retryUserError
           );
-          return NextResponse.json(
-            { error: 'Failed to fetch user profile after creation' },
-            { status: 500 }
-          );
+
+          // Fallback: return basic user data from Auth if database fetch fails
+          console.log('Using fallback user data from Auth...');
+          return NextResponse.json({
+            message: 'Login successful (fallback mode)',
+            user: {
+              id: authData.user.id,
+              email: authData.user.email,
+              role: 'event_manager', // Default role
+              is_verified: true,
+              last_login: new Date().toISOString(),
+              profile: {
+                first_name:
+                  authData.user.user_metadata?.full_name?.split(' ')[0] ||
+                  'User',
+                last_name:
+                  authData.user.user_metadata?.full_name
+                    ?.split(' ')
+                    .slice(1)
+                    .join(' ') || '',
+                timezone: 'Pacific/Auckland',
+              },
+              business_profile: null,
+            },
+            session: authData.session,
+          });
         }
 
         // Use the retry data for the rest of the function
