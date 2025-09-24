@@ -71,7 +71,7 @@ export default function DashboardLayout({
   const sidebarItems = getSidebarItems();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -82,7 +82,7 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:h-screen flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -107,7 +107,7 @@ export default function DashboardLayout({
           </Button>
         </div>
 
-        <nav className="mt-8 px-4">
+        <nav className="mt-8 px-4 flex-1">
           <ul className="space-y-2">
             {sidebarItems.map(item => {
               const Icon = item.icon;
@@ -129,7 +129,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 flex-1 min-h-screen">
         {/* Mobile header */}
         <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
