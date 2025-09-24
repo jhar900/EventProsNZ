@@ -49,13 +49,45 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
         throw new Error(result.error || 'Login failed');
       }
 
-      // Set the session in Supabase client
+      // Set the session in Supabase client with timeout
       if (result.session) {
-        const { supabase } = await import('@/lib/supabase/client');
-        await supabase.auth.setSession(result.session);
+        console.log('Setting session in Supabase client...');
+        try {
+          const { supabase } = await import('@/lib/supabase/client');
+
+          // Add timeout to prevent hanging
+          const sessionPromise = supabase.auth.setSession(result.session);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Session setting timeout')), 5000)
+          );
+
+          const { error: sessionError } = (await Promise.race([
+            sessionPromise,
+            timeoutPromise,
+          ])) as any;
+
+          if (sessionError) {
+            console.error('Failed to set session:', sessionError);
+            throw new Error('Failed to set session: ' + sessionError.message);
+          }
+
+          console.log('Session set successfully');
+        } catch (sessionErr) {
+          console.error('Session setting failed:', sessionErr);
+          // Don't throw error for session issues, just log and continue
+          console.warn(
+            'Continuing without session setup due to error:',
+            sessionErr
+          );
+        }
       }
 
-      onSuccess?.(result.user);
+      console.log('Calling onSuccess with user:', result.user);
+
+      // Trigger a small delay to ensure session is fully set
+      setTimeout(() => {
+        onSuccess?.(result.user);
+      }, 100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
