@@ -18,7 +18,7 @@ export default function DashboardPage() {
     try {
       await logout();
     } catch (error) {
-      // Handle logout error silently
+      console.error('Logout error:', error);
     }
   };
 
@@ -29,7 +29,7 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       <DashboardLayout>
-        <div className="py-6 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
               <div className="text-center">
@@ -37,7 +37,7 @@ export default function DashboardPage() {
                   Welcome to Event Pros NZ
                 </h1>
                 <p className="text-lg text-gray-600 mb-8">
-                  New Zealand&apos;s Event Ecosystem
+                  New Zealand's Event Ecosystem
                 </p>
 
                 {user && (

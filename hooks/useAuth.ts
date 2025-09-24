@@ -27,12 +27,12 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Emergency fallback: force loading to false after 10 seconds
+  // Emergency fallback: force loading to false after 3 seconds
   React.useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
       console.log('Emergency timeout: forcing loading state to false');
       setIsLoading(false);
-    }, 10000);
+    }, 3000);
 
     return () => clearTimeout(emergencyTimeout);
   }, []);
