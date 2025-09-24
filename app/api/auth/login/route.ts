@@ -57,9 +57,124 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError) {
-      // console.error('Failed to fetch user profile:', userError);
+      console.error('Failed to fetch user profile:', userError);
+
+      // If user exists in Auth but not in our database, create the record
+      if (
+        userError.code === 'PGRST116' ||
+        userError.message.includes('No rows found')
+      ) {
+        console.log(
+          'User exists in Auth but not in database, creating user record...'
+        );
+
+        // Create user record in our database
+        const { error: createUserError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: authData.user.email!,
+            role: 'event_manager', // Default role
+            is_verified: true,
+            last_login: new Date().toISOString(),
+          });
+
+        if (createUserError) {
+          console.error('Failed to create user record:', createUserError);
+          return NextResponse.json(
+            {
+              error: 'Failed to create user profile',
+              details: createUserError.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        // Create profile record
+        const { error: createProfileError } = await supabaseAdmin
+          .from('profiles')
+          .insert({
+            user_id: authData.user.id,
+            first_name:
+              authData.user.user_metadata?.full_name?.split(' ')[0] || 'User',
+            last_name:
+              authData.user.user_metadata?.full_name
+                ?.split(' ')
+                .slice(1)
+                .join(' ') || '',
+            timezone: 'Pacific/Auckland',
+          });
+
+        if (createProfileError) {
+          console.error('Failed to create profile:', createProfileError);
+          // Don't fail login for profile creation error
+        }
+
+        // Retry fetching the user profile
+        const { data: retryUserData, error: retryUserError } =
+          await supabaseAdmin
+            .from('users')
+            .select(
+              `
+            id,
+            email,
+            role,
+            is_verified,
+            last_login,
+            profiles (
+              first_name,
+              last_name,
+              avatar_url,
+              timezone
+            )
+          `
+            )
+            .eq('id', authData.user.id)
+            .single();
+
+        if (retryUserError) {
+          console.error(
+            'Failed to fetch user profile after creation:',
+            retryUserError
+          );
+          return NextResponse.json(
+            { error: 'Failed to fetch user profile after creation' },
+            { status: 500 }
+          );
+        }
+
+        // Use the retry data for the rest of the function
+        const userData = retryUserData;
+
+        // Get business profile if contractor
+        let businessProfile = null;
+        if (userData.role === 'contractor') {
+          const { data: businessData } = await supabaseAdmin
+            .from('business_profiles')
+            .select('id, company_name, subscription_tier, is_verified')
+            .eq('user_id', authData.user.id)
+            .single();
+
+          businessProfile = businessData;
+        }
+
+        return NextResponse.json({
+          message: 'Login successful',
+          user: {
+            id: userData.id,
+            email: userData.email,
+            role: userData.role,
+            is_verified: userData.is_verified,
+            last_login: userData.last_login,
+            profile: userData.profiles,
+            business_profile: businessProfile,
+          },
+          session: authData.session,
+        });
+      }
+
       return NextResponse.json(
-        { error: 'Failed to fetch user profile' },
+        { error: 'Failed to fetch user profile', details: userError.message },
         { status: 500 }
       );
     }
