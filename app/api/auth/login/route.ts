@@ -9,12 +9,19 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Login API called');
+
     const body = await request.json();
+    console.log('Request body parsed successfully');
+
     const validatedData = loginSchema.parse(body);
+    console.log('Request validation passed');
 
     const { email, password } = validatedData;
+    console.log('Attempting login for email:', email);
 
     // Authenticate user with Supabase Auth
+    console.log('Attempting Supabase authentication...');
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.signInWithPassword({
         email,
@@ -22,6 +29,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
+      console.error('Authentication failed:', authError);
       return NextResponse.json(
         { error: 'Invalid credentials', details: authError.message },
         { status: 401 }
@@ -29,13 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     if (!authData.user) {
+      console.error('No user returned from authentication');
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 401 }
       );
     }
 
+    console.log('Authentication successful for user:', authData.user.id);
+
     // Get user profile from our database
+    console.log(
+      'Fetching user profile from database for user:',
+      authData.user.id
+    );
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select(
@@ -56,13 +71,28 @@ export async function POST(request: NextRequest) {
       .eq('id', authData.user.id)
       .single();
 
+    console.log(
+      'Database query completed. Data:',
+      userData,
+      'Error:',
+      userError
+    );
+
     if (userError) {
       console.error('Failed to fetch user profile:', userError);
+      console.error('User error details:', {
+        code: userError.code,
+        message: userError.message,
+        details: userError.details,
+        hint: userError.hint,
+      });
 
       // If user exists in Auth but not in our database, create the record
       if (
         userError.code === 'PGRST116' ||
-        userError.message.includes('No rows found')
+        userError.message.includes('No rows found') ||
+        userError.message.includes('relation') ||
+        userError.message.includes('does not exist')
       ) {
         console.log(
           'User exists in Auth but not in database, creating user record...'
