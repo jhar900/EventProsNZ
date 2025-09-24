@@ -38,6 +38,8 @@ export function useAuth() {
 
   const refreshUser = async () => {
     try {
+      console.log('refreshUser called');
+
       // Check if Supabase is properly configured
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
         console.warn('Supabase not configured - running in demo mode');
@@ -45,17 +47,22 @@ export function useAuth() {
         return;
       }
 
+      console.log('Getting session from Supabase...');
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      console.log('Session in refreshUser:', session);
+
       if (!session?.user) {
+        console.log('No session or user found, setting user to null');
         setUser(null);
         return;
       }
 
-      // Get user profile from our database
-      const { data: userData, error } = await supabase
+      // Get user profile from our database with timeout
+      console.log('Fetching user profile from database...');
+      const userQueryPromise = supabase
         .from('users')
         .select(
           `
@@ -74,6 +81,15 @@ export function useAuth() {
         )
         .eq('id', session.user.id)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database query timeout')), 10000)
+      );
+
+      const { data: userData, error } = (await Promise.race([
+        userQueryPromise,
+        timeoutPromise,
+      ])) as any;
 
       if (error) {
         console.error('Failed to fetch user profile:', error);
@@ -277,17 +293,25 @@ export function useAuth() {
           return;
         }
 
+        console.log('Checking for existing session...');
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
+        console.log('Session check result:', session);
+
         if (session?.user) {
+          console.log('Found existing session, refreshing user...');
           await refreshUser();
+        } else {
+          console.log('No existing session found');
+          setUser(null);
         }
       } catch (error) {
         console.error('Error checking session:', error);
         setUser(null);
       } finally {
+        console.log('Setting isLoading to false');
         setIsLoading(false);
       }
     };
