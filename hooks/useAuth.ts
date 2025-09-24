@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 export interface User {
@@ -26,6 +26,16 @@ export interface User {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Emergency fallback: force loading to false after 10 seconds
+  React.useEffect(() => {
+    const emergencyTimeout = setTimeout(() => {
+      console.log('Emergency timeout: forcing loading state to false');
+      setIsLoading(false);
+    }, 10000);
+
+    return () => clearTimeout(emergencyTimeout);
+  }, []);
 
   console.log('useAuth hook called, isLoading:', isLoading, 'user:', user);
   console.log('Environment check:', {
@@ -282,6 +292,12 @@ export function useAuth() {
       process.env.NEXT_PUBLIC_SUPABASE_URL
     );
 
+    // Add a fallback timeout to ensure loading state is always set to false
+    const fallbackTimeout = setTimeout(() => {
+      console.log('Fallback timeout: forcing isLoading to false');
+      setIsLoading(false);
+    }, 5000);
+
     // Check for existing session on mount
     const checkSession = async () => {
       try {
@@ -290,6 +306,7 @@ export function useAuth() {
           console.warn('Supabase not configured - running in demo mode');
           setUser(null);
           setIsLoading(false);
+          clearTimeout(fallbackTimeout);
           return;
         }
 
@@ -302,7 +319,17 @@ export function useAuth() {
 
         if (session?.user) {
           console.log('Found existing session, refreshing user...');
-          await refreshUser();
+          try {
+            // Add timeout to refreshUser to prevent hanging
+            const refreshPromise = refreshUser();
+            const refreshTimeout = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Refresh user timeout')), 8000)
+            );
+            await Promise.race([refreshPromise, refreshTimeout]);
+          } catch (refreshError) {
+            console.error('Refresh user failed or timed out:', refreshError);
+            setUser(null);
+          }
         } else {
           console.log('No existing session found');
           setUser(null);
@@ -313,6 +340,7 @@ export function useAuth() {
       } finally {
         console.log('Setting isLoading to false');
         setIsLoading(false);
+        clearTimeout(fallbackTimeout);
       }
     };
 
@@ -335,6 +363,7 @@ export function useAuth() {
     }
 
     return () => {
+      clearTimeout(fallbackTimeout);
       if (subscription) {
         subscription.unsubscribe();
       }
