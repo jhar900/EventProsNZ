@@ -12,6 +12,23 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is properly configured
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      console.error('Missing Supabase environment variables');
+      return NextResponse.json(
+        {
+          error: 'Server configuration error',
+          details:
+            'Database connection not configured. Please contact support.',
+          code: 'CONFIG_ERROR',
+        },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
@@ -26,8 +43,13 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
+      console.error('Auth creation error:', authError);
       return NextResponse.json(
-        { error: 'Failed to create user account', details: authError.message },
+        {
+          error: 'Failed to create user account',
+          details: authError.message,
+          code: authError.status || 'AUTH_ERROR',
+        },
         { status: 400 }
       );
     }
@@ -115,14 +137,38 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        {
+          error: 'Validation failed',
+          details: error.errors,
+          code: 'VALIDATION_ERROR',
+        },
         { status: 400 }
       );
     }
 
     console.error('Registration error:', error);
+
+    // Check if it's a Supabase connection error
+    if (error instanceof Error && error.message.includes('fetch')) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          details: 'Unable to connect to the database. Please try again later.',
+          code: 'DB_CONNECTION_ERROR',
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error.message
+            : 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
+      },
       { status: 500 }
     );
   }

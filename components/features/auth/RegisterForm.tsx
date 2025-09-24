@@ -74,7 +74,22 @@ export default function RegisterForm({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Registration failed');
+        // Show more specific error messages based on the error code
+        let errorMessage = result.error || 'Registration failed';
+
+        if (result.code === 'CONFIG_ERROR') {
+          errorMessage = 'Server configuration error. Please contact support.';
+        } else if (result.code === 'DB_CONNECTION_ERROR') {
+          errorMessage = 'Database connection failed. Please try again later.';
+        } else if (result.code === 'AUTH_ERROR') {
+          errorMessage =
+            result.details ||
+            'Authentication failed. Please check your information.';
+        } else if (result.details) {
+          errorMessage = result.details;
+        }
+
+        throw new Error(errorMessage);
       }
 
       onSuccess?.(result.user);
