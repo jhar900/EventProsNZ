@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError) {
-      console.error('Failed to fetch user profile:', userError);
+      // console.error('Failed to fetch user profile:', userError);
       return NextResponse.json(
         { error: 'Failed to fetch user profile' },
         { status: 500 }
@@ -93,11 +93,7 @@ export async function POST(request: NextRequest) {
         profile: userData.profiles,
         business_profile: businessProfile,
       },
-      session: {
-        access_token: authData.session?.access_token,
-        refresh_token: authData.session?.refresh_token,
-        expires_at: authData.session?.expires_at,
-      },
+      session: authData.session,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -107,7 +103,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Login error:', error);
+    // console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

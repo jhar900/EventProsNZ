@@ -49,11 +49,10 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
         throw new Error(result.error || 'Login failed');
       }
 
-      // Store session data
+      // Set the session in Supabase client
       if (result.session) {
-        localStorage.setItem('access_token', result.session.access_token);
-        localStorage.setItem('refresh_token', result.session.refresh_token);
-        localStorage.setItem('expires_at', result.session.expires_at);
+        const { supabase } = await import('@/lib/supabase/client');
+        await supabase.auth.setSession(result.session);
       }
 
       onSuccess?.(result.user);
@@ -150,7 +149,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link
               href="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
