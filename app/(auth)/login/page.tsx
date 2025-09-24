@@ -8,10 +8,12 @@ import AuthGuard from '@/components/features/auth/AuthGuard';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // console.log('Login page - user:', user, 'isLoading:', isLoading);
 
   const handleSuccess = (user: any) => {
-    console.log('Login successful:', user);
+    // console.log('Login successful:', user);
     // Redirect based on user role
     if (user.role === 'admin') {
       router.push('/admin/dashboard');
@@ -23,7 +25,7 @@ export default function LoginPage() {
   };
 
   const handleError = (error: string) => {
-    console.error('Login error:', error);
+    // console.error('Login error:', error);
   };
 
   return (
@@ -33,7 +35,7 @@ export default function LoginPage() {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900">Event Pros NZ</h1>
             <p className="mt-2 text-sm text-gray-600">
-              New Zealand's Event Ecosystem
+              New Zealand&apos;s Event Ecosystem
             </p>
           </div>
 

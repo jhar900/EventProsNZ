@@ -49,8 +49,25 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
         throw new Error(result.error || 'Login failed');
       }
 
-      console.log('Login successful, calling onSuccess immediately');
-      onSuccess?.(result.user);
+      // Set the session in Supabase client (simplified approach)
+      if (result.session) {
+        // console.log('Setting session in Supabase client...');
+        try {
+          const { supabase } = await import('@/lib/supabase/client');
+          await supabase.auth.setSession(result.session);
+          // console.log('Session set successfully');
+        } catch (sessionErr) {
+          // console.error('Session setting failed:', sessionErr);
+          // Continue anyway - the user data is still valid
+        }
+      }
+
+      // console.log('Login successful, calling onSuccess');
+
+      // Small delay to ensure session is properly set
+      setTimeout(() => {
+        onSuccess?.(result.user);
+      }, 100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
