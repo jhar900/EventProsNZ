@@ -278,6 +278,8 @@ export function useAuth() {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('expires_at');
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('is_authenticated');
 
       // Sign out from Supabase
       await supabase.auth.signOut();
@@ -301,6 +303,19 @@ export function useAuth() {
     // Check for existing session on mount
     const checkSession = async () => {
       try {
+        // First check localStorage for user data
+        const storedUserData = localStorage.getItem('user_data');
+        const isAuthenticated = localStorage.getItem('is_authenticated');
+
+        if (storedUserData && isAuthenticated === 'true') {
+          console.log('Found user data in localStorage');
+          const userData = JSON.parse(storedUserData);
+          setUser(userData);
+          setIsLoading(false);
+          clearTimeout(fallbackTimeout);
+          return;
+        }
+
         // Check if Supabase is properly configured
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
           console.warn('Supabase not configured - running in demo mode');
@@ -310,7 +325,7 @@ export function useAuth() {
           return;
         }
 
-        console.log('Checking for existing session...');
+        console.log('No localStorage data, checking Supabase session...');
         const {
           data: { session },
         } = await supabase.auth.getSession();
