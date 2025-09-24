@@ -37,7 +37,7 @@ export default function DashboardPage() {
                   Welcome to Event Pros NZ
                 </h1>
                 <p className="text-lg text-gray-600 mb-8">
-                  New Zealand's Event Ecosystem
+                  New Zealand&apos;s Event Ecosystem
                 </p>
 
                 {user && (
