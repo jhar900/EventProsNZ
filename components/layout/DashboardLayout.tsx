@@ -129,7 +129,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex-1 min-h-screen">
+      <div className="lg:pl-64 flex-1 min-h-screen flex justify-center">
         {/* Mobile header */}
         <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
@@ -155,7 +155,9 @@ export default function DashboardLayout({
         </div>
 
         {/* Page content */}
-        <div className={`${className}`}>{children}</div>
+        <div className={`${className} w-full max-w-7xl mx-auto`}>
+          {children}
+        </div>
       </div>
     </div>
   );
