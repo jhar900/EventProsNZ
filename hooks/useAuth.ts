@@ -232,11 +232,10 @@ export function useAuth() {
       throw new Error(result.error || 'Login failed');
     }
 
-    // Store session data
-    if (result.session) {
-      localStorage.setItem('access_token', result.session.access_token);
-      localStorage.setItem('refresh_token', result.session.refresh_token);
-      localStorage.setItem('expires_at', result.session.expires_at);
+    // Store user data in localStorage for persistence
+    if (result.user) {
+      localStorage.setItem('user_data', JSON.stringify(result.user));
+      localStorage.setItem('is_authenticated', 'true');
     }
 
     setUser(result.user);
@@ -261,6 +260,12 @@ export function useAuth() {
 
     if (!response.ok) {
       throw new Error(result.error || 'Registration failed');
+    }
+
+    // Store user data in localStorage for persistence
+    if (result.user) {
+      localStorage.setItem('user_data', JSON.stringify(result.user));
+      localStorage.setItem('is_authenticated', 'true');
     }
 
     setUser(result.user);
@@ -298,17 +303,19 @@ export function useAuth() {
     const fallbackTimeout = setTimeout(() => {
       console.log('Fallback timeout: forcing isLoading to false');
       setIsLoading(false);
-    }, 5000);
+    }, 2000); // Reduced timeout since localStorage is instant
 
     // Check for existing session on mount
     const checkSession = async () => {
       try {
-        // First check localStorage for user data
+        // First check localStorage for user data (instant check)
         const storedUserData = localStorage.getItem('user_data');
         const isAuthenticated = localStorage.getItem('is_authenticated');
 
         if (storedUserData && isAuthenticated === 'true') {
-          console.log('Found user data in localStorage');
+          console.log(
+            'Found user data in localStorage, setting user immediately'
+          );
           const userData = JSON.parse(storedUserData);
           setUser(userData);
           setIsLoading(false);
@@ -316,72 +323,23 @@ export function useAuth() {
           return;
         }
 
-        // Check if Supabase is properly configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-          console.warn('Supabase not configured - running in demo mode');
-          setUser(null);
-          setIsLoading(false);
-          clearTimeout(fallbackTimeout);
-          return;
-        }
-
-        console.log('No localStorage data, checking Supabase session...');
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        console.log('Session check result:', session);
-
-        if (session?.user) {
-          console.log('Found existing session, refreshing user...');
-          try {
-            // Add timeout to refreshUser to prevent hanging
-            const refreshPromise = refreshUser();
-            const refreshTimeout = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Refresh user timeout')), 8000)
-            );
-            await Promise.race([refreshPromise, refreshTimeout]);
-          } catch (refreshError) {
-            console.error('Refresh user failed or timed out:', refreshError);
-            setUser(null);
-          }
-        } else {
-          console.log('No existing session found');
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
+        console.log('No localStorage data found, user not authenticated');
         setUser(null);
-      } finally {
-        console.log('Setting isLoading to false');
+        setIsLoading(false);
+        clearTimeout(fallbackTimeout);
+      } catch (error) {
+        console.error('Error checking localStorage:', error);
+        setUser(null);
         setIsLoading(false);
         clearTimeout(fallbackTimeout);
       }
     };
 
+    // Run immediately (no async needed for localStorage)
     checkSession();
-
-    // Listen for auth changes (only if Supabase is configured)
-    let subscription;
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      const {
-        data: { subscription: authSubscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          await refreshUser();
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-        setIsLoading(false);
-      });
-      subscription = authSubscription;
-    }
 
     return () => {
       clearTimeout(fallbackTimeout);
-      if (subscription) {
-        subscription.unsubscribe();
-      }
     };
   }, []);
 
