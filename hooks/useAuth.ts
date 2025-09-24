@@ -87,38 +87,35 @@ export function useAuth() {
             'User exists in Auth but not in database, creating user record...'
           );
 
-          // Create user record in our database
-          const { error: createError } = await supabase.from('users').insert({
-            id: session.user.id,
-            email: session.user.email!,
-            role: 'event_manager', // Default role
-            is_verified: true,
-            last_login: new Date().toISOString(),
-          });
+          // Create user record via API call to avoid RLS issues
+          const createUserResponse = await fetch(
+            '/api/auth/create-user-profile',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                user_id: session.user.id,
+                email: session.user.email!,
+                role: 'event_manager', // Default role
+                first_name:
+                  session.user.user_metadata?.full_name?.split(' ')[0] ||
+                  'User',
+                last_name:
+                  session.user.user_metadata?.full_name
+                    ?.split(' ')
+                    .slice(1)
+                    .join(' ') || '',
+              }),
+            }
+          );
 
-          if (createError) {
-            console.error('Failed to create user record:', createError);
+          if (!createUserResponse.ok) {
+            const errorData = await createUserResponse.json();
+            console.error('Failed to create user record:', errorData);
             setUser(null);
             return;
-          }
-
-          // Create profile record
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: session.user.id,
-              first_name:
-                session.user.user_metadata?.full_name?.split(' ')[0] || 'User',
-              last_name:
-                session.user.user_metadata?.full_name
-                  ?.split(' ')
-                  .slice(1)
-                  .join(' ') || '',
-              timezone: 'Pacific/Auckland',
-            });
-
-          if (profileError) {
-            console.error('Failed to create profile:', profileError);
           }
 
           // Retry fetching the user profile
