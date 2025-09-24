@@ -77,6 +77,92 @@ export function useAuth() {
 
       if (error) {
         console.error('Failed to fetch user profile:', error);
+
+        // If user exists in Auth but not in our database, create the record
+        if (
+          error.code === 'PGRST116' ||
+          error.message.includes('No rows found')
+        ) {
+          console.log(
+            'User exists in Auth but not in database, creating user record...'
+          );
+
+          // Create user record in our database
+          const { error: createError } = await supabase.from('users').insert({
+            id: session.user.id,
+            email: session.user.email!,
+            role: 'event_manager', // Default role
+            is_verified: true,
+            last_login: new Date().toISOString(),
+          });
+
+          if (createError) {
+            console.error('Failed to create user record:', createError);
+            setUser(null);
+            return;
+          }
+
+          // Create profile record
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: session.user.id,
+              first_name:
+                session.user.user_metadata?.full_name?.split(' ')[0] || 'User',
+              last_name:
+                session.user.user_metadata?.full_name
+                  ?.split(' ')
+                  .slice(1)
+                  .join(' ') || '',
+              timezone: 'Pacific/Auckland',
+            });
+
+          if (profileError) {
+            console.error('Failed to create profile:', profileError);
+          }
+
+          // Retry fetching the user profile
+          const { data: retryUserData, error: retryError } = await supabase
+            .from('users')
+            .select(
+              `
+              id,
+              email,
+              role,
+              is_verified,
+              last_login,
+              profiles (
+                first_name,
+                last_name,
+                avatar_url,
+                timezone
+              )
+            `
+            )
+            .eq('id', session.user.id)
+            .single();
+
+          if (retryError) {
+            console.error(
+              'Failed to fetch user profile after creation:',
+              retryError
+            );
+            setUser(null);
+            return;
+          }
+
+          setUser({
+            id: retryUserData.id,
+            email: retryUserData.email,
+            role: retryUserData.role,
+            is_verified: retryUserData.is_verified,
+            last_login: retryUserData.last_login,
+            profile: retryUserData.profiles,
+            business_profile: null,
+          });
+          return;
+        }
+
         setUser(null);
         return;
       }
