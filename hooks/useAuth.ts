@@ -27,12 +27,12 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Emergency fallback: force loading to false after 3 seconds
+  // Emergency fallback: force loading to false after 1 second
   React.useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
       console.log('Emergency timeout: forcing loading state to false');
       setIsLoading(false);
-    }, 3000);
+    }, 1000);
 
     return () => clearTimeout(emergencyTimeout);
   }, []);
@@ -306,8 +306,17 @@ export function useAuth() {
     }, 2000); // Reduced timeout since localStorage is instant
 
     // Check for existing session on mount
-    const checkSession = async () => {
+    const checkSession = () => {
       try {
+        // Check if we're in the browser (localStorage is available)
+        if (typeof window === 'undefined') {
+          console.log('Server-side rendering, setting loading to false');
+          setUser(null);
+          setIsLoading(false);
+          clearTimeout(fallbackTimeout);
+          return;
+        }
+
         // First check localStorage for user data (instant check)
         const storedUserData = localStorage.getItem('user_data');
         const isAuthenticated = localStorage.getItem('is_authenticated');
