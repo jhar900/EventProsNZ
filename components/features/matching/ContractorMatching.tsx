@@ -27,13 +27,13 @@ import { ContractorMatch, MatchingFilters } from '@/types/matching';
 import { EventRequirementAnalysis } from './EventRequirementAnalysis';
 import { CompatibilityScoring } from './CompatibilityScoring';
 import { AvailabilityChecker } from './AvailabilityChecker';
-import { BudgetCompatibility } from './BudgetCompatibility';
+import { BudgetCompatibilityComponent } from './BudgetCompatibility';
 import { LocationMatching } from './LocationMatching';
 import { PerformanceIntegration } from './PerformanceIntegration';
-import { ContractorRanking } from './ContractorRanking';
+import { ContractorRankingComponent } from './ContractorRanking';
 import { MatchingResults } from './MatchingResults';
 import { InquiryIntegration } from './InquiryIntegration';
-import { MatchingFilters as MatchingFiltersComponent } from './MatchingFilters';
+import { MatchingFiltersComponent } from './MatchingFilters';
 import { MatchingPagination } from './MatchingPagination';
 
 interface ContractorMatchingProps {
@@ -279,7 +279,7 @@ export function ContractorMatching({
             duration={8}
           />
 
-          <BudgetCompatibility
+          <BudgetCompatibilityComponent
             eventId={eventId}
             contractorId={selectedMatch.contractor_id}
           />
@@ -291,7 +291,7 @@ export function ContractorMatching({
 
           <PerformanceIntegration contractorId={selectedMatch.contractor_id} />
 
-          <ContractorRanking matches={matches} algorithm="default" />
+          <ContractorRankingComponent matches={matches} algorithm="default" />
         </div>
       )}
 
