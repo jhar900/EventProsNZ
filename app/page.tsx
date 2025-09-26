@@ -15,7 +15,9 @@ export default function Home() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-lg">Loading...</p>
-          <p className="mt-2 text-sm text-gray-500">Debug: isLoading = {isLoading.toString()}</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Debug: isLoading = {isLoading.toString()}
+          </p>
         </div>
       </main>
     );
@@ -279,6 +281,36 @@ export default function Home() {
                 </Link>
 
                 <Link
+                  href="/events/create/budget"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💰</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Budget Planning
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Budget planning for events
+                  </p>
+                </Link>
+
+                <Link
+                  href="/events/create/matching"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🎯</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Contractor Matching
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Match contractors to events
+                  </p>
+                </Link>
+
+                <Link
                   href="/events/templates"
                   className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
                 >
@@ -290,6 +322,59 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-gray-600">
                     Pre-built event templates
+                  </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Budget Planning Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                💰 Budget Planning Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/budget/analytics"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Budget Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Budget analysis and insights
+                  </p>
+                </Link>
+
+                <Link
+                  href="/budget/recommendations"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💡</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Budget Recommendations
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    AI-powered budget suggestions
+                  </p>
+                </Link>
+
+                <Link
+                  href="/budget/tracking"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📈</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Budget Tracking
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Track budget performance
                   </p>
                 </Link>
               </div>
@@ -342,6 +427,44 @@ export default function Home() {
                     </h4>
                   </div>
                   <p className="text-sm text-gray-600">AI service templates</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Matching Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🎯 Matching Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/matching/contractors"
+                  className="group block bg-cyan-50 hover:bg-cyan-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-cyan-600">
+                      Contractor Matching
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Match contractors to events
+                  </p>
+                </Link>
+
+                <Link
+                  href="/matching/analytics"
+                  className="group block bg-cyan-50 hover:bg-cyan-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-cyan-600">
+                      Matching Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Matching performance analytics
+                  </p>
                 </Link>
               </div>
             </div>
@@ -456,6 +579,36 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-gray-600">
                     Learn how to use the platform
+                  </p>
+                </Link>
+
+                <Link
+                  href="/onboarding/contractor/submitted"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Contractor Submitted
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Contractor application submitted
+                  </p>
+                </Link>
+
+                <Link
+                  href="/onboarding/contractor/tutorial"
+                  className="group block bg-teal-50 hover:bg-teal-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🎓</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                      Contractor Tutorial
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Contractor-specific tutorial
                   </p>
                 </Link>
               </div>
@@ -632,6 +785,36 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-gray-600">
                     Verification guidelines
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/analytics/performance"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⚡</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Performance Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    System performance metrics
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/analytics/search"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Search Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Search behavior analytics
                   </p>
                 </Link>
               </div>
