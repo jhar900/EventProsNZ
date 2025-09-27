@@ -172,7 +172,12 @@ export class ErrorHandler {
    */
   static handleError(error: Error, req: NextRequest): NextResponse {
     // Log the error
-    .toISOString(),
+    console.error('Error occurred:', {
+      timestamp: new Date().toISOString(),
+      error: error.message,
+      stack: error.stack,
+      url: req.url,
+      method: req.method,
     });
 
     // Handle specific error types
