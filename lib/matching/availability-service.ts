@@ -26,7 +26,6 @@ export class AvailabilityService {
         .eq('is_available', true);
 
       if (error) {
-        console.error('Error checking availability:', error);
         return this.createUnavailableResult(contractorId, eventDate, [
           {
             id: 'error',
@@ -68,7 +67,6 @@ export class AvailabilityService {
         availability_score: isAvailable && conflicts.length === 0 ? 1.0 : 0.0,
       };
     } catch (error) {
-      console.error('Error in availability check:', error);
       return this.createUnavailableResult(contractorId, eventDate, [
         {
           id: 'error',
@@ -121,13 +119,11 @@ export class AvailabilityService {
         });
 
       if (error) {
-        console.error('Error setting availability:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in setAvailability:', error);
       return false;
     }
   }
@@ -150,7 +146,6 @@ export class AvailabilityService {
         .order('event_date');
 
       if (error) {
-        console.error('Error fetching availability range:', error);
         return [];
       }
 
@@ -161,7 +156,6 @@ export class AvailabilityService {
         availability_score: avail.is_available ? 1.0 : 0.0,
       }));
     } catch (error) {
-      console.error('Error in getAvailabilityRange:', error);
       return [];
     }
   }
@@ -193,7 +187,6 @@ export class AvailabilityService {
         description: 'Contractor has existing booking at this time',
       }));
     } catch (error) {
-      console.error('Error checking time conflicts:', error);
       return [];
     }
   }

@@ -9,7 +9,6 @@ const mockSupabaseClient = {
       select: jest.fn((columns?: string) => mockQuery),
       eq: jest.fn((column: string, value: any) => mockQuery),
       order: jest.fn((column: string, options?: any) => {
-        console.log('order method called with:', column, options);
         return Promise.resolve({
           data: null,
           error: new Error('Database error'),
@@ -31,7 +30,6 @@ const mockSupabaseClient = {
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() => {
-    console.log('createClient called, returning mockSupabaseClient');
     return mockSupabaseClient;
   }),
 }));
@@ -144,13 +142,7 @@ describe('/api/ai/user-preferences', () => {
       });
 
       // Debug: check if mock is being called
-      console.log('Mock setup:', {
-        from: mockSupabaseClient.from,
-      });
-
       // Add debugging to track when order is called
-      console.log('Database error test setup complete');
-
       const request = new NextRequest(
         'http://localhost:3000/api/ai/user-preferences'
       );
@@ -369,9 +361,6 @@ describe('/api/ai/user-preferences', () => {
       const response = await PUT(request);
       const data = await response.json();
 
-      console.log('PUT Response status:', response.status);
-      console.log('PUT Response data:', data);
-
       if (response.status === 500) {
         // API route is returning an error
         expect(response.status).toBe(500);
@@ -480,9 +469,6 @@ describe('/api/ai/user-preferences', () => {
       const response = await PUT(request);
       const data = await response.json();
 
-      console.log('PUT Database error response status:', response.status);
-      console.log('PUT Database error response data:', data);
-
       if (response.status === 400) {
         // API route is rejecting the request data
         expect(response.status).toBe(400);
@@ -536,9 +522,6 @@ describe('/api/ai/user-preferences', () => {
 
       const response = await DELETE(request);
       const data = await response.json();
-
-      console.log('DELETE Response status:', response.status);
-      console.log('DELETE Response data:', data);
 
       if (response.status === 400) {
         // API route is rejecting the request data
@@ -645,9 +628,6 @@ describe('/api/ai/user-preferences', () => {
 
       const response = await DELETE(request);
       const data = await response.json();
-
-      console.log('DELETE Database error response status:', response.status);
-      console.log('DELETE Database error response data:', data);
 
       if (response.status === 400) {
         // API route is rejecting the request data

@@ -44,7 +44,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -85,7 +84,6 @@ export async function GET(
       .order('version_number', { ascending: false });
 
     if (versionsError) {
-      console.error('Error fetching versions:', versionsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch versions' },
         { status: 500 }
@@ -98,7 +96,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/versions:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -162,7 +159,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -214,7 +210,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Error creating version:', createError);
       return NextResponse.json(
         { success: false, message: 'Failed to create version' },
         { status: 500 }
@@ -241,8 +236,7 @@ export async function POST(
         .insert(notifications);
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
-      }
+        }
     }
 
     return NextResponse.json({
@@ -251,7 +245,6 @@ export async function POST(
       message: 'Version created successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/versions:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

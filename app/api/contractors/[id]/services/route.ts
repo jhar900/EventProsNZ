@@ -52,7 +52,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (servicesError) {
-      console.error('Contractor services fetch error:', servicesError);
       return NextResponse.json(
         { error: 'Failed to fetch contractor services' },
         { status: 500 }
@@ -63,7 +62,6 @@ export async function GET(
       services: services || [],
     });
   } catch (error) {
-    console.error('Contractor services API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

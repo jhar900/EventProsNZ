@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
       .eq('id', authData.user.id);
 
     if (updateError) {
-      console.error('Failed to update verification status:', updateError);
       return NextResponse.json(
         { error: 'Failed to update verification status' },
         { status: 500 }
@@ -67,7 +66,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Email verification error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -114,8 +114,7 @@ export function ContractorProfile({
           url: shareUrl,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
-      }
+        }
     } else {
       // Fallback: copy to clipboard
       await navigator.clipboard.writeText(shareUrl);

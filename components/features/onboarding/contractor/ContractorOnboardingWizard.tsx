@@ -72,11 +72,9 @@ export function ContractorOnboardingWizard({
       if (success) {
         router.push('/onboarding/contractor/submitted');
       } else {
-        console.error('Submission failed');
         // Handle error - show toast or error message
       }
     } catch (error) {
-      console.error('Submission error:', error);
       // Handle error - show toast or error message
     } finally {
       setIsSubmitting(false);

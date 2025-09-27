@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Get system info error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -130,7 +129,6 @@ async function getSystemHealth(supabase: any) {
 
     return NextResponse.json({ health });
   } catch (error) {
-    console.error('System health check error:', error);
     return NextResponse.json(
       { error: 'Failed to get system health' },
       { status: 500 }
@@ -197,7 +195,6 @@ async function getSystemPerformance(
 
     return NextResponse.json({ performance });
   } catch (error) {
-    console.error('System performance check error:', error);
     return NextResponse.json(
       { error: 'Failed to get system performance' },
       { status: 500 }

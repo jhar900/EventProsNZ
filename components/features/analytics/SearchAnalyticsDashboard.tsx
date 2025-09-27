@@ -107,8 +107,7 @@ export default function SearchAnalyticsDashboard({
         performanceScore,
       });
     } catch (error) {
-      console.error('Error fetching dashboard metrics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -123,8 +122,7 @@ export default function SearchAnalyticsDashboard({
 
   const handleExport = () => {
     // TODO: Implement data export functionality
-    console.log('Exporting analytics data...');
-  };
+    };
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {

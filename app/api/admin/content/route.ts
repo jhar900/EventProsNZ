@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
       summary: summaryStats,
     });
   } catch (error) {
-    console.error('Get content reports error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -193,7 +192,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Content moderation action error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -241,10 +239,8 @@ async function removeContent(
           .eq('id', contentId);
         break;
       default:
-        console.warn(`Unknown content type for removal: ${contentType}`);
-    }
+        }
   } catch (error) {
-    console.error('Error removing content:', error);
     throw error;
   }
 }

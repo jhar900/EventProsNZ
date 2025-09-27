@@ -98,7 +98,6 @@ export async function GET(request: NextRequest) {
       .order('discount_percentage', { ascending: false });
 
     if (packagesError) {
-      console.error('Error fetching package deals:', packagesError);
       return NextResponse.json(
         { error: 'Failed to fetch package deals' },
         { status: 500 }
@@ -154,7 +153,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Package deals error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -240,7 +238,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (applyError) {
-      console.error('Error applying package:', applyError);
       return NextResponse.json(
         { error: 'Failed to apply package' },
         { status: 500 }
@@ -262,8 +259,7 @@ export async function POST(request: NextRequest) {
         .eq('id', event_id);
 
       if (budgetError) {
-        console.error('Error updating event budget:', budgetError);
-      }
+        }
     }
 
     // Create service breakdown entries for package services
@@ -290,8 +286,7 @@ export async function POST(request: NextRequest) {
         .upsert(serviceBreakdowns);
 
       if (breakdownError) {
-        console.error('Error creating service breakdown:', breakdownError);
-      }
+        }
     }
 
     return NextResponse.json({
@@ -304,7 +299,6 @@ export async function POST(request: NextRequest) {
       budget_updated: !!packageDeal.base_price,
     });
   } catch (error) {
-    console.error('Package application error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

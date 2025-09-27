@@ -166,11 +166,9 @@ export const useEventCreationStore = create<EventCreationState>()(
           if (data.success) {
             set({ templates: data.templates });
           } else {
-            console.error('Failed to load templates:', data.message);
-          }
+            }
         } catch (error) {
-          console.error('Error loading templates:', error);
-        } finally {
+          } finally {
           set({ isLoading: false });
         }
       },
@@ -189,8 +187,7 @@ export const useEventCreationStore = create<EventCreationState>()(
             });
           }
         } catch (error) {
-          console.error('Error loading drafts:', error);
-        } finally {
+          } finally {
           set({ isLoading: false });
         }
       },
@@ -214,11 +211,9 @@ export const useEventCreationStore = create<EventCreationState>()(
           const data = await response.json();
 
           if (!data.success) {
-            console.error('Failed to save draft:', data.message);
-          }
+            }
         } catch (error) {
-          console.error('Error saving draft:', error);
-        } finally {
+          } finally {
           set({ isLoading: false });
         }
       },
@@ -252,7 +247,6 @@ export const useEventCreationStore = create<EventCreationState>()(
             throw new Error(data.message || 'Failed to create event');
           }
         } catch (error) {
-          console.error('Error submitting event:', error);
           throw error;
         } finally {
           set({ isLoading: false });

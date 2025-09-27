@@ -94,14 +94,12 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error) {
-      console.error('Budget tracking error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch budget tracking' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Budget tracking error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -168,7 +166,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching updated tracking:', fetchError);
         return NextResponse.json(
           { error: 'Failed to fetch updated tracking' },
           { status: 500 }
@@ -180,14 +177,12 @@ export async function POST(request: NextRequest) {
         success: true,
       });
     } catch (error) {
-      console.error('Budget variance tracking error:', error);
       return NextResponse.json(
         { error: 'Failed to track budget variance' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Budget tracking update error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

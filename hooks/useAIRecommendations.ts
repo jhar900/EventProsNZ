@@ -560,8 +560,7 @@ export function useAIRecommendations() {
           },
         });
       } catch (error) {
-        console.error('Error recording interaction:', error);
-      }
+        }
     },
     [learningEngine, state.userPreferences]
   );

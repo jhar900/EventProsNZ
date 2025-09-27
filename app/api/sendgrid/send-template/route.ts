@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
       messageId: messageId,
     });
   } catch (error) {
-    console.error("SendGrid template email error:", error);
     return NextResponse.json(
       {
         error: "Failed to send template email",

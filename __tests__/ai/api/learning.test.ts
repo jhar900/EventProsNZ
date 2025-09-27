@@ -43,16 +43,13 @@ const supabaseMock = {
   },
   setQueryResult: (query: string, result: any) => {
     // This would need to be implemented based on the specific query patterns
-    console.log(`Setting query result for: ${query}`, result);
-  },
+    },
   setQueryError: (query: string, error: Error) => {
     // This would need to be implemented based on the specific query patterns
-    console.log(`Setting query error for: ${query}`, error);
-  },
+    },
   setInsertResult: (table: string, result: any) => {
     // Mock insert result
-    console.log(`Setting insert result for: ${table}`, result);
-  },
+    },
   setDatabaseError: (error: Error) => {
     // Set all database operations to fail
     mockSupabaseClient.from.mockImplementation((table: string) => {

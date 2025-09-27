@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (userError) {
-      console.error('Failed to create user record:', userError);
       return NextResponse.json(
         { error: 'Failed to create user record', details: userError.message },
         { status: 500 }
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error('Failed to create profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to create profile', details: profileError.message },
         { status: 500 }
@@ -70,7 +68,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Create user profile error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

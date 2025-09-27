@@ -45,7 +45,6 @@ async function getUserVerificationData(userId: string) {
       .single();
 
     if (userDetailsError) {
-      console.error('Error fetching user details:', userDetailsError);
       return notFound();
     }
 
@@ -65,7 +64,6 @@ async function getUserVerificationData(userId: string) {
       .order('created_at', { ascending: false });
 
     if (logError) {
-      console.error('Error fetching verification log:', logError);
       return { user: userDetails, verification_log: [], queue_status: null };
     }
 
@@ -77,8 +75,7 @@ async function getUserVerificationData(userId: string) {
       .single();
 
     if (queueError && queueError.code !== 'PGRST116') {
-      console.error('Error fetching queue status:', queueError);
-    }
+      }
 
     return {
       user: userDetails,
@@ -86,7 +83,6 @@ async function getUserVerificationData(userId: string) {
       queue_status: queueStatus,
     };
   } catch (error) {
-    console.error('Error in getUserVerificationData:', error);
     return notFound();
   }
 }

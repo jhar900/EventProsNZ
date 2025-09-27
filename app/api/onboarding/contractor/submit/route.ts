@@ -66,15 +66,12 @@ export async function POST(request: NextRequest) {
 
     // TODO: Send admin notification email
     // This would typically integrate with SendGrid or similar service
-    console.log(`Contractor profile submitted for approval: ${user.id}`);
-
     return NextResponse.json({
       success: true,
       status: 'pending_approval',
       message: 'Profile submitted for approval successfully',
     });
   } catch (error) {
-    console.error('Contractor submit error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

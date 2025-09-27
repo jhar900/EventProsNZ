@@ -64,8 +64,7 @@ export function LearningAnalytics({
       const learningStats = learningEngine.getLearningStats();
       setStats(learningStats);
     } catch (error) {
-      console.error('Error loading learning data:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

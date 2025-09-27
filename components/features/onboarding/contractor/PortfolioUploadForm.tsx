@@ -118,8 +118,7 @@ export function PortfolioUploadForm({
       reader.readAsDataURL(file);
     } catch (error) {
       setError('Failed to upload file');
-      console.error('File upload error:', error);
-    } finally {
+      } finally {
       setUploadingFiles(prev => ({ ...prev, [index]: false }));
     }
   };
@@ -146,8 +145,7 @@ export function PortfolioUploadForm({
       }
     } catch (error) {
       setError('Failed to validate video URL');
-      console.error('Video validation error:', error);
-    }
+      }
   };
 
   const onFormSubmit = async (data: PortfolioUploadFormData) => {
@@ -183,8 +181,7 @@ export function PortfolioUploadForm({
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Portfolio submission error:', error);
-    }
+      }
   };
 
   return (

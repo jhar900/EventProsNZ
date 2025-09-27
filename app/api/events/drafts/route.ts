@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
     let draft;
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking existing draft:', checkError);
       return NextResponse.json(
         { success: false, message: 'Failed to validate draft' },
         { status: 500 }
@@ -132,7 +131,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('Error updating draft:', updateError);
         return NextResponse.json(
           { success: false, message: 'Failed to update draft' },
           { status: 500 }
@@ -153,7 +151,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError) {
-        console.error('Error creating draft:', createError);
         return NextResponse.json(
           { success: false, message: 'Failed to create draft' },
           { status: 500 }
@@ -170,7 +167,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/drafts:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -203,7 +199,6 @@ export async function GET(request: NextRequest) {
       .order('updated_at', { ascending: false });
 
     if (draftsError) {
-      console.error('Error fetching drafts:', draftsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch drafts' },
         { status: 500 }
@@ -217,7 +212,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events/drafts:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -249,7 +243,6 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (deleteError) {
-      console.error('Error deleting draft:', deleteError);
       return NextResponse.json(
         { success: false, message: 'Failed to delete draft' },
         { status: 500 }
@@ -261,7 +254,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Draft deleted successfully',
     });
   } catch (error) {
-    console.error('Error in DELETE /api/events/drafts:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

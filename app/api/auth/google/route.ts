@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
 
     if (userError && userError.code !== 'PGRST116') {
       // PGRST116 is "not found" error, which is expected for new users
-      console.error('Failed to check existing user:', userError);
       return NextResponse.json(
         { error: 'Failed to check user status' },
         { status: 500 }
@@ -80,7 +79,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (profileError) {
-        console.error('Failed to fetch user profile:', profileError);
         return NextResponse.json(
           { error: 'Failed to fetch user profile' },
           { status: 500 }
@@ -117,7 +115,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (createUserError) {
-      console.error('Failed to create user:', createUserError);
       return NextResponse.json(
         {
           error: 'Failed to create user profile',
@@ -144,7 +141,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error('Failed to create profile:', profileError);
       // Don't fail registration for profile creation error
     }
 
@@ -159,10 +155,6 @@ export async function POST(request: NextRequest) {
         });
 
       if (businessProfileError) {
-        console.error(
-          'Failed to create business profile:',
-          businessProfileError
-        );
         // Don't fail registration for business profile creation error
       }
     }
@@ -201,7 +193,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Google auth error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -70,8 +70,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setQueryAnalytics(data);
     } catch (err) {
       setError('Failed to fetch query analytics');
-      console.error('Error fetching query analytics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period, limit]);
@@ -84,8 +83,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setFilterAnalytics(data);
     } catch (err) {
       setError('Failed to fetch filter analytics');
-      console.error('Error fetching filter analytics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period]);
@@ -98,8 +96,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setCtrMetrics(data);
     } catch (err) {
       setError('Failed to fetch CTR analytics');
-      console.error('Error fetching CTR analytics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period]);
@@ -112,8 +109,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setTrendingData(data);
     } catch (err) {
       setError('Failed to fetch trending data');
-      console.error('Error fetching trending data:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period, limit]);
@@ -129,8 +125,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setBehaviorMetrics(data);
     } catch (err) {
       setError('Failed to fetch behavior analytics');
-      console.error('Error fetching behavior analytics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period, userSegment]);
@@ -143,8 +138,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setEngagementMetrics(data);
     } catch (err) {
       setError('Failed to fetch engagement metrics');
-      console.error('Error fetching engagement metrics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period]);
@@ -157,8 +151,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setPerformanceMetrics(data);
     } catch (err) {
       setError('Failed to fetch performance metrics');
-      console.error('Error fetching performance metrics:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, [period]);
@@ -171,8 +164,7 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       setAbTests(data);
     } catch (err) {
       setError('Failed to fetch A/B tests');
-      console.error('Error fetching A/B tests:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }, []);
@@ -224,7 +216,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       try {
         return await searchAnalyticsService.trackSearchQuery(data);
       } catch (err) {
-        console.error('Error tracking search query:', err);
         return null;
       }
     },
@@ -241,7 +232,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       try {
         return await searchAnalyticsService.trackSearchFilter(data);
       } catch (err) {
-        console.error('Error tracking search filter:', err);
         return null;
       }
     },
@@ -258,7 +248,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       try {
         return await searchAnalyticsService.trackSearchClick(data);
       } catch (err) {
-        console.error('Error tracking search click:', err);
         return null;
       }
     },
@@ -269,7 +258,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
     try {
       return await searchAnalyticsService.startSearchSession(user_id);
     } catch (err) {
-      console.error('Error starting search session:', err);
       return null;
     }
   }, []);
@@ -283,7 +271,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
           total_clicks
         );
       } catch (err) {
-        console.error('Error ending search session:', err);
         return null;
       }
     },
@@ -300,7 +287,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       try {
         return await searchAnalyticsService.recordPerformanceMetric(data);
       } catch (err) {
-        console.error('Error recording performance metric:', err);
         return null;
       }
     },
@@ -322,7 +308,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
         }
         return result;
       } catch (err) {
-        console.error('Error creating A/B test:', err);
         return null;
       }
     },
@@ -340,7 +325,6 @@ export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
       try {
         return await searchAnalyticsService.recordABTestResult(data);
       } catch (err) {
-        console.error('Error recording A/B test result:', err);
         return null;
       }
     },

@@ -44,7 +44,6 @@ export class PerformanceService {
         success_rate: successRate,
       };
     } catch (error) {
-      console.error('Error calculating performance score:', error);
       return this.getDefaultPerformance(contractorId);
     }
   }
@@ -88,13 +87,11 @@ export class PerformanceService {
         });
 
       if (error) {
-        console.error('Error updating performance metrics:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in updatePerformanceMetrics:', error);
       return false;
     }
   }
@@ -126,7 +123,6 @@ export class PerformanceService {
 
       return mockTrends;
     } catch (error) {
-      console.error('Error getting performance trends:', error);
       throw new Error('Failed to get performance trends');
     }
   }
@@ -163,7 +159,6 @@ export class PerformanceService {
 
       return benchmarks;
     } catch (error) {
-      console.error('Error getting performance benchmarks:', error);
       throw new Error('Failed to get performance benchmarks');
     }
   }
@@ -197,7 +192,6 @@ export class PerformanceService {
 
       return Math.min(1, Math.max(0, performanceScore));
     } catch (error) {
-      console.error('Error calculating performance score from factors:', error);
       return 0.5;
     }
   }

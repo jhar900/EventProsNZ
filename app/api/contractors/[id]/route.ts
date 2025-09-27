@@ -93,7 +93,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Contractor details fetch error:', contractorError);
       return NextResponse.json(
         { error: 'Failed to fetch contractor details' },
         { status: 500 }
@@ -139,7 +138,6 @@ export async function GET(
       contractor: transformedContractor,
     });
   } catch (error) {
-    console.error('Contractor details API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

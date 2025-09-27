@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (pricingError) {
-      console.error('Error fetching pricing data:', pricingError);
       return NextResponse.json(
         { error: 'Failed to fetch pricing data' },
         { status: 500 }
@@ -144,7 +143,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Location pricing error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -10,19 +10,16 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Users,
   UserCheck,
   Activity,
   AlertTriangle,
-  TrendingUp,
   Shield,
   FileText,
   Settings,
   RefreshCw,
 } from 'lucide-react';
-import { useAdmin } from '@/hooks/useAdmin';
 import { useRouter } from 'next/navigation';
 
 interface DashboardMetrics {
@@ -37,17 +34,10 @@ interface DashboardMetrics {
   systemHealth: 'healthy' | 'degraded' | 'critical';
 }
 
-interface DashboardTrends {
-  userGrowth: number[];
-  verificationTrend: number;
-}
-
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [trends, setTrends] = useState<DashboardTrends | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const { fetchAnalytics, fetchSystemHealth } = useAdmin();
   const router = useRouter();
 
   const loadDashboardData = async () => {
@@ -74,7 +64,6 @@ export default function AdminDashboard() {
           activeAlerts: 0, // Will be updated from health response
           systemHealth: 'healthy', // Will be updated from health response
         });
-        setTrends(analyticsData.trends);
       }
 
       if (healthResponse.ok) {
@@ -95,8 +84,7 @@ export default function AdminDashboard() {
 
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

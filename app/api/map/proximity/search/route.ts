@@ -92,7 +92,6 @@ export async function GET(request: NextRequest) {
     const { data: contractors, error } = await dbQuery;
 
     if (error) {
-      console.error('Error searching contractors:', error);
       return NextResponse.json(
         { error: 'Failed to search contractors' },
         { status: 500 }
@@ -165,7 +164,6 @@ export async function GET(request: NextRequest) {
       radius: lat && lng ? radius : undefined,
     });
   } catch (error) {
-    console.error('Proximity search API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

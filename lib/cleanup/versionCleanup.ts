@@ -34,7 +34,6 @@ export class VersionCleanupService {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Error fetching versions:', fetchError);
         throw new Error('Failed to fetch versions');
       }
 
@@ -52,7 +51,6 @@ export class VersionCleanupService {
         .in('id', versionIdsToDelete);
 
       if (deleteError) {
-        console.error('Error deleting versions:', deleteError);
         throw new Error('Failed to delete versions');
       }
 
@@ -62,7 +60,6 @@ export class VersionCleanupService {
         remaining: keepLatest,
       };
     } catch (error) {
-      console.error('Error in cleanupEventVersions:', error);
       throw error;
     }
   }
@@ -99,7 +96,6 @@ export class VersionCleanupService {
         .limit(batchSize);
 
       if (fetchError) {
-        console.error('Error fetching events with versions:', fetchError);
         throw new Error('Failed to fetch events');
       }
 
@@ -121,7 +117,6 @@ export class VersionCleanupService {
           eventsProcessed++;
         } catch (error) {
           const errorMessage = `Failed to cleanup event ${event.id}: ${error.message}`;
-          console.error(errorMessage);
           errors.push(errorMessage);
         }
       }
@@ -133,7 +128,6 @@ export class VersionCleanupService {
         errors,
       };
     } catch (error) {
-      console.error('Error in cleanupAllEventVersions:', error);
       throw error;
     }
   }
@@ -163,7 +157,6 @@ export class VersionCleanupService {
         .range(archiveThreshold, this.MAX_VERSIONS_PER_EVENT);
 
       if (fetchError) {
-        console.error('Error fetching versions to archive:', fetchError);
         throw new Error('Failed to fetch versions to archive');
       }
 
@@ -189,7 +182,6 @@ export class VersionCleanupService {
         );
 
       if (archiveError) {
-        console.error('Error archiving versions:', archiveError);
         throw new Error('Failed to archive versions');
       }
 
@@ -198,7 +190,6 @@ export class VersionCleanupService {
         remaining: archiveThreshold,
       };
     } catch (error) {
-      console.error('Error in archiveOldVersions:', error);
       throw error;
     }
   }
@@ -223,7 +214,6 @@ export class VersionCleanupService {
         .select('*', { count: 'exact', head: true });
 
       if (countError) {
-        console.error('Error getting version count:', countError);
         throw new Error('Failed to get version count');
       }
 
@@ -235,7 +225,6 @@ export class VersionCleanupService {
           .gte('version_number', this.MAX_VERSIONS_PER_EVENT);
 
       if (eventsError) {
-        console.error('Error getting events with many versions:', eventsError);
         throw new Error('Failed to get events with many versions');
       }
 
@@ -253,10 +242,6 @@ export class VersionCleanupService {
         .limit(1);
 
       if (dateError || newestError) {
-        console.error(
-          'Error getting version date range:',
-          dateError || newestError
-        );
         throw new Error('Failed to get version date range');
       }
 
@@ -268,7 +253,6 @@ export class VersionCleanupService {
         newestVersion: newestDate?.[0]?.created_at || null,
       };
     } catch (error) {
-      console.error('Error in getVersionStatistics:', error);
       throw error;
     }
   }
@@ -283,12 +267,8 @@ export class VersionCleanupService {
     statistics: any;
   }> {
     try {
-      console.log('Starting scheduled version cleanup...');
-
       // Get current statistics
       const statistics = await this.getVersionStatistics();
-      console.log('Version statistics:', statistics);
-
       // Only run cleanup if there are many versions
       if (statistics.totalVersions < 1000) {
         return {
@@ -300,8 +280,6 @@ export class VersionCleanupService {
 
       // Run cleanup
       const cleanupResult = await this.cleanupAllEventVersions();
-      console.log('Cleanup completed:', cleanupResult);
-
       return {
         success: true,
         message: `Cleanup completed: ${cleanupResult.totalDeleted} versions deleted`,
@@ -311,7 +289,6 @@ export class VersionCleanupService {
         },
       };
     } catch (error) {
-      console.error('Error in scheduleCleanup:', error);
       return {
         success: false,
         message: `Cleanup failed: ${error.message}`,

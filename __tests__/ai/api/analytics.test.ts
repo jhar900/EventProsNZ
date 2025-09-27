@@ -166,9 +166,6 @@ describe('/api/ai/analytics', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      console.log('Analytics response status:', response.status);
-      console.log('Analytics response data:', data);
-
       expect(response.status).toBe(200);
       expect(data.recommendation_analytics).toBeDefined();
       expect(data.engagement_analytics).toBeDefined();

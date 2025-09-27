@@ -59,8 +59,7 @@ export function EventVersionHistory({ eventId }: EventVersionHistoryProps) {
       }
     } catch (err) {
       setError('Failed to load version history');
-      console.error('Error loading versions:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

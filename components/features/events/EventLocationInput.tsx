@@ -78,8 +78,7 @@ export function EventLocationInput({
       setShowSuggestions(true);
     } catch (err) {
       setError('Failed to search locations. Please try again.');
-      console.error('Location search error:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -161,16 +160,14 @@ export function EventLocationInput({
           onChange(location);
         } catch (err) {
           setError('Failed to get current location address.');
-          console.error('Reverse geocoding error:', err);
-        } finally {
+          } finally {
           setIsLoading(false);
         }
       },
       error => {
         setError('Unable to get your current location.');
         setIsLoading(false);
-        console.error('Geolocation error:', error);
-      }
+        }
     );
   };
 

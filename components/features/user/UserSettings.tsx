@@ -65,8 +65,7 @@ export default function UserSettings({
         throw new Error(result.error || 'Failed to load settings');
       }
     } catch (err) {
-      console.error('Failed to load settings:', err);
-    }
+      }
   };
 
   const onSubmit = async (data: SettingsFormData) => {

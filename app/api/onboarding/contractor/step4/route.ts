@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Contractor Step 4 error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

@@ -95,8 +95,7 @@ export function useEventManagement() {
       }
     } catch (error) {
       setError('Failed to load events');
-      console.error('Error loading events:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, []);
@@ -117,8 +116,7 @@ export function useEventManagement() {
       }
     } catch (error) {
       setError('Failed to load event');
-      console.error('Error loading event:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, []);
@@ -153,8 +151,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to update event status');
-        console.error('Error updating event status:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -188,8 +185,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to create version');
-        console.error('Error creating version:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -223,8 +219,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to create milestone');
-        console.error('Error creating milestone:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -263,8 +258,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to update milestone');
-        console.error('Error updating milestone:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -301,8 +295,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to complete event');
-        console.error('Error completing event:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -336,8 +329,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to submit feedback');
-        console.error('Error submitting feedback:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -371,8 +363,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to duplicate event');
-        console.error('Error duplicating event:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -398,8 +389,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to load dashboard');
-        console.error('Error loading dashboard:', error);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },

@@ -108,11 +108,9 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
         setIsFormOpen(false);
       } else {
         const error = await response.json();
-        console.error('Error saving service:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error saving service:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -142,11 +140,9 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
         const updatedServices = services.filter(s => s.id !== serviceId);
         onUpdate(updatedServices);
       } else {
-        console.error('Error deleting service');
-      }
+        }
     } catch (error) {
-      console.error('Error deleting service:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

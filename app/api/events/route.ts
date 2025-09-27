@@ -150,7 +150,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (eventError) {
-      console.error('Error creating event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to create event' },
         { status: 500 }
@@ -174,7 +173,6 @@ export async function POST(request: NextRequest) {
         .insert(serviceRequirements);
 
       if (serviceError) {
-        console.error('Error creating service requirements:', serviceError);
         // Don't fail the entire request, just log the error
       }
     }
@@ -193,7 +191,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (versionError) {
-      console.error('Error creating version record:', versionError);
       // Don't fail the entire request
     }
 
@@ -207,7 +204,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -291,7 +287,6 @@ export async function GET(request: NextRequest) {
     const { data: events, error: eventsError, count } = await query;
 
     if (eventsError) {
-      console.error('Error fetching events:', eventsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch events' },
         { status: 500 }
@@ -307,7 +302,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

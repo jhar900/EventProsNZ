@@ -51,7 +51,6 @@ export class BudgetService {
         overall_score: Math.min(1, Math.max(0, overallScore)),
       };
     } catch (error) {
-      console.error('Error calculating budget compatibility:', error);
       throw new Error('Failed to calculate budget compatibility');
     }
   }
@@ -69,7 +68,6 @@ export class BudgetService {
         .eq('user_id', contractorId);
 
       if (error) {
-        console.error('Error fetching contractor pricing:', error);
         return { min: 0, max: 1000 };
       }
 
@@ -90,7 +88,6 @@ export class BudgetService {
         max: Math.max(...validPrices.map(s => s.price_range_max)),
       };
     } catch (error) {
-      console.error('Error in getContractorPricing:', error);
       return { min: 0, max: 1000 };
     }
   }
@@ -123,10 +120,6 @@ export class BudgetService {
         contractorPricing
       );
     } catch (error) {
-      console.error(
-        'Error calculating event-contractor budget compatibility:',
-        error
-      );
       throw new Error('Failed to calculate budget compatibility');
     }
   }
@@ -215,7 +208,6 @@ export class BudgetService {
         budget_breakdown,
       };
     } catch (error) {
-      console.error('Error getting budget recommendations:', error);
       throw new Error('Failed to get budget recommendations');
     }
   }
@@ -242,7 +234,6 @@ export class BudgetService {
 
       return mockData;
     } catch (error) {
-      console.error('Error analyzing budget trends:', error);
       throw new Error('Failed to analyze budget trends');
     }
   }

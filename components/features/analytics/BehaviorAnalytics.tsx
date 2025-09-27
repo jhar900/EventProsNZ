@@ -73,8 +73,7 @@ export default function BehaviorAnalytics({
         setUserJourneys(data.user_journeys);
       }
     } catch (error) {
-      console.error('Error fetching behavior analytics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

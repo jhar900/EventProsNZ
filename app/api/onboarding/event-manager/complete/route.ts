@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
       message: 'Onboarding completed successfully',
     });
   } catch (error) {
-    console.error('Complete onboarding error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

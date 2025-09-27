@@ -57,8 +57,7 @@ export default function ClickthroughAnalytics({
         setClickData(data.click_analytics);
       }
     } catch (error) {
-      console.error('Error fetching clickthrough analytics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

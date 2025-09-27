@@ -24,11 +24,9 @@ export default function ServiceRecommendationsPage() {
             event_date: '2024-06-15T18:00:00Z',
           }}
           onServiceSelect={service => {
-            console.log('Service selected:', service);
             // Handle service selection
           }}
           onServiceRemove={serviceId => {
-            console.log('Service removed:', serviceId);
             // Handle service removal
           }}
           selectedServices={[]}

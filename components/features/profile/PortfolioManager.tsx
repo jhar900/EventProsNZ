@@ -105,11 +105,9 @@ export function PortfolioManager({
         setIsFormOpen(false);
       } else {
         const error = await response.json();
-        console.error('Error saving portfolio item:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error saving portfolio item:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -141,11 +139,9 @@ export function PortfolioManager({
         const updatedPortfolio = portfolio.filter(p => p.id !== itemId);
         onUpdate(updatedPortfolio);
       } else {
-        console.error('Error deleting portfolio item');
-      }
+        }
     } catch (error) {
-      console.error('Error deleting portfolio item:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -177,11 +173,9 @@ export function PortfolioManager({
         const result = await response.json();
         setValue('image_url', result.url);
       } else {
-        console.error('Error uploading image');
-      }
+        }
     } catch (error) {
-      console.error('Error uploading image:', error);
-    } finally {
+      } finally {
       setIsUploading(false);
     }
   };

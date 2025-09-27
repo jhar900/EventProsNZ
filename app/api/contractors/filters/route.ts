@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
       .not('service_categories', 'is', null);
 
     if (serviceError) {
-      console.error('Service categories error:', serviceError);
       return NextResponse.json(
         { error: 'Failed to fetch service categories' },
         { status: 500 }
@@ -36,7 +35,6 @@ export async function GET(request: NextRequest) {
       .not('service_areas', 'is', null);
 
     if (regionsError) {
-      console.error('Regions error:', regionsError);
       return NextResponse.json(
         { error: 'Failed to fetch regions' },
         { status: 500 }
@@ -61,7 +59,6 @@ export async function GET(request: NextRequest) {
       .not('price_range_max', 'is', null);
 
     if (priceError) {
-      console.error('Price ranges error:', priceError);
       return NextResponse.json(
         { error: 'Failed to fetch price ranges' },
         { status: 500 }
@@ -95,7 +92,6 @@ export async function GET(request: NextRequest) {
       .gt('average_rating', 0);
 
     if (ratingError) {
-      console.error('Ratings error:', ratingError);
       return NextResponse.json(
         { error: 'Failed to fetch ratings' },
         { status: 500 }
@@ -118,7 +114,6 @@ export async function GET(request: NextRequest) {
       max_price: maxPrice,
     });
   } catch (error) {
-    console.error('Filters API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

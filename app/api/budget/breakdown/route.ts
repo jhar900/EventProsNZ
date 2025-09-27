@@ -107,14 +107,12 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error) {
-      console.error('Service breakdown error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch service breakdown' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Service breakdown error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -184,14 +182,12 @@ export async function PUT(request: NextRequest) {
         success: true,
       });
     } catch (error) {
-      console.error('Budget adjustment error:', error);
       return NextResponse.json(
         { error: 'Failed to apply budget adjustments' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Budget adjustment error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

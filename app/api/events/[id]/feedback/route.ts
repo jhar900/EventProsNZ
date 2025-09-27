@@ -45,7 +45,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -86,7 +85,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (feedbackError) {
-      console.error('Error fetching feedback:', feedbackError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch feedback' },
         { status: 500 }
@@ -98,7 +96,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/feedback:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -162,7 +159,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -226,7 +222,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Error creating feedback:', createError);
       return NextResponse.json(
         { success: false, message: 'Failed to create feedback' },
         { status: 500 }
@@ -239,7 +234,6 @@ export async function POST(
       message: 'Feedback created successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/feedback:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

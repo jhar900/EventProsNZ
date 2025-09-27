@@ -55,8 +55,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
         localStorage.setItem('is_authenticated', 'true');
       }
 
-      // console.log('Login successful, calling onSuccess immediately');
-      onSuccess?.(result.user);
+      // onSuccess?.(result.user);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);

@@ -109,8 +109,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         }));
       }
     } catch (error) {
-      console.error('Failed to load users:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -138,8 +137,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         onUserUpdate?.(userId, data);
       }
     } catch (error) {
-      console.error(`Failed to ${action} user:`, error);
-    }
+      }
   };
 
   const handleUpdateUser = async () => {

@@ -217,8 +217,7 @@ export function BudgetTracking({
         calculateInsights();
       }
     } catch (error) {
-      console.error('Error updating tracking:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

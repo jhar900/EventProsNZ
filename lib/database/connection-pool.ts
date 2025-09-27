@@ -40,7 +40,6 @@ export class DatabaseConnectionPool {
 
     // Set up error handling
     this.pool.on('error', err => {
-      console.error('Unexpected error on idle client', err);
       this.isHealthy = false;
     });
 
@@ -65,8 +64,6 @@ export class DatabaseConnectionPool {
         return client;
       } catch (error) {
         lastError = error as Error;
-        console.warn(`Connection attempt ${attempt} failed:`, error);
-
         if (attempt < maxRetries) {
           // Exponential backoff
           await this.delay(Math.pow(2, attempt) * 1000);
@@ -127,7 +124,6 @@ export class DatabaseConnectionPool {
       this.lastHealthCheck = Date.now();
       return true;
     } catch (error) {
-      console.error('Database health check failed:', error);
       this.isHealthy = false;
       return false;
     }

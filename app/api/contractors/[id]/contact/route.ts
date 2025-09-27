@@ -127,7 +127,6 @@ export async function POST(
       .single();
 
     if (inquiryError) {
-      console.error('Inquiry creation error:', inquiryError);
       return NextResponse.json(
         { error: 'Failed to send inquiry' },
         { status: 500 }
@@ -142,7 +141,6 @@ export async function POST(
       message: 'Inquiry sent successfully',
     });
   } catch (error) {
-    console.error('Contact API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

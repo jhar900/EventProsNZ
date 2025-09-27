@@ -101,8 +101,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: true });
 
     if (trendsError) {
-      console.error('Error fetching trends:', trendsError);
-    }
+      }
 
     // Process trends data
     const trendsData =
@@ -152,7 +151,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error fetching verification analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

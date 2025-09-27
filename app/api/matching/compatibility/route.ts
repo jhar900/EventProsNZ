@@ -125,8 +125,6 @@ export async function GET(request: NextRequest) {
       breakdown,
     });
   } catch (error) {
-    console.error('Error in compatibility API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -193,8 +191,6 @@ export async function POST(request: NextRequest) {
       breakdown,
     });
   } catch (error) {
-    console.error('Error in compatibility calculation API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

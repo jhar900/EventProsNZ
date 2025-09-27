@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
     const { data: events, error: eventsError } = await query;
 
     if (eventsError) {
-      console.error('Error fetching events:', eventsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch events' },
         { status: 500 }
@@ -153,7 +152,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events/status/overview:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

@@ -86,8 +86,6 @@ export class QueryOptimizer {
         };
       } catch (error) {
         lastError = error as Error;
-        console.warn(`Query attempt ${attempt} failed:`, error);
-
         if (attempt < retries) {
           // Exponential backoff
           await this.delay(Math.pow(2, attempt) * 1000);

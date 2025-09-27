@@ -163,7 +163,6 @@ export async function GET(
       badges,
     });
   } catch (error) {
-    console.error('Verification API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

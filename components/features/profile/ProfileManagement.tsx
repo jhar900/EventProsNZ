@@ -124,8 +124,7 @@ export function ProfileManagement() {
         setPrivacySettings(privacyData.privacy_settings);
       }
     } catch (error) {
-      console.error('Error fetching profile data:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

@@ -118,11 +118,9 @@ export function PrivacySettings({ settings, onUpdate }: PrivacySettingsProps) {
         reset(data);
       } else {
         const error = await response.json();
-        console.error('Error updating privacy settings:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error updating privacy settings:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

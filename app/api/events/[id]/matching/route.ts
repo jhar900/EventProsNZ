@@ -82,7 +82,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -139,7 +138,6 @@ export async function GET(
       .overlaps('service_categories', categoriesToMatch);
 
     if (contractorsError) {
-      console.error('Error fetching contractors:', contractorsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch contractors' },
         { status: 500 }
@@ -241,7 +239,6 @@ export async function GET(
       });
 
     if (insertError) {
-      console.error('Error saving matches:', insertError);
       // Don't fail the request, just log the error
     }
 
@@ -252,7 +249,6 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/matching:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

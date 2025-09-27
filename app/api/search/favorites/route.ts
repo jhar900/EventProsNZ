@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (favoritesError) {
-      console.error('Favorites error:', favoritesError);
       return NextResponse.json(
         { error: 'Failed to fetch favorites' },
         { status: 500 }
@@ -107,7 +106,6 @@ export async function GET(request: NextRequest) {
       favorites: transformedFavorites,
     });
   } catch (error) {
-    console.error('Favorites API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -165,7 +163,6 @@ export async function POST(request: NextRequest) {
 
     if (checkError && checkError.code !== 'PGRST116') {
       // PGRST116 = no rows returned
-      console.error('Favorite check error:', checkError);
       return NextResponse.json(
         { error: 'Failed to check existing favorite' },
         { status: 500 }
@@ -189,7 +186,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Favorite insert error:', insertError);
       return NextResponse.json(
         { error: 'Failed to add to favorites' },
         { status: 500 }
@@ -201,7 +197,6 @@ export async function POST(request: NextRequest) {
       favorite,
     });
   } catch (error) {
-    console.error('Favorites POST API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -239,7 +234,6 @@ export async function DELETE(request: NextRequest) {
       .eq('contractor_id', contractor_id);
 
     if (deleteError) {
-      console.error('Favorite delete error:', deleteError);
       return NextResponse.json(
         { error: 'Failed to remove from favorites' },
         { status: 500 }
@@ -250,7 +244,6 @@ export async function DELETE(request: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error('Favorites DELETE API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

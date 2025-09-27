@@ -97,7 +97,6 @@ export class CompatibilityService {
 
       return { compatibility, breakdown };
     } catch (error) {
-      console.error('Error calculating compatibility:', error);
       throw new Error('Failed to calculate compatibility');
     }
   }
@@ -194,7 +193,6 @@ export class CompatibilityService {
 
       return performance.overall_performance_score || 0.5;
     } catch (error) {
-      console.error('Error fetching performance score:', error);
       return 0.5;
     }
   }
@@ -218,7 +216,6 @@ export class CompatibilityService {
 
       return availability.is_available ? 1.0 : 0.0;
     } catch (error) {
-      console.error('Error fetching availability score:', error);
       return 0.5;
     }
   }

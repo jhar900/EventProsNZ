@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (ctrError) {
-      console.error('Error fetching CTR metrics:', ctrError);
       return NextResponse.json(
         { error: 'Failed to fetch CTR metrics' },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
       .limit(100);
 
     if (clickError) {
-      console.error('Error fetching click analytics:', clickError);
       return NextResponse.json(
         { error: 'Failed to fetch click analytics' },
         { status: 500 }
@@ -99,7 +97,6 @@ export async function GET(request: NextRequest) {
       date_to: params.date_to,
     });
   } catch (error) {
-    console.error('Error in search clickthrough analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

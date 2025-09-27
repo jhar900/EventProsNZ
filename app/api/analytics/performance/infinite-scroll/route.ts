@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
       .limit(100);
 
     if (scrollError) {
-      console.error('Error fetching scroll metrics:', scrollError);
       return NextResponse.json(
         { error: 'Failed to fetch scroll metrics' },
         { status: 500 }
@@ -73,10 +72,6 @@ export async function GET(request: NextRequest) {
       });
 
     if (recommendationsError) {
-      console.error(
-        'Error fetching optimization recommendations:',
-        recommendationsError
-      );
       return NextResponse.json(
         { error: 'Failed to fetch optimization recommendations' },
         { status: 500 }
@@ -152,7 +147,6 @@ export async function GET(request: NextRequest) {
       period: params.period,
     });
   } catch (error) {
-    console.error('Error in infinite scroll performance analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

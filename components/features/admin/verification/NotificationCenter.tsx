@@ -54,11 +54,9 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       if (response.ok) {
         setNotifications(data.notifications);
       } else {
-        console.error('Error fetching notifications:', data.error);
-      }
+        }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -93,8 +91,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         );
       }
     } catch (error) {
-      console.error('Error marking notifications as read:', error);
-    }
+      }
   };
 
   const markAllAsRead = async () => {

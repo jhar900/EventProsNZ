@@ -50,8 +50,6 @@ export async function GET(request: NextRequest) {
       algorithm,
     });
   } catch (error) {
-    console.error('Error in ranking API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -95,8 +93,6 @@ export async function POST(request: NextRequest) {
       algorithm,
     });
   } catch (error) {
-    console.error('Error in ranking calculation API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

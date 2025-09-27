@@ -81,11 +81,9 @@ export function PersonalInfoEditor({
         reset(data);
       } else {
         const error = await response.json();
-        console.error('Error updating profile:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -113,11 +111,9 @@ export function PersonalInfoEditor({
         const updatedProfile = { ...profile, profile_photo_url: result.url };
         onUpdate(updatedProfile);
       } else {
-        console.error('Error uploading photo');
-      }
+        }
     } catch (error) {
-      console.error('Error uploading photo:', error);
-    } finally {
+      } finally {
       setIsUploading(false);
     }
   };

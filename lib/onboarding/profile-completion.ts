@@ -115,7 +115,6 @@ export class ProfileCompletionService {
         },
       };
     } catch (error) {
-      console.error('Profile completion check error:', error);
       throw error;
     }
   }
@@ -251,7 +250,6 @@ export class ProfileCompletionService {
         }
       }
     } catch (error) {
-      console.error('Profile completion update error:', error);
       throw error;
     }
   }

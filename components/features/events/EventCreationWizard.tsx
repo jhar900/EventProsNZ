@@ -103,8 +103,7 @@ export function EventCreationWizard({
             router.push(`/events/${result.event.id}`);
           }
         } catch (error) {
-          console.error('Failed to submit event:', error);
-        }
+          }
       }
     }
   };
@@ -118,8 +117,7 @@ export function EventCreationWizard({
     try {
       await saveDraft();
     } catch (error) {
-      console.error('Failed to save draft:', error);
-    }
+      }
   };
 
   const handleTemplateSelect = () => {

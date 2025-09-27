@@ -60,8 +60,7 @@ export function PersonalInfoForm({
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Personal info submission error:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

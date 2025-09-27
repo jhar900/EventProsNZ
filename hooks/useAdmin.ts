@@ -141,7 +141,6 @@ export function useAdmin() {
         const errorMessage =
           err instanceof Error ? err.message : 'An error occurred';
         setError(errorMessage);
-        console.error('Admin request error:', err);
         return null;
       } finally {
         setLoading(false);

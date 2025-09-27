@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (testsError) {
-      console.error('Error fetching A/B tests:', testsError);
       return NextResponse.json(
         { error: 'Failed to fetch A/B tests' },
         { status: 500 }
@@ -58,7 +57,6 @@ export async function GET(request: NextRequest) {
       tests: tests || [],
     });
   } catch (error) {
-    console.error('Error in A/B tests GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (testError) {
-      console.error('Error creating A/B test:', testError);
       return NextResponse.json(
         { error: 'Failed to create A/B test' },
         { status: 500 }
@@ -122,7 +119,6 @@ export async function POST(request: NextRequest) {
       test: test,
     });
   } catch (error) {
-    console.error('Error in A/B tests POST:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },

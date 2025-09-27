@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (behaviorError) {
-      console.error('Error fetching behavior metrics:', behaviorError);
       return NextResponse.json(
         { error: 'Failed to fetch behavior metrics' },
         { status: 500 }
@@ -82,7 +81,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (journeysError) {
-      console.error('Error fetching user journeys:', journeysError);
       return NextResponse.json(
         { error: 'Failed to fetch user journeys' },
         { status: 500 }
@@ -96,7 +94,6 @@ export async function GET(request: NextRequest) {
       user_segment: params.user_segment,
     });
   } catch (error) {
-    console.error('Error in search behavior analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

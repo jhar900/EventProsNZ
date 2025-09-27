@@ -29,7 +29,6 @@ async function checkAdminAccess() {
 
     return true;
   } catch (error) {
-    console.error('Error in checkAdminAccess:', error);
     redirect('/dashboard');
   }
 }

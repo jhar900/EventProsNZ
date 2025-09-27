@@ -98,7 +98,6 @@ describe('EventTypeSuggestions', () => {
     // Set up realistic async mocks
     mockEventTypeSuggestionEngine.suggestEventType.mockImplementation(
       async context => {
-        console.log('suggestEventType called with:', context);
         // Simulate actual async behavior
         await new Promise(resolve => setTimeout(resolve, 100));
         return mockSuggestions;
@@ -107,7 +106,6 @@ describe('EventTypeSuggestions', () => {
 
     mockEventTypeSuggestionEngine.getEventTypeTips.mockImplementation(
       eventType => {
-        console.log('getEventTypeTips called with:', eventType);
         return mockTips;
       }
     );

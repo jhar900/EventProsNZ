@@ -102,7 +102,6 @@ export async function GET(request: NextRequest) {
     const { data: contractors, error: contractorsError, count } = await query;
 
     if (contractorsError) {
-      console.error('Contractors fetch error:', contractorsError);
       return NextResponse.json(
         { error: 'Failed to fetch contractors' },
         { status: 500 }
@@ -140,8 +139,7 @@ export async function GET(request: NextRequest) {
 
     // If no contractors found, return empty array instead of error
     if (transformedContractors.length === 0) {
-      console.log('No contractors found in database');
-    }
+      }
 
     return NextResponse.json({
       contractors: transformedContractors,
@@ -151,7 +149,6 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil((count || 0) / limit),
     });
   } catch (error) {
-    console.error('Contractors API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

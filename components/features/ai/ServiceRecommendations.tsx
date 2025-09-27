@@ -88,13 +88,6 @@ export function ServiceRecommendations({
   );
 
   // Debug logging
-  console.log(
-    'Component render - eventType:',
-    eventType,
-    'selectedEventType:',
-    selectedEventType
-  );
-
   const {
     recommendations,
     templates,
@@ -144,11 +137,9 @@ export function ServiceRecommendations({
 
       if (response.ok) {
         // Update local state or trigger refresh
-        console.log('Feedback recorded successfully');
-      }
+        }
     } catch (error) {
-      console.error('Error recording feedback:', error);
-    }
+      }
   };
 
   const handleServiceSelect = (service: ServiceRecommendation) => {
@@ -296,10 +287,7 @@ export function ServiceRecommendations({
       )}
 
       {/* Main Content Tabs */}
-      {console.log(
-        'About to render tabs - selectedEventType:',
-        selectedEventType
-      )}
+      {}
       {selectedEventType && (
         <div data-testid="tabs-section">
           <p>DEBUG: Tabs should render here</p>

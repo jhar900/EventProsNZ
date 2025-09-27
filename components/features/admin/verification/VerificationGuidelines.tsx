@@ -111,11 +111,9 @@ export function VerificationGuidelines({
         }
         handleCancel();
       } else {
-        console.error('Error saving criterion:', data.error);
-      }
+        }
     } catch (error) {
-      console.error('Error saving criterion:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -132,11 +130,9 @@ export function VerificationGuidelines({
       if (response.ok) {
         setCriteria(prev => prev.filter(c => c.id !== id));
       } else {
-        console.error('Error deleting criterion');
-      }
+        }
     } catch (error) {
-      console.error('Error deleting criterion:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

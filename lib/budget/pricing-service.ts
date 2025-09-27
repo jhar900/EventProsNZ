@@ -76,7 +76,6 @@ export class PricingService {
       // Check cache first
       const cached = this.cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
-        console.log('Pricing data cache hit');
         return cached.data;
       }
 
@@ -89,7 +88,6 @@ export class PricingService {
         .single();
 
       if (error) {
-        console.error('Error fetching pricing data:', error);
         return null;
       }
 
@@ -103,7 +101,6 @@ export class PricingService {
 
       return data;
     } catch (error) {
-      console.error('Pricing service error:', error);
       return null;
     }
   }
@@ -177,7 +174,6 @@ export class PricingService {
         contractor_count: contractorPricing.length,
       };
     } catch (error) {
-      console.error('Real-time pricing error:', error);
       return null;
     }
   }
@@ -194,7 +190,6 @@ export class PricingService {
         .eq('is_visible', true);
 
       if (error || !services) {
-        console.error('Error fetching contractor services:', error);
         return;
       }
 
@@ -242,8 +237,7 @@ export class PricingService {
         });
       }
     } catch (error) {
-      console.error('Error updating pricing data:', error);
-    }
+      }
   }
 
   /**

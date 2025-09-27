@@ -102,14 +102,12 @@ export async function GET(request: NextRequest) {
         metadata: budgetCalculation.metadata,
       });
     } catch (error) {
-      console.error('Budget calculation error:', error);
       return NextResponse.json(
         { error: 'Failed to calculate budget recommendations' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Budget recommendations error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -158,7 +156,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (feedbackError) {
-      console.error('Error storing feedback:', feedbackError);
       return NextResponse.json(
         { error: 'Failed to store feedback' },
         { status: 500 }
@@ -183,8 +180,7 @@ export async function POST(request: NextRequest) {
       .eq('id', recommendation_id);
 
     if (updateError) {
-      console.error('Error updating recommendation:', updateError);
-    }
+      }
 
     return NextResponse.json({
       success: true,
@@ -194,7 +190,6 @@ export async function POST(request: NextRequest) {
       ),
     });
   } catch (error) {
-    console.error('Budget feedback error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

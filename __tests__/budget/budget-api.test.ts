@@ -309,13 +309,9 @@ describe('Budget API Routes', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        console.log('API Error Response:', data);
-        console.log('Request URL:', request.url);
-
         // Test URL parsing directly
         const testUrl = new URL(request.url);
-        console.log('URL parsing test:', {
-          event_type: testUrl.searchParams.get('event_type'),
+        ,
           attendee_count: testUrl.searchParams.get('attendee_count'),
           duration: testUrl.searchParams.get('duration'),
         });
@@ -348,8 +344,7 @@ describe('Budget API Routes', () => {
           try {
             location = JSON.parse(locationParam);
           } catch {
-            console.log('Location parsing error');
-          }
+            }
         }
 
         const validationData = {
@@ -360,18 +355,10 @@ describe('Budget API Routes', () => {
         };
 
         const validation = BudgetRecommendationSchema.safeParse(validationData);
-        console.log('API route validation test:', {
-          success: validation.success,
-          data: validationData,
-          errors: validation.success ? null : validation.error.errors,
-        });
-
         if (data.details) {
-          console.log('Validation details:', data.details);
-        }
+          }
         if (data.error === 'Unauthorized') {
-          console.log('Authentication failed - check Supabase auth mock');
-        }
+          }
       }
 
       // Test passed! Remove debugging
@@ -464,8 +451,7 @@ describe('Budget API Routes', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        console.log('API Error Response:', data);
-      }
+        }
 
       expect(response.status).toBe(200);
       expect(data.breakdown).toHaveLength(1);
@@ -691,8 +677,7 @@ describe('Budget API Routes', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        console.log('API Error Response:', data);
-      }
+        }
 
       expect(response.status).toBe(200);
       expect(data.tracking).toHaveLength(1);

@@ -102,8 +102,7 @@ export default function ABTestingDashboard({
         setTests(data.tests);
       }
     } catch (error) {
-      console.error('Error fetching A/B tests:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -117,8 +116,7 @@ export default function ABTestingDashboard({
         setTestResults(data.test_results);
       }
     } catch (error) {
-      console.error('Error fetching test results:', error);
-    }
+      }
   };
 
   const createABTest = async () => {
@@ -143,8 +141,7 @@ export default function ABTestingDashboard({
         fetchABTests();
       }
     } catch (error) {
-      console.error('Error creating A/B test:', error);
-    }
+      }
   };
 
   useEffect(() => {

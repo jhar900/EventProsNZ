@@ -87,7 +87,6 @@ export async function POST(
       user: suspendedUser,
     });
   } catch (error) {
-    console.error('Suspend user error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

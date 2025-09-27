@@ -104,7 +104,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: true });
 
     if (historicalError) {
-      console.error('Error fetching historical pricing:', historicalError);
       return NextResponse.json(
         { error: 'Failed to fetch historical pricing' },
         { status: 500 }
@@ -120,8 +119,7 @@ export async function GET(request: NextRequest) {
       .order('tracking_date', { ascending: true });
 
     if (trackingError) {
-      console.error('Error fetching budget tracking:', trackingError);
-    }
+      }
 
     // Process historical data into trends
     const trends = [];
@@ -216,7 +214,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Historical pricing error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -53,8 +53,7 @@ export async function GET(request: NextRequest) {
       .limit(10);
 
     if (contractorsError) {
-      console.error('Error searching contractors:', contractorsError);
-    }
+      }
 
     // Transform contractor results with proper geocoding
     const contractorResults = await Promise.all(
@@ -115,7 +114,6 @@ export async function GET(request: NextRequest) {
       total: results.length,
     });
   } catch (error) {
-    console.error('Map search API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

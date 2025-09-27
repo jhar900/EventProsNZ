@@ -66,7 +66,6 @@ export async function GET(
     const { data: reviews, error: reviewsError, count } = await query;
 
     if (reviewsError) {
-      console.error('Reviews fetch error:', reviewsError);
       return NextResponse.json(
         { error: 'Failed to fetch reviews' },
         { status: 500 }
@@ -100,7 +99,6 @@ export async function GET(
       ratingDistribution,
     });
   } catch (error) {
-    console.error('Reviews API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

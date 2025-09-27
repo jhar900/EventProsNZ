@@ -49,7 +49,6 @@ export class LocationService {
         overall_score: Math.min(1, Math.max(0, overallScore)),
       };
     } catch (error) {
-      console.error('Error calculating location match:', error);
       throw new Error('Failed to calculate location match');
     }
   }
@@ -73,7 +72,6 @@ export class LocationService {
 
       return mockContractors.filter(c => c.distance_km <= radiusKm);
     } catch (error) {
-      console.error('Error getting contractors in radius:', error);
       return [];
     }
   }
@@ -95,7 +93,6 @@ export class LocationService {
 
       return businessProfile.service_areas || [];
     } catch (error) {
-      console.error('Error getting contractor service areas:', error);
       return [];
     }
   }
@@ -117,7 +114,6 @@ export class LocationService {
       // Simplified check - would implement actual geospatial logic
       return true;
     } catch (error) {
-      console.error('Error checking location coverage:', error);
       return false;
     }
   }
@@ -170,7 +166,6 @@ export class LocationService {
         location_factors,
       };
     } catch (error) {
-      console.error('Error getting location recommendations:', error);
       throw new Error('Failed to get location recommendations');
     }
   }

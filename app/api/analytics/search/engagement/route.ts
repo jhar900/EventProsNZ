@@ -67,7 +67,6 @@ export async function GET(request: NextRequest) {
       });
 
     if (engagementError) {
-      console.error('Error fetching engagement metrics:', engagementError);
       return NextResponse.json(
         { error: 'Failed to fetch engagement metrics' },
         { status: 500 }
@@ -83,7 +82,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (activityError) {
-      console.error('Error fetching user activity:', activityError);
       return NextResponse.json(
         { error: 'Failed to fetch user activity' },
         { status: 500 }
@@ -98,7 +96,6 @@ export async function GET(request: NextRequest) {
       date_to: params.date_to,
     });
   } catch (error) {
-    console.error('Error in search engagement analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

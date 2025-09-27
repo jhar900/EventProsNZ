@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
       business_location: businessLocation,
     });
   } catch (error) {
-    console.error('Proximity coverage API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

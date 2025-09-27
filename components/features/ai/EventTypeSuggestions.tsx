@@ -83,8 +83,7 @@ export function EventTypeSuggestions({
         await EventTypeSuggestionEngine.suggestEventType(context);
       setSuggestions(newSuggestions);
     } catch (error) {
-      console.error('Error generating suggestions:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

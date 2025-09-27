@@ -70,7 +70,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -125,7 +124,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Error creating duplicated event:', createError);
       return NextResponse.json(
         { success: false, message: 'Failed to create duplicated event' },
         { status: 500 }
@@ -154,7 +152,6 @@ export async function POST(
         .insert(serviceRequirements);
 
       if (serviceError) {
-        console.error('Error duplicating service requirements:', serviceError);
         // Don't fail the entire request, just log the error
       }
     }
@@ -174,7 +171,6 @@ export async function POST(
       });
 
     if (versionError) {
-      console.error('Error creating version record:', versionError);
       // Don't fail the entire request
     }
 
@@ -184,7 +180,6 @@ export async function POST(
       message: 'Event duplicated successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/duplicate:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -228,7 +223,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -268,7 +262,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (duplicatesError) {
-      console.error('Error fetching duplicates:', duplicatesError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch duplicates' },
         { status: 500 }
@@ -290,7 +283,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/duplicates:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

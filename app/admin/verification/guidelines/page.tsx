@@ -35,13 +35,11 @@ async function getVerificationCriteria() {
       .order('is_required', { ascending: false });
 
     if (criteriaError) {
-      console.error('Error fetching verification criteria:', criteriaError);
       return [];
     }
 
     return criteria || [];
   } catch (error) {
-    console.error('Error in getVerificationCriteria:', error);
     return [];
   }
 }

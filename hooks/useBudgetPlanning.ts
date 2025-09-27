@@ -154,8 +154,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error loading service breakdown:', error);
-    }
+      }
   };
 
   const loadPackageDeals = async (eventType: string, location?: any) => {
@@ -182,8 +181,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error loading package deals:', error);
-    }
+      }
   };
 
   const loadBudgetTracking = async (eventId: string) => {
@@ -202,8 +200,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error loading budget tracking:', error);
-    }
+      }
   };
 
   const applyBudgetAdjustment = async (
@@ -237,8 +234,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error applying budget adjustment:', error);
-    }
+      }
   };
 
   const updateBudgetTracking = async (
@@ -276,8 +272,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error updating budget tracking:', error);
-    }
+      }
   };
 
   const applyPackageDeal = async (eventId: string, packageId: string) => {
@@ -307,8 +302,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error applying package deal:', error);
-    }
+      }
   };
 
   const submitRecommendationFeedback = async (
@@ -347,8 +341,7 @@ export function useBudgetPlanning() {
         }));
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
-    }
+      }
   };
 
   const clearError = () => {

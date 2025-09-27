@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(onboardingStatus);
   } catch (error) {
-    console.error('Onboarding status error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

@@ -68,7 +68,6 @@ export async function GET(request: NextRequest) {
       .limit(100);
 
     if (filtersError) {
-      console.error('Error fetching filter analytics:', filtersError);
       return NextResponse.json(
         { error: 'Failed to fetch filter analytics' },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (patternsError) {
-      console.error('Error fetching filter patterns:', patternsError);
       return NextResponse.json(
         { error: 'Failed to fetch filter patterns' },
         { status: 500 }
@@ -99,7 +97,6 @@ export async function GET(request: NextRequest) {
       date_to: params.date_to,
     });
   } catch (error) {
-    console.error('Error in search filters analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

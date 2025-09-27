@@ -50,7 +50,6 @@ const mockSupabaseClient = {
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() => {
-    console.log('createClient called, returning mockSupabaseClient');
     return mockSupabaseClient;
   }),
 }));
@@ -228,8 +227,6 @@ describe('/api/ai/service-templates', () => {
             mockSupabaseClient.from.mock.calls[
               mockSupabaseClient.from.mock.calls.length - 1
             ]?.[0];
-          console.log('Service templates query for table:', table);
-
           if (table === 'service_templates') {
             // Check if this is a select query (duplicate check) or insert query
             const isSelectQuery = mockSupabaseClient.from.mock.calls.some(
@@ -282,9 +279,6 @@ describe('/api/ai/service-templates', () => {
 
       const response = await POST(request);
       const data = await response.json();
-
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
 
       if (response.status === 409) {
         // API route is working correctly - it's detecting a duplicate template name

@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       messageId: messageId,
     });
   } catch (error) {
-    console.error("SendGrid email error:", error);
     return NextResponse.json(
       { error: "Failed to send email" },
       { status: 500 }

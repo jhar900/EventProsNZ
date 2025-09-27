@@ -127,8 +127,7 @@ export default function UserActivityMonitor() {
         document.body.removeChild(a);
       }
     } catch (err) {
-      console.error('Export failed:', err);
-    }
+      }
   };
 
   const getActivityIcon = (type: string) => {

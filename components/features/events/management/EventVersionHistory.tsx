@@ -61,8 +61,7 @@ export function EventVersionHistory({ eventId }: EventVersionHistoryProps) {
         setVersions(data.versions || []);
       }
     } catch (error) {
-      console.error('Error loading versions:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -97,11 +96,9 @@ export function EventVersionHistory({ eventId }: EventVersionHistoryProps) {
         setShowCreateForm(false);
         await loadVersions();
       } else {
-        console.error('Error creating version:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error creating version:', error);
-    } finally {
+      } finally {
       setIsCreating(false);
     }
   };

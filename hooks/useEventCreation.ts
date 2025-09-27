@@ -72,8 +72,7 @@ export function useEventCreation({
       }
     } catch (err) {
       setError('Failed to load templates');
-      console.error('Error loading templates:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -88,8 +87,7 @@ export function useEventCreation({
         setDraft(data.draft);
       }
     } catch (err) {
-      console.error('Error loading draft:', err);
-    }
+      }
   };
 
   // Save draft
@@ -120,7 +118,6 @@ export function useEventCreation({
       }
     } catch (err) {
       setError('Failed to save draft');
-      console.error('Error saving draft:', err);
       return false;
     }
   };
@@ -143,7 +140,6 @@ export function useEventCreation({
       }
     } catch (err) {
       setError('Failed to delete draft');
-      console.error('Error deleting draft:', err);
       return false;
     }
   };
@@ -180,7 +176,6 @@ export function useEventCreation({
       }
     } catch (err) {
       setError('Failed to create event');
-      console.error('Error creating event:', err);
       return null;
     } finally {
       setIsLoading(false);

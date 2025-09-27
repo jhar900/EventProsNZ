@@ -163,8 +163,7 @@ export function useVerification(): UseVerificationReturn {
         }
       } catch (err) {
         setError('An unexpected error occurred');
-        console.error('Error fetching verifications:', err);
-      } finally {
+        } finally {
         setLoading(false);
       }
     },
@@ -205,7 +204,6 @@ export function useVerification(): UseVerificationReturn {
         }
       } catch (err) {
         setError('An unexpected error occurred');
-        console.error('Error approving user:', err);
         return false;
       }
     },
@@ -250,7 +248,6 @@ export function useVerification(): UseVerificationReturn {
         }
       } catch (err) {
         setError('An unexpected error occurred');
-        console.error('Error rejecting user:', err);
         return false;
       }
     },
@@ -289,7 +286,6 @@ export function useVerification(): UseVerificationReturn {
       }
     } catch (err) {
       setError('An unexpected error occurred');
-      console.error('Error resubmitting user:', err);
       return false;
     }
   }, []);
@@ -307,11 +303,9 @@ export function useVerification(): UseVerificationReturn {
         setMetrics(data.metrics);
         setTrends(data.trends);
       } else {
-        console.error('Error fetching analytics:', data.error);
-      }
+        }
     } catch (err) {
-      console.error('Error fetching analytics:', err);
-    } finally {
+      } finally {
       setAnalyticsLoading(false);
     }
   }, []);
@@ -326,11 +320,9 @@ export function useVerification(): UseVerificationReturn {
       if (response.ok) {
         setNotifications(data.notifications);
       } else {
-        console.error('Error fetching notifications:', data.error);
-      }
+        }
     } catch (err) {
-      console.error('Error fetching notifications:', err);
-    } finally {
+      } finally {
       setNotificationsLoading(false);
     }
   }, []);
@@ -358,8 +350,7 @@ export function useVerification(): UseVerificationReturn {
           );
         }
       } catch (err) {
-        console.error('Error marking notifications as read:', err);
-      }
+        }
     },
     []
   );

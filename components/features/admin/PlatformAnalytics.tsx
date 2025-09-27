@@ -87,8 +87,7 @@ export default function PlatformAnalytics() {
         setLastUpdated(new Date());
       }
     } catch (error) {
-      console.error('Failed to load analytics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -119,8 +118,7 @@ export default function PlatformAnalytics() {
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Failed to export analytics:', error);
-    }
+      }
   };
 
   const getPeriodLabel = (period: string) => {

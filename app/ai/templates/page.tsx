@@ -18,11 +18,9 @@ export default function ServiceTemplatesPage() {
         <ServiceTemplates
           eventType="wedding" // This would come from URL params or context
           onTemplateSelect={template => {
-            console.log('Template selected:', template);
             // Handle template selection
           }}
           onTemplateCreate={template => {
-            console.log('Template created:', template);
             // Handle template creation
           }}
         />

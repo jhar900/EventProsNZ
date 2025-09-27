@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
       message: 'Profile photo uploaded successfully',
     });
   } catch (error) {
-    console.error('Profile photo upload error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -178,7 +177,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Profile photo deleted successfully',
     });
   } catch (error) {
-    console.error('Profile photo delete error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

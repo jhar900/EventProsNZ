@@ -61,7 +61,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -102,7 +101,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (notificationsError) {
-      console.error('Error fetching notifications:', notificationsError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch notifications' },
         { status: 500 }
@@ -114,7 +112,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/notifications:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -178,7 +175,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -215,7 +211,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Error creating notification:', createError);
       return NextResponse.json(
         { success: false, message: 'Failed to create notification' },
         { status: 500 }
@@ -228,7 +223,6 @@ export async function POST(
       message: 'Notification created successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/notifications:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -286,7 +280,6 @@ export async function PUT(
       .eq('contractor_id', user.id);
 
     if (updateError) {
-      console.error('Error updating notifications:', updateError);
       return NextResponse.json(
         { success: false, message: 'Failed to update notifications' },
         { status: 500 }
@@ -298,7 +291,6 @@ export async function PUT(
       message: 'Notifications marked as read',
     });
   } catch (error) {
-    console.error('Error in PUT /api/events/[id]/notifications:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

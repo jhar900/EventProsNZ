@@ -72,8 +72,7 @@ export function ChangeNotifications({ eventId }: ChangeNotificationsProps) {
         setNotifications(data.notifications || []);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -107,11 +106,9 @@ export function ChangeNotifications({ eventId }: ChangeNotificationsProps) {
         setShowCreateForm(false);
         await loadNotifications();
       } else {
-        console.error('Error creating notification:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error creating notification:', error);
-    } finally {
+      } finally {
       setIsCreating(false);
     }
   };
@@ -132,8 +129,7 @@ export function ChangeNotifications({ eventId }: ChangeNotificationsProps) {
         await loadNotifications();
       }
     } catch (error) {
-      console.error('Error marking notifications as read:', error);
-    }
+      }
   };
 
   const getNotificationIcon = (type: string) => {

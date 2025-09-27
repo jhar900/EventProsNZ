@@ -56,8 +56,7 @@ function trackImageLoadEnd(
 
   // Log slow loading images
   if (loadTime > SLOW_LOAD_THRESHOLD) {
-    console.warn(`Slow image load: ${imageId} took ${loadTime}ms`);
-  }
+    }
 
   // Keep only last 100 metrics to prevent memory leaks
   if (imageLoadMetrics.length > 100) {
@@ -173,8 +172,7 @@ function Lightbox({
           url: item.imageUrl,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
-      }
+        }
     } else {
       // Fallback: copy to clipboard
       if (item.imageUrl) {

@@ -47,7 +47,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (preferencesError) {
-      console.error('Error fetching user preferences:', preferencesError);
       return NextResponse.json(
         { error: 'Failed to fetch preferences' },
         { status: 500 }
@@ -62,8 +61,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (insightsError) {
-      console.error('Error fetching learning insights:', insightsError);
-    }
+      }
 
     // Get AI learning data for behavior patterns
     const { data: learningData, error: learningError } = await supabase
@@ -73,8 +71,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (learningError) {
-      console.error('Error fetching learning data:', learningError);
-    }
+      }
 
     // Transform preferences to match component interface
     const transformedPreferences = (preferences || []).map(pref => ({
@@ -115,7 +112,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -182,7 +178,6 @@ export async function PUT(
         .single();
 
       if (error) {
-        console.error('Error updating user preference:', error);
         return NextResponse.json(
           { error: 'Failed to update preference' },
           { status: 500 }
@@ -201,7 +196,6 @@ export async function PUT(
         .single();
 
       if (error) {
-        console.error('Error creating user preference:', error);
         return NextResponse.json(
           { error: 'Failed to create preference' },
           { status: 500 }
@@ -214,7 +208,6 @@ export async function PUT(
     const response = await GET(request, { params });
     return response;
   } catch (error) {
-    console.error('Error updating user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -262,7 +255,6 @@ export async function DELETE(
       .eq('preference_type', preferenceType);
 
     if (error) {
-      console.error('Error deleting user preference:', error);
       return NextResponse.json(
         { error: 'Failed to delete preference' },
         { status: 500 }
@@ -273,7 +265,6 @@ export async function DELETE(
     const response = await GET(request, { params });
     return response;
   } catch (error) {
-    console.error('Error deleting user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

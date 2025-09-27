@@ -558,8 +558,7 @@ export function ServiceCategorySuggestions({
                     variant="outline"
                     onClick={() => {
                       // Handle category removal
-                      console.log('Remove category:', category.id);
-                    }}
+                      }}
                     className="flex-1"
                   >
                     <Minus className="h-4 w-4 mr-2" />

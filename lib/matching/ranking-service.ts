@@ -36,7 +36,6 @@ export class RankingService {
         match_reasons: this.generateMatchReasons(match),
       }));
     } catch (error) {
-      console.error('Error ranking contractors:', error);
       throw new Error('Failed to rank contractors');
     }
   }

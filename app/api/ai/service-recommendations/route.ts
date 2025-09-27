@@ -369,7 +369,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Error generating service recommendations:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -416,7 +415,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (error) {
-      console.error('Error storing recommendation feedback:', error);
       return NextResponse.json(
         { error: 'Failed to store feedback' },
         { status: 500 }
@@ -431,7 +429,6 @@ export async function POST(request: NextRequest) {
       message: 'Feedback recorded successfully',
     });
   } catch (error) {
-    console.error('Error processing recommendation feedback:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

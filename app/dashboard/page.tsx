@@ -18,8 +18,7 @@ export default function DashboardPage() {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
-    }
+      }
   };
 
   const handleCompleteProfile = () => {

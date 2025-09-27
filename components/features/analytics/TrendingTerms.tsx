@@ -57,8 +57,7 @@ export default function TrendingTerms({
         setTrendingServices(data.trending_services);
       }
     } catch (error) {
-      console.error('Error fetching trending data:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

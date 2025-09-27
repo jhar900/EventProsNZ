@@ -386,8 +386,7 @@ export function ServiceTemplates({
                   onClick={e => {
                     e.stopPropagation();
                     // Handle template copy
-                    console.log('Copy template:', template.id);
-                  }}
+                    }}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>

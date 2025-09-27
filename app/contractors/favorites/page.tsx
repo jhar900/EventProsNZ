@@ -27,8 +27,7 @@ export default function FavoritesPage() {
     try {
       await removeFromFavorites(contractorId);
     } catch (error) {
-      console.error('Failed to remove favorite:', error);
-    } finally {
+      } finally {
       setIsRemoving(null);
     }
   };

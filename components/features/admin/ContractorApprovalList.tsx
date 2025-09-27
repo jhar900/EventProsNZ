@@ -55,8 +55,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while loading contractors');
-      console.error('Contractors load error:', err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -83,8 +82,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while approving contractor');
-      console.error('Approval error:', err);
-    } finally {
+      } finally {
       setActionLoading(null);
     }
   };
@@ -111,8 +109,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while rejecting contractor');
-      console.error('Rejection error:', err);
-    } finally {
+      } finally {
       setActionLoading(null);
     }
   };

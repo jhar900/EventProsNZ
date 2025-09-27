@@ -81,7 +81,6 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
           isLoading: false,
         }));
       } catch (error) {
-        console.error('Error fetching contractors:', error);
         setState(prev => ({
           ...prev,
           error:
@@ -121,7 +120,6 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
           isLoading: false,
         }));
       } catch (error) {
-        console.error('Error searching contractors:', error);
         setState(prev => ({
           ...prev,
           error:
@@ -144,8 +142,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
         featuredContractors: response.contractors,
       }));
     } catch (error) {
-      console.error('Failed to fetch featured contractors:', error);
-    }
+      }
   }, []);
 
   const fetchContractorDetails = useCallback(async (id: string) => {

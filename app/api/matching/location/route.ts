@@ -58,8 +58,6 @@ export async function GET(request: NextRequest) {
       score: locationMatch.overall_score,
     });
   } catch (error) {
-    console.error('Error in location matching API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -106,8 +104,6 @@ export async function POST(request: NextRequest) {
       score: locationMatch.overall_score,
     });
   } catch (error) {
-    console.error('Error in location matching calculation API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

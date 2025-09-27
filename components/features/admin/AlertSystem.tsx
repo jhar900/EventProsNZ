@@ -143,8 +143,7 @@ export default function AlertSystem() {
         setResolutionText('');
       }
     } catch (err) {
-      console.error('Failed to resolve alert:', err);
-    } finally {
+      } finally {
       setIsResolving(false);
     }
   };
@@ -157,8 +156,7 @@ export default function AlertSystem() {
         await loadAlerts();
       }
     } catch (err) {
-      console.error('Failed to dismiss alert:', err);
-    }
+      }
   };
 
   const handleCreateAlert = async () => {
@@ -181,8 +179,7 @@ export default function AlertSystem() {
         });
       }
     } catch (err) {
-      console.error('Failed to create alert:', err);
-    } finally {
+      } finally {
       setIsCreating(false);
     }
   };

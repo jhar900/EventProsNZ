@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating inquiry:', error);
       return NextResponse.json(
         { error: 'Failed to create inquiry' },
         { status: 500 }
@@ -58,8 +57,6 @@ export async function POST(request: NextRequest) {
       inquiry,
     });
   } catch (error) {
-    console.error('Error in inquiry API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -125,7 +122,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Error fetching enquiries:', error);
       return NextResponse.json(
         { error: 'Failed to fetch enquiries' },
         { status: 500 }
@@ -136,8 +132,6 @@ export async function GET(request: NextRequest) {
       enquiries: enquiries || [],
     });
   } catch (error) {
-    console.error('Error in inquiry fetch API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

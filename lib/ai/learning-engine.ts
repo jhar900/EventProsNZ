@@ -90,7 +90,6 @@ export class AILearningEngine {
         .single();
 
       if (error) {
-        console.error('Error storing learning data:', error);
         return;
       }
 
@@ -108,8 +107,7 @@ export class AILearningEngine {
       // Trigger learning analysis
       await this.analyzeInteraction(learningData);
     } catch (error) {
-      console.error('Error recording interaction:', error);
-    }
+      }
   }
 
   /**
@@ -144,7 +142,6 @@ export class AILearningEngine {
       .eq('event_type', data.eventType);
 
     if (error) {
-      console.error('Error fetching service interactions:', error);
       return;
     }
 
@@ -169,7 +166,6 @@ export class AILearningEngine {
       .single();
 
     if (insightError && insightError.code !== 'PGRST116') {
-      console.error('Error checking existing insight:', insightError);
       return;
     }
 
@@ -213,7 +209,6 @@ export class AILearningEngine {
       .eq('user_id', data.userId);
 
     if (error) {
-      console.error('Error fetching user interactions:', error);
       return;
     }
 
@@ -247,7 +242,6 @@ export class AILearningEngine {
       .single();
 
     if (insightError && insightError.code !== 'PGRST116') {
-      console.error('Error checking existing insight:', insightError);
       return;
     }
 
@@ -289,7 +283,6 @@ export class AILearningEngine {
       .eq('event_type', data.eventType);
 
     if (error) {
-      console.error('Error fetching event type interactions:', error);
       return;
     }
 
@@ -327,7 +320,6 @@ export class AILearningEngine {
       .single();
 
     if (insightError && insightError.code !== 'PGRST116') {
-      console.error('Error checking existing insight:', insightError);
       return;
     }
 
@@ -371,10 +363,6 @@ export class AILearningEngine {
       .select('*');
 
     if (error) {
-      console.error(
-        'Error fetching interactions for seasonal analysis:',
-        error
-      );
       return;
     }
 
@@ -403,7 +391,6 @@ export class AILearningEngine {
       .single();
 
     if (insightError && insightError.code !== 'PGRST116') {
-      console.error('Error checking existing insight:', insightError);
       return;
     }
 
@@ -448,10 +435,6 @@ export class AILearningEngine {
       .select('*');
 
     if (error) {
-      console.error(
-        'Error fetching interactions for location analysis:',
-        error
-      );
       return;
     }
 
@@ -480,7 +463,6 @@ export class AILearningEngine {
       .single();
 
     if (insightError && insightError.code !== 'PGRST116') {
-      console.error('Error checking existing insight:', insightError);
       return;
     }
 
@@ -637,8 +619,7 @@ export class AILearningEngine {
         .lt('created_at', cutoffDate.toISOString());
 
       if (learningDataError) {
-        console.error('Error clearing old learning data:', learningDataError);
-      }
+        }
 
       // Delete old insights
       const { error: insightsError } = await this.supabase
@@ -647,11 +628,9 @@ export class AILearningEngine {
         .lt('updated_at', cutoffDate.toISOString());
 
       if (insightsError) {
-        console.error('Error clearing old insights:', insightsError);
-      }
+        }
     } catch (error) {
-      console.error('Error clearing old data:', error);
-    }
+      }
   }
 
   // Helper methods
@@ -683,13 +662,11 @@ export class AILearningEngine {
         .single();
 
       if (error) {
-        console.error('Error storing insight:', error);
         return null;
       }
 
       return data.id;
     } catch (error) {
-      console.error('Error storing insight:', error);
       return null;
     }
   }
@@ -712,11 +689,9 @@ export class AILearningEngine {
         .eq('id', id);
 
       if (error) {
-        console.error('Error updating insight:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error updating insight:', error);
-    }
+      }
   }
 
   /**
@@ -743,7 +718,6 @@ export class AILearningEngine {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching insights:', error);
         return [];
       }
 
@@ -758,7 +732,6 @@ export class AILearningEngine {
         updatedAt: new Date(row.updated_at),
       }));
     } catch (error) {
-      console.error('Error fetching insights:', error);
       return [];
     }
   }

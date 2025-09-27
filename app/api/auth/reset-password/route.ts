@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (resetError) {
-      console.error('Password reset error:', resetError);
       // Don't reveal the error to the client for security
       return NextResponse.json({
         message:
@@ -55,7 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Password reset error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -66,11 +66,7 @@ export async function POST(
       .eq('user_id', userId);
 
     if (businessUpdateError) {
-      console.error(
-        'Error updating business profile verification:',
-        businessUpdateError
-      );
-    }
+      }
 
     // Log verification action
     const { data: verificationLog, error: logError } = await supabase
@@ -86,8 +82,7 @@ export async function POST(
       .single();
 
     if (logError) {
-      console.error('Error logging verification action:', logError);
-    }
+      }
 
     return NextResponse.json({
       success: true,
@@ -100,7 +95,6 @@ export async function POST(
         { status: 400 }
       );
     }
-    console.error('Error approving user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -59,10 +59,6 @@ export async function POST(
       .eq('user_id', contractorId);
 
     if (businessProfileError) {
-      console.error(
-        'Failed to update business profile verification:',
-        businessProfileError
-      );
       // Don't fail the request, just log the error
     }
 
@@ -75,19 +71,15 @@ export async function POST(
       .eq('id', contractorId);
 
     if (userUpdateError) {
-      console.error('Failed to update user verification:', userUpdateError);
       // Don't fail the request, just log the error
     }
 
     // TODO: Send approval notification email to contractor
-    console.log(`Contractor approved: ${contractorId}`);
-
     return NextResponse.json({
       success: true,
       message: 'Contractor approved successfully',
     });
   } catch (error) {
-    console.error('Contractor approval error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

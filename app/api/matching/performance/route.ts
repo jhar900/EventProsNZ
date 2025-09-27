@@ -37,8 +37,6 @@ export async function GET(request: NextRequest) {
       score: performance.overall_performance_score,
     });
   } catch (error) {
-    console.error('Error in performance API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -91,8 +89,6 @@ export async function POST(request: NextRequest) {
       score: performance.overall_performance_score,
     });
   } catch (error) {
-    console.error('Error in performance calculation API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

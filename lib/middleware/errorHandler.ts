@@ -101,7 +101,6 @@ export class SecurityLogger {
     };
 
     // In production, send to security monitoring service
-    console.error('Security Error:', JSON.stringify(securityEvent, null, 2));
   }
 
   /**
@@ -128,9 +127,6 @@ export class SecurityLogger {
       },
     };
 
-    console.warn(
-      'Suspicious Activity:',
-      JSON.stringify(securityEvent, null, 2)
     );
   }
 }
@@ -163,9 +159,6 @@ export class PerformanceLogger {
       },
     };
 
-    console.error(
-      'Performance Error:',
-      JSON.stringify(performanceEvent, null, 2)
     );
   }
 }
@@ -183,13 +176,7 @@ export class ErrorHandler {
    */
   static handleError(error: Error, req: NextRequest): NextResponse {
     // Log the error
-    console.error('API Error:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      url: req.url,
-      method: req.method,
-      timestamp: new Date().toISOString(),
+    .toISOString(),
     });
 
     // Handle specific error types

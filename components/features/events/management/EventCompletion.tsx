@@ -68,11 +68,9 @@ export function EventCompletion({ eventId }: EventCompletionProps) {
         });
         // Show success message or redirect
       } else {
-        console.error('Error completing event:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error completing event:', error);
-    } finally {
+      } finally {
       setIsCompleting(false);
     }
   };

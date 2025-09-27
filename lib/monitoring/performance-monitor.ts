@@ -95,7 +95,6 @@ export class PerformanceMonitor {
   ): void {
     const startTime = additionalMetadata._startTime;
     if (!startTime) {
-      console.warn('Metric end called without start time');
       return;
     }
 
@@ -307,7 +306,7 @@ export class PerformanceMonitor {
   }
 
   private alert(level: 'warning' | 'error', metric: PerformanceMetric, message: string): void {
-    console.warn(`[${level.toUpperCase()}] ${message}`, {
+    console.log(`[${level.toUpperCase()}] ${message}`, {
       metric: metric.name,
       duration: metric.duration,
       type: metric.type,
@@ -335,8 +334,7 @@ export class PerformanceMonitor {
         }),
       });
     } catch (error) {
-      console.error('Failed to send alert to monitoring service:', error);
-    }
+      }
   }
 
   private collectSystemMetrics(): void {

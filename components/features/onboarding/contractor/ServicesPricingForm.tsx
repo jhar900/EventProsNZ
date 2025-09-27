@@ -135,8 +135,7 @@ export function ServicesPricingForm({
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Services pricing submission error:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

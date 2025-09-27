@@ -16,7 +16,6 @@ export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 // Initialize Google Analytics
 export const initGA = () => {
   if (!GA_TRACKING_ID) {
-    console.warn("Google Analytics ID not configured");
     return;
   }
 

@@ -9,13 +9,11 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
 
   const handleSuccess = () => {
-    console.log('Password reset email sent');
     // The form will show success message
   };
 
   const handleError = (error: string) => {
-    console.error('Password reset error:', error);
-  };
+    };
 
   return (
     <AuthGuard requireAuth={false}>

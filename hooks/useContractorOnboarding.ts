@@ -42,8 +42,7 @@ export function useContractorOnboarding() {
       }
     } catch (err) {
       setError('An error occurred while loading status');
-      console.error('Onboarding status error:', err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -67,7 +66,6 @@ export function useContractorOnboarding() {
       }
     } catch (err) {
       setError('An error occurred while updating step');
-      console.error('Step update error:', err);
       return false;
     }
   };
@@ -91,7 +89,6 @@ export function useContractorOnboarding() {
       }
     } catch (err) {
       setError('An error occurred while submitting');
-      console.error('Submission error:', err);
       return false;
     }
   };

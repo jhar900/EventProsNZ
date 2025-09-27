@@ -65,7 +65,6 @@ export function VerificationAnalytics({
         setError(errorData.error || 'Failed to fetch analytics');
       }
     } catch (error) {
-      console.error('Error fetching analytics:', error);
       setError('Failed to fetch analytics');
     } finally {
       setIsLoading(false);

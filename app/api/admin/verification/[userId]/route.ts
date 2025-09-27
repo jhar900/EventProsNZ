@@ -93,15 +93,13 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (logError) {
-      console.error('Error fetching verification log:', logError);
-    }
+      }
 
     return NextResponse.json({
       user: userData,
       verification_log: verificationLog || [],
     });
   } catch (error) {
-    console.error('Error fetching user verification details:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

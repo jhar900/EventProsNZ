@@ -91,11 +91,9 @@ export default function ContractorsMapPage() {
                     showLayers={true}
                     showLegend={true}
                     onContractorSelect={contractorId => {
-                      console.log('Selected contractor:', contractorId);
-                    }}
+                      }}
                     onMapReady={map => {
-                      console.log('Map ready:', map);
-                    }}
+                      }}
                   />
                 </div>
               </div>

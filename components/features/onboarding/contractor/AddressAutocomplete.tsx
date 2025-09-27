@@ -60,11 +60,9 @@ export function AddressAutocomplete({
         const data = await response.json();
         setSuggestions(data.features || []);
       } else {
-        console.error('Geocoding API error:', response.statusText);
         setSuggestions([]);
       }
     } catch (error) {
-      console.error('Address search error:', error);
       setSuggestions([]);
     } finally {
       setIsLoading(false);

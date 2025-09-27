@@ -133,10 +133,8 @@ export function ContractorMatching({
       }
 
       // Show success message or handle success
-      console.log('Inquiry sent successfully');
-    } catch (err) {
-      console.error('Error sending inquiry:', err);
-    }
+      } catch (err) {
+      }
   };
 
   return (

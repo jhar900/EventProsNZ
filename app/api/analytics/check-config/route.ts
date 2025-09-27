@@ -14,7 +14,6 @@ export async function GET() {
         : "Google Analytics ID not found",
     });
   } catch (error) {
-    console.error("Google Analytics configuration check error:", error);
     return NextResponse.json(
       {
         configured: false,

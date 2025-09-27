@@ -14,8 +14,6 @@ export async function GET() {
       message: isConfigured ? "Mapbox is configured" : "Mapbox token not found",
     });
   } catch (error) {
-    console.error("Configuration check error:", error);
-
     return NextResponse.json(
       {
         configured: false,

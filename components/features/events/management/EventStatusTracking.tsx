@@ -69,8 +69,7 @@ export function EventStatusTracking({ eventId }: EventStatusTrackingProps) {
         setStatusHistory(data.event.event_status_history || []);
       }
     } catch (error) {
-      console.error('Error loading status history:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -99,11 +98,9 @@ export function EventStatusTracking({ eventId }: EventStatusTrackingProps) {
         setShowUpdateForm(false);
         await loadStatusHistory();
       } else {
-        console.error('Error updating status:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error updating status:', error);
-    } finally {
+      } finally {
       setIsUpdating(false);
     }
   };

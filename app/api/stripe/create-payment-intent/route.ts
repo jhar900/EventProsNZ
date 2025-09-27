@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
       id: paymentIntent.id,
     });
   } catch (error) {
-    console.error("Stripe Payment Intent creation error:", error);
     return NextResponse.json(
       { error: "Failed to create payment intent" },
       { status: 500 }

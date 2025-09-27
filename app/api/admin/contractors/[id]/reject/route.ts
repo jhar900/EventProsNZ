@@ -57,14 +57,11 @@ export async function POST(
     }
 
     // TODO: Send rejection notification email to contractor
-    console.log(`Contractor rejected: ${contractorId}, reason: ${reason}`);
-
     return NextResponse.json({
       success: true,
       message: 'Contractor rejected successfully',
     });
   } catch (error) {
-    console.error('Contractor rejection error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

@@ -56,7 +56,6 @@ export async function GET(
     const { data: portfolio, error: portfolioError, count } = await query;
 
     if (portfolioError) {
-      console.error('Portfolio fetch error:', portfolioError);
       return NextResponse.json(
         { error: 'Failed to fetch portfolio' },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(
       categories: uniqueCategories,
     });
   } catch (error) {
-    console.error('Portfolio API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -71,7 +71,6 @@ export async function GET(request: NextRequest) {
     const { data: contractors, error } = await query;
 
     if (error) {
-      console.error('Error fetching contractors:', error);
       return NextResponse.json(
         { error: 'Failed to fetch contractors' },
         { status: 500 }
@@ -110,7 +109,6 @@ export async function GET(request: NextRequest) {
       total: mapContractors.length,
     });
   } catch (error) {
-    console.error('Map contractors API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -123,7 +123,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -152,7 +151,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -216,7 +214,6 @@ export async function PUT(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', fetchError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -274,7 +271,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating event:', updateError);
       return NextResponse.json(
         { success: false, message: 'Failed to update event' },
         { status: 500 }
@@ -290,8 +286,7 @@ export async function PUT(
         .eq('event_id', eventId);
 
       if (deleteError) {
-        console.error('Error deleting service requirements:', deleteError);
-      }
+        }
 
       // Insert new service requirements
       if (updateData.serviceRequirements.length > 0) {
@@ -310,8 +305,7 @@ export async function PUT(
           .insert(serviceRequirements);
 
         if (serviceError) {
-          console.error('Error updating service requirements:', serviceError);
-        }
+          }
       }
     }
 
@@ -323,7 +317,6 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in PUT /api/events/[id]:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -367,7 +360,6 @@ export async function DELETE(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', fetchError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -409,7 +401,6 @@ export async function DELETE(
       .eq('id', eventId);
 
     if (deleteError) {
-      console.error('Error deleting event:', deleteError);
       return NextResponse.json(
         { success: false, message: 'Failed to delete event' },
         { status: 500 }
@@ -421,7 +412,6 @@ export async function DELETE(
       message: 'Event deleted successfully',
     });
   } catch (error) {
-    console.error('Error in DELETE /api/events/[id]:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

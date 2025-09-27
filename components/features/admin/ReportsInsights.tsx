@@ -157,8 +157,7 @@ export default function ReportsInsights() {
         await loadReports();
       }
     } catch (err) {
-      console.error('Report generation failed:', err);
-    } finally {
+      } finally {
       setIsGenerating(false);
     }
   };
@@ -177,8 +176,7 @@ export default function ReportsInsights() {
         document.body.removeChild(a);
       }
     } catch (err) {
-      console.error('Download failed:', err);
-    }
+      }
   };
 
   const getReportTypeIcon = (type: string) => {

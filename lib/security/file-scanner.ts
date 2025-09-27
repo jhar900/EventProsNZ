@@ -326,8 +326,7 @@ export class FileSecurityScanner {
         threats.push(...cloudScan.threats);
         scanMethod = this.config.enableLocalScanning ? "hybrid" : "cloud";
       } catch (error) {
-        console.warn("Cloud scan failed, relying on local scan:", error);
-      }
+        }
     }
 
     return {
@@ -396,8 +395,7 @@ export class FileSecurityScanner {
         }
       }
     } catch (error) {
-      console.warn("Local scan error:", error);
-    }
+      }
 
     return { threats };
   }
@@ -429,8 +427,7 @@ export class FileSecurityScanner {
         }
       }
     } catch (error) {
-      console.warn("Cloud scan failed:", error);
-    }
+      }
 
     return { threats };
   }

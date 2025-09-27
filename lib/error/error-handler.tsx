@@ -93,13 +93,7 @@ export class ErrorHandler {
 
     // Log to console (in development)
     if (process.env.NODE_ENV === "development") {
-      console.error("Error handled:", {
-        id: errorId,
-        message: error.message,
-        context,
-        stack: error.stack,
-      });
-    }
+      }
 
     // Send to external logging service
     await this.sendToLoggingService(errorLog);
@@ -386,8 +380,7 @@ export class ErrorHandler {
     // This would integrate with your logging service (e.g., Sentry, LogRocket, etc.)
     if (process.env.SENTRY_DSN) {
       // Send to Sentry
-      console.log("Sending error to Sentry:", errorLog.id);
-    }
+      }
 
     // Send to custom logging endpoint
     try {
@@ -397,14 +390,12 @@ export class ErrorHandler {
         body: JSON.stringify(errorLog),
       });
     } catch (error) {
-      console.error("Failed to send error to logging service:", error);
-    }
+      }
   }
 
   private async notifyError(errorLog: ErrorLog): Promise<void> {
     // This would integrate with your notification service (e.g., Slack, email, etc.)
-    console.log("Notifying about error:", errorLog.id);
-  }
+    }
 
   private generateErrorId(): string {
     return `err_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;

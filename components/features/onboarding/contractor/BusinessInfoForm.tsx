@@ -98,8 +98,7 @@ export function BusinessInfoForm({
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Business info submission error:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

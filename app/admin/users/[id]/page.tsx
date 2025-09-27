@@ -88,8 +88,7 @@ export default function UserDetailsPage() {
         setActivities(result.activities || []);
       }
     } catch (err) {
-      console.error('Failed to load user activity:', err);
-    }
+      }
   };
 
   const handleVerifyUser = async () => {

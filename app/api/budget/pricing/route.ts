@@ -141,14 +141,12 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error) {
-      console.error('Pricing calculation error:', error);
       return NextResponse.json(
         { error: 'Failed to calculate pricing data' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Pricing data error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

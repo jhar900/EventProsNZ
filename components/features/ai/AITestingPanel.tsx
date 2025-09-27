@@ -99,8 +99,7 @@ export function AITestingPanel({
         )
       );
     } catch (err) {
-      console.error('Error toggling test:', err);
-    }
+      }
   };
 
   const getVariantColor = (variant: string) => {

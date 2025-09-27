@@ -29,12 +29,7 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error(
-        'Analytics Error Boundary caught an error:',
-        error,
-        errorInfo
-      );
-    }
+      }
 
     // Call custom error handler if provided
     if (this.props.onError) {

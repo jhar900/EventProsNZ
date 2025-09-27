@@ -18,8 +18,6 @@ export async function GET() {
         : "SendGrid API key not found",
     });
   } catch (error) {
-    console.error("SendGrid configuration check error:", error);
-
     return NextResponse.json(
       {
         configured: false,

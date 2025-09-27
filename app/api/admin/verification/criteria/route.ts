@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
       .order('is_required', { ascending: false });
 
     if (criteriaError) {
-      console.error('Error fetching verification criteria:', criteriaError);
       return NextResponse.json(
         { error: 'Failed to fetch verification criteria' },
         { status: 500 }
@@ -52,7 +51,6 @@ export async function GET(request: NextRequest) {
       criteria: criteria || [],
     });
   } catch (error) {
-    console.error('Error in verification criteria API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -107,7 +105,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (criterionError) {
-      console.error('Error creating verification criterion:', criterionError);
       return NextResponse.json(
         { error: 'Failed to create verification criterion' },
         { status: 500 }
@@ -119,7 +116,6 @@ export async function POST(request: NextRequest) {
       criterion,
     });
   } catch (error) {
-    console.error('Error in create verification criterion API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

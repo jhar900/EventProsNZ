@@ -88,8 +88,6 @@ export class ReliableRealtime {
 
       return channel;
     } catch (error) {
-      console.error(`Failed to subscribe to ${subscriptionId}:`, error);
-      
       // Fallback to polling if available
       if (fallbackPolling) {
         return this.createFallbackPolling(subscriptionId, fallbackPolling);
@@ -205,11 +203,9 @@ export class ReliableRealtime {
         // Simulate real-time callback
         if (data) {
           // This would need to be adapted based on your data structure
-          console.log('Polling data received:', data);
-        }
+          }
       } catch (error) {
-        console.error('Polling error:', error);
-      }
+        }
     }, this.config.fallbackPollingInterval);
 
     this.pollingIntervals.set(subscriptionId, interval);
@@ -244,7 +240,6 @@ export class ReliableRealtime {
 
     for (const [subscriptionId, subscription] of this.subscriptions.entries()) {
       if (now - subscription.lastHeartbeat > timeout) {
-        console.warn(`Subscription ${subscriptionId} appears to be stale, reconnecting...`);
         this.reconnectSubscription(subscriptionId, subscription);
       }
     }
@@ -255,7 +250,6 @@ export class ReliableRealtime {
     subscription: RealtimeSubscription
   ): Promise<void> {
     if (subscription.reconnectAttempts >= this.config.maxReconnectAttempts) {
-      console.error(`Max reconnection attempts reached for ${subscriptionId}`);
       this.unsubscribe(subscriptionId.split(':')[0], subscriptionId.split(':')[1]);
       return;
     }
@@ -272,11 +266,9 @@ export class ReliableRealtime {
     setTimeout(async () => {
       try {
         // This would need to be adapted based on your specific subscription logic
-        console.log(`Attempting to reconnect ${subscriptionId}...`);
         // Reconnection logic would go here
       } catch (error) {
-        console.error(`Reconnection failed for ${subscriptionId}:`, error);
-      }
+        }
     }, delay);
   }
 

@@ -52,7 +52,6 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(
       .order('milestone_date', { ascending: true });
 
     if (milestonesError) {
-      console.error('Error fetching milestones:', milestonesError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch milestones' },
         { status: 500 }
@@ -96,7 +94,6 @@ export async function GET(
       success: true,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/milestones:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -161,7 +158,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -198,7 +194,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Error creating milestone:', createError);
       return NextResponse.json(
         { success: false, message: 'Failed to create milestone' },
         { status: 500 }
@@ -225,8 +220,7 @@ export async function POST(
         .insert(notifications);
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
-      }
+        }
     }
 
     return NextResponse.json({
@@ -235,7 +229,6 @@ export async function POST(
       message: 'Milestone created successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/milestones:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -308,7 +301,6 @@ export async function PUT(
           { status: 404 }
         );
       }
-      console.error('Error fetching milestone:', milestoneError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch milestone' },
         { status: 500 }
@@ -345,7 +337,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating milestone:', updateError);
       return NextResponse.json(
         { success: false, message: 'Failed to update milestone' },
         { status: 500 }
@@ -373,8 +364,7 @@ export async function PUT(
           .insert(notifications);
 
         if (notificationError) {
-          console.error('Error creating notifications:', notificationError);
-        }
+          }
       }
     }
 
@@ -384,10 +374,6 @@ export async function PUT(
       message: 'Milestone updated successfully',
     });
   } catch (error) {
-    console.error(
-      'Error in PUT /api/events/[id]/milestones/[milestone_id]:',
-      error
-    );
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

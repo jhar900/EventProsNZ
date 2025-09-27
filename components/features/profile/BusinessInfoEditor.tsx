@@ -118,11 +118,9 @@ export function BusinessInfoEditor({
         reset(data);
       } else {
         const error = await response.json();
-        console.error('Error updating business profile:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error updating business profile:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

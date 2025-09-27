@@ -165,7 +165,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error('Error fetching AI analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -200,7 +199,6 @@ async function getRecommendationAnalytics(
     const { data: requests, error: requestsError } = await query;
 
     if (requestsError) {
-      console.error('Error fetching recommendation requests:', requestsError);
       return { error: 'Failed to fetch recommendation data' };
     }
 
@@ -218,8 +216,7 @@ async function getRecommendationAnalytics(
     const { data: feedback, error: feedbackError } = await feedbackQuery;
 
     if (feedbackError) {
-      console.error('Error fetching recommendation feedback:', feedbackError);
-    }
+      }
 
     // Calculate metrics
     const totalRequests = requests?.length || 0;
@@ -261,7 +258,6 @@ async function getRecommendationAnalytics(
         .map(([type, count]) => ({ event_type: type, count })),
     };
   } catch (error) {
-    console.error('Error calculating recommendation analytics:', error);
     return { error: 'Failed to calculate recommendation analytics' };
   }
 }
@@ -289,7 +285,6 @@ async function getEngagementAnalytics(
     const { data: interactions, error } = await query;
 
     if (error) {
-      console.error('Error fetching recommendation interactions:', error);
       return { error: 'Failed to fetch engagement data' };
     }
 
@@ -326,7 +321,6 @@ async function getEngagementAnalytics(
       bounce_rate: 0, // Would need session tracking
     };
   } catch (error) {
-    console.error('Error calculating engagement analytics:', error);
     return { error: 'Failed to calculate engagement analytics' };
   }
 }
@@ -358,7 +352,6 @@ async function getLearningAnalytics(
     const { data: learningData, error } = await query;
 
     if (error) {
-      console.error('Error fetching learning data:', error);
       return { error: 'Failed to fetch learning data' };
     }
 
@@ -370,8 +363,7 @@ async function getLearningAnalytics(
       .lte('updated_at', endDate.toISOString());
 
     if (patternsError) {
-      console.error('Error fetching service patterns:', patternsError);
-    }
+      }
 
     const totalLearningEvents = learningData?.length || 0;
     const averageSuccessRate =
@@ -396,7 +388,6 @@ async function getLearningAnalytics(
       learning_velocity: totalLearningEvents / 30, // Events per day
     };
   } catch (error) {
-    console.error('Error calculating learning analytics:', error);
     return { error: 'Failed to calculate learning analytics' };
   }
 }
@@ -424,7 +415,6 @@ async function getABTestingAnalytics(
     const { data: testResults, error } = await query;
 
     if (error) {
-      console.error('Error fetching A/B test results:', error);
       return { error: 'Failed to fetch A/B testing data' };
     }
 
@@ -463,7 +453,6 @@ async function getABTestingAnalytics(
       statistical_significance: totalTests >= 20, // Simple threshold
     };
   } catch (error) {
-    console.error('Error calculating A/B testing analytics:', error);
     return { error: 'Failed to calculate A/B testing analytics' };
   }
 }
@@ -486,8 +475,7 @@ async function getPerformanceAnalytics(
       .like('endpoint', '%ai%');
 
     if (error) {
-      console.error('Error fetching performance data:', error);
-    }
+      }
 
     const totalRequests = performanceData?.length || 0;
     const averageResponseTime =
@@ -512,7 +500,6 @@ async function getPerformanceAnalytics(
       throughput: totalRequests / 30, // Requests per day
     };
   } catch (error) {
-    console.error('Error calculating performance analytics:', error);
     return { error: 'Failed to calculate performance analytics' };
   }
 }

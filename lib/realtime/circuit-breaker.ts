@@ -62,7 +62,6 @@ export class CircuitBreaker {
       this.onFailure();
       
       if (this.config.fallbackEnabled && fallback) {
-        console.warn('Circuit breaker triggered, using fallback:', error);
         return await fallback();
       }
       

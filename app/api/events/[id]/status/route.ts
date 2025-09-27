@@ -73,7 +73,6 @@ async function updateStatusHandler(
     if (fetchError.code === 'PGRST116') {
       return createErrorResponse('Event not found', 404);
     }
-    console.error('Error fetching event:', fetchError);
     return createErrorResponse('Failed to fetch event', 500);
   }
 
@@ -107,7 +106,6 @@ async function updateStatusHandler(
     .single();
 
   if (updateError) {
-    console.error('Error updating event status:', updateError);
     return createErrorResponse('Failed to update event status', 500);
   }
 
@@ -124,7 +122,6 @@ async function updateStatusHandler(
     });
 
   if (historyError) {
-    console.error('Error creating status history:', historyError);
     // Don't fail the request, just log the error
   }
 
@@ -152,8 +149,7 @@ async function updateStatusHandler(
         .insert(notifications);
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
-      }
+        }
     }
   }
 
@@ -209,7 +205,6 @@ async function getStatusHandler(
     if (eventError.code === 'PGRST116') {
       return createErrorResponse('Event not found', 404);
     }
-    console.error('Error fetching event:', eventError);
     return createErrorResponse('Failed to fetch event', 500);
   }
 

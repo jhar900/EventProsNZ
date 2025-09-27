@@ -7,7 +7,6 @@ const mockSupabaseClient = {
     // Create a mock query object that can be chained
     const mockQuery = {
       select: jest.fn((columns?: string) => {
-        console.log('select method called with:', columns);
         return Promise.resolve({
           data: null,
           error: new Error('Database error'),
@@ -18,7 +17,6 @@ const mockSupabaseClient = {
       limit: jest.fn().mockResolvedValue({ data: [], error: null }),
       single: jest.fn().mockResolvedValue({ data: null, error: null }),
       insert: jest.fn((data: any) => {
-        console.log('insert method called with:', data);
         return Promise.resolve({ data: { id: 'test-123' }, error: null });
       }),
       update: jest.fn().mockReturnValue({
@@ -34,7 +32,6 @@ const mockSupabaseClient = {
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() => {
-    console.log('createClient called, returning mockSupabaseClient');
     return mockSupabaseClient;
   }),
 }));
@@ -146,9 +143,6 @@ describe('/api/ai/ab-testing', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
-
       if (response.status === 200) {
         // API route is designed to be resilient and return partial data
         expect(response.status).toBe(200);
@@ -213,9 +207,6 @@ describe('/api/ai/ab-testing', () => {
 
       const response = await POST(request);
       const data = await response.json();
-
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
@@ -371,9 +362,6 @@ describe('/api/ai/ab-testing', () => {
 
       const response = await POST(request);
       const data = await response.json();
-
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
 
       if (response.status === 400) {
         // API route is rejecting the request data

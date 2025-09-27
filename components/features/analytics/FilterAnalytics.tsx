@@ -63,8 +63,7 @@ export default function FilterAnalytics({
         setPatterns(data.usage_patterns);
       }
     } catch (error) {
-      console.error('Error fetching filter analytics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

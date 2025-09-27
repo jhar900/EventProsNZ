@@ -63,8 +63,7 @@ export function EventDuplication({ eventId }: EventDuplicationProps) {
         setDuplicates(data.duplicates || []);
       }
     } catch (error) {
-      console.error('Error loading duplicates:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -101,11 +100,9 @@ export function EventDuplication({ eventId }: EventDuplicationProps) {
         setShowCreateForm(false);
         await loadDuplicates();
       } else {
-        console.error('Error creating duplicate:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error creating duplicate:', error);
-    } finally {
+      } finally {
       setIsCreating(false);
     }
   };

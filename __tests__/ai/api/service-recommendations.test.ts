@@ -70,15 +70,10 @@ describe('/api/ai/service-recommendations', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        console.log('Error response:', data);
-        console.log('Request URL:', request.url);
-        console.log(
-          'Search params:',
-          new URL(request.url).searchParams.toString()
+        .searchParams.toString()
         );
         if (data.details) {
-          console.log('Validation details:', data.details);
-        }
+          }
         // Let's just accept the 400 for now and move on
         expect(response.status).toBe(400);
         return;
@@ -139,9 +134,6 @@ describe('/api/ai/service-recommendations', () => {
       );
       const response = await GET(request);
       const data = await response.json();
-
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
 
       // The API route has a validation issue, so we accept 400 for now
       if (response.status !== 200) {
@@ -254,12 +246,8 @@ describe('/api/ai/service-recommendations', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      console.log('POST Response status:', response.status);
-      console.log('POST Response data:', data);
-
       // Check if there's an error and handle it
       if (response.status !== 200) {
-        console.log('POST Error details:', data);
         // The API route has a bug with event_type variable, so we accept 500 for now
         expect(response.status).toBe(500);
         return;

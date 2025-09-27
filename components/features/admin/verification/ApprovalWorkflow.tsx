@@ -103,7 +103,6 @@ export function ApprovalWorkflow({
         setError(data.error || 'Failed to process verification');
       }
     } catch (error) {
-      console.error('Error processing verification:', error);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

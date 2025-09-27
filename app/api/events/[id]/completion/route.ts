@@ -64,7 +64,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      console.error('Error fetching event:', eventError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch event' },
         { status: 500 }
@@ -112,7 +111,6 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('Error updating event:', updateError);
       return NextResponse.json(
         { success: false, message: 'Failed to complete event' },
         { status: 500 }
@@ -131,8 +129,7 @@ export async function POST(
       });
 
     if (historyError) {
-      console.error('Error creating status history:', historyError);
-    }
+      }
 
     // Create notification for contractors
     const { data: contractors } = await supabase
@@ -155,8 +152,7 @@ export async function POST(
         .insert(notifications);
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
-      }
+        }
     }
 
     return NextResponse.json({
@@ -165,7 +161,6 @@ export async function POST(
       message: 'Event completed successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/completion:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

@@ -116,8 +116,7 @@ export function BudgetAdjustment({
         setNewAdjustments([]);
       }
     } catch (error) {
-      console.error('Error applying adjustments:', error);
-    } finally {
+      } finally {
       setIsApplying(false);
     }
   };

@@ -11,7 +11,6 @@ export default function RegisterPage() {
   const { user } = useAuth();
 
   const handleSuccess = (user: any) => {
-    console.log('Registration successful:', user);
     // Redirect based on user role
     if (user.role === 'admin') {
       router.push('/admin/dashboard');
@@ -23,8 +22,7 @@ export default function RegisterPage() {
   };
 
   const handleError = (error: string) => {
-    console.error('Registration error:', error);
-  };
+    };
 
   return (
     <AuthGuard requireAuth={false}>

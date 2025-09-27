@@ -93,7 +93,6 @@ export class BudgetService {
       // Check cache first
       const cached = this.cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
-        console.log('Budget calculation cache hit');
         return cached.data;
       }
 
@@ -197,7 +196,6 @@ export class BudgetService {
 
       return result;
     } catch (error) {
-      console.error('Budget calculation error:', error);
       throw error;
     }
   }
@@ -241,7 +239,6 @@ export class BudgetService {
         total: Math.round(total * 100) / 100,
       };
     } catch (error) {
-      console.error('Service breakdown error:', error);
       throw error;
     }
   }
@@ -296,7 +293,6 @@ export class BudgetService {
           .single();
 
         if (updateError) {
-          console.error('Error updating breakdown item:', updateError);
           continue;
         }
 
@@ -305,7 +301,6 @@ export class BudgetService {
 
       return updatedBreakdown;
     } catch (error) {
-      console.error('Budget adjustment error:', error);
       throw error;
     }
   }
@@ -325,7 +320,6 @@ export class BudgetService {
         .eq('event_id', eventId);
 
       if (fetchError) {
-        console.error('Error fetching budget tracking:', fetchError);
         return;
       }
 
@@ -361,7 +355,6 @@ export class BudgetService {
         }
       }
     } catch (error) {
-      console.error('Budget tracking error:', error);
       throw error;
     }
   }
@@ -443,7 +436,6 @@ export class BudgetService {
         top_savings: savings,
       };
     } catch (error) {
-      console.error('Budget insights error:', error);
       throw error;
     }
   }

@@ -128,7 +128,6 @@ export function useProximityFilter(): ProximityFilterState &
       );
       setState(prev => ({ ...prev, locationSuggestions: suggestions }));
     } catch (error) {
-      console.error('Failed to get location suggestions:', error);
       setState(prev => ({ ...prev, locationSuggestions: [] }));
     }
   }, []);

@@ -305,8 +305,6 @@ export const cacheWarming = {
 
     // This would typically call the actual analytics functions
     // to populate the cache with commonly requested data
-    console.log('Warming analytics caches...');
-
     // TODO: Implement actual cache warming logic
     // This would involve calling the analytics service functions
     // with common parameters to populate the cache

@@ -19,8 +19,7 @@ export default function AIAnalyticsPage() {
           eventType="wedding" // This would come from URL params or context
           onClose={() => {
             // Handle close - in a real app, this might navigate back
-            console.log('Analytics closed');
-          }}
+            }}
         />
       </div>
     </div>

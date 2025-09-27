@@ -78,8 +78,6 @@ export async function GET(request: NextRequest) {
       score: budgetCompatibility.overall_score,
     });
   } catch (error) {
-    console.error('Error in budget compatibility API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -128,8 +126,6 @@ export async function POST(request: NextRequest) {
       score: budgetCompatibility.overall_score,
     });
   } catch (error) {
-    console.error('Error in budget compatibility calculation API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

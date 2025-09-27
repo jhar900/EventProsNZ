@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Step 1 error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

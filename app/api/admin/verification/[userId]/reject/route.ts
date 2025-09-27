@@ -67,11 +67,7 @@ export async function POST(
       .eq('user_id', userId);
 
     if (businessUpdateError) {
-      console.error(
-        'Error updating business profile verification:',
-        businessUpdateError
-      );
-    }
+      }
 
     // Log verification action
     const { data: verificationLog, error: logError } = await supabase
@@ -87,8 +83,7 @@ export async function POST(
       .single();
 
     if (logError) {
-      console.error('Error logging verification action:', logError);
-    }
+      }
 
     // TODO: Send rejection email to user with feedback
 
@@ -103,7 +98,6 @@ export async function POST(
         { status: 400 }
       );
     }
-    console.error('Error rejecting user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

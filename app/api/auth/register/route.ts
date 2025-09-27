@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.SUPABASE_SERVICE_ROLE_KEY
     ) {
-      console.error('Missing Supabase environment variables');
       return NextResponse.json(
         {
           error: 'Server configuration error',
@@ -43,7 +42,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
-      console.error('Auth creation error:', authError);
       return NextResponse.json(
         {
           error: 'Failed to create user account',
@@ -90,7 +88,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error('Failed to create profile:', profileError);
       // Don't fail registration for profile creation error
     }
 
@@ -105,10 +102,6 @@ export async function POST(request: NextRequest) {
         });
 
       if (businessProfileError) {
-        console.error(
-          'Failed to create business profile:',
-          businessProfileError
-        );
         // Don't fail registration for business profile creation error
       }
     }
@@ -121,8 +114,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (sessionError) {
-      console.error('Failed to generate session:', sessionError);
-    }
+      }
 
     return NextResponse.json({
       message: 'User registered successfully',
@@ -145,8 +137,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.error('Registration error:', error);
 
     // Check if it's a Supabase connection error
     if (error instanceof Error && error.message.includes('fetch')) {

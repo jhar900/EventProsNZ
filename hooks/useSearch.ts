@@ -141,8 +141,7 @@ export function useSearch() {
         setState(prev => ({ ...prev, suggestions: data.suggestions }));
       }
     } catch (error) {
-      console.error('Failed to get suggestions:', error);
-    }
+      }
   }, []);
 
   // Get filter options
@@ -155,8 +154,7 @@ export function useSearch() {
         return data;
       }
     } catch (error) {
-      console.error('Failed to get filter options:', error);
-    }
+      }
     return null;
   }, []);
 
@@ -176,8 +174,7 @@ export function useSearch() {
           }),
         });
       } catch (error) {
-        console.error('Failed to save search history:', error);
-      }
+        }
     },
     []
   );
@@ -193,8 +190,7 @@ export function useSearch() {
         return data.searches;
       }
     } catch (error) {
-      console.error('Failed to get search history:', error);
-    }
+      }
     return [];
   }, []);
 
@@ -223,7 +219,6 @@ export function useSearch() {
           return data.saved_search;
         }
       } catch (error) {
-        console.error('Failed to save search:', error);
         throw error;
       }
     },
@@ -241,8 +236,7 @@ export function useSearch() {
         return data.saved_searches;
       }
     } catch (error) {
-      console.error('Failed to get saved searches:', error);
-    }
+      }
     return [];
   }, []);
 
@@ -262,7 +256,6 @@ export function useSearch() {
         }));
       }
     } catch (error) {
-      console.error('Failed to delete saved search:', error);
       throw error;
     }
   }, []);
@@ -283,7 +276,6 @@ export function useSearch() {
         await getFavorites();
       }
     } catch (error) {
-      console.error('Failed to add to favorites:', error);
       throw error;
     }
   }, []);
@@ -303,7 +295,6 @@ export function useSearch() {
         await getFavorites();
       }
     } catch (error) {
-      console.error('Failed to remove from favorites:', error);
       throw error;
     }
   }, []);
@@ -319,8 +310,7 @@ export function useSearch() {
         return data.favorites;
       }
     } catch (error) {
-      console.error('Failed to get favorites:', error);
-    }
+      }
     return [];
   }, []);
 

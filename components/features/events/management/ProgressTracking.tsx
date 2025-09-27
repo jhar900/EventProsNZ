@@ -64,8 +64,7 @@ export function ProgressTracking({ eventId }: ProgressTrackingProps) {
         setMilestones(data.milestones || []);
       }
     } catch (error) {
-      console.error('Error loading milestones:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -94,11 +93,9 @@ export function ProgressTracking({ eventId }: ProgressTrackingProps) {
         setShowCreateForm(false);
         await loadMilestones();
       } else {
-        console.error('Error creating milestone:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error creating milestone:', error);
-    } finally {
+      } finally {
       setIsCreating(false);
     }
   };
@@ -121,11 +118,9 @@ export function ProgressTracking({ eventId }: ProgressTrackingProps) {
       if (data.success) {
         await loadMilestones();
       } else {
-        console.error('Error updating milestone:', data.message);
-      }
+        }
     } catch (error) {
-      console.error('Error updating milestone:', error);
-    }
+      }
   };
 
   const getStatusIcon = (status: string) => {

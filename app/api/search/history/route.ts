@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (historyError) {
-      console.error('Search history error:', historyError);
       return NextResponse.json(
         { error: 'Failed to fetch search history' },
         { status: 500 }
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
       searches: searchHistory || [],
     });
   } catch (error) {
-    console.error('Search history API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -82,7 +80,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Search history insert error:', insertError);
       return NextResponse.json(
         { error: 'Failed to save search history' },
         { status: 500 }
@@ -94,7 +91,6 @@ export async function POST(request: NextRequest) {
       search_entry: searchEntry,
     });
   } catch (error) {
-    console.error('Search history POST API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

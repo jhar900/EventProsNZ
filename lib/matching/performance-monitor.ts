@@ -52,14 +52,6 @@ export class MatchingPerformanceMonitor {
 
     // Check for performance issues
     await this.checkPerformanceThresholds(metrics);
-
-    console.log(`Performance metrics logged for event ${eventId}:`, {
-      queryTime: `${queryTimeMs}ms`,
-      contractors: contractorsProcessed,
-      cacheHitRate: `${(cacheHitRate * 100).toFixed(1)}%`,
-      algorithmTime: `${algorithmTimeMs}ms`,
-      memoryUsage: `${memoryUsageMb.toFixed(2)}MB`,
-    });
   }
 
   /**
@@ -95,11 +87,6 @@ export class MatchingPerformanceMonitor {
     }
 
     if (issues.length > 0) {
-      console.warn(
-        `Performance issues detected for event ${metrics.event_id}:`,
-        issues
-      );
-
       // In a real implementation, you might:
       // - Send alerts to monitoring systems
       // - Log to external monitoring services
@@ -234,8 +221,7 @@ export class MatchingPerformanceMonitor {
 
     const removedCount = initialCount - this.metrics.length;
     if (removedCount > 0) {
-      console.log(`Cleared ${removedCount} old performance metrics`);
-    }
+      }
   }
 }
 

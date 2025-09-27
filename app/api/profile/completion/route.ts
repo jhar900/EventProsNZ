@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
       status,
     });
   } catch (error) {
-    console.error('Profile completion check error:', error);
     return NextResponse.json(
       {
         error: 'Failed to check profile completion status',
@@ -54,7 +53,6 @@ export async function POST(request: NextRequest) {
       message: 'Profile completion status updated',
     });
   } catch (error) {
-    console.error('Profile completion update error:', error);
     return NextResponse.json(
       {
         error: 'Failed to update profile completion status',

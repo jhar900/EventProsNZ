@@ -100,7 +100,6 @@ export async function POST(
       user: updatedUser,
     });
   } catch (error) {
-    console.error('Update user role error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

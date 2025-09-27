@@ -202,8 +202,7 @@ export function BudgetPlanning({
         );
       }
     } catch (err) {
-      console.error('Error loading service breakdown:', err);
-    }
+      }
   };
 
   const loadPackageDeals = async () => {
@@ -229,8 +228,7 @@ export function BudgetPlanning({
         );
       }
     } catch (err) {
-      console.error('Error loading package deals:', err);
-    }
+      }
   };
 
   const loadBudgetTracking = async () => {
@@ -250,8 +248,7 @@ export function BudgetPlanning({
         );
       }
     } catch (err) {
-      console.error('Error loading budget tracking:', err);
-    }
+      }
   };
 
   const handleEventDetailsChange = (field: string, value: any) => {

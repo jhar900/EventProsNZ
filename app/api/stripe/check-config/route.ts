@@ -18,7 +18,6 @@ export async function GET() {
       message: isConfigured ? "Stripe is configured" : "Stripe keys not found",
     });
   } catch (error) {
-    console.error("Stripe configuration check error:", error);
     return NextResponse.json(
       {
         configured: false,

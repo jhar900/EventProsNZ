@@ -28,8 +28,7 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
-    }
+      }
   };
 
   const toggleMobileMenu = () => {

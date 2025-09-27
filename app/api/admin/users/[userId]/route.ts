@@ -74,7 +74,6 @@ export async function GET(
 
     return NextResponse.json({ user: userDetails });
   } catch (error) {
-    console.error('Get user details error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -158,7 +157,6 @@ export async function PUT(
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    console.error('Update user error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

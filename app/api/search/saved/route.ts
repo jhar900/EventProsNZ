@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (savedError) {
-      console.error('Saved searches error:', savedError);
       return NextResponse.json(
         { error: 'Failed to fetch saved searches' },
         { status: 500 }
@@ -33,7 +32,6 @@ export async function GET(request: NextRequest) {
       saved_searches: savedSearches || [],
     });
   } catch (error) {
-    console.error('Saved searches API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -77,7 +75,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Saved search insert error:', insertError);
       return NextResponse.json(
         { error: 'Failed to save search' },
         { status: 500 }
@@ -88,7 +85,6 @@ export async function POST(request: NextRequest) {
       saved_search: savedSearch,
     });
   } catch (error) {
-    console.error('Saved searches POST API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,7 +122,6 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (deleteError) {
-      console.error('Saved search delete error:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete saved search' },
         { status: 500 }
@@ -137,7 +132,6 @@ export async function DELETE(request: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error('Saved searches DELETE API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -56,8 +56,7 @@ export function ContractorDetails({
         setServices(servicesResponse.services);
         setReviews(reviewsResponse.reviews);
       } catch (error) {
-        console.error('Failed to load contractor data:', error);
-      } finally {
+        } finally {
         setIsLoadingServices(false);
         setIsLoadingReviews(false);
       }

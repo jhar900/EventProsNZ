@@ -6,8 +6,6 @@ import Link from 'next/link';
 export default function Home() {
   const { user, isLoading } = useAuth();
 
-  console.log('Home component rendering, isLoading:', isLoading, 'user:', user);
-
   // Temporary bypass for debugging
   if (isLoading) {
     return (

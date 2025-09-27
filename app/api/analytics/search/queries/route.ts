@@ -73,7 +73,6 @@ async function handler(request: NextRequest) {
     );
 
     if (queriesError) {
-      console.error('Error fetching query analytics:', queriesError);
       return NextResponse.json(
         { error: 'Failed to fetch query analytics' },
         { status: 500 }
@@ -86,7 +85,6 @@ async function handler(request: NextRequest) {
       .select('*', { count: 'exact', head: true });
 
     if (countError) {
-      console.error('Error fetching total count:', countError);
       return NextResponse.json(
         { error: 'Failed to fetch total count' },
         { status: 500 }
@@ -101,7 +99,6 @@ async function handler(request: NextRequest) {
       date_to: params.date_to,
     });
   } catch (error) {
-    console.error('Error in search queries analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

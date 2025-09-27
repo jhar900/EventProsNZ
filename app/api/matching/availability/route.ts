@@ -39,8 +39,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(availability);
   } catch (error) {
-    console.error('Error in availability API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&
@@ -98,8 +96,6 @@ export async function POST(request: NextRequest) {
       availability: availabilityResults,
     });
   } catch (error) {
-    console.error('Error in availability check API:', error);
-
     // Handle authentication/authorization errors
     if (
       error instanceof Error &&

@@ -44,7 +44,6 @@ export class MatchingCacheService {
       return null;
     }
 
-    console.log(`Cache hit for key: ${key}`);
     return cached.results;
   }
 
@@ -68,8 +67,7 @@ export class MatchingCacheService {
       created_at: new Date(),
     });
 
-    console.log(
-      `Cached ${matches.length} matches for key: ${key}, expires: ${expires.toISOString()}`
+    }`
     );
   }
 
@@ -86,10 +84,7 @@ export class MatchingCacheService {
     }
 
     keysToDelete.forEach(key => this.cache.delete(key));
-    console.log(
-      `Invalidated ${keysToDelete.length} cache entries for event: ${eventId}`
-    );
-  }
+    }
 
   /**
    * Invalidate all cache entries
@@ -97,8 +92,7 @@ export class MatchingCacheService {
   async invalidateAllCache(): Promise<void> {
     const size = this.cache.size;
     this.cache.clear();
-    console.log(`Invalidated all ${size} cache entries`);
-  }
+    }
 
   /**
    * Get cache statistics
@@ -140,7 +134,6 @@ export class MatchingCacheService {
     }
 
     keysToDelete.forEach(key => this.cache.delete(key));
-    console.log(`Cleaned up ${keysToDelete.length} expired cache entries`);
   }
 }
 

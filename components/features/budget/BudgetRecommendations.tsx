@@ -75,8 +75,7 @@ export function BudgetRecommendations({
         }));
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
-    } finally {
+      } finally {
       setIsSubmittingFeedback(false);
     }
   };

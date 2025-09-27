@@ -118,8 +118,7 @@ export function PackageDeals({
         onPackageApply?.(data);
       }
     } catch (error) {
-      console.error('Error applying package:', error);
-    } finally {
+      } finally {
       setApplyingPackage(null);
     }
   };

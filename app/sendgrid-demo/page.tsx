@@ -22,7 +22,6 @@ export default function SendGridDemoPage() {
         const data = await response.json();
         setIsConfigured(data.configured);
       } catch (error) {
-        console.error("Error checking SendGrid configuration:", error);
         setIsConfigured(false);
       } finally {
         setIsLoading(false);

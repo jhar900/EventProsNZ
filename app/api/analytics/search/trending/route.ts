@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
       .limit(params.limit);
 
     if (termsError) {
-      console.error('Error fetching trending terms:', termsError);
       return NextResponse.json(
         { error: 'Failed to fetch trending terms' },
         { status: 500 }
@@ -78,7 +77,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (servicesError) {
-      console.error('Error fetching trending services:', servicesError);
       return NextResponse.json(
         { error: 'Failed to fetch trending services' },
         { status: 500 }
@@ -92,7 +90,6 @@ export async function GET(request: NextRequest) {
       limit: params.limit,
     });
   } catch (error) {
-    console.error('Error in search trending analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

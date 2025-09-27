@@ -122,8 +122,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
       }
     } catch (err) {
       setError('Failed to load event');
-      console.error('Error loading event:', err);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -225,8 +224,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
       }
     } catch (err) {
       setError('Failed to update event');
-      console.error('Error updating event:', err);
-    } finally {
+      } finally {
       setIsSaving(false);
     }
   };

@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     if (notificationsError) {
-      console.error('Error fetching notifications:', notificationsError);
       return NextResponse.json(
         { error: 'Failed to fetch notifications' },
         { status: 500 }
@@ -58,7 +57,6 @@ export async function GET(request: NextRequest) {
       notifications: notifications || [],
     });
   } catch (error) {
-    console.error('Error in notifications API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest) {
       .in('id', notification_ids);
 
     if (updateError) {
-      console.error('Error updating notifications:', updateError);
       return NextResponse.json(
         { error: 'Failed to update notifications' },
         { status: 500 }
@@ -122,7 +119,6 @@ export async function POST(request: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error('Error in mark notifications read API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

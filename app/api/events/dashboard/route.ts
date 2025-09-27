@@ -104,7 +104,6 @@ async function getDashboardHandler(request: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (eventsError) {
-    console.error('Error fetching events:', eventsError);
     return createErrorResponse('Failed to fetch events', 500);
   }
 

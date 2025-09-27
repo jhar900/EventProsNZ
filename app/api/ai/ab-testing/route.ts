@@ -154,8 +154,7 @@ export async function GET(request: NextRequest) {
     const { data: customTests, error } = await query;
 
     if (error) {
-      console.error('Error fetching custom A/B tests:', error);
-    } else if (customTests) {
+      } else if (customTests) {
       tests.push(...customTests);
     }
 
@@ -259,7 +258,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching A/B tests:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -336,7 +334,6 @@ export async function POST(request: NextRequest) {
       .insert(resultRecord);
 
     if (error) {
-      console.error('Error storing A/B test result:', error);
       return NextResponse.json(
         { error: 'Failed to store test result' },
         { status: 500 }
@@ -351,7 +348,6 @@ export async function POST(request: NextRequest) {
       message: 'Test result recorded successfully',
     });
   } catch (error) {
-    console.error('Error processing A/B test result:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

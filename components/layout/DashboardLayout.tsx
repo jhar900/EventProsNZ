@@ -139,7 +139,6 @@ export default function DashboardLayout({
                 await logout();
                 window.location.href = '/';
               } catch (error) {
-                console.error('Logout error:', error);
                 // Fallback: clear localStorage and redirect
                 localStorage.clear();
                 window.location.href = '/';

@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Step 2 error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

@@ -11,8 +11,7 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Application error:", error);
-  }, [error]);
+    }, [error]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

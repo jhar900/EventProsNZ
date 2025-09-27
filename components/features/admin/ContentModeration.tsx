@@ -149,8 +149,7 @@ export default function ContentModeration() {
         setModerationReason('');
       }
     } catch (err) {
-      console.error('Moderation failed:', err);
-    } finally {
+      } finally {
       setIsModerating(false);
     }
   };

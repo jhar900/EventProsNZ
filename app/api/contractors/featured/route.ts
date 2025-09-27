@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (contractorsError) {
-      console.error('Featured contractors fetch error:', contractorsError);
       return NextResponse.json(
         { error: 'Failed to fetch featured contractors' },
         { status: 500 }
@@ -100,7 +99,6 @@ export async function GET(request: NextRequest) {
       total: contractors?.length || 0,
     });
   } catch (error) {
-    console.error('Featured contractors API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

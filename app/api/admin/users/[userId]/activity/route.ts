@@ -82,7 +82,6 @@ export async function GET(
       offset,
     });
   } catch (error) {
-    console.error('Get user activity error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

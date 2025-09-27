@@ -48,8 +48,7 @@ export default function QueryAnalytics({
         setFilteredQueries(data.queries);
       }
     } catch (error) {
-      console.error('Error fetching query analytics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

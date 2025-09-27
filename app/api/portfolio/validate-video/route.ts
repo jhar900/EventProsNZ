@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Video validation error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

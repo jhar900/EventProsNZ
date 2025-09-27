@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
       return await generateJSONReport(supabase, reportType, dateFrom, dateTo);
     }
   } catch (error) {
-    console.error('Generate report error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -35,7 +35,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting portfolio item:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

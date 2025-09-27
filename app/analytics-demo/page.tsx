@@ -26,7 +26,6 @@ export default function AnalyticsDemoPage() {
         const data = await response.json();
         setIsConfigured(data.configured);
       } catch (error) {
-        console.error("Error checking Analytics configuration:", error);
         setIsConfigured(false);
       } finally {
         setIsLoading(false);

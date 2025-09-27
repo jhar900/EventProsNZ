@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
       .limit(100);
 
     if (metricsError) {
-      console.error('Error fetching performance metrics:', metricsError);
       return NextResponse.json(
         { error: 'Failed to fetch performance metrics' },
         { status: 500 }
@@ -85,7 +84,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (alertsError) {
-      console.error('Error fetching performance alerts:', alertsError);
       return NextResponse.json(
         { error: 'Failed to fetch performance alerts' },
         { status: 500 }
@@ -147,7 +145,6 @@ export async function GET(request: NextRequest) {
       date_to: params.date_to,
     });
   } catch (error) {
-    console.error('Error in search performance analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

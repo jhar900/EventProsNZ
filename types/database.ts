@@ -681,6 +681,178 @@ export interface Database {
           created_at?: string;
         };
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          status: 'active' | 'inactive' | 'cancelled' | 'expired' | 'trial';
+          billing_cycle: 'monthly' | 'yearly' | '2year';
+          price: number;
+          start_date: string;
+          end_date: string | null;
+          trial_end_date: string | null;
+          promotional_code: string | null;
+          stripe_subscription_id: string | null;
+          stripe_customer_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          status?: 'active' | 'inactive' | 'cancelled' | 'expired' | 'trial';
+          billing_cycle?: 'monthly' | 'yearly' | '2year';
+          price: number;
+          start_date?: string;
+          end_date?: string | null;
+          trial_end_date?: string | null;
+          promotional_code?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tier?: 'essential' | 'showcase' | 'spotlight';
+          status?: 'active' | 'inactive' | 'cancelled' | 'expired' | 'trial';
+          billing_cycle?: 'monthly' | 'yearly' | '2year';
+          price?: number;
+          start_date?: string;
+          end_date?: string | null;
+          trial_end_date?: string | null;
+          promotional_code?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      promotional_codes: {
+        Row: {
+          id: string;
+          code: string;
+          discount_type: 'percentage' | 'fixed_amount';
+          discount_value: number;
+          tier_applicable: ('essential' | 'showcase' | 'spotlight')[];
+          usage_limit: number | null;
+          usage_count: number;
+          expires_at: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          discount_type: 'percentage' | 'fixed_amount';
+          discount_value: number;
+          tier_applicable?: ('essential' | 'showcase' | 'spotlight')[];
+          usage_limit?: number | null;
+          usage_count?: number;
+          expires_at?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          discount_type?: 'percentage' | 'fixed_amount';
+          discount_value?: number;
+          tier_applicable?: ('essential' | 'showcase' | 'spotlight')[];
+          usage_limit?: number | null;
+          usage_count?: number;
+          expires_at?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+      };
+      subscription_features: {
+        Row: {
+          id: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          feature_name: string;
+          feature_description: string | null;
+          is_included: boolean;
+          limit_value: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          feature_name: string;
+          feature_description?: string | null;
+          is_included?: boolean;
+          limit_value?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tier?: 'essential' | 'showcase' | 'spotlight';
+          feature_name?: string;
+          feature_description?: string | null;
+          is_included?: boolean;
+          limit_value?: number | null;
+          created_at?: string;
+        };
+      };
+      subscription_pricing: {
+        Row: {
+          id: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          billing_cycle: 'monthly' | 'yearly' | '2year';
+          price: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tier: 'essential' | 'showcase' | 'spotlight';
+          billing_cycle: 'monthly' | 'yearly' | '2year';
+          price: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tier?: 'essential' | 'showcase' | 'spotlight';
+          billing_cycle?: 'monthly' | 'yearly' | '2year';
+          price?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      subscription_analytics: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          event_type: string;
+          event_data: any | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          event_type: string;
+          event_data?: any | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          subscription_id?: string;
+          event_type?: string;
+          event_data?: any | null;
+          created_at?: string;
+        };
+      };
     };
     Enums: {
       user_role: 'event_manager' | 'contractor' | 'admin';
@@ -691,7 +863,15 @@ export interface Database {
         | 'completed'
         | 'cancelled';
       job_status: 'open' | 'in_progress' | 'completed' | 'cancelled';
-      subscription_tier: 'essential' | 'professional' | 'enterprise';
+      subscription_tier: 'essential' | 'showcase' | 'spotlight';
+      subscription_status:
+        | 'active'
+        | 'inactive'
+        | 'cancelled'
+        | 'expired'
+        | 'trial';
+      billing_cycle: 'monthly' | 'yearly' | '2year';
+      discount_type: 'percentage' | 'fixed_amount';
       enquiry_status: 'pending' | 'accepted' | 'declined' | 'withdrawn';
     };
   };

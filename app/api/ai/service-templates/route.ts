@@ -440,8 +440,7 @@ export async function GET(request: NextRequest) {
     const { data: userTemplates, error } = await query;
 
     if (error) {
-      console.error('Error fetching user templates:', error);
-    } else if (userTemplates) {
+      } else if (userTemplates) {
       templates.push(...userTemplates);
     }
 
@@ -460,8 +459,7 @@ export async function GET(request: NextRequest) {
       const { data: publicTemplates, error: publicError } = await publicQuery;
 
       if (publicError) {
-        console.error('Error fetching public templates:', publicError);
-      } else if (publicTemplates) {
+        } else if (publicTemplates) {
         templates.push(...publicTemplates);
       }
     }
@@ -484,7 +482,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching service templates:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -554,7 +551,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating service template:', error);
       return NextResponse.json(
         { error: 'Failed to create template' },
         { status: 500 }
@@ -567,7 +563,6 @@ export async function POST(request: NextRequest) {
       message: 'Template created successfully',
     });
   } catch (error) {
-    console.error('Error creating service template:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

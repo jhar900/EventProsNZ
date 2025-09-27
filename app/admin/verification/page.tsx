@@ -62,11 +62,9 @@ export default function VerificationPage() {
         const data = await response.json();
         setVerificationLog(data.verification_log);
       } else {
-        console.error('Failed to fetch user details');
-      }
+        }
     } catch (error) {
-      console.error('Error fetching user details:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -93,11 +91,9 @@ export default function VerificationPage() {
         // You might want to refresh the queue here
       } else {
         const error = await response.json();
-        console.error('Failed to approve user:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error approving user:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -125,11 +121,9 @@ export default function VerificationPage() {
         // You might want to refresh the queue here
       } else {
         const error = await response.json();
-        console.error('Failed to reject user:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error rejecting user:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -151,11 +145,9 @@ export default function VerificationPage() {
         }
       } else {
         const error = await response.json();
-        console.error('Failed to resubmit user:', error);
-      }
+        }
     } catch (error) {
-      console.error('Error resubmitting user:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

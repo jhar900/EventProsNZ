@@ -145,10 +145,7 @@ export class DashboardCacheService {
     expiredKeys.forEach(key => this.cache.delete(key));
 
     if (expiredKeys.length > 0) {
-      console.log(
-        `Cache cleanup: removed ${expiredKeys.length} expired entries`
-      );
-    }
+      }
   }
 
   /**
@@ -206,10 +203,7 @@ export class DashboardCacheService {
     keysToDelete.forEach(key => this.cache.delete(key));
 
     if (keysToDelete.length > 0) {
-      console.log(
-        `Cache invalidation: removed ${keysToDelete.length} entries for user ${userId}`
-      );
-    }
+      }
   }
 
   /**
@@ -218,8 +212,7 @@ export class DashboardCacheService {
   static async invalidateAllCache(): Promise<void> {
     const size = this.cache.size;
     this.cache.clear();
-    console.log(`Cache invalidation: removed all ${size} entries`);
-  }
+    }
 
   /**
    * Get cache statistics
@@ -278,8 +271,7 @@ export class DashboardCacheService {
    */
   static initialize(): void {
     this.initializeCleanup();
-    console.log('Dashboard cache service initialized');
-  }
+    }
 
   /**
    * Shutdown cache service
@@ -290,8 +282,7 @@ export class DashboardCacheService {
       this.cleanupTimer = null;
     }
     this.cache.clear();
-    console.log('Dashboard cache service shutdown');
-  }
+    }
 }
 
 /**

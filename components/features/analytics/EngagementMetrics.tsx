@@ -61,8 +61,7 @@ export default function EngagementMetrics({
         setUserActivity(data.user_activity);
       }
     } catch (error) {
-      console.error('Error fetching engagement metrics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

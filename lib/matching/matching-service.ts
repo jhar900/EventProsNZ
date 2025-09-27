@@ -52,10 +52,7 @@ export class ContractorMatchingService {
       if (cachedMatches) {
         matches = cachedMatches;
         cacheHitRate = 1;
-        console.log(
-          `Cache hit for event ${event_id}, returning ${matches.length} matches`
-        );
-      } else {
+        } else {
         // Get event details
         const event = await this.getEventDetails(event_id);
         if (!event) {
@@ -110,7 +107,6 @@ export class ContractorMatchingService {
         analytics,
       };
     } catch (error) {
-      console.error('Error finding matches:', error);
       throw new Error('Failed to find contractor matches');
     }
   }
@@ -203,7 +199,6 @@ export class ContractorMatchingService {
         availability_score: isAvailable ? 1 : 0,
       };
     } catch (error) {
-      console.error('Error checking availability:', error);
       return {
         contractor_id: contractorId,
         available: false,
@@ -326,7 +321,6 @@ export class ContractorMatchingService {
         success_rate: successRate,
       };
     } catch (error) {
-      console.error('Error calculating performance score:', error);
       return {
         contractor_id: contractorId,
         response_time_hours: 24,
@@ -473,10 +467,6 @@ export class ContractorMatchingService {
     }
 
     const endTime = performance.now();
-    console.log(
-      `Matching completed in ${endTime - startTime}ms for ${contractors.length} contractors`
-    );
-
     return matches.sort((a, b) => b.overall_score - a.overall_score);
   }
 

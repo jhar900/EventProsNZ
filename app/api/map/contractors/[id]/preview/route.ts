@@ -86,7 +86,6 @@ export async function GET(
       contractor: preview,
     });
   } catch (error) {
-    console.error('Contractor preview API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

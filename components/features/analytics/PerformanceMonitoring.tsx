@@ -67,8 +67,7 @@ export default function PerformanceMonitoring({
         setAlerts(data.alerts);
       }
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

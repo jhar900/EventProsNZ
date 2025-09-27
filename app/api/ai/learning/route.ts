@@ -108,7 +108,6 @@ export async function POST(request: NextRequest) {
       .insert(learningData);
 
     if (error) {
-      console.error('Error storing learning data:', error);
       return NextResponse.json(
         { error: 'Failed to store learning data' },
         { status: 500 }
@@ -139,7 +138,6 @@ export async function POST(request: NextRequest) {
       message: 'Learning data recorded successfully',
     });
   } catch (error) {
-    console.error('Error processing learning data:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -183,8 +181,7 @@ export async function GET(request: NextRequest) {
     const { data: patterns, error: patternsError } = await patternsQuery;
 
     if (patternsError) {
-      console.error('Error fetching service patterns:', patternsError);
-    }
+      }
 
     // Get learning insights
     let insightsQuery = supabase
@@ -200,8 +197,7 @@ export async function GET(request: NextRequest) {
     const { data: insights, error: insightsError } = await insightsQuery;
 
     if (insightsError) {
-      console.error('Error fetching learning insights:', insightsError);
-    }
+      }
 
     // Get aggregated learning statistics
     const { data: stats, error: statsError } = await supabase
@@ -210,8 +206,7 @@ export async function GET(request: NextRequest) {
       .gte('created_at', startDate.toISOString());
 
     if (statsError) {
-      console.error('Error fetching learning statistics:', statsError);
-    }
+      }
 
     // Process statistics
     const statistics = {
@@ -267,7 +262,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching learning patterns:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -329,8 +323,7 @@ async function updateServicePatterns(
       });
     }
   } catch (error) {
-    console.error('Error updating service patterns:', error);
-  }
+    }
 }
 
 // Helper function to generate insights
@@ -379,6 +372,5 @@ async function generateInsights(
       await supabase.from('learning_insights').insert(insight);
     }
   } catch (error) {
-    console.error('Error generating insights:', error);
-  }
+    }
 }

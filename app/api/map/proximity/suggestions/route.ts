@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       query: query.trim(),
     });
   } catch (error) {
-    console.error('Proximity suggestions API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,7 +125,6 @@ async function getLocationSuggestions(
       };
     });
   } catch (error) {
-    console.error('Error getting location suggestions:', error);
     return [];
   }
 }

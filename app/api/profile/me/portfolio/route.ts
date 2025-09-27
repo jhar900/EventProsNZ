@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ portfolio: portfolio || [] });
   } catch (error) {
-    console.error('Error fetching portfolio:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -94,7 +93,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error creating portfolio item:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -158,7 +156,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error updating portfolio item:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

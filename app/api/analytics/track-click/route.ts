@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
       click_id: result.id,
     });
   } catch (error) {
-    console.error('Error tracking click:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },

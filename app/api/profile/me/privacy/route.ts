@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ privacy_settings: privacySettings });
   } catch (error) {
-    console.error('Error fetching privacy settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -102,7 +101,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error updating privacy settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
       .insert(preference);
 
     if (error) {
-      console.error('Error creating user preference:', error);
       return NextResponse.json(
         { error: 'Failed to create user preference' },
         { status: 500 }
@@ -138,7 +137,6 @@ export async function POST(request: NextRequest) {
       preference_id: data?.[0]?.id,
     });
   } catch (error) {
-    console.error('Error processing user preference creation:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -186,7 +184,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Error fetching user preferences:', error);
       return NextResponse.json(
         { error: 'Failed to fetch preferences' },
         { status: 500 }
@@ -215,7 +212,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -293,7 +289,6 @@ export async function PUT(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error updating user preference:', error);
         return NextResponse.json(
           { error: 'Failed to update preference' },
           { status: 500 }
@@ -312,7 +307,6 @@ export async function PUT(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error creating user preference:', error);
         return NextResponse.json(
           { error: 'Failed to create preference' },
           { status: 500 }
@@ -327,7 +321,6 @@ export async function PUT(request: NextRequest) {
       message: 'Preference updated successfully',
     });
   } catch (error) {
-    console.error('Error updating user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -365,7 +358,6 @@ export async function DELETE(request: NextRequest) {
       .eq('preference_type', preferenceType);
 
     if (error) {
-      console.error('Error deleting user preference:', error);
       return NextResponse.json(
         { error: 'Failed to delete preference' },
         { status: 500 }
@@ -377,7 +369,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Preference deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

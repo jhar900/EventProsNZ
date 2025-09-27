@@ -71,8 +71,7 @@ export function EventDashboard({ eventId }: EventDashboardProps) {
         setDashboardData(data.dashboard);
       }
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

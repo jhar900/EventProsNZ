@@ -66,7 +66,6 @@ export async function GET(
       company_name: contractor.company_name,
     });
   } catch (error) {
-    console.error('Contractor location API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error updating match feedback:', error);
       return NextResponse.json(
         { error: 'Failed to update match feedback' },
         { status: 500 }
@@ -42,7 +41,6 @@ export async function POST(request: NextRequest) {
       updated_match: updatedMatch,
     });
   } catch (error) {
-    console.error('Error in match feedback API:', error);
     return NextResponse.json(
       { error: 'Failed to process match feedback' },
       { status: 500 }

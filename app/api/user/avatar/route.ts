@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
       return NextResponse.json(
         { error: 'Failed to upload file', details: uploadError.message },
         { status: 500 }
@@ -69,7 +68,6 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (updateError) {
-      console.error('Update profile error:', updateError);
       return NextResponse.json(
         { error: 'Failed to update profile', details: updateError.message },
         { status: 500 }
@@ -81,7 +79,6 @@ export async function POST(request: NextRequest) {
       avatar_url: publicUrl,
     });
   } catch (error) {
-    console.error('Avatar upload error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -125,7 +122,6 @@ export async function DELETE(request: NextRequest) {
       .remove([filePath]);
 
     if (deleteError) {
-      console.error('Delete file error:', deleteError);
       // Continue with profile update even if file deletion fails
     }
 
@@ -136,7 +132,6 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (updateError) {
-      console.error('Update profile error:', updateError);
       return NextResponse.json(
         { error: 'Failed to update profile', details: updateError.message },
         { status: 500 }
@@ -147,7 +142,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Avatar deleted successfully',
     });
   } catch (error) {
-    console.error('Avatar delete error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

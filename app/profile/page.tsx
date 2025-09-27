@@ -25,8 +25,7 @@ export default function ProfilePage() {
   };
 
   const handleError = (error: string) => {
-    // console.error('Profile error:', error);
-  };
+    // };
 
   const tabs = [
     { id: 'personal', name: 'Personal Info', icon: '👤' },

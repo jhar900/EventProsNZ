@@ -101,13 +101,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error tracking search query:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error tracking search query:', error);
       return null;
     }
   }
@@ -133,13 +131,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error tracking search filter:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error tracking search filter:', error);
       return null;
     }
   }
@@ -165,13 +161,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error tracking search click:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error tracking search click:', error);
       return null;
     }
   }
@@ -190,13 +184,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error starting search session:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error starting search session:', error);
       return null;
     }
   }
@@ -228,13 +220,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error ending search session:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error ending search session:', error);
       return null;
     }
   }
@@ -260,13 +250,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error recording performance metric:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error recording performance metric:', error);
       return null;
     }
   }
@@ -295,13 +283,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error creating A/B test:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error creating A/B test:', error);
       return null;
     }
   }
@@ -329,13 +315,11 @@ export class SearchAnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error recording A/B test result:', error);
         return null;
       }
 
       return result;
     } catch (error) {
-      console.error('Error recording A/B test result:', error);
       return null;
     }
   }
@@ -349,7 +333,6 @@ export class SearchAnalyticsService {
       const data = await response.json();
       return data.queries || [];
     } catch (error) {
-      console.error('Error fetching query analytics:', error);
       return [];
     }
   }
@@ -365,7 +348,6 @@ export class SearchAnalyticsService {
         patterns: data.usage_patterns || [],
       };
     } catch (error) {
-      console.error('Error fetching filter analytics:', error);
       return { filters: [], patterns: [] };
     }
   }
@@ -381,7 +363,6 @@ export class SearchAnalyticsService {
         analytics: data.click_analytics || [],
       };
     } catch (error) {
-      console.error('Error fetching CTR analytics:', error);
       return { metrics: {}, analytics: [] };
     }
   }
@@ -397,7 +378,6 @@ export class SearchAnalyticsService {
         services: data.trending_services || [],
       };
     } catch (error) {
-      console.error('Error fetching trending data:', error);
       return { terms: [], services: [] };
     }
   }
@@ -416,7 +396,6 @@ export class SearchAnalyticsService {
         journeys: data.user_journeys || [],
       };
     } catch (error) {
-      console.error('Error fetching behavior analytics:', error);
       return { metrics: {}, journeys: [] };
     }
   }
@@ -432,7 +411,6 @@ export class SearchAnalyticsService {
         activity: data.user_activity || [],
       };
     } catch (error) {
-      console.error('Error fetching engagement metrics:', error);
       return { metrics: {}, activity: [] };
     }
   }
@@ -448,7 +426,6 @@ export class SearchAnalyticsService {
         alerts: data.alerts || [],
       };
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
       return { metrics: {}, alerts: [] };
     }
   }
@@ -459,7 +436,6 @@ export class SearchAnalyticsService {
       const data = await response.json();
       return data.tests || [];
     } catch (error) {
-      console.error('Error fetching A/B tests:', error);
       return [];
     }
   }
@@ -470,7 +446,6 @@ export class SearchAnalyticsService {
       const data = await response.json();
       return data.test_results || null;
     } catch (error) {
-      console.error('Error fetching A/B test results:', error);
       return null;
     }
   }

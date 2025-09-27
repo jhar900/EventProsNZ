@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError) {
-      console.error('Auth error:', authError);
       // Continue without user ID for anonymous interactions
     }
 
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (insertError) {
-      console.error('Error recording interaction:', insertError);
       return NextResponse.json(
         { error: 'Failed to record interaction' },
         { status: 500 }
@@ -55,7 +53,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Map interactions API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -108,7 +105,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching interactions:', error);
       return NextResponse.json(
         { error: 'Failed to fetch interactions' },
         { status: 500 }
@@ -184,7 +180,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Map interactions analytics API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

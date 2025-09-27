@@ -34,7 +34,6 @@ export function AddressAutocomplete({
 
   const searchAddresses = async (query: string) => {
     if (!MAPBOX_CONFIG.ACCESS_TOKEN) {
-      console.warn('Mapbox access token not configured');
       return;
     }
 
@@ -65,7 +64,6 @@ export function AddressAutocomplete({
       setSuggestions(data.features || []);
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Geocoding error:', error);
         setSuggestions([]);
       }
     }

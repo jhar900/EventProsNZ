@@ -47,15 +47,13 @@ export async function POST(
       .single();
 
     if (logError) {
-      console.error('Error logging verification action:', logError);
-    }
+      }
 
     return NextResponse.json({
       success: true,
       verification_log: verificationLog,
     });
   } catch (error) {
-    console.error('Error resubmitting user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

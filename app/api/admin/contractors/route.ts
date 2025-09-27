@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ contractors });
   } catch (error) {
-    console.error('Admin contractors error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

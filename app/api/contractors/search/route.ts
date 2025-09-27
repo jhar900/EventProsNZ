@@ -114,7 +114,6 @@ export async function GET(request: NextRequest) {
       );
 
       if (searchError) {
-        console.error('Advanced search error:', searchError);
         return NextResponse.json(
           { error: 'Failed to search contractors' },
           { status: 500 }
@@ -190,7 +189,6 @@ export async function GET(request: NextRequest) {
         .eq('is_verified', true);
 
       if (contractorsError) {
-        console.error('Contractor details error:', contractorsError);
         return NextResponse.json(
           { error: 'Failed to fetch contractor details' },
           { status: 500 }
@@ -334,7 +332,6 @@ export async function GET(request: NextRequest) {
     const { data: contractors, error: contractorsError, count } = await query;
 
     if (contractorsError) {
-      console.error('Contractor search error:', contractorsError);
       return NextResponse.json(
         { error: 'Failed to search contractors' },
         { status: 500 }
@@ -404,8 +401,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Contractor search API error:', error);
-
     // Record error metrics
     const responseTime = Date.now() - startTime;
     await searchAnalyticsService.recordPerformanceMetric({

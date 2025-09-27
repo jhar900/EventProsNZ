@@ -82,15 +82,12 @@ export class SecurityLogger {
         .insert(securityEvent);
 
       if (error) {
-        console.error('Failed to log security event:', error);
         // Don't throw - logging failures shouldn't break the application
       }
 
       // Also log to console for immediate visibility
-      console.warn('Security Event:', JSON.stringify(securityEvent, null, 2));
     } catch (error) {
-      console.error('Error logging security event:', error);
-    }
+      }
   }
 
   /**
@@ -334,13 +331,11 @@ export class SecurityLogger {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching security events:', error);
         throw new Error('Failed to fetch security events');
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in getSecurityEvents:', error);
       throw error;
     }
   }
@@ -369,7 +364,6 @@ export class SecurityLogger {
         .gte('timestamp', startDate.toISOString());
 
       if (countError) {
-        console.error('Error getting security event count:', countError);
         throw new Error('Failed to get security event count');
       }
 
@@ -380,7 +374,6 @@ export class SecurityLogger {
         .gte('timestamp', startDate.toISOString());
 
       if (typeError) {
-        console.error('Error getting events by type:', typeError);
         throw new Error('Failed to get events by type');
       }
 
@@ -391,7 +384,6 @@ export class SecurityLogger {
         .gte('timestamp', startDate.toISOString());
 
       if (severityError) {
-        console.error('Error getting events by severity:', severityError);
         throw new Error('Failed to get events by severity');
       }
 
@@ -404,7 +396,6 @@ export class SecurityLogger {
         .limit(10);
 
       if (recentError) {
-        console.error('Error getting recent events:', recentError);
         throw new Error('Failed to get recent events');
       }
 
@@ -429,7 +420,6 @@ export class SecurityLogger {
         recent_events: recentEvents || [],
       };
     } catch (error) {
-      console.error('Error in getSecurityStatistics:', error);
       throw error;
     }
   }

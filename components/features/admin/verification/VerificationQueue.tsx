@@ -85,7 +85,6 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
         setError(errorData.error || 'Failed to fetch users');
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
       setError('Failed to fetch users');
     } finally {
       setIsLoading(false);

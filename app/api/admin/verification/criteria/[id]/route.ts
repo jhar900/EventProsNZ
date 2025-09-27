@@ -50,7 +50,6 @@ export async function PUT(
       .single();
 
     if (criterionError) {
-      console.error('Error updating verification criterion:', criterionError);
       return NextResponse.json(
         { error: 'Failed to update verification criterion' },
         { status: 500 }
@@ -69,7 +68,6 @@ export async function PUT(
       criterion,
     });
   } catch (error) {
-    console.error('Error in update verification criterion API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -111,7 +109,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (criterionError) {
-      console.error('Error deleting verification criterion:', criterionError);
       return NextResponse.json(
         { error: 'Failed to delete verification criterion' },
         { status: 500 }
@@ -122,7 +119,6 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error('Error in delete verification criterion API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

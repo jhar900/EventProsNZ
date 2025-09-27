@@ -115,7 +115,6 @@ export async function GET(request: NextRequest) {
     const { data: templates, error: templatesError } = await query;
 
     if (templatesError) {
-      console.error('Error fetching templates:', templatesError);
       return NextResponse.json(
         { success: false, message: 'Failed to fetch templates' },
         { status: 500 }
@@ -129,7 +128,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events/templates:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -183,7 +181,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking existing template:', checkError);
       return NextResponse.json(
         { success: false, message: 'Failed to validate template' },
         { status: 500 }
@@ -211,7 +208,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (templateError) {
-      console.error('Error creating template:', templateError);
       return NextResponse.json(
         { success: false, message: 'Failed to create template' },
         { status: 500 }
@@ -225,7 +221,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/templates:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

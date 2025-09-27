@@ -233,8 +233,7 @@ if (typeof window === 'undefined') {
     () => {
       const deleted = aiCache.cleanup();
       if (deleted > 0) {
-        console.log(`AI Cache: Cleaned up ${deleted} expired entries`);
-      }
+        }
     },
     5 * 60 * 1000
   );

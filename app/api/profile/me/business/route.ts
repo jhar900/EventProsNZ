@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ business_profile: businessProfile });
   } catch (error) {
-    console.error('Error fetching business profile:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -90,7 +89,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error updating business profile:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

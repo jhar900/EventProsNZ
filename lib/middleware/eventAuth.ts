@@ -79,7 +79,6 @@ export class EventAuthService {
         event,
       };
     } catch (error) {
-      console.error('Error in validateEventAccess:', error);
       return { hasAccess: false, isAdmin: false, isOwner: false };
     }
   }
@@ -105,7 +104,6 @@ export class EventAuthService {
 
       return userProfile.role === 'admin';
     } catch (error) {
-      console.error('Error in validateAdminAccess:', error);
       return false;
     }
   }
@@ -131,7 +129,6 @@ export class EventAuthService {
 
       return ['event_manager', 'admin'].includes(userProfile.role);
     } catch (error) {
-      console.error('Error in validateEventManagerAccess:', error);
       return false;
     }
   }
@@ -211,7 +208,6 @@ export class EventAuthService {
         // Call the original handler with auth context
         return await handler(req, context, authContext);
       } catch (error) {
-        console.error('Error in withEventAuth middleware:', error);
         return new Response(
           JSON.stringify({ success: false, message: 'Internal server error' }),
           { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -243,7 +239,6 @@ export async function getAuthenticatedUser(
 
     return { user, error: null };
   } catch (error) {
-    console.error('Error in getAuthenticatedUser:', error);
     return { user: null, error: 'Authentication failed' };
   }
 }

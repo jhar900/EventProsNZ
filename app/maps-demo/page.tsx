@@ -28,7 +28,6 @@ export default function MapsDemoPage() {
         const data = await response.json();
         setIsConfigured(data.configured);
       } catch (error) {
-        console.error('Error checking configuration:', error);
         setIsConfigured(false);
       } finally {
         setIsLoading(false);
@@ -63,8 +62,7 @@ export default function MapsDemoPage() {
               addResult(
                 '❌ Map error: ' + (e.error?.message || 'Unknown error')
               );
-              console.error('Mapbox error:', e);
-            });
+              });
 
             newMap.on('style.load', () => {
               addResult('✅ Map style loaded!');
@@ -78,8 +76,7 @@ export default function MapsDemoPage() {
             addResult(
               '❌ Map initialization error: ' + (error as Error).message
             );
-            console.error('Map initialization error:', error);
-          }
+            }
         } else {
           addResult('❌ Map container not found');
         }

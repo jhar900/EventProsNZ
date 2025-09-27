@@ -9,19 +9,10 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Login API called');
-
     const body = await request.json();
-    console.log('Request body parsed successfully');
-
     const validatedData = loginSchema.parse(body);
-    console.log('Request validation passed');
-
     const { email, password } = validatedData;
-    console.log('Attempting login for email:', email);
-
     // Authenticate user with Supabase Auth
-    console.log('Attempting Supabase authentication...');
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.signInWithPassword({
         email,
@@ -29,7 +20,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
-      console.error('Authentication failed:', authError);
       return NextResponse.json(
         { error: 'Invalid credentials', details: authError.message },
         { status: 401 }
@@ -37,20 +27,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!authData.user) {
-      console.error('No user returned from authentication');
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 401 }
       );
     }
 
-    console.log('Authentication successful for user:', authData.user.id);
-
     // Get user profile from our database
-    console.log(
-      'Fetching user profile from database for user:',
-      authData.user.id
-    );
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select(
@@ -71,22 +54,7 @@ export async function POST(request: NextRequest) {
       .eq('id', authData.user.id)
       .single();
 
-    console.log(
-      'Database query completed. Data:',
-      userData,
-      'Error:',
-      userError
-    );
-
     if (userError) {
-      console.error('Failed to fetch user profile:', userError);
-      console.error('User error details:', {
-        code: userError.code,
-        message: userError.message,
-        details: userError.details,
-        hint: userError.hint,
-      });
-
       // If user exists in Auth but not in our database, create the record
       if (
         userError.code === 'PGRST116' ||
@@ -94,10 +62,6 @@ export async function POST(request: NextRequest) {
         userError.message.includes('relation') ||
         userError.message.includes('does not exist')
       ) {
-        console.log(
-          'User exists in Auth but not in database, creating user record...'
-        );
-
         // Create user record in our database
         const { error: createUserError } = await supabaseAdmin
           .from('users')
@@ -110,14 +74,11 @@ export async function POST(request: NextRequest) {
           });
 
         if (createUserError) {
-          console.error('Failed to create user record:', createUserError);
-
           // Check if it's a duplicate key error (user already exists)
           if (
             createUserError.code === '23505' ||
             createUserError.message.includes('duplicate key')
           ) {
-            console.log('User already exists, continuing with login...');
             // Continue with the login process even if user creation failed
           } else {
             return NextResponse.json(
@@ -147,18 +108,12 @@ export async function POST(request: NextRequest) {
           });
 
         if (createProfileError) {
-          console.error('Failed to create profile:', createProfileError);
           // Check if it's a duplicate key error (profile already exists)
           if (
             createProfileError.code === '23505' ||
             createProfileError.message.includes('duplicate key')
           ) {
-            console.log('Profile already exists, continuing with login...');
-          } else {
-            console.error(
-              'Profile creation failed with non-duplicate error:',
-              createProfileError
-            );
+            } else {
             // Don't fail login for profile creation error, but log it
           }
         }
@@ -186,13 +141,7 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (retryUserError) {
-          console.error(
-            'Failed to fetch user profile after creation:',
-            retryUserError
-          );
-
           // Fallback: return basic user data from Auth if database fetch fails
-          console.log('Using fallback user data from Auth...');
           return NextResponse.json({
             message: 'Login successful (fallback mode)',
             user: {
@@ -293,7 +242,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

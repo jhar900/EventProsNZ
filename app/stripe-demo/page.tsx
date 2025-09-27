@@ -20,7 +20,6 @@ export default function StripeDemoPage() {
         const data = await response.json();
         setIsConfigured(data.configured);
       } catch (error) {
-        console.error("Error checking Stripe configuration:", error);
         setIsConfigured(false);
       } finally {
         setIsLoading(false);

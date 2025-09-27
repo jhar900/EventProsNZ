@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Portfolio photo upload error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

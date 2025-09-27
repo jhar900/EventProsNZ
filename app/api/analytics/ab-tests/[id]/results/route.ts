@@ -38,7 +38,6 @@ export async function GET(
       .single();
 
     if (testError) {
-      console.error('Error fetching A/B test:', testError);
       return NextResponse.json(
         { error: 'A/B test not found' },
         { status: 404 }
@@ -52,7 +51,6 @@ export async function GET(
       .eq('test_id', testId);
 
     if (resultsError) {
-      console.error('Error fetching A/B test results:', resultsError);
       return NextResponse.json(
         { error: 'Failed to fetch test results' },
         { status: 500 }
@@ -148,7 +146,6 @@ export async function GET(
       test_results: testResults,
     });
   } catch (error) {
-    console.error('Error in A/B test results:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
