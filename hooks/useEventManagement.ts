@@ -1,229 +1,433 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useCallback } from 'react';
 import {
   Event,
-  EventUpdate,
   EventVersion,
+  EventMilestone,
   EventNotification,
+  EventFeedback,
 } from '@/types/events';
 
-interface UseEventManagementOptions {
-  eventId?: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
-}
-
-interface UseEventManagementReturn {
-  event: Event | null;
+interface EventManagementStore {
+  events: Event[];
+  currentEvent: Event | null;
   versions: EventVersion[];
+  milestones: EventMilestone[];
   notifications: EventNotification[];
+  feedback: EventFeedback[];
+  dashboard: any;
   isLoading: boolean;
   error: string | null;
-  updateEvent: (updates: EventUpdate) => Promise<boolean>;
-  deleteEvent: () => Promise<boolean>;
-  loadVersions: () => Promise<void>;
-  loadNotifications: () => Promise<void>;
-  markNotificationAsRead: (notificationId: string) => Promise<void>;
-  refreshEvent: () => Promise<void>;
 }
 
-export function useEventManagement({
-  eventId,
-  autoRefresh = false,
-  refreshInterval = 30000,
-}: UseEventManagementOptions = {}): UseEventManagementReturn {
-  const [event, setEvent] = useState<Event | null>(null);
-  const [versions, setVersions] = useState<EventVersion[]>([]);
-  const [notifications, setNotifications] = useState<EventNotification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface EventFilters {
+  status?: string;
+  eventType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
 
-  // Load event data
-  const loadEvent = async () => {
-    if (!eventId) return;
+interface MilestoneData {
+  milestone_name: string;
+  milestone_date: string;
+  description?: string;
+}
 
+interface MilestoneUpdate {
+  status?: string;
+  description?: string;
+}
+
+interface FeedbackData {
+  contractor_id: string;
+  rating: number;
+  feedback?: string;
+}
+
+interface DuplicationData {
+  new_title: string;
+  new_date: string;
+  changes?: any;
+}
+
+export function useEventManagement() {
+  const [state, setState] = useState<EventManagementStore>({
+    events: [],
+    currentEvent: null,
+    versions: [],
+    milestones: [],
+    notifications: [],
+    feedback: [],
+    dashboard: null,
+    isLoading: false,
+    error: null,
+  });
+
+  const setLoading = (isLoading: boolean) => {
+    setState(prev => ({ ...prev, isLoading }));
+  };
+
+  const setError = (error: string | null) => {
+    setState(prev => ({ ...prev, error }));
+  };
+
+  // Load events with filtering
+  const loadEvents = useCallback(async (filters?: EventFilters) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
+
+      const queryParams = new URLSearchParams();
+      if (filters?.status) queryParams.append('status', filters.status);
+      if (filters?.eventType)
+        queryParams.append('eventType', filters.eventType);
+      if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
+      if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
+
+      const response = await fetch(`/api/events?${queryParams.toString()}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setState(prev => ({ ...prev, events: data.events }));
+      } else {
+        setError(data.message || 'Failed to load events');
+      }
+    } catch (error) {
+      setError('Failed to load events');
+      console.error('Error loading events:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load specific event
+  const loadEvent = useCallback(async (eventId: string) => {
+    try {
+      setLoading(true);
       setError(null);
 
       const response = await fetch(`/api/events/${eventId}`);
       const data = await response.json();
 
       if (data.success) {
-        setEvent(data.event);
+        setState(prev => ({ ...prev, currentEvent: data.event }));
       } else {
         setError(data.message || 'Failed to load event');
       }
-    } catch (err) {
+    } catch (error) {
       setError('Failed to load event');
-      console.error('Error loading event:', err);
+      console.error('Error loading event:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
-  // Load event versions
-  const loadVersions = async () => {
-    if (!eventId) return;
+  // Update event status
+  const updateEventStatus = useCallback(
+    async (eventId: string, status: string, reason?: string) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    try {
-      const response = await fetch(`/api/events/${eventId}/versions`);
-      const data = await response.json();
+        const response = await fetch(`/api/events/${eventId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status, reason }),
+        });
 
-      if (data.success) {
-        setVersions(data.versions);
-      } else {
-        console.error('Failed to load versions:', data.message);
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            currentEvent: data.event,
+            events: prev.events.map(event =>
+              event.id === eventId ? data.event : event
+            ),
+          }));
+        } else {
+          setError(data.message || 'Failed to update event status');
+        }
+      } catch (error) {
+        setError('Failed to update event status');
+        console.error('Error updating event status:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading versions:', err);
-    }
-  };
+    },
+    []
+  );
 
-  // Load event notifications
-  const loadNotifications = async () => {
-    if (!eventId) return;
+  // Create version
+  const createVersion = useCallback(
+    async (eventId: string, changes: any, reason?: string) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    try {
-      const response = await fetch(`/api/events/${eventId}/notifications`);
-      const data = await response.json();
+        const response = await fetch(`/api/events/${eventId}/versions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ changes, reason }),
+        });
 
-      if (data.success) {
-        setNotifications(data.notifications);
-      } else {
-        console.error('Failed to load notifications:', data.message);
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            versions: [data.version, ...prev.versions],
+          }));
+        } else {
+          setError(data.message || 'Failed to create version');
+        }
+      } catch (error) {
+        setError('Failed to create version');
+        console.error('Error creating version:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading notifications:', err);
-    }
-  };
+    },
+    []
+  );
 
-  // Update event
-  const updateEvent = async (updates: EventUpdate): Promise<boolean> => {
-    if (!eventId) return false;
+  // Create milestone
+  const createMilestone = useCallback(
+    async (eventId: string, milestone: MilestoneData) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    try {
-      setIsLoading(true);
-      setError(null);
+        const response = await fetch(`/api/events/${eventId}/milestones`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(milestone),
+        });
 
-      const response = await fetch(`/api/events/${eventId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (data.success) {
-        setEvent(data.event);
-        return true;
-      } else {
-        setError(data.message || 'Failed to update event');
-        return false;
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            milestones: [...prev.milestones, data.milestone],
+          }));
+        } else {
+          setError(data.message || 'Failed to create milestone');
+        }
+      } catch (error) {
+        setError('Failed to create milestone');
+        console.error('Error creating milestone:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Failed to update event');
-      console.error('Error updating event:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    []
+  );
 
-  // Delete event
-  const deleteEvent = async (): Promise<boolean> => {
-    if (!eventId) return false;
+  // Update milestone
+  const updateMilestone = useCallback(
+    async (milestoneId: string, updates: MilestoneUpdate) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/events/${eventId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setEvent(null);
-        return true;
-      } else {
-        setError(data.message || 'Failed to delete event');
-        return false;
-      }
-    } catch (err) {
-      setError('Failed to delete event');
-      console.error('Error deleting event:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Mark notification as read
-  const markNotificationAsRead = async (
-    notificationId: string
-  ): Promise<void> => {
-    try {
-      const response = await fetch(`/api/events/${eventId}/notifications`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          notificationIds: [notificationId],
-          isRead: true,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setNotifications(prev =>
-          prev.map(notification =>
-            notification.id === notificationId
-              ? { ...notification, is_read: true }
-              : notification
-          )
+        const response = await fetch(
+          `/api/events/${state.currentEvent?.id}/milestones/${milestoneId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updates),
+          }
         );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            milestones: prev.milestones.map(milestone =>
+              milestone.id === milestoneId ? data.milestone : milestone
+            ),
+          }));
+        } else {
+          setError(data.message || 'Failed to update milestone');
+        }
+      } catch (error) {
+        setError('Failed to update milestone');
+        console.error('Error updating milestone:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
-    }
-  };
+    },
+    [state.currentEvent?.id]
+  );
 
-  // Refresh event data
-  const refreshEvent = async () => {
-    await Promise.all([loadEvent(), loadVersions(), loadNotifications()]);
-  };
+  // Complete event
+  const completeEvent = useCallback(
+    async (eventId: string, completionData: any, feedback?: string) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Load initial data
-  useEffect(() => {
-    if (eventId) {
-      refreshEvent();
-    }
-  }, [eventId]);
+        const response = await fetch(`/api/events/${eventId}/completion`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ completion_data: completionData, feedback }),
+        });
 
-  // Auto-refresh
-  useEffect(() => {
-    if (!autoRefresh || !eventId) return;
+        const data = await response.json();
 
-    const interval = setInterval(refreshEvent, refreshInterval);
-    return () => clearInterval(interval);
-  }, [autoRefresh, eventId, refreshInterval]);
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            currentEvent: data.event,
+            events: prev.events.map(event =>
+              event.id === eventId ? data.event : event
+            ),
+          }));
+        } else {
+          setError(data.message || 'Failed to complete event');
+        }
+      } catch (error) {
+        setError('Failed to complete event');
+        console.error('Error completing event:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Submit feedback
+  const submitFeedback = useCallback(
+    async (eventId: string, feedback: FeedbackData) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/events/${eventId}/feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(feedback),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            feedback: [...prev.feedback, data.feedback],
+          }));
+        } else {
+          setError(data.message || 'Failed to submit feedback');
+        }
+      } catch (error) {
+        setError('Failed to submit feedback');
+        console.error('Error submitting feedback:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Duplicate event
+  const duplicateEvent = useCallback(
+    async (eventId: string, duplicationData: DuplicationData) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/events/${eventId}/duplicate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(duplicationData),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({
+            ...prev,
+            events: [data.duplicated_event, ...prev.events],
+          }));
+        } else {
+          setError(data.message || 'Failed to duplicate event');
+        }
+      } catch (error) {
+        setError('Failed to duplicate event');
+        console.error('Error duplicating event:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Load dashboard
+  const loadDashboard = useCallback(
+    async (userId: string, period: string = 'month') => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `/api/events/dashboard?userId=${userId}&period=${period}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({ ...prev, dashboard: data.dashboard }));
+        } else {
+          setError(data.message || 'Failed to load dashboard');
+        }
+      } catch (error) {
+        setError('Failed to load dashboard');
+        console.error('Error loading dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   return {
-    event,
-    versions,
-    notifications,
-    isLoading,
-    error,
-    updateEvent,
-    deleteEvent,
-    loadVersions,
-    loadNotifications,
-    markNotificationAsRead,
-    refreshEvent,
+    // State
+    events: state.events,
+    currentEvent: state.currentEvent,
+    versions: state.versions,
+    milestones: state.milestones,
+    notifications: state.notifications,
+    feedback: state.feedback,
+    dashboard: state.dashboard,
+    isLoading: state.isLoading,
+    error: state.error,
+
+    // Actions
+    loadEvents,
+    loadEvent,
+    updateEventStatus,
+    createVersion,
+    createMilestone,
+    updateMilestone,
+    completeEvent,
+    submitFeedback,
+    duplicateEvent,
+    loadDashboard,
   };
 }
