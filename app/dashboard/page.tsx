@@ -85,7 +85,10 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <RoleGuard allowedRoles={['event_manager']}>
+                <RoleGuard
+                  allowedRoles={['event_manager']}
+                  hideOnUnauthorized={true}
+                >
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                     <h3 className="text-lg font-semibold text-blue-900 mb-4">
                       Event Manager Dashboard
@@ -147,7 +150,10 @@ export default function DashboardPage() {
                   </div>
                 </RoleGuard>
 
-                <RoleGuard allowedRoles={['contractor']}>
+                <RoleGuard
+                  allowedRoles={['contractor']}
+                  hideOnUnauthorized={true}
+                >
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                     <h3 className="text-lg font-semibold text-green-900 mb-2">
                       Contractor Dashboard
@@ -159,7 +165,7 @@ export default function DashboardPage() {
                   </div>
                 </RoleGuard>
 
-                <RoleGuard allowedRoles={['admin']}>
+                <RoleGuard allowedRoles={['admin']} hideOnUnauthorized={true}>
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                     <h3 className="text-lg font-semibold text-purple-900 mb-2">
                       Admin Dashboard

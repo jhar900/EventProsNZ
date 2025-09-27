@@ -32,7 +32,11 @@ export default function DashboardLayout({
     if (!user) return [];
 
     const baseItems = [
-      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      {
+        href: user.role === 'admin' ? '/admin/dashboard' : '/dashboard',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+      },
     ];
 
     switch (user.role) {
@@ -143,8 +147,18 @@ export default function DashboardLayout({
             }}
             className="w-full flex items-center space-x-3 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-200"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
             <span>Logout</span>
           </button>
@@ -152,7 +166,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex-1 min-h-screen">
+      <div className="flex-1 min-h-screen w-full">
         {/* Mobile header */}
         <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">

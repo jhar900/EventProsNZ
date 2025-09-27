@@ -124,3 +124,4 @@ CREATE TRIGGER update_event_milestones_updated_at
   BEFORE UPDATE ON event_milestones
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+

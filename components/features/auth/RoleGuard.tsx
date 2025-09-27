@@ -7,6 +7,7 @@ interface RoleGuardProps {
   children: React.ReactNode;
   allowedRoles: string[];
   fallback?: React.ReactNode;
+  hideOnUnauthorized?: boolean;
 }
 
 function RoleGuard({
@@ -22,6 +23,7 @@ function RoleGuard({
       </div>
     </div>
   ),
+  hideOnUnauthorized = false,
 }: RoleGuardProps) {
   const { user, isLoading } = useAuth();
 
@@ -37,11 +39,11 @@ function RoleGuard({
   }
 
   if (!user) {
-    return fallback;
+    return hideOnUnauthorized ? null : fallback;
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <>{fallback}</>;
+    return hideOnUnauthorized ? null : <>{fallback}</>;
   }
 
   return <>{children}</>;
