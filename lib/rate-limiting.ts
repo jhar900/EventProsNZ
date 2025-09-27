@@ -101,6 +101,12 @@ export const webhookRateLimiter = new RateLimiter({
   message: 'Too many webhook requests',
 });
 
+export const analyticsRateLimit = new RateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 200, // 200 analytics requests per 15 minutes
+  message: 'Too many analytics requests',
+});
+
 /**
  * Rate limiting middleware
  */
@@ -164,3 +170,40 @@ export function cleanupRateLimitStore(): void {
 
 // Clean up every 5 minutes
 setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+
+/**
+ * Higher-order function to wrap API handlers with rate limiting
+ */
+export function withRateLimit(rateLimiter: RateLimiter) {
+  return function <T extends any[]>(
+    handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
+  ) {
+    return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
+      const rateLimitResult = rateLimit(request, rateLimiter);
+
+      if (!rateLimitResult.allowed) {
+        return NextResponse.json(
+          {
+            error: rateLimitResult.message || 'Rate limit exceeded',
+            retryAfter: Math.ceil(
+              (rateLimitResult.headers['X-RateLimit-Reset'] as any) -
+                Date.now() / 1000
+            ),
+          },
+          {
+            status: 429,
+            headers: rateLimitResult.headers,
+          }
+        );
+      }
+
+      // Add rate limit headers to successful responses
+      const response = await handler(request, ...args);
+      Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+
+      return response;
+    };
+  };
+}
