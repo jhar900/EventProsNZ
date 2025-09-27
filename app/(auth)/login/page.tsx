@@ -10,11 +10,11 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  // const handleSuccess = (user: any) => {
-    // // Redirect based on user role
-    if (user.role === 'admin') {
+  const handleSuccess = (user: any) => {
+    // Redirect based on user role
+    if (user?.role === 'admin') {
       router.push('/admin/dashboard');
-    } else if (user.role === 'contractor') {
+    } else if (user?.role === 'contractor') {
       router.push('/contractor/dashboard');
     } else {
       router.push('/dashboard');
@@ -22,7 +22,8 @@ export default function LoginPage() {
   };
 
   const handleError = (error: string) => {
-    // };
+    console.error('Login error:', error);
+  };
 
   return (
     <AuthGuard requireAuth={false}>
