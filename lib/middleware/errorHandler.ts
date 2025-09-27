@@ -126,8 +126,6 @@ export class SecurityLogger {
         ip: req.headers.get('x-forwarded-for') || req.ip || 'unknown',
       },
     };
-
-    );
   }
 }
 
@@ -158,8 +156,6 @@ export class PerformanceLogger {
         duration,
       },
     };
-
-    );
   }
 }
 

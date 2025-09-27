@@ -66,9 +66,6 @@ export class MatchingCacheService {
       expires,
       created_at: new Date(),
     });
-
-    }`
-    );
   }
 
   /**
