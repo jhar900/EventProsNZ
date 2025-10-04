@@ -899,6 +899,87 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Payment Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                💳 Payment Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/payments"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💳</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Payment Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main payment overview</p>
+                </Link>
+
+                <Link
+                  href="/payments/methods"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💳</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Payment Methods
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Manage payment methods
+                  </p>
+                </Link>
+
+                <Link
+                  href="/payments/receipts"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🧾</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Payment Receipts
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    View and download receipts
+                  </p>
+                </Link>
+
+                <Link
+                  href="/payments/failed"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⚠️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Failed Payments
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Manage failed payments
+                  </p>
+                </Link>
+
+                <Link
+                  href="/payments/confirm"
+                  className="group block bg-emerald-50 hover:bg-emerald-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600">
+                      Payment Confirmation
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Confirm payment completion
+                  </p>
+                </Link>
+              </div>
+            </div>
+
             {/* Search & History Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
