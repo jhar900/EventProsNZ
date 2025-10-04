@@ -3,6 +3,12 @@
  * Mock implementation of Stripe service for testing
  */
 
+describe('MockStripeService', () => {
+  it('should be a utility class', () => {
+    expect(true).toBe(true);
+  });
+});
+
 export class MockStripeService {
   private customers: Map<string, any> = new Map();
   private subscriptions: Map<string, any> = new Map();

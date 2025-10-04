@@ -311,7 +311,7 @@ describe('Budget API Routes', () => {
       if (response.status !== 200) {
         // Test URL parsing directly
         const testUrl = new URL(request.url);
-        ,
+        console.log('URL params:', {
           attendee_count: testUrl.searchParams.get('attendee_count'),
           duration: testUrl.searchParams.get('duration'),
         });
@@ -343,8 +343,7 @@ describe('Budget API Routes', () => {
         if (locationParam) {
           try {
             location = JSON.parse(locationParam);
-          } catch {
-            }
+          } catch {}
         }
 
         const validationData = {
@@ -356,9 +355,9 @@ describe('Budget API Routes', () => {
 
         const validation = BudgetRecommendationSchema.safeParse(validationData);
         if (data.details) {
-          }
+        }
         if (data.error === 'Unauthorized') {
-          }
+        }
       }
 
       // Test passed! Remove debugging
@@ -451,7 +450,7 @@ describe('Budget API Routes', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        }
+      }
 
       expect(response.status).toBe(200);
       expect(data.breakdown).toHaveLength(1);
@@ -677,7 +676,7 @@ describe('Budget API Routes', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        }
+      }
 
       expect(response.status).toBe(200);
       expect(data.tracking).toHaveLength(1);

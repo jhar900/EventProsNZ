@@ -5,7 +5,13 @@
 
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import { MapContractor } from '@/lib/maps/map-service';
 import { useMapbox } from '@/lib/maps/mapbox-context';
 import { pinService } from '@/lib/maps/clustering/pin-service';
@@ -57,10 +63,22 @@ export const ContractorPin: React.FC<ContractorPinProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const { mapInstance } = useMapbox();
 
+  // Use a ref to store the last known position to prevent unnecessary updates
+  const lastPositionRef = useRef({ x: 0, y: 0 });
+
   const serviceColor =
     SERVICE_COLORS[contractor.service_type] || SERVICE_COLORS.other;
   const serviceIcon =
     SERVICE_ICONS[contractor.service_type] || SERVICE_ICONS.other;
+
+  // Memoize the contractor location to prevent unnecessary re-renders
+  const contractorLocation = useMemo(
+    () => ({
+      lat: contractor.location.lat,
+      lng: contractor.location.lng,
+    }),
+    [contractor.location.lat, contractor.location.lng]
+  );
 
   // Initialize pin state
   useEffect(() => {
@@ -69,64 +87,117 @@ export const ContractorPin: React.FC<ContractorPinProps> = ({
 
   // Update pin position when map moves or contractor location changes
   useEffect(() => {
-    if (!mapInstance || !pinRef.current) return;
+    if (!mapInstance || !pinRef.current) {
+      // Set a default position when map is not available (e.g., in tests)
+      setPosition({ x: 100, y: 100 });
+      return;
+    }
+
+    // Use a ref to track if we're currently updating to prevent race conditions
+    const isUpdatingRef = { current: false };
+    let animationFrameId: number | null = null;
 
     const updatePosition = () => {
+      // Prevent multiple simultaneous updates
+      if (isUpdatingRef.current) return;
+
+      isUpdatingRef.current = true;
+
       try {
         const point = mapInstance.project([
-          contractor.location.lng,
-          contractor.location.lat,
+          contractorLocation.lng,
+          contractorLocation.lat,
         ]);
-        setPosition({ x: point.x, y: point.y });
+
+        const newPosition = { x: point.x, y: point.y };
+
+        // Use a more stable comparison to prevent unnecessary updates
+        const deltaX = Math.abs(lastPositionRef.current.x - newPosition.x);
+        const deltaY = Math.abs(lastPositionRef.current.y - newPosition.y);
+
+        // Only update if position changed significantly (5px threshold)
+        if (deltaX > 5 || deltaY > 5) {
+          lastPositionRef.current = newPosition;
+          setPosition(newPosition);
+        }
       } catch (error) {
         // Fallback to default position if projection fails
         setPosition({ x: 100, y: 100 });
+      } finally {
+        isUpdatingRef.current = false;
       }
     };
 
-    // Initial position
+    // Throttled update function using requestAnimationFrame
+    const throttledUpdate = () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      animationFrameId = requestAnimationFrame(() => {
+        updatePosition();
+        animationFrameId = null;
+      });
+    };
+
+    // Initial position calculation
     updatePosition();
 
-    // Update on map move
-    mapInstance.on('move', updatePosition);
-    mapInstance.on('zoom', updatePosition);
+    // Add event listeners with throttling
+    mapInstance.on('move', throttledUpdate);
+    mapInstance.on('zoom', throttledUpdate);
+    mapInstance.on('rotate', throttledUpdate);
+    mapInstance.on('pitch', throttledUpdate);
 
+    // Cleanup function
     return () => {
-      mapInstance.off('move', updatePosition);
-      mapInstance.off('zoom', updatePosition);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      mapInstance.off('move', throttledUpdate);
+      mapInstance.off('zoom', throttledUpdate);
+      mapInstance.off('rotate', throttledUpdate);
+      mapInstance.off('pitch', throttledUpdate);
     };
-  }, [mapInstance, contractor.location.lat, contractor.location.lng]);
+  }, [mapInstance, contractorLocation.lat, contractorLocation.lng]);
 
-  // Handle pin click
-  const handleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  // Handle pin click - memoized to prevent unnecessary re-renders
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
 
-    const coordinates = { x: event.clientX, y: event.clientY };
-    pinService.handlePinClick(contractor.id, contractor, coordinates);
+      const coordinates = { x: event.clientX, y: event.clientY };
+      pinService.handlePinClick(contractor.id, contractor, coordinates);
 
-    // Animate pin selection
-    if (pinRef.current) {
-      animationService.animatePinBounce(pinRef.current);
-    }
+      // Animate pin selection
+      if (pinRef.current) {
+        animationService.animatePinBounce(pinRef.current);
+      }
 
-    onClick();
-  };
+      onClick();
+    },
+    [contractor.id, contractor, onClick]
+  );
 
-  // Handle pin hover
-  const handleMouseEnter = (event: React.MouseEvent) => {
-    const coordinates = { x: event.clientX, y: event.clientY };
-    pinService.handlePinHover(contractor.id, contractor, coordinates);
+  // Handle pin hover - memoized to prevent unnecessary re-renders
+  const handleMouseEnter = useCallback(
+    (event: React.MouseEvent) => {
+      const coordinates = { x: event.clientX, y: event.clientY };
+      pinService.handlePinHover(contractor.id, contractor, coordinates);
 
-    // Animate pin hover
-    if (pinRef.current) {
-      animationService.animatePinScale(pinRef.current, 1.1);
-    }
+      // Animate pin hover
+      if (pinRef.current) {
+        animationService.animatePinScale(pinRef.current, 1.1);
+      }
 
-    onHover?.();
-  };
+      onHover?.();
+    },
+    [contractor.id, contractor, onHover]
+  );
 
-  // Handle pin hover end
-  const handleMouseLeave = () => {
+  // Handle pin hover end - memoized to prevent unnecessary re-renders
+  const handleMouseLeave = useCallback(() => {
     pinService.handlePinHoverEnd(contractor.id);
 
     // Animate pin back to normal
@@ -135,24 +206,30 @@ export const ContractorPin: React.FC<ContractorPinProps> = ({
     }
 
     onHoverEnd?.();
-  };
+  }, [contractor.id, onHoverEnd]);
 
-  // Handle touch events for mobile
-  const handleTouchStart = (event: React.TouchEvent) => {
-    event.preventDefault();
-    const touch = event.touches[0];
-    const coordinates = { x: touch.clientX, y: touch.clientY };
-    pinService.handlePinHover(contractor.id, contractor, coordinates);
-  };
+  // Handle touch events for mobile - memoized to prevent unnecessary re-renders
+  const handleTouchStart = useCallback(
+    (event: React.TouchEvent) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const coordinates = { x: touch.clientX, y: touch.clientY };
+      pinService.handlePinHover(contractor.id, contractor, coordinates);
+    },
+    [contractor.id, contractor]
+  );
 
-  const handleTouchEnd = (event: React.TouchEvent) => {
-    event.preventDefault();
-    const touch = event.changedTouches[0];
-    const coordinates = { x: touch.clientX, y: touch.clientY };
-    pinService.handlePinClick(contractor.id, contractor, coordinates);
-    pinService.handlePinHoverEnd(contractor.id);
-    onClick();
-  };
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent) => {
+      event.preventDefault();
+      const touch = event.changedTouches[0];
+      const coordinates = { x: touch.clientX, y: touch.clientY };
+      pinService.handlePinClick(contractor.id, contractor, coordinates);
+      pinService.handlePinHoverEnd(contractor.id);
+      onClick();
+    },
+    [contractor.id, contractor, onClick]
+  );
 
   return (
     <div

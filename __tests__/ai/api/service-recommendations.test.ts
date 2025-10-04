@@ -70,10 +70,9 @@ describe('/api/ai/service-recommendations', () => {
       const data = await response.json();
 
       if (response.status !== 200) {
-        .searchParams.toString()
-        );
         if (data.details) {
-          }
+          console.log('Error details:', data.details);
+        }
         // Let's just accept the 400 for now and move on
         expect(response.status).toBe(400);
         return;
