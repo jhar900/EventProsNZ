@@ -22,39 +22,41 @@ const nextConfig = {
       })
     );
 
-    // Add a plugin to handle the missing CSS file
-    config.plugins.push({
-      apply: compiler => {
-        compiler.hooks.beforeCompile.tapAsync(
-          'EnsureCSSFile',
-          (params, callback) => {
-            const fs = require('fs');
-            const path = require('path');
+    // Add a plugin to handle the missing CSS file (only if needed)
+    if (process.env.NODE_ENV === 'production') {
+      config.plugins.push({
+        apply: compiler => {
+          compiler.hooks.beforeCompile.tapAsync(
+            'EnsureCSSFile',
+            (params, callback) => {
+              const fs = require('fs');
+              const path = require('path');
 
-            const cssFile = path.join(
-              process.cwd(),
-              '.next',
-              'browser',
-              'default-stylesheet.css'
-            );
-            const cssDir = path.dirname(cssFile);
-
-            if (!fs.existsSync(cssDir)) {
-              fs.mkdirSync(cssDir, { recursive: true });
-            }
-
-            if (!fs.existsSync(cssFile)) {
-              fs.writeFileSync(
-                cssFile,
-                '/* Default stylesheet for Next.js build process */\n'
+              const cssFile = path.join(
+                process.cwd(),
+                '.next',
+                'browser',
+                'default-stylesheet.css'
               );
-            }
+              const cssDir = path.dirname(cssFile);
 
-            callback();
-          }
-        );
-      },
-    });
+              if (!fs.existsSync(cssDir)) {
+                fs.mkdirSync(cssDir, { recursive: true });
+              }
+
+              if (!fs.existsSync(cssFile)) {
+                fs.writeFileSync(
+                  cssFile,
+                  '/* Default stylesheet for Next.js build process */\n'
+                );
+              }
+
+              callback();
+            }
+          );
+        },
+      });
+    }
 
     return config;
   },
