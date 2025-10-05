@@ -14,6 +14,17 @@ const trialAnalyticsRateLimiter = {
 
 export const GET = withCSRFProtection(async (request: NextRequest) => {
   try {
+    // Check if we're in a build environment
+    if (
+      process.env.NODE_ENV === 'production' &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable during build' },
+        { status: 503 }
+      );
+    }
+
     // Apply rate limiting
     const rateLimitResult = rateLimit(request, trialAnalyticsRateLimiter);
     if (!rateLimitResult.allowed) {
@@ -109,6 +120,17 @@ export const GET = withCSRFProtection(async (request: NextRequest) => {
 
 export const POST = withCSRFProtection(async (request: NextRequest) => {
   try {
+    // Check if we're in a build environment
+    if (
+      process.env.NODE_ENV === 'production' &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable during build' },
+        { status: 503 }
+      );
+    }
+
     // Apply rate limiting
     const rateLimitResult = rateLimit(request, trialAnalyticsRateLimiter);
     if (!rateLimitResult.allowed) {
