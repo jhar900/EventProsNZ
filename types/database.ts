@@ -853,6 +853,184 @@ export interface Database {
           created_at?: string;
         };
       };
+      inquiries: {
+        Row: {
+          id: string;
+          contractor_id: string;
+          event_manager_id: string;
+          event_id: string | null;
+          inquiry_type: 'general' | 'quote_request' | 'availability' | 'custom';
+          subject: string;
+          message: string;
+          event_details: any | null;
+          status: 'sent' | 'viewed' | 'responded' | 'quoted' | 'closed';
+          priority: 'low' | 'medium' | 'high' | 'urgent';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          contractor_id: string;
+          event_manager_id: string;
+          event_id?: string | null;
+          inquiry_type?:
+            | 'general'
+            | 'quote_request'
+            | 'availability'
+            | 'custom';
+          subject: string;
+          message: string;
+          event_details?: any | null;
+          status?: 'sent' | 'viewed' | 'responded' | 'quoted' | 'closed';
+          priority?: 'low' | 'medium' | 'high' | 'urgent';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          contractor_id?: string;
+          event_manager_id?: string;
+          event_id?: string | null;
+          inquiry_type?:
+            | 'general'
+            | 'quote_request'
+            | 'availability'
+            | 'custom';
+          subject?: string;
+          message?: string;
+          event_details?: any | null;
+          status?: 'sent' | 'viewed' | 'responded' | 'quoted' | 'closed';
+          priority?: 'low' | 'medium' | 'high' | 'urgent';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      inquiry_responses: {
+        Row: {
+          id: string;
+          inquiry_id: string;
+          responder_id: string;
+          response_type: 'reply' | 'quote' | 'decline' | 'question';
+          message: string;
+          attachments: any | null;
+          is_template: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          inquiry_id: string;
+          responder_id: string;
+          response_type?: 'reply' | 'quote' | 'decline' | 'question';
+          message: string;
+          attachments?: any | null;
+          is_template?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          inquiry_id?: string;
+          responder_id?: string;
+          response_type?: 'reply' | 'quote' | 'decline' | 'question';
+          message?: string;
+          attachments?: any | null;
+          is_template?: boolean;
+          created_at?: string;
+        };
+      };
+      inquiry_templates: {
+        Row: {
+          id: string;
+          user_id: string;
+          template_name: string;
+          template_content: string;
+          template_type:
+            | 'general'
+            | 'quote_request'
+            | 'availability'
+            | 'follow_up';
+          is_public: boolean;
+          usage_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          template_name: string;
+          template_content: string;
+          template_type?:
+            | 'general'
+            | 'quote_request'
+            | 'availability'
+            | 'follow_up';
+          is_public?: boolean;
+          usage_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          template_name?: string;
+          template_content?: string;
+          template_type?:
+            | 'general'
+            | 'quote_request'
+            | 'availability'
+            | 'follow_up';
+          is_public?: boolean;
+          usage_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      inquiry_notifications: {
+        Row: {
+          id: string;
+          inquiry_id: string;
+          recipient_id: string;
+          notification_type:
+            | 'new_inquiry'
+            | 'inquiry_response'
+            | 'status_update'
+            | 'reminder';
+          subject: string;
+          message: string;
+          is_read: boolean;
+          sent_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          inquiry_id: string;
+          recipient_id: string;
+          notification_type:
+            | 'new_inquiry'
+            | 'inquiry_response'
+            | 'status_update'
+            | 'reminder';
+          subject: string;
+          message: string;
+          is_read?: boolean;
+          sent_at?: string;
+          read_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          inquiry_id?: string;
+          recipient_id?: string;
+          notification_type?:
+            | 'new_inquiry'
+            | 'inquiry_response'
+            | 'status_update'
+            | 'reminder';
+          subject?: string;
+          message?: string;
+          is_read?: boolean;
+          sent_at?: string;
+          read_at?: string | null;
+        };
+      };
     };
     Enums: {
       user_role: 'event_manager' | 'contractor' | 'admin';
