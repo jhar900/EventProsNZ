@@ -21,6 +21,17 @@ export default function MapsDemoPage() {
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   useEffect(() => {
+    // Load Mapbox CSS dynamically
+    const loadMapboxCSS = async () => {
+      try {
+        await import('mapbox-gl/dist/mapbox-gl.css');
+      } catch (error) {
+        console.warn('Failed to load Mapbox CSS:', error);
+      }
+    };
+
+    loadMapboxCSS();
+
     const checkConfiguration = async () => {
       try {
         const response = await fetch('/api/maps/check-config');
