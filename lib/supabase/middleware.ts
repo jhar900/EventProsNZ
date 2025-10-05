@@ -14,10 +14,10 @@ export const createClient = (request: NextRequest) => {
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value;
+          return request.cookies?.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          request.cookies.set({
+          request.cookies?.set({
             name,
             value,
             ...options,
@@ -34,7 +34,7 @@ export const createClient = (request: NextRequest) => {
           });
         },
         remove(name: string, options: any) {
-          request.cookies.set({
+          request.cookies?.set({
             name,
             value: '',
             ...options,

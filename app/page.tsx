@@ -1,13 +1,25 @@
 'use client';
 
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
 
-  // Temporary bypass for debugging
-  if (isLoading) {
+  // Check for bypass flag in URL parameters
+  const [bypassAuth, setBypassAuth] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check URL parameters for bypass
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('bypass') === 'true') {
+      setBypassAuth(true);
+    }
+  }, []);
+
+  // Show loading state with bypass option
+  if (isLoading && !bypassAuth) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
         <div className="text-center">
@@ -16,6 +28,36 @@ export default function Home() {
           <p className="mt-2 text-sm text-gray-500">
             Debug: isLoading = {isLoading.toString()}
           </p>
+          <p className="mt-4 text-sm text-red-500">
+            If this loading persists, there may be a Supabase connection issue.
+          </p>
+          <div className="mt-4 space-x-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Force Reload
+            </button>
+            <button
+              onClick={() => {
+                console.log('Bypass button clicked');
+                // Use URL parameter bypass
+                window.location.href = window.location.href + '?bypass=true';
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Bypass Loading
+            </button>
+            <button
+              onClick={() => {
+                console.log('Direct bypass clicked');
+                setBypassAuth(true);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Direct Bypass
+            </button>
+          </div>
         </div>
       </main>
     );
