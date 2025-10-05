@@ -1,14 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Ensure the .next/browser directory exists
-const browserDir = path.join(process.cwd(), '.next', 'browser');
-if (!fs.existsSync(browserDir)) {
-  fs.mkdirSync(browserDir, { recursive: true });
-}
-
-// Create the default-stylesheet.css file
-const cssFile = path.join(browserDir, 'default-stylesheet.css');
 const cssContent = `/* Default stylesheet for Next.js build process */
 body {
   margin: 0;
@@ -16,15 +8,39 @@ body {
 }
 `;
 
-fs.writeFileSync(cssFile, cssContent);
-console.log('Created default-stylesheet.css for build process');
+// Create the file in multiple locations to ensure it's available
+const locations = [
+  path.join(process.cwd(), '.next', 'browser', 'default-stylesheet.css'),
+  path.join(process.cwd(), 'public', 'default-stylesheet.css'),
+  path.join(process.cwd(), 'default-stylesheet.css'),
+];
 
-// Also create it in the public directory as a backup
-const publicDir = path.join(process.cwd(), 'public');
-if (!fs.existsSync(publicDir)) {
-  fs.mkdirSync(publicDir, { recursive: true });
+locations.forEach(filePath => {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(filePath, cssContent);
+  console.log(`Created default-stylesheet.css at ${filePath}`);
+});
+
+// Also create a symlink if possible
+try {
+  const source = path.join(process.cwd(), 'default-stylesheet.css');
+  const target = path.join(
+    process.cwd(),
+    '.next',
+    'browser',
+    'default-stylesheet.css'
+  );
+
+  if (fs.existsSync(source) && !fs.existsSync(target)) {
+    fs.symlinkSync(source, target);
+    console.log('Created symlink for default-stylesheet.css');
+  }
+} catch (error) {
+  console.log(
+    'Could not create symlink (this is normal on Windows):',
+    error.message
+  );
 }
-
-const publicCssFile = path.join(publicDir, 'default-stylesheet.css');
-fs.writeFileSync(publicCssFile, cssContent);
-console.log('Created backup default-stylesheet.css in public directory');
