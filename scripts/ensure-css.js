@@ -44,3 +44,19 @@ try {
     error.message
   );
 }
+
+// Set up a file watcher to recreate the file if it gets deleted
+const watchFile = path.join(
+  process.cwd(),
+  '.next',
+  'browser',
+  'default-stylesheet.css'
+);
+if (fs.existsSync(watchFile)) {
+  fs.watchFile(watchFile, (curr, prev) => {
+    if (!curr.isFile()) {
+      console.log('CSS file was deleted, recreating...');
+      fs.writeFileSync(watchFile, cssContent);
+    }
+  });
+}

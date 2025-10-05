@@ -15,12 +15,46 @@ const nextConfig = {
       };
     }
 
-    // Handle missing CSS file issue
+    // Handle missing CSS file issue by creating a virtual module
     config.plugins.push(
       new (require('webpack').DefinePlugin)({
         'process.env.NEXT_PUBLIC_CSS_FIX': JSON.stringify('true'),
       })
     );
+
+    // Add a plugin to handle the missing CSS file
+    config.plugins.push({
+      apply: compiler => {
+        compiler.hooks.beforeCompile.tapAsync(
+          'EnsureCSSFile',
+          (params, callback) => {
+            const fs = require('fs');
+            const path = require('path');
+
+            const cssFile = path.join(
+              process.cwd(),
+              '.next',
+              'browser',
+              'default-stylesheet.css'
+            );
+            const cssDir = path.dirname(cssFile);
+
+            if (!fs.existsSync(cssDir)) {
+              fs.mkdirSync(cssDir, { recursive: true });
+            }
+
+            if (!fs.existsSync(cssFile)) {
+              fs.writeFileSync(
+                cssFile,
+                '/* Default stylesheet for Next.js build process */\n'
+              );
+            }
+
+            callback();
+          }
+        );
+      },
+    });
 
     return config;
   },
