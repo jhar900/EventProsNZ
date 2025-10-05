@@ -14,9 +14,8 @@ export default function LoginPage() {
     // Redirect based on user role
     if (user?.role === 'admin') {
       router.push('/admin/dashboard');
-    } else if (user?.role === 'contractor') {
-      router.push('/contractor/dashboard');
     } else {
+      // Both contractors and event managers use the main dashboard
       router.push('/dashboard');
     }
   };

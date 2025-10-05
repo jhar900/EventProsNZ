@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { createServerClient } from '@supabase/ssr';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
@@ -14,7 +14,8 @@ const updateProfileSchema = z.object({
   phone: z
     .string()
     .regex(/^(\+64|0)[2-9][0-9]{7,9}$/, 'Invalid NZ phone number')
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   address: z.string().max(200, 'Address too long').optional(),
   bio: z.string().max(500, 'Bio too long').optional(),
   location: z.string().max(100, 'Location too long').optional(),
@@ -23,20 +24,29 @@ const updateProfileSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user ID from request headers (sent by client)
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
+
+    // Create Supabase client with service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+        },
+      }
+    );
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (profileError) {
@@ -57,38 +67,58 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Get user ID from request headers (sent by client)
+    const userId = request.headers.get('x-user-id');
+    console.log('Profile API - Received user ID:', userId);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
 
+    // Create Supabase client with service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+        },
+      }
+    );
+
     const body = await request.json();
+    console.log('Profile API - Request body:', body);
+
     const validatedData = updateProfileSchema.parse(body);
+    console.log('Profile API - Validated data:', validatedData);
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .update(validatedData)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
+    console.log('Profile API - Update result:', { profile, profileError });
+
     if (profileError) {
+      console.error('Profile API - Update error:', profileError);
       return NextResponse.json(
         { error: 'Failed to update profile', details: profileError.message },
         { status: 500 }
       );
     }
 
+    console.log('Profile API - Update successful');
     return NextResponse.json({
       message: 'Profile updated successfully',
       profile,
     });
   } catch (error) {
+    console.error('Profile API - Error:', error);
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },

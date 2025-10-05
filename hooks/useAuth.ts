@@ -37,6 +37,7 @@ export function useAuth() {
   }, []);
 
   const refreshUser = async () => {
+    console.log('refreshUser - Function called!');
     try {
       // Check if Supabase is properly configured
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -48,142 +49,124 @@ export function useAuth() {
         data: { session },
       } = await supabase.auth.getSession();
 
+      console.log('refreshUser - Session:', session);
+      console.log('refreshUser - Session user:', session?.user);
+
       if (!session?.user) {
-        setUser(null);
-        return;
-      }
+        console.log(
+          'refreshUser - No session or user, trying to get user from localStorage'
+        );
+        // Try to get user from localStorage as fallback
+        const storedUserData = localStorage.getItem('user_data');
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          console.log('refreshUser - Found user in localStorage:', userData);
 
-      // Get user profile from our database with timeout
-      const userQueryPromise = supabase
-        .from('users')
-        .select(
-          `
-          id,
-          email,
-          role,
-          is_verified,
-          last_login,
-          profiles (
-            first_name,
-            last_name,
-            avatar_url,
-            timezone
-          )
-        `
-        )
-        .eq('id', session.user.id)
-        .single();
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database query timeout')), 10000)
-      );
-
-      const { data: userData, error } = (await Promise.race([
-        userQueryPromise,
-        timeoutPromise,
-      ])) as any;
-
-      if (error) {
-        // If user exists in Auth but not in our database, create the record
-        if (
-          error.code === 'PGRST116' ||
-          error.message.includes('No rows found')
-        ) {
-          // Create user record via API call to avoid RLS issues
-          const createUserResponse = await fetch(
-            '/api/auth/create-user-profile',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                user_id: session.user.id,
-                email: session.user.email!,
-                role: 'event_manager', // Default role
-                first_name:
-                  session.user.user_metadata?.full_name?.split(' ')[0] ||
-                  'User',
-                last_name:
-                  session.user.user_metadata?.full_name
-                    ?.split(' ')
-                    .slice(1)
-                    .join(' ') || '',
-              }),
-            }
-          );
-
-          if (!createUserResponse.ok) {
-            const errorData = await createUserResponse.json();
-            setUser(null);
-            return;
-          }
-
-          // Retry fetching the user profile
-          const { data: retryUserData, error: retryError } = await supabase
-            .from('users')
-            .select(
-              `
-              id,
-              email,
-              role,
-              is_verified,
-              last_login,
-              profiles (
-                first_name,
-                last_name,
-                avatar_url,
-                timezone
+          // Try to get updated profile data using the stored user ID
+          if (userData.id) {
+            console.log(
+              'refreshUser - Trying to get updated profile for user ID:',
+              userData.id
+            );
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select(
+                'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
               )
-            `
-            )
-            .eq('id', session.user.id)
-            .single();
+              .eq('user_id', userData.id)
+              .single();
 
-          if (retryError) {
-            setUser(null);
-            return;
+            console.log(
+              'refreshUser - Profile data from localStorage fallback:',
+              profileData
+            );
+            console.log(
+              'refreshUser - Profile error from localStorage fallback:',
+              profileError
+            );
+
+            if (profileData) {
+              const updatedUser = {
+                ...userData,
+                profile: profileData,
+              };
+              console.log(
+                'refreshUser - Setting user with updated profile from localStorage:',
+                updatedUser
+              );
+              setUser(updatedUser);
+              return;
+            }
           }
 
-          setUser({
-            id: retryUserData.id,
-            email: retryUserData.email,
-            role: retryUserData.role,
-            is_verified: retryUserData.is_verified,
-            last_login: retryUserData.last_login,
-            profile: retryUserData.profiles,
-            business_profile: null,
-          });
+          setUser(userData);
+          return;
+        } else {
+          console.log(
+            'refreshUser - No user data in localStorage, setting user to null'
+          );
+          setUser(null);
           return;
         }
-
-        setUser(null);
-        return;
       }
 
-      // Get business profile if contractor
-      let businessProfile = null;
-      if (userData.role === 'contractor') {
-        const { data: businessData } = await supabase
-          .from('business_profiles')
-          .select('id, company_name, subscription_tier, is_verified')
-          .eq('user_id', session.user.id)
-          .single();
+      // Get updated profile data
+      console.log(
+        'refreshUser - About to query profiles table for user_id:',
+        session.user.id
+      );
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select(
+          'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
+        )
+        .eq('user_id', session.user.id)
+        .single();
 
-        businessProfile = businessData;
+      console.log('refreshUser - Profile data:', profileData);
+      console.log('refreshUser - Profile error:', profileError);
+      console.log('refreshUser - Current user:', user);
+
+      if (profileData) {
+        // Always try to get current user data first
+        const currentUser =
+          user || JSON.parse(localStorage.getItem('user_data') || '{}');
+
+        console.log(
+          'refreshUser - Current user from state or localStorage:',
+          currentUser
+        );
+
+        if (currentUser && currentUser.id) {
+          const updatedUser = {
+            ...currentUser,
+            profile: profileData,
+          };
+          console.log(
+            'refreshUser - Setting user with current data:',
+            updatedUser
+          );
+          setUser(updatedUser);
+        } else {
+          // Fallback: create a basic user object with the profile data
+          const fallbackUser: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            role: 'contractor', // Default role, should be updated from actual user data
+            is_verified: false,
+            last_login: null,
+            profile: profileData,
+          };
+          console.log('refreshUser - Setting fallback user:', fallbackUser);
+          setUser(fallbackUser);
+        }
+      } else {
+        console.log(
+          'refreshUser - No profile data found, keeping current user'
+        );
       }
-
-      setUser({
-        id: userData.id,
-        email: userData.email,
-        role: userData.role,
-        is_verified: userData.is_verified,
-        last_login: userData.last_login,
-        profile: userData.profiles,
-        business_profile: businessProfile,
-      });
     } catch (error) {
-      setUser(null);
+      console.error('Error refreshing user:', error);
     }
   };
 
@@ -247,7 +230,7 @@ export function useAuth() {
         method: 'POST',
       });
     } catch (error) {
-      } finally {
+    } finally {
       // Clear local storage
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -266,10 +249,10 @@ export function useAuth() {
     // Add a fallback timeout to ensure loading state is always set to false
     const fallbackTimeout = setTimeout(() => {
       setIsLoading(false);
-    }, 2000); // Reduced timeout since localStorage is instant
+    }, 2000);
 
-    // Check for existing session on mount
-    const checkSession = () => {
+    // Check for existing session on mount and refresh user data
+    const checkSession = async () => {
       try {
         // Check if we're in the browser (localStorage is available)
         if (typeof window === 'undefined') {
@@ -288,6 +271,9 @@ export function useAuth() {
           setUser(userData);
           setIsLoading(false);
           clearTimeout(fallbackTimeout);
+
+          // Refresh user data from database to get latest profile info
+          await refreshUser();
           return;
         }
 
@@ -301,7 +287,7 @@ export function useAuth() {
       }
     };
 
-    // Run immediately (no async needed for localStorage)
+    // Run the session check
     checkSession();
 
     return () => {

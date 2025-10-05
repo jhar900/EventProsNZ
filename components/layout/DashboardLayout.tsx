@@ -52,20 +52,32 @@ export default function DashboardLayout({
         return [
           ...baseItems,
           { href: '/events', label: 'My Events', icon: Calendar },
+          { href: '/events/create', label: 'Create Event', icon: Calendar },
           { href: '/contractors', label: 'Find Contractors', icon: Search },
-          { href: '/jobs', label: 'Jobs', icon: FileText },
+          {
+            href: '/contractors/search',
+            label: 'Search Contractors',
+            icon: Search,
+          },
+          { href: '/contractors/map', label: 'Contractor Map', icon: Search },
+          {
+            href: '/budget/analytics',
+            label: 'Budget Analytics',
+            icon: BarChart3,
+          },
           { href: '/profile', label: 'Profile', icon: Settings },
         ];
       case 'contractor':
         return [
           ...baseItems,
           { href: '/profile', label: 'Profile', icon: Settings },
-          { href: '/jobs', label: 'Browse Jobs', icon: Search },
+          { href: '/contractors', label: 'Browse Jobs', icon: Search },
           {
-            href: '/my-applications',
-            label: 'My Applications',
+            href: '/contractors/favorites',
+            label: 'My Favorites',
             icon: FileText,
           },
+          { href: '/contractors/map', label: 'Map View', icon: Search },
         ];
       default:
         return baseItems;
