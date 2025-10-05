@@ -435,4 +435,144 @@ export class StripeService {
       throw new Error('Update failed');
     }
   }
+
+  /**
+   * Create Stripe subscription
+   */
+  async createSubscription(
+    customerId: string,
+    priceId: string,
+    paymentMethodId?: string,
+    trialPeriodDays?: number
+  ): Promise<Stripe.Subscription> {
+    try {
+      const subscriptionData: Stripe.SubscriptionCreateParams = {
+        customer: customerId,
+        items: [{ price: priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+      };
+
+      if (trialPeriodDays) {
+        subscriptionData.trial_period_days = trialPeriodDays;
+      }
+
+      if (paymentMethodId) {
+        subscriptionData.default_payment_method = paymentMethodId;
+      }
+
+      const subscription =
+        await this.stripe.subscriptions.create(subscriptionData);
+      return subscription;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Subscription creation failed: ${error.message}`);
+      }
+      throw new Error('Failed to create subscription');
+    }
+  }
+
+  /**
+   * Get Stripe subscription
+   */
+  async getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    try {
+      const subscription =
+        await this.stripe.subscriptions.retrieve(subscriptionId);
+      return subscription;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Subscription not found: ${error.message}`);
+      }
+      throw new Error('Failed to get subscription');
+    }
+  }
+
+  /**
+   * Update Stripe subscription
+   */
+  async updateSubscription(
+    subscriptionId: string,
+    updateData: Stripe.SubscriptionUpdateParams
+  ): Promise<Stripe.Subscription> {
+    try {
+      const subscription = await this.stripe.subscriptions.update(
+        subscriptionId,
+        updateData
+      );
+      return subscription;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Subscription update failed: ${error.message}`);
+      }
+      throw new Error('Failed to update subscription');
+    }
+  }
+
+  /**
+   * Cancel Stripe subscription
+   */
+  async cancelSubscription(
+    subscriptionId: string,
+    immediately: boolean = false
+  ): Promise<Stripe.Subscription> {
+    try {
+      const subscription = await this.stripe.subscriptions.update(
+        subscriptionId,
+        {
+          cancel_at_period_end: !immediately,
+          ...(immediately && { cancel_at: Math.floor(Date.now() / 1000) }),
+        }
+      );
+      return subscription;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Subscription cancellation failed: ${error.message}`);
+      }
+      throw new Error('Failed to cancel subscription');
+    }
+  }
+
+  /**
+   * Create Stripe price for subscription
+   */
+  async createPrice(
+    productId: string,
+    unitAmount: number,
+    currency: string = 'nzd',
+    interval: 'month' | 'year' = 'month'
+  ): Promise<Stripe.Price> {
+    try {
+      const price = await this.stripe.prices.create({
+        product: productId,
+        unit_amount: unitAmount,
+        currency: currency,
+        recurring: {
+          interval: interval,
+        },
+      });
+      return price;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Price creation failed: ${error.message}`);
+      }
+      throw new Error('Failed to create price');
+    }
+  }
+
+  /**
+   * Get Stripe price
+   */
+  async getPrice(priceId: string): Promise<Stripe.Price> {
+    try {
+      const price = await this.stripe.prices.retrieve(priceId);
+      return price;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Price not found: ${error.message}`);
+      }
+      throw new Error('Failed to get price');
+    }
+  }
 }
