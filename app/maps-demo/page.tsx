@@ -7,7 +7,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function MapsDemoPage() {
   const [isConfigured, setIsConfigured] = useState(false);
@@ -62,7 +61,7 @@ export default function MapsDemoPage() {
               addResult(
                 '❌ Map error: ' + (e.error?.message || 'Unknown error')
               );
-              });
+            });
 
             newMap.on('style.load', () => {
               addResult('✅ Map style loaded!');
@@ -76,7 +75,7 @@ export default function MapsDemoPage() {
             addResult(
               '❌ Map initialization error: ' + (error as Error).message
             );
-            }
+          }
         } else {
           addResult('❌ Map container not found');
         }
