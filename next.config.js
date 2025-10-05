@@ -14,6 +14,14 @@ const nextConfig = {
         fs: false,
       };
     }
+
+    // Handle missing CSS file issue
+    config.plugins.push(
+      new (require('webpack').DefinePlugin)({
+        'process.env.NEXT_PUBLIC_CSS_FIX': JSON.stringify('true'),
+      })
+    );
+
     return config;
   },
   eslint: {
