@@ -72,9 +72,6 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
     setSuccessMessage(null); // Clear success message on new submission
 
     try {
-      console.log('ProfileForm - Submitting data:', data);
-      console.log('ProfileForm - User ID:', user?.id);
-
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
@@ -85,9 +82,7 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
         body: JSON.stringify(data),
       });
 
-      console.log('ProfileForm - Response status:', response.status);
       const result = await response.json();
-      console.log('ProfileForm - Response result:', result);
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update profile');
@@ -106,7 +101,6 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
 
       onSuccess?.(result.profile);
     } catch (err) {
-      console.error('ProfileForm - Error:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to update profile';
       setError(errorMessage);

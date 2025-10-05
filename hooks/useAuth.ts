@@ -37,7 +37,6 @@ export function useAuth() {
   }, []);
 
   const refreshUser = async () => {
-    console.log('refreshUser - Function called!');
     try {
       // Check if Supabase is properly configured
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -49,25 +48,14 @@ export function useAuth() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      console.log('refreshUser - Session:', session);
-      console.log('refreshUser - Session user:', session?.user);
-
       if (!session?.user) {
-        console.log(
-          'refreshUser - No session or user, trying to get user from localStorage'
-        );
         // Try to get user from localStorage as fallback
         const storedUserData = localStorage.getItem('user_data');
         if (storedUserData) {
           const userData = JSON.parse(storedUserData);
-          console.log('refreshUser - Found user in localStorage:', userData);
 
           // Try to get updated profile data using the stored user ID
           if (userData.id) {
-            console.log(
-              'refreshUser - Trying to get updated profile for user ID:',
-              userData.id
-            );
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select(
@@ -76,24 +64,11 @@ export function useAuth() {
               .eq('user_id', userData.id)
               .single();
 
-            console.log(
-              'refreshUser - Profile data from localStorage fallback:',
-              profileData
-            );
-            console.log(
-              'refreshUser - Profile error from localStorage fallback:',
-              profileError
-            );
-
             if (profileData) {
               const updatedUser = {
                 ...userData,
                 profile: profileData,
               };
-              console.log(
-                'refreshUser - Setting user with updated profile from localStorage:',
-                updatedUser
-              );
               setUser(updatedUser);
               return;
             }
@@ -102,19 +77,12 @@ export function useAuth() {
           setUser(userData);
           return;
         } else {
-          console.log(
-            'refreshUser - No user data in localStorage, setting user to null'
-          );
           setUser(null);
           return;
         }
       }
 
       // Get updated profile data
-      console.log(
-        'refreshUser - About to query profiles table for user_id:',
-        session.user.id
-      );
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(
@@ -123,29 +91,16 @@ export function useAuth() {
         .eq('user_id', session.user.id)
         .single();
 
-      console.log('refreshUser - Profile data:', profileData);
-      console.log('refreshUser - Profile error:', profileError);
-      console.log('refreshUser - Current user:', user);
-
       if (profileData) {
         // Always try to get current user data first
         const currentUser =
           user || JSON.parse(localStorage.getItem('user_data') || '{}');
-
-        console.log(
-          'refreshUser - Current user from state or localStorage:',
-          currentUser
-        );
 
         if (currentUser && currentUser.id) {
           const updatedUser = {
             ...currentUser,
             profile: profileData,
           };
-          console.log(
-            'refreshUser - Setting user with current data:',
-            updatedUser
-          );
           setUser(updatedUser);
         } else {
           // Fallback: create a basic user object with the profile data
@@ -157,13 +112,8 @@ export function useAuth() {
             last_login: null,
             profile: profileData,
           };
-          console.log('refreshUser - Setting fallback user:', fallbackUser);
           setUser(fallbackUser);
         }
-      } else {
-        console.log(
-          'refreshUser - No profile data found, keeping current user'
-        );
       }
     } catch (error) {
       console.error('Error refreshing user:', error);

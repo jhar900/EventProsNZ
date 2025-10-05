@@ -629,11 +629,14 @@ jest.mock('@/components/features/map/ContractorPin', () => {
   const React = require('react');
   return {
     default: props =>
-      React.createElement('div', {
-        'data-testid': 'contractor-pin-mock',
-        ...props,
-      }, `Mocked Contractor Pin for ${props.contractor?.company_name || 'Unknown'}`,
-      }),
+      React.createElement(
+        'div',
+        {
+          'data-testid': 'contractor-pin-mock',
+          ...props,
+        },
+        `Mocked Contractor Pin for ${props.contractor?.company_name || 'Unknown'}`
+      ),
   };
 });
 
