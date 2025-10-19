@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function MessagesPage() {
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 px-4">
       <MessageTracking />
     </div>
   );

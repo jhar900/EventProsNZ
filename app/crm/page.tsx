@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CRMPage() {
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 px-4">
       <BasicCRM />
     </div>
   );
