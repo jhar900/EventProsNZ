@@ -1022,6 +1022,118 @@ export default function Home() {
               </div>
             </div>
 
+            {/* CRM Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                📞 CRM Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/crm"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📞</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      CRM Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main CRM dashboard</p>
+                </Link>
+
+                <Link
+                  href="/crm/contacts"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👥</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Contacts
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Manage contacts</p>
+                </Link>
+
+                <Link
+                  href="/crm/messages"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💬</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Messages
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Message management</p>
+                </Link>
+
+                <Link
+                  href="/crm/notes"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Notes
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Customer notes</p>
+                </Link>
+
+                <Link
+                  href="/crm/reminders"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⏰</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Reminders
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Follow-up reminders</p>
+                </Link>
+
+                <Link
+                  href="/crm/timeline"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Timeline
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Customer timeline</p>
+                </Link>
+
+                <Link
+                  href="/crm/search"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      CRM Search
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Search CRM data</p>
+                </Link>
+
+                <Link
+                  href="/crm/export"
+                  className="group block bg-violet-50 hover:bg-violet-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📤</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-violet-600">
+                      Export Data
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Export CRM data</p>
+                </Link>
+              </div>
+            </div>
+
             {/* Search & History Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
