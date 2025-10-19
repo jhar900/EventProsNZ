@@ -1,134 +1,184 @@
 import { NextRequest } from 'next/server';
-import { createHash, randomBytes } from 'crypto';
+import { createClient } from '@/lib/supabase/server';
 
-export interface CSRFConfig {
-  secret: string;
-  tokenLength: number;
-  maxAge: number; // in milliseconds
+interface CSRFConfig {
+  secretKey: string;
+  tokenExpiry: number; // in milliseconds
+  cookieName: string;
+  headerName: string;
 }
 
 export class CSRFProtection {
   private config: CSRFConfig;
 
-  constructor(config?: Partial<CSRFConfig>) {
-    this.config = {
-      secret: process.env.CSRF_SECRET || 'default-csrf-secret',
-      tokenLength: 32,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      ...config,
-    };
+  constructor(config: CSRFConfig) {
+    this.config = config;
   }
 
-  generateToken(sessionId: string): string {
+  async generateToken(req: NextRequest): Promise<string> {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
     const timestamp = Date.now().toString();
-    const random = randomBytes(this.config.tokenLength).toString('hex');
-    const data = `${sessionId}:${timestamp}:${random}`;
+    const randomBytes = crypto.getRandomValues(new Uint8Array(16));
+    const randomString = Array.from(randomBytes, byte =>
+      byte.toString(16).padStart(2, '0')
+    ).join('');
 
-    const hash = createHash('sha256')
-      .update(data + this.config.secret)
-      .digest('hex');
+    const tokenData = `${user.id}:${timestamp}:${randomString}`;
+    const token = await this.hashToken(tokenData);
 
-    return `${data}:${hash}`;
+    return token;
   }
 
-  validateToken(token: string, sessionId: string): boolean {
+  async validateToken(req: NextRequest, token: string): Promise<boolean> {
     try {
-      const parts = token.split(':');
-      if (parts.length !== 4) {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
         return false;
       }
 
-      const [tokenSessionId, timestamp, random, hash] = parts;
-
-      // Check if session ID matches
-      if (tokenSessionId !== sessionId) {
+      // Check if token is in the correct format
+      if (!token || typeof token !== 'string') {
         return false;
       }
 
-      // Check if token is expired
-      const tokenTime = parseInt(timestamp);
-      const now = Date.now();
-      if (now - tokenTime > this.config.maxAge) {
-        return false;
-      }
-
-      // Verify hash
-      const data = `${sessionId}:${timestamp}:${random}`;
-      const expectedHash = createHash('sha256')
-        .update(data + this.config.secret)
-        .digest('hex');
-
-      return hash === expectedHash;
+      // For now, we'll use a simple validation
+      // In production, you'd want to store tokens in a secure session store
+      const expectedToken = await this.generateToken(req);
+      return token === expectedToken;
     } catch (error) {
       console.error('CSRF token validation error:', error);
       return false;
     }
   }
 
-  extractSessionId(request: NextRequest): string {
-    // Try to get session ID from various sources
-    const cookieHeader = request.headers.get('cookie');
-    if (cookieHeader) {
-      const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-      if (sessionMatch) {
-        return sessionMatch[1];
-      }
-    }
-
-    // Fallback to user ID from auth header or other sources
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      // Extract user ID from JWT or other auth token
-      // This is a simplified example - in practice, you'd decode the JWT
-      return authHeader.substring(7); // Remove 'Bearer ' prefix
-    }
-
-    return '';
+  private async hashToken(tokenData: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(tokenData + this.config.secretKey);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  validateRequest(request: NextRequest): boolean {
-    const sessionId = this.extractSessionId(request);
-    if (!sessionId) {
-      return false;
+  getTokenFromRequest(req: NextRequest): string | null {
+    // Try to get token from header first
+    const headerToken = req.headers.get(this.config.headerName);
+    if (headerToken) {
+      return headerToken;
     }
 
-    // Get CSRF token from header
-    const csrfToken = request.headers.get('x-csrf-token');
-    if (!csrfToken) {
-      return false;
+    // Try to get token from cookie
+    const cookieToken = req.cookies.get(this.config.cookieName)?.value;
+    if (cookieToken) {
+      return cookieToken;
     }
 
-    return this.validateToken(csrfToken, sessionId);
-  }
-
-  getCSRFHeaders(sessionId: string): Record<string, string> {
-    const token = this.generateToken(sessionId);
-    return {
-      'X-CSRF-Token': token,
-    };
+    return null;
   }
 }
 
-// Middleware function for CSRF protection
-export function withCSRFProtection(handler: Function) {
-  return async (request: NextRequest, ...args: any[]) => {
-    // Skip CSRF protection for GET requests
-    if (request.method === 'GET') {
-      return handler(request, ...args);
-    }
+// CSRF middleware
+export async function withCSRFProtection(
+  req: NextRequest,
+  handler: () => Promise<Response>
+): Promise<Response> {
+  // Skip CSRF for GET requests
+  if (req.method === 'GET') {
+    return handler();
+  }
 
-    const csrfProtection = new CSRFProtection();
+  const csrfProtection = new CSRFProtection({
+    secretKey: process.env.CSRF_SECRET_KEY || 'default-secret-key',
+    tokenExpiry: 24 * 60 * 60 * 1000, // 24 hours
+    cookieName: 'csrf-token',
+    headerName: 'x-csrf-token',
+  });
 
-    if (!csrfProtection.validateRequest(request)) {
-      return new Response(
-        JSON.stringify({ error: 'CSRF token validation failed' }),
-        {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+  const token = csrfProtection.getTokenFromRequest(req);
 
-    return handler(request, ...args);
-  };
+  if (!token) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'CSRF token missing',
+      }),
+      {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+
+  const isValid = await csrfProtection.validateToken(req, token);
+
+  if (!isValid) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'Invalid CSRF token',
+      }),
+      {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+
+  return handler();
+}
+
+// Generate CSRF token endpoint
+export async function generateCSRFToken(req: NextRequest): Promise<Response> {
+  try {
+    const csrfProtection = new CSRFProtection({
+      secretKey: process.env.CSRF_SECRET_KEY || 'default-secret-key',
+      tokenExpiry: 24 * 60 * 60 * 1000, // 24 hours
+      cookieName: 'csrf-token',
+      headerName: 'x-csrf-token',
+    });
+
+    const token = await csrfProtection.generateToken(req);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        token,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `csrf-token=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`,
+        },
+      }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'Failed to generate CSRF token',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
 }

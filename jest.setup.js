@@ -222,6 +222,49 @@ Object.defineProperty(window, 'open', {
   })),
 });
 
+// Mock window.confirm
+Object.defineProperty(window, 'confirm', {
+  writable: true,
+  value: jest.fn(() => true), // Default to true for tests
+});
+
+// Mock hasPointerCapture for Radix UI compatibility
+Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+  writable: true,
+  value: jest.fn(() => false),
+});
+
+Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+  writable: true,
+  value: jest.fn(),
+});
+
+Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+  writable: true,
+  value: jest.fn(),
+});
+
+// Mock scrollIntoView for Radix UI compatibility
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  writable: true,
+  value: jest.fn(),
+});
+
+// Mock getBoundingClientRect for Radix UI compatibility
+Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+  writable: true,
+  value: jest.fn(() => ({
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+  })),
+});
+
 // Mock NextRequest with proper cookies support
 global.NextRequest = class NextRequest {
   constructor(input, init) {
@@ -294,14 +337,14 @@ jest.mock('next/server', () => ({
   NextResponse: global.NextResponse,
 }));
 
-// Import final Supabase mock
+// Import simple Supabase mock
 const {
-  createFinalSupabaseMock,
-} = require('./__tests__/mocks/supabase-final-mock');
+  createSimpleSupabaseMock,
+} = require('./__tests__/mocks/supabase-simple-mock');
 
-// Create a robust, stateful Supabase mock
+// Create a simple, working Supabase mock
 const createMockSupabaseClient = () => {
-  return createFinalSupabaseMock();
+  return createSimpleSupabaseMock();
 };
 
 // Set up global mock
@@ -312,6 +355,15 @@ jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() => global.mockSupabaseClient),
   supabaseAdmin: global.mockSupabaseClient,
 }));
+
+// Ensure the mock is applied before any imports
+beforeAll(() => {
+  // Force the mock to be applied
+  jest.doMock('@/lib/supabase/server', () => ({
+    createClient: jest.fn(() => global.mockSupabaseClient),
+    supabaseAdmin: global.mockSupabaseClient,
+  }));
+});
 
 // Mock the client import
 jest.mock('@/lib/supabase/client', () => ({

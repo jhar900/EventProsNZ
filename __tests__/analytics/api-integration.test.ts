@@ -1,10 +1,32 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
+// Mock rate limiting
+jest.mock('@/lib/rate-limiting', () => ({
+  withRateLimit: jest.fn(rateLimiter => handler => handler),
+  analyticsRateLimit: {
+    checkLimit: jest.fn().mockResolvedValue(true),
+  },
+}));
+
 // Mock the Supabase client
 const mockSupabaseClient = {
+  auth: {
+    getUser: jest.fn().mockResolvedValue({
+      data: { user: { id: 'admin-user', email: 'admin@example.com' } },
+      error: null,
+    }),
+  },
   from: jest.fn(() => ({
     select: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        single: jest.fn(() =>
+          Promise.resolve({
+            data: { role: 'admin' },
+            error: null,
+          })
+        ),
+      })),
       gte: jest.fn(() => ({
         lte: jest.fn(() => ({
           order: jest.fn(() => ({
@@ -61,6 +83,11 @@ mockSupabaseClient.auth = {
   ),
 };
 
+// Mock Supabase client
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(() => mockSupabaseClient),
+}));
+
 describe('Analytics API Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -75,6 +102,10 @@ describe('Analytics API Integration Tests', () => {
       );
       const response = await GET(request);
       const data = await response.json();
+
+      if (response.status !== 200) {
+        console.log('Error response:', data);
+      }
 
       expect(response.status).toBe(200);
       expect(data).toHaveProperty('queries');
