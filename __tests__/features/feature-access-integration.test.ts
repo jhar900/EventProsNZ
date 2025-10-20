@@ -5,38 +5,20 @@ const mockSupabaseClient = {
   auth: {
     getUser: jest.fn(),
   },
-  from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-        in: jest.fn(() => ({
-          order: jest.fn(() => ({
-            limit: jest.fn(() => ({
-              single: jest.fn(),
-            })),
-          })),
-        })),
-      })),
-      order: jest.fn(() => ({
-        limit: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-    })),
-    upsert: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        eq: jest.fn(),
-      })),
-    })),
-    insert: jest.fn(),
-  })),
+  from: jest.fn(() => {
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+      upsert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+    };
+    return mockQuery;
+  }),
   rpc: jest.fn(),
 };
 
@@ -45,38 +27,20 @@ jest.mock('@/lib/supabase/server', () => ({
     auth: {
       getUser: jest.fn(),
     },
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(),
-          })),
-          in: jest.fn(() => ({
-            order: jest.fn(() => ({
-              limit: jest.fn(() => ({
-                single: jest.fn(),
-              })),
-            })),
-          })),
-        })),
-        order: jest.fn(() => ({
-          limit: jest.fn(() => ({
-            single: jest.fn(),
-          })),
-        })),
-      })),
-      upsert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          eq: jest.fn(),
-        })),
-      })),
-      insert: jest.fn(),
-    })),
+    from: jest.fn(() => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        in: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        single: jest.fn(),
+        upsert: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        insert: jest.fn().mockReturnThis(),
+      };
+      return mockQuery;
+    }),
     rpc: jest.fn(),
   })),
 }));

@@ -10,7 +10,7 @@ import { PerformanceIntegration } from '@/components/features/matching/Performan
 import { ContractorRanking } from '@/components/features/matching/ContractorRanking';
 import { MatchingResults } from '@/components/features/matching/MatchingResults';
 import { InquiryIntegration } from '@/components/features/matching/InquiryIntegration';
-import { MatchingFilters } from '@/components/features/matching/MatchingFilters';
+import { MatchingFiltersComponent as MatchingFilters } from '@/components/features/matching/MatchingFilters';
 import { MatchingPagination } from '@/components/features/matching/MatchingPagination';
 
 // Mock fetch
@@ -263,7 +263,9 @@ describe('Matching Components', () => {
         <InquiryIntegration eventId="event-1" contractorId="contractor-1" />
       );
 
-      expect(screen.getByText('Send Inquiry')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Send Inquiry' })
+      ).toBeInTheDocument();
     });
 
     it('should handle form submission', async () => {
@@ -281,7 +283,7 @@ describe('Matching Components', () => {
       );
       fireEvent.change(textarea, { target: { value: 'Test message' } });
 
-      const submitButton = screen.getByText('Send Inquiry');
+      const submitButton = screen.getByRole('button', { name: 'Send Inquiry' });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -348,7 +350,7 @@ describe('Matching Components', () => {
         />
       );
 
-      const nextButton = screen.getByRole('button', { name: /next/i });
+      const nextButton = screen.getAllByRole('button')[4]; // The next button (ChevronRight)
       fireEvent.click(nextButton);
 
       expect(onPageChange).toHaveBeenCalledWith(2);

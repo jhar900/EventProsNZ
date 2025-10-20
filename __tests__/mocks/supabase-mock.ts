@@ -56,6 +56,17 @@ export const createMockSupabaseClient = () => {
           },
           error: null,
         });
+        // For array queries (no .single() call)
+        mockQuery.select.mockResolvedValue({
+          data: [
+            {
+              id: 'test-user-id',
+              email: 'test@example.com',
+              role: 'contractor',
+            },
+          ],
+          error: null,
+        });
       } else if (table === 'trial_conversions') {
         mockQuery.single.mockResolvedValue({
           data: {
@@ -141,6 +152,132 @@ export const createMockSupabaseClient = () => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
+          error: null,
+        });
+      } else if (table === 'documents') {
+        mockQuery.single.mockResolvedValue({
+          data: {
+            id: 'test-document-id',
+            user_id: 'test-user-id',
+            document_name: 'Test Document',
+            document_type: 'application/pdf',
+            file_size: 1000,
+            file_path: 'documents/test-file.pdf',
+            mime_type: 'application/pdf',
+            document_category: 'contract',
+            is_public: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          error: null,
+        });
+        // For array queries (no .single() call)
+        mockQuery.select.mockResolvedValue({
+          data: [
+            {
+              id: 'test-document-id',
+              user_id: 'test-user-id',
+              document_name: 'Test Document',
+              document_type: 'application/pdf',
+              file_size: 1000,
+              file_path: 'documents/test-file.pdf',
+              mime_type: 'application/pdf',
+              document_category: 'contract',
+              is_public: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ],
+          error: null,
+        });
+      } else if (table === 'document_shares') {
+        mockQuery.single.mockResolvedValue({
+          data: {
+            id: 'test-share-id',
+            document_id: 'test-document-id',
+            shared_by: 'test-user-id',
+            shared_with: 'user-123',
+            permission_level: 'read',
+            expires_at: null,
+            is_active: true,
+            created_at: new Date().toISOString(),
+          },
+          error: null,
+        });
+        // For array queries (no .single() call)
+        mockQuery.select.mockResolvedValue({
+          data: [
+            {
+              id: 'test-share-id',
+              document_id: 'test-document-id',
+              shared_by: 'test-user-id',
+              shared_with: 'user-123',
+              permission_level: 'read',
+              expires_at: null,
+              is_active: true,
+              created_at: new Date().toISOString(),
+            },
+          ],
+          error: null,
+        });
+      } else if (table === 'document_versions') {
+        mockQuery.single.mockResolvedValue({
+          data: {
+            id: 'test-version-id',
+            document_id: 'test-document-id',
+            version_number: 1,
+            file_path: 'documents/versions/test-file-v1.pdf',
+            file_size: 1000,
+            change_summary: 'Initial version',
+            created_by: 'test-user-id',
+            created_at: new Date().toISOString(),
+          },
+          error: null,
+        });
+        // For array queries (no .single() call)
+        mockQuery.select.mockResolvedValue({
+          data: [
+            {
+              id: 'test-version-id',
+              document_id: 'test-document-id',
+              version_number: 1,
+              file_path: 'documents/versions/test-file-v1.pdf',
+              file_size: 1000,
+              change_summary: 'Initial version',
+              created_by: 'test-user-id',
+              created_at: new Date().toISOString(),
+            },
+          ],
+          error: null,
+        });
+      } else if (table === 'document_access') {
+        mockQuery.single.mockResolvedValue({
+          data: {
+            id: 'test-access-id',
+            document_id: 'test-document-id',
+            user_id: 'test-user-id',
+            access_type: 'read',
+            granted_by: 'test-user-id',
+            granted_at: new Date().toISOString(),
+            expires_at: null,
+            is_active: true,
+          },
+          error: null,
+        });
+        // For array queries (no .single() call)
+        mockQuery.select.mockResolvedValue({
+          data: [
+            {
+              id: 'test-access-id',
+              document_id: 'test-document-id',
+              user_id: 'test-user-id',
+              access_type: 'read',
+              granted_by: 'test-user-id',
+              granted_at: new Date().toISOString(),
+              expires_at: null,
+              is_active: true,
+            },
+          ],
           error: null,
         });
       }

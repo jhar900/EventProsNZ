@@ -1,14 +1,9 @@
-/**
- * Rate Limiting Service
- * Rate limiting for subscription endpoints
- */
-
 import { NextRequest } from 'next/server';
 
 interface RateLimitConfig {
-  windowMs: number;
-  maxRequests: number;
-  message?: string;
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
+  keyGenerator: (request: NextRequest) => string; // Function to generate rate limit key
 }
 
 interface RateLimitEntry {
@@ -16,7 +11,7 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
-// In-memory store for rate limiting (in production, use Redis)
+// In-memory store for rate limiting (in production, use Redis or similar)
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 export class RateLimiter {
@@ -26,32 +21,31 @@ export class RateLimiter {
     this.config = config;
   }
 
-  /**
-   * Check if request is within rate limit
-   */
-  isAllowed(identifier: string): {
-    allowed: boolean;
-    remaining: number;
-    resetTime: number;
-  } {
+  async checkLimit(
+    request: NextRequest
+  ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+    const key = this.config.keyGenerator(request);
     const now = Date.now();
-    const windowMs = this.config.windowMs;
-    const maxRequests = this.config.maxRequests;
+    const windowStart = now - this.config.windowMs;
 
-    // Get or create rate limit entry
-    let entry = rateLimitStore.get(identifier);
-
-    if (!entry || now > entry.resetTime) {
-      // Create new entry or reset expired entry
-      entry = {
-        count: 0,
-        resetTime: now + windowMs,
-      };
-      rateLimitStore.set(identifier, entry);
+    // Clean up expired entries
+    for (const [storeKey, entry] of rateLimitStore.entries()) {
+      if (entry.resetTime < now) {
+        rateLimitStore.delete(storeKey);
+      }
     }
 
-    // Check if limit exceeded
-    if (entry.count >= maxRequests) {
+    // Get or create entry for this key
+    let entry = rateLimitStore.get(key);
+    if (!entry || entry.resetTime < now) {
+      entry = {
+        count: 0,
+        resetTime: now + this.config.windowMs,
+      };
+    }
+
+    // Check if limit is exceeded
+    if (entry.count >= this.config.maxRequests) {
       return {
         allowed: false,
         remaining: 0,
@@ -59,151 +53,86 @@ export class RateLimiter {
       };
     }
 
-    // Increment counter
+    // Increment count
     entry.count++;
-    rateLimitStore.set(identifier, entry);
+    rateLimitStore.set(key, entry);
 
     return {
       allowed: true,
-      remaining: maxRequests - entry.count,
+      remaining: this.config.maxRequests - entry.count,
       resetTime: entry.resetTime,
-    };
-  }
-
-  /**
-   * Get rate limit headers
-   */
-  getHeaders(remaining: number, resetTime: number): Record<string, string> {
-    return {
-      'X-RateLimit-Limit': this.config.maxRequests.toString(),
-      'X-RateLimit-Remaining': remaining.toString(),
-      'X-RateLimit-Reset': Math.ceil(resetTime / 1000).toString(),
     };
   }
 }
 
 // Pre-configured rate limiters
-export const subscriptionRateLimiter = new RateLimiter({
+export const uploadRateLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100, // 100 requests per 15 minutes
-  message: 'Too many subscription requests',
+  maxRequests: 10, // 10 uploads per 15 minutes
+  keyGenerator: (request: NextRequest) => {
+    // Use IP address for rate limiting
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `upload:${ip}`;
+  },
 });
 
-export const paymentRateLimiter = new RateLimiter({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  maxRequests: 10, // 10 payment requests per 5 minutes
-  message: 'Too many payment requests',
+export const userUploadRateLimiter = new RateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 50, // 50 uploads per hour per user
+  keyGenerator: (request: NextRequest) => {
+    // Use user ID from auth header
+    const authHeader = request.headers.get('authorization');
+    const userId = authHeader ? 'authenticated' : 'anonymous';
+    return `user_upload:${userId}`;
+  },
 });
 
-export const webhookRateLimiter = new RateLimiter({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  maxRequests: 50, // 50 webhook requests per minute
-  message: 'Too many webhook requests',
-});
-
-export const analyticsRateLimit = new RateLimiter({
+export const apiRateLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 200, // 200 analytics requests per 15 minutes
-  message: 'Too many analytics requests',
+  maxRequests: 100, // 100 API calls per 15 minutes
+  keyGenerator: (request: NextRequest) => {
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `api:${ip}`;
+  },
 });
 
-/**
- * Rate limiting middleware
- */
-export function rateLimit(
+// Helper function to apply rate limiting to API routes
+export async function applyRateLimit(
   request: NextRequest,
-  rateLimiter: RateLimiter,
-  getIdentifier?: (req: NextRequest) => string
-): { allowed: boolean; headers: Record<string, string>; message?: string } {
-  // Get identifier (IP address by default)
-  const identifier = getIdentifier
-    ? getIdentifier(request)
-    : getClientIP(request);
+  rateLimiter: RateLimiter
+): Promise<{ allowed: boolean; response?: Response }> {
+  try {
+    const result = await rateLimiter.checkLimit(request);
 
-  const result = rateLimiter.isAllowed(identifier);
-  const headers = rateLimiter.getHeaders(result.remaining, result.resetTime);
-
-  if (!result.allowed) {
-    return {
-      allowed: false,
-      headers,
-      message: rateLimiter.config.message || 'Rate limit exceeded',
-    };
-  }
-
-  return {
-    allowed: true,
-    headers,
-  };
-}
-
-/**
- * Get client IP address
- */
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-
-  if (realIP) {
-    return realIP;
-  }
-
-  return 'unknown';
-}
-
-/**
- * Clean up expired rate limit entries
- */
-export function cleanupRateLimitStore(): void {
-  const now = Date.now();
-
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}
-
-// Clean up every 5 minutes
-setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
-
-/**
- * Higher-order function to wrap API handlers with rate limiting
- */
-export function withRateLimit(rateLimiter: RateLimiter) {
-  return function <T extends any[]>(
-    handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
-  ) {
-    return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-      const rateLimitResult = rateLimit(request, rateLimiter);
-
-      if (!rateLimitResult.allowed) {
-        return NextResponse.json(
-          {
-            error: rateLimitResult.message || 'Rate limit exceeded',
-            retryAfter: Math.ceil(
-              (rateLimitResult.headers['X-RateLimit-Reset'] as any) -
-                Date.now() / 1000
-            ),
+    if (!result.allowed) {
+      const response = new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000),
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil(
+              (result.resetTime - Date.now()) / 1000
+            ).toString(),
+            'X-RateLimit-Limit': rateLimiter['config'].maxRequests.toString(),
+            'X-RateLimit-Remaining': result.remaining.toString(),
+            'X-RateLimit-Reset': result.resetTime.toString(),
           },
-          {
-            status: 429,
-            headers: rateLimitResult.headers,
-          }
-        );
-      }
+        }
+      );
 
-      // Add rate limit headers to successful responses
-      const response = await handler(request, ...args);
-      Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
+      return { allowed: false, response };
+    }
 
-      return response;
-    };
-  };
+    return { allowed: true };
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // Allow request to proceed if rate limiting fails
+    return { allowed: true };
+  }
 }
