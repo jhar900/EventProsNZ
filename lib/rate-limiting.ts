@@ -72,7 +72,9 @@ export const uploadRateLimiter = new RateLimiter({
   keyGenerator: (request: NextRequest) => {
     // Use IP address for rate limiting
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `upload:${ip}`;
   },
 });
@@ -82,7 +84,9 @@ export const userUploadRateLimiter = new RateLimiter({
   maxRequests: 50, // 50 uploads per hour per user
   keyGenerator: (request: NextRequest) => {
     // Use user ID from auth header
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers
+      ? request.headers.get('authorization')
+      : null;
     const userId = authHeader ? 'authenticated' : 'anonymous';
     return `user_upload:${userId}`;
   },
@@ -93,7 +97,9 @@ export const apiRateLimiter = new RateLimiter({
   maxRequests: 100, // 100 API calls per 15 minutes
   keyGenerator: (request: NextRequest) => {
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `api:${ip}`;
   },
 });
@@ -104,7 +110,9 @@ export const paymentRateLimiter = new RateLimiter({
   maxRequests: 20, // 20 payment requests per 5 minutes
   keyGenerator: (request: NextRequest) => {
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `payment:${ip}`;
   },
 });
@@ -114,7 +122,9 @@ export const subscriptionRateLimiter = new RateLimiter({
   maxRequests: 15, // 15 subscription requests per 10 minutes
   keyGenerator: (request: NextRequest) => {
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `subscription:${ip}`;
   },
 });
@@ -124,7 +134,9 @@ export const analyticsRateLimit = new RateLimiter({
   maxRequests: 100, // 100 analytics requests per minute
   keyGenerator: (request: NextRequest) => {
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `analytics:${ip}`;
   },
 });
@@ -135,7 +147,9 @@ export const rateLimit = new RateLimiter({
   maxRequests: 100, // 100 requests per 15 minutes
   keyGenerator: (request: NextRequest) => {
     const ip =
-      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
     return `api:${ip}`;
   },
 });
@@ -181,7 +195,15 @@ export async function applyRateLimit(
 
 // Higher-order function for rate limiting middleware
 export function withRateLimit(rateLimiter: RateLimiter) {
-  return async (request: NextRequest) => {
-    return await applyRateLimit(request, rateLimiter);
+  return function (handler: (request: NextRequest) => Promise<Response>) {
+    return async (request: NextRequest) => {
+      const rateLimitResult = await applyRateLimit(request, rateLimiter);
+
+      if (!rateLimitResult.allowed) {
+        return rateLimitResult.response!;
+      }
+
+      return await handler(request);
+    };
   };
 }
