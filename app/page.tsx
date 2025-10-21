@@ -1134,6 +1134,339 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Documents Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                📄 Documents Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/documents"
+                  className="group block bg-slate-50 hover:bg-slate-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📄</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-slate-600">
+                      Documents
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Document management</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Inquiries Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                📧 Inquiries Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/inquiries"
+                  className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-amber-600">
+                      Inquiries
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Manage inquiries</p>
+                </Link>
+
+                <Link
+                  href="/inquiries/send"
+                  className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📤</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-amber-600">
+                      Send Inquiry
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Send new inquiry</p>
+                </Link>
+
+                <Link
+                  href="/inquiries/history"
+                  className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🕒</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-amber-600">
+                      Inquiry History
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View inquiry history</p>
+                </Link>
+
+                <Link
+                  href="/inquiries/status"
+                  className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-amber-600">
+                      Inquiry Status
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Track inquiry status</p>
+                </Link>
+
+                <Link
+                  href="/inquiries/templates"
+                  className="group block bg-amber-50 hover:bg-amber-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-amber-600">
+                      Inquiry Templates
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Pre-built inquiry templates
+                  </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Trial Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🆓 Trial Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/trial"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🆓</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Trial user dashboard</p>
+                </Link>
+
+                <Link
+                  href="/trial/progress"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📈</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Progress
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Track trial progress</p>
+                </Link>
+
+                <Link
+                  href="/trial/analytics"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Trial usage analytics</p>
+                </Link>
+
+                <Link
+                  href="/trial/emails"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📧</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Emails
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Trial email management
+                  </p>
+                </Link>
+
+                <Link
+                  href="/trial/recommendations"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💡</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Recommendations
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Trial-specific recommendations
+                  </p>
+                </Link>
+
+                <Link
+                  href="/trial/support"
+                  className="group block bg-lime-50 hover:bg-lime-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🆘</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-lime-600">
+                      Trial Support
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Trial user support</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Features Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                ⭐ Features Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/features"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⭐</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Features
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Platform features overview
+                  </p>
+                </Link>
+
+                <Link
+                  href="/features/analytics"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Feature Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Feature usage analytics
+                  </p>
+                </Link>
+
+                <Link
+                  href="/features/early-access"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚀</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Early Access
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Early access features</p>
+                </Link>
+
+                <Link
+                  href="/features/spotlight"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✨</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Feature Spotlight
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Featured platform features
+                  </p>
+                </Link>
+
+                <Link
+                  href="/features/support"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🆘</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Feature Support
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Feature support and help
+                  </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Subscriptions Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                💎 Subscriptions Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/subscriptions"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💎</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Subscriptions
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Subscription management
+                  </p>
+                </Link>
+
+                <Link
+                  href="/subscriptions/pricing"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💰</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Pricing Plans
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View pricing plans</p>
+                </Link>
+
+                <Link
+                  href="/subscriptions/tiers"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Subscription Tiers
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Compare subscription tiers
+                  </p>
+                </Link>
+
+                <Link
+                  href="/subscriptions/trial"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🆓</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Trial Subscription
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Trial subscription details
+                  </p>
+                </Link>
+              </div>
+            </div>
+
             {/* Search & History Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
