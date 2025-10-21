@@ -98,6 +98,48 @@ export const apiRateLimiter = new RateLimiter({
   },
 });
 
+// Additional rate limiters for specific use cases
+export const paymentRateLimiter = new RateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  maxRequests: 20, // 20 payment requests per 5 minutes
+  keyGenerator: (request: NextRequest) => {
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `payment:${ip}`;
+  },
+});
+
+export const subscriptionRateLimiter = new RateLimiter({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  maxRequests: 15, // 15 subscription requests per 10 minutes
+  keyGenerator: (request: NextRequest) => {
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `subscription:${ip}`;
+  },
+});
+
+export const analyticsRateLimit = new RateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 100, // 100 analytics requests per minute
+  keyGenerator: (request: NextRequest) => {
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `analytics:${ip}`;
+  },
+});
+
+// Generic rate limiter for general API use
+export const rateLimit = new RateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 100, // 100 requests per 15 minutes
+  keyGenerator: (request: NextRequest) => {
+    const ip =
+      request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    return `api:${ip}`;
+  },
+});
+
 // Helper function to apply rate limiting to API routes
 export async function applyRateLimit(
   request: NextRequest,
@@ -135,4 +177,11 @@ export async function applyRateLimit(
     // Allow request to proceed if rate limiting fails
     return { allowed: true };
   }
+}
+
+// Higher-order function for rate limiting middleware
+export function withRateLimit(rateLimiter: RateLimiter) {
+  return async (request: NextRequest) => {
+    return await applyRateLimit(request, rateLimiter);
+  };
 }
