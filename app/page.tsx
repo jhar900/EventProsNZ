@@ -1467,6 +1467,155 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Testimonials Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                ⭐ Testimonials Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/testimonials"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⭐</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Testimonials
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View testimonials</p>
+                </Link>
+
+                <Link
+                  href="/testimonials/create"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✍️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Create Testimonial
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Submit new testimonial
+                  </p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Event Management Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                📅 Event Management Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/events"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Events Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main events dashboard</p>
+                </Link>
+
+                <Link
+                  href="/events/[id]"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👁️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Details
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View event details</p>
+                </Link>
+
+                <Link
+                  href="/events/[id]/edit"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✏️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Edit Event
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Edit event details</p>
+                </Link>
+
+                <Link
+                  href="/events/[id]/completion"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Completion
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Event completion tracking
+                  </p>
+                </Link>
+
+                <Link
+                  href="/events/[id]/milestones"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🎯</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Milestones
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Track event milestones
+                  </p>
+                </Link>
+
+                <Link
+                  href="/events/[id]/versions"
+                  className="group block bg-purple-50 hover:bg-purple-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600">
+                      Event Versions
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Event version history</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Contractor Detail Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                🔧 Contractor Detail Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/contractors/[id]"
+                  className="group block bg-indigo-50 hover:bg-indigo-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👤</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                      Contractor Profile
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    View contractor profile
+                  </p>
+                </Link>
+              </div>
+            </div>
+
             {/* Search & History Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
