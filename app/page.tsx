@@ -857,6 +857,66 @@ export default function Home() {
                     Search behavior analytics
                   </p>
                 </Link>
+
+                <Link
+                  href="/admin/job-board"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💼</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Job Board Management
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Manage job board and postings
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/subscriptions"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💎</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Subscription Management
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Manage user subscriptions
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/users/[id]"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👤</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Individual User Management
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Manage individual user accounts
+                  </p>
+                </Link>
+
+                <Link
+                  href="/admin/verification/[userId]"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Individual User Verification
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Verify individual user accounts
+                  </p>
+                </Link>
               </div>
             </div>
 
@@ -1396,6 +1456,49 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-gray-600">
                     Feature support and help
+                  </p>
+                </Link>
+
+                <Link
+                  href="/features/analytics"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📊</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Feature Analytics
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Feature usage analytics
+                  </p>
+                </Link>
+
+                <Link
+                  href="/features/early-access"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚀</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Early Access
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Early access features</p>
+                </Link>
+
+                <Link
+                  href="/features/spotlight"
+                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✨</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
+                      Feature Spotlight
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Featured platform features
                   </p>
                 </Link>
               </div>
