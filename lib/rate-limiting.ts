@@ -141,6 +141,19 @@ export const analyticsRateLimit = new RateLimiter({
   },
 });
 
+export const jobCreationRateLimiter = new RateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 5, // 5 job postings per hour per user
+  keyGenerator: (request: NextRequest) => {
+    // Use IP address for rate limiting (in production, use user ID from auth)
+    const ip =
+      request.ip ||
+      (request.headers ? request.headers.get('x-forwarded-for') : null) ||
+      'unknown';
+    return `job_creation:${ip}`;
+  },
+});
+
 // Generic rate limiter for general API use
 export const rateLimit = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
