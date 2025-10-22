@@ -1698,6 +1698,19 @@ export default function Home() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Link
+                  href="/search"
+                  className="group block bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-gray-600">
+                      Search
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Main search page</p>
+                </Link>
+
+                <Link
                   href="/search/history"
                   className="group block bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition-colors"
                 >
