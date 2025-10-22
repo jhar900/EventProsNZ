@@ -37,6 +37,12 @@ export interface JobFormData {
   timeline_start_date?: string;
   timeline_end_date?: string;
   event_id?: string;
+  // Internal job specific fields
+  internal_job_category?: InternalJobCategory;
+  skill_requirements?: string[];
+  experience_level?: ExperienceLevel;
+  payment_terms?: string;
+  work_arrangement?: WorkArrangement;
 }
 
 export interface JobApplicationFormData {
@@ -145,6 +151,37 @@ export const JOB_TYPES = {
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];
+
+// Internal job type categories
+export const INTERNAL_JOB_CATEGORIES = {
+  CASUAL_WORK: 'casual_work',
+  SUBCONTRACTING: 'subcontracting',
+  PARTNERSHIPS: 'partnerships',
+} as const;
+
+export type InternalJobCategory =
+  (typeof INTERNAL_JOB_CATEGORIES)[keyof typeof INTERNAL_JOB_CATEGORIES];
+
+// Experience levels
+export const EXPERIENCE_LEVELS = {
+  ENTRY: 'entry',
+  INTERMEDIATE: 'intermediate',
+  SENIOR: 'senior',
+  EXPERT: 'expert',
+} as const;
+
+export type ExperienceLevel =
+  (typeof EXPERIENCE_LEVELS)[keyof typeof EXPERIENCE_LEVELS];
+
+// Work arrangements
+export const WORK_ARRANGEMENTS = {
+  REMOTE: 'remote',
+  ONSITE: 'onsite',
+  HYBRID: 'hybrid',
+} as const;
+
+export type WorkArrangement =
+  (typeof WORK_ARRANGEMENTS)[keyof typeof WORK_ARRANGEMENTS];
 
 // Service categories enum (reusing from events)
 export const JOB_SERVICE_CATEGORIES = {
