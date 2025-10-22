@@ -7,27 +7,12 @@ const jobService = new JobService();
 
 // Validation schemas
 const updateJobSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Title is required')
-    .max(200, 'Title too long')
-    .optional(),
-  description: z
-    .string()
-    .min(1, 'Description is required')
-    .max(5000, 'Description too long')
-    .optional(),
-  service_category: z
-    .string()
-    .min(1, 'Service category is required')
-    .optional(),
+  title: z.string().min(10).max(200).optional(),
+  description: z.string().min(50).max(5000).optional(),
+  service_category: z.string().optional(),
   budget_range_min: z.number().min(0).optional(),
   budget_range_max: z.number().min(0).optional(),
-  location: z
-    .string()
-    .min(1, 'Location is required')
-    .max(200, 'Location too long')
-    .optional(),
+  location: z.string().max(200).optional(),
   coordinates: z
     .object({
       lat: z.number(),
@@ -35,12 +20,9 @@ const updateJobSchema = z.object({
     })
     .optional(),
   is_remote: z.boolean().optional(),
-  special_requirements: z
-    .string()
-    .max(2000, 'Special requirements too long')
-    .optional(),
-  contact_email: z.string().email('Invalid email').optional(),
-  contact_phone: z.string().max(50, 'Phone number too long').optional(),
+  special_requirements: z.string().max(2000).optional(),
+  contact_email: z.string().email().max(255).optional(),
+  contact_phone: z.string().max(50).optional(),
   response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
   timeline_start_date: z.string().optional(),
   timeline_end_date: z.string().optional(),
@@ -53,6 +35,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = createClient();
+
+    // Get current user (optional for public job viewing)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const { id } = params;
 
     if (!id) {
@@ -71,27 +60,19 @@ export async function GET(
       );
     }
 
-    // Track view if user is authenticated
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    // Track job view if user is authenticated
     if (user) {
-      // Get client IP and user agent for analytics
-      const ipAddress =
-        request.headers.get('x-forwarded-for') ||
-        request.headers.get('x-real-ip') ||
-        'unknown';
-      const userAgent = request.headers.get('user-agent') || 'unknown';
-      const referrer = request.headers.get('referer') || 'unknown';
+      const forwarded = request.headers.get('x-forwarded-for');
+      const ip = forwarded ? forwarded.split(',')[0] : request.ip;
+      const userAgent = request.headers.get('user-agent');
+      const referrer = request.headers.get('referer');
 
       await jobService.trackJobView(
         id,
         user.id,
-        ipAddress,
-        userAgent,
-        referrer
+        ip,
+        userAgent || undefined,
+        referrer || undefined
       );
     }
 

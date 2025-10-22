@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,106 +14,127 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { X, Filter, Search } from 'lucide-react';
-import { JOB_TYPES, JOB_SERVICE_CATEGORIES } from '@/types/jobs';
+import { Slider } from '@/components/ui/slider';
+import {
+  FunnelIcon,
+  XMarkIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import {
+  JobFilters as JobFiltersType,
+  JOB_SERVICE_CATEGORIES,
+  JOB_TYPES,
+} from '@/types/jobs';
 
 interface JobFiltersProps {
-  filters: {
-    q?: string;
-    job_type?: string;
-    service_category?: string;
-    location?: string;
-    budget_min?: number;
-    budget_max?: number;
-    is_remote?: boolean;
-    status?: string;
-  };
-  onFiltersChange: (filters: any) => void;
-  onSearch: () => void;
+  filters: JobFiltersType;
+  onFiltersChange: (filters: JobFiltersType) => void;
+  onSearch: (query: string) => void;
   onClear: () => void;
+  isLoading?: boolean;
+  className?: string;
 }
+
+const LOCATIONS = [
+  'Auckland',
+  'Wellington',
+  'Christchurch',
+  'Hamilton',
+  'Tauranga',
+  'Napier',
+  'Dunedin',
+  'Palmerston North',
+  'Nelson',
+  'Rotorua',
+  'Remote',
+];
+
+const BUDGET_RANGES = [
+  { label: 'Under $500', min: 0, max: 500 },
+  { label: '$500 - $1,000', min: 500, max: 1000 },
+  { label: '$1,000 - $2,500', min: 1000, max: 2500 },
+  { label: '$2,500 - $5,000', min: 2500, max: 5000 },
+  { label: '$5,000 - $10,000', min: 5000, max: 10000 },
+  { label: 'Over $10,000', min: 10000, max: 100000 },
+];
 
 export function JobFilters({
   filters,
   onFiltersChange,
   onSearch,
   onClear,
+  isLoading = false,
+  className = '',
 }: JobFiltersProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters);
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 10000]);
 
-  const handleFilterChange = (key: string, value: any) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value,
-    });
-  };
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
 
-  const handleClearFilter = (key: string) => {
-    const newFilters = { ...filters };
-    delete newFilters[key as keyof typeof newFilters];
+  const handleFilterChange = (key: keyof JobFiltersType, value: any) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
-  const getActiveFiltersCount = () => {
+  const handleBudgetRangeChange = (value: number[]) => {
+    setBudgetRange([value[0], value[1]]);
+    handleFilterChange('budget_min', value[0]);
+    handleFilterChange('budget_max', value[1]);
+  };
+
+  const clearFilters = () => {
+    const clearedFilters: JobFiltersType = {};
+    setLocalFilters(clearedFilters);
+    setBudgetRange([0, 10000]);
+    onClear();
+  };
+
+  const hasActiveFilters = Object.values(filters).some(
+    value => value !== undefined && value !== null && value !== ''
+  );
+
+  const getActiveFilterCount = () => {
     return Object.values(filters).filter(
-      value => value !== undefined && value !== '' && value !== false
+      value => value !== undefined && value !== null && value !== ''
     ).length;
   };
 
-  const activeFiltersCount = getActiveFiltersCount();
-
   return (
-    <Card>
-      <CardHeader>
+    <Card className={`p-6 ${className}`}>
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-            {activeFiltersCount > 0 && (
-              <Badge variant="secondary">{activeFiltersCount}</Badge>
+          <div className="flex items-center space-x-2">
+            <FunnelIcon className="h-5 w-5 text-gray-600" />
+            <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+            {getActiveFilterCount() > 0 && (
+              <Badge variant="secondary">{getActiveFilterCount()} active</Badge>
             )}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            {activeFiltersCount > 0 && (
-              <Button variant="outline" size="sm" onClick={onClear}>
-                <X className="h-4 w-4 mr-1" />
-                Clear All
-              </Button>
-            )}
+          </div>
+          {hasActiveFilters && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={clearFilters}
+              className="text-gray-600 hover:text-gray-900"
             >
-              {isExpanded ? 'Collapse' : 'Expand'}
+              <XMarkIcon className="h-4 w-4 mr-1" />
+              Clear all
             </Button>
-          </div>
+          )}
         </div>
-      </CardHeader>
 
-      {isExpanded && (
-        <CardContent className="space-y-6">
-          {/* Search Query */}
-          <div className="space-y-2">
-            <Label htmlFor="search">Search Jobs</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="search"
-                placeholder="Search by title, description, or location..."
-                value={filters.q || ''}
-                onChange={e => handleFilterChange('q', e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Job Type */}
           <div className="space-y-2">
             <Label htmlFor="job_type">Job Type</Label>
             <Select
-              value={filters.job_type || ''}
+              value={localFilters.job_type || ''}
               onValueChange={value =>
                 handleFilterChange('job_type', value || undefined)
               }
@@ -122,13 +144,10 @@ export function JobFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All job types</SelectItem>
-                {Object.entries(JOB_TYPES).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
-                    {value === 'event_manager'
-                      ? 'Event Manager Position'
-                      : 'Internal Contractor Role'}
-                  </SelectItem>
-                ))}
+                <SelectItem value="event_manager">Event Manager</SelectItem>
+                <SelectItem value="contractor_internal">
+                  Contractor Internal
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -137,7 +156,7 @@ export function JobFilters({
           <div className="space-y-2">
             <Label htmlFor="service_category">Service Category</Label>
             <Select
-              value={filters.service_category || ''}
+              value={localFilters.service_category || ''}
               onValueChange={value =>
                 handleFilterChange('service_category', value || undefined)
               }
@@ -149,9 +168,7 @@ export function JobFilters({
                 <SelectItem value="">All categories</SelectItem>
                 {Object.entries(JOB_SERVICE_CATEGORIES).map(([key, value]) => (
                   <SelectItem key={key} value={value}>
-                    {value
-                      .replace('_', ' ')
-                      .replace(/\b\w/g, l => l.toUpperCase())}
+                    {value.replace('_', ' ').toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -161,64 +178,50 @@ export function JobFilters({
           {/* Location */}
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="e.g., Auckland, Wellington"
-              value={filters.location || ''}
-              onChange={e => handleFilterChange('location', e.target.value)}
-            />
-          </div>
-
-          {/* Budget Range */}
-          <div className="space-y-2">
-            <Label>Budget Range (NZD)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.budget_min || ''}
-                  onChange={e =>
-                    handleFilterChange(
-                      'budget_min',
-                      e.target.value ? parseFloat(e.target.value) : undefined
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.budget_max || ''}
-                  onChange={e =>
-                    handleFilterChange(
-                      'budget_max',
-                      e.target.value ? parseFloat(e.target.value) : undefined
-                    )
-                  }
-                />
-              </div>
-            </div>
+            <Select
+              value={localFilters.location || ''}
+              onValueChange={value =>
+                handleFilterChange('location', value || undefined)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All locations</SelectItem>
+                {LOCATIONS.map(location => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Remote Work */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="is_remote"
-              checked={filters.is_remote || false}
-              onCheckedChange={checked =>
-                handleFilterChange('is_remote', checked)
-              }
-            />
-            <Label htmlFor="is_remote">Remote work only</Label>
+          <div className="space-y-2">
+            <Label>Remote Work</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remote_only"
+                  checked={localFilters.is_remote === true}
+                  onCheckedChange={checked =>
+                    handleFilterChange('is_remote', checked ? true : undefined)
+                  }
+                />
+                <Label htmlFor="remote_only" className="text-sm">
+                  Remote only
+                </Label>
+              </div>
+            </div>
           </div>
 
           {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <Select
-              value={filters.status || ''}
+              value={localFilters.status || ''}
               onValueChange={value =>
                 handleFilterChange('status', value || undefined)
               }
@@ -236,115 +239,145 @@ export function JobFilters({
             </Select>
           </div>
 
-          {/* Active Filters Display */}
-          {activeFiltersCount > 0 && (
-            <div className="space-y-2">
-              <Label>Active Filters</Label>
-              <div className="flex flex-wrap gap-2">
-                {filters.q && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Search: {filters.q}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('q')}
-                    />
-                  </Badge>
-                )}
-                {filters.job_type && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Type:{' '}
-                    {filters.job_type === 'event_manager'
-                      ? 'Event Manager'
-                      : 'Contractor'}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('job_type')}
-                    />
-                  </Badge>
-                )}
-                {filters.service_category && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Category: {filters.service_category.replace('_', ' ')}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('service_category')}
-                    />
-                  </Badge>
-                )}
-                {filters.location && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Location: {filters.location}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('location')}
-                    />
-                  </Badge>
-                )}
-                {(filters.budget_min || filters.budget_max) && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Budget: {filters.budget_min || 0} -{' '}
-                    {filters.budget_max || '∞'}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => {
-                        handleClearFilter('budget_min');
-                        handleClearFilter('budget_max');
-                      }}
-                    />
-                  </Badge>
-                )}
-                {filters.is_remote && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Remote Only
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('is_remote')}
-                    />
-                  </Badge>
-                )}
-                {filters.status && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Status: {filters.status}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleClearFilter('status')}
-                    />
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClear}>
-              Clear All
-            </Button>
-            <Button onClick={onSearch}>Apply Filters</Button>
+          {/* Posted By */}
+          <div className="space-y-2">
+            <Label htmlFor="posted_by_user_id">Posted By</Label>
+            <Input
+              id="posted_by_user_id"
+              placeholder="User ID"
+              value={localFilters.posted_by_user_id || ''}
+              onChange={e =>
+                handleFilterChange(
+                  'posted_by_user_id',
+                  e.target.value || undefined
+                )
+              }
+            />
           </div>
-        </CardContent>
-      )}
+        </div>
+
+        {/* Budget Range */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Budget Range</Label>
+            <div className="text-sm text-gray-600">
+              ${budgetRange[0].toLocaleString()} - $
+              {budgetRange[1].toLocaleString()}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Slider
+              value={budgetRange}
+              onValueChange={handleBudgetRangeChange}
+              max={10000}
+              min={0}
+              step={100}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>$0</span>
+              <span>$10,000+</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="budget_min" className="text-xs">
+                Min Budget
+              </Label>
+              <Input
+                id="budget_min"
+                type="number"
+                placeholder="Min"
+                value={localFilters.budget_min || ''}
+                onChange={e =>
+                  handleFilterChange(
+                    'budget_min',
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="budget_max" className="text-xs">
+                Max Budget
+              </Label>
+              <Input
+                id="budget_max"
+                type="number"
+                placeholder="Max"
+                value={localFilters.budget_max || ''}
+                onChange={e =>
+                  handleFilterChange(
+                    'budget_max',
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Budget Filters */}
+        <div className="space-y-2">
+          <Label>Quick Budget Filters</Label>
+          <div className="flex flex-wrap gap-2">
+            {BUDGET_RANGES.map(range => (
+              <Button
+                key={range.label}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleFilterChange('budget_min', range.min);
+                  handleFilterChange('budget_max', range.max);
+                  setBudgetRange([range.min, range.max]);
+                }}
+                className="text-xs"
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="page">Page</Label>
+            <Input
+              id="page"
+              type="number"
+              min="1"
+              placeholder="Page"
+              value={localFilters.page || ''}
+              onChange={e =>
+                handleFilterChange(
+                  'page',
+                  e.target.value ? Number(e.target.value) : undefined
+                )
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="limit">Results per page</Label>
+            <Select
+              value={localFilters.limit?.toString() || '12'}
+              onValueChange={value =>
+                handleFilterChange('limit', Number(value))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6">6 per page</SelectItem>
+                <SelectItem value="12">12 per page</SelectItem>
+                <SelectItem value="24">24 per page</SelectItem>
+                <SelectItem value="48">48 per page</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }
