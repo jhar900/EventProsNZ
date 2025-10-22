@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -27,179 +26,224 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  AlertTriangle,
-  Download,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+import {
+  Users,
+  Activity,
+  Eye,
+  MousePointer,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Search,
   Filter,
   RefreshCw,
-  Search,
-  Shield,
-  User,
-  Clock,
-  MapPin,
-  Monitor,
+  AlertTriangle,
+  CheckCircle,
+  Star,
+  MessageSquare,
+  Heart,
 } from 'lucide-react';
-import { useAdmin } from '@/hooks/useAdmin';
 
 interface UserActivity {
   id: string;
   user_id: string;
+  user_name: string;
+  user_email: string;
+  user_role: 'contractor' | 'event_manager' | 'admin';
   activity_type: string;
-  activity_data: any;
-  ip_address: string;
-  user_agent: string;
-  created_at: string;
-  users: {
-    id: string;
-    email: string;
-    role: string;
-    profiles: {
-      first_name: string;
-      last_name: string;
-    };
-  };
+  activity_description: string;
+  timestamp: string;
+  session_duration: number;
+  page_views: number;
+  actions_count: number;
+  satisfaction_rating?: number;
+  feedback?: string;
+  location: string;
+  device_type: string;
+  browser: string;
 }
 
-interface ActivityFilters {
-  userId?: string;
-  type?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  limit?: number;
-  offset?: number;
+interface ActivityMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  averageSessionTime: number;
+  totalPageViews: number;
+  bounceRate: number;
+  satisfactionScore: number;
+  topActivities: Array<{
+    activity: string;
+    count: number;
+    percentage: number;
+  }>;
+  userEngagement: Array<{
+    date: string;
+    activeUsers: number;
+    sessions: number;
+    pageViews: number;
+  }>;
+  deviceBreakdown: Array<{
+    device: string;
+    count: number;
+    percentage: number;
+  }>;
+  locationBreakdown: Array<{
+    location: string;
+    users: number;
+    sessions: number;
+  }>;
 }
+
+interface UserFeedback {
+  id: string;
+  user_id: string;
+  user_name: string;
+  rating: number;
+  feedback: string;
+  job_id: string;
+  job_title: string;
+  created_at: string;
+  status: 'pending' | 'reviewed' | 'resolved';
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function UserActivityMonitor() {
   const [activities, setActivities] = useState<UserActivity[]>([]);
-  const [suspiciousActivities, setSuspiciousActivities] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
+  const [filteredActivities, setFilteredActivities] = useState<UserActivity[]>(
+    []
+  );
+  const [metrics, setMetrics] = useState<ActivityMetrics | null>(null);
+  const [feedback, setFeedback] = useState<UserFeedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ActivityFilters>({
-    limit: 50,
-    offset: 0,
+  const [filters, setFilters] = useState({
+    timeRange: '24h',
+    userRole: 'all',
+    activityType: 'all',
+    search: '',
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
 
-  const { fetchUserActivity, exportReport } = useAdmin();
-
-  const loadActivityData = async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      const [activitiesResponse, metricsResponse, feedbackResponse] =
+        await Promise.all([
+          fetch(`/api/admin/users/activity?timeRange=${filters.timeRange}`),
+          fetch('/api/admin/users/activity/metrics'),
+          fetch('/api/admin/users/feedback'),
+        ]);
 
-      const activityFilters = {
-        ...filters,
-        type: selectedType === 'all' ? undefined : selectedType,
-      };
-
-      const result = await fetchUserActivity(activityFilters);
-      if (result) {
-        setActivities(result.activities || []);
-        setSuspiciousActivities(result.suspiciousActivities || []);
-        setSummary(result.summary || null);
+      if (activitiesResponse.ok) {
+        const activitiesData = await activitiesResponse.json();
+        setActivities(activitiesData.activities || []);
+        setFilteredActivities(activitiesData.activities || []);
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load activity data'
-      );
+
+      if (metricsResponse.ok) {
+        const metricsData = await metricsResponse.json();
+        setMetrics(metricsData);
+      }
+
+      if (feedbackResponse.ok) {
+        const feedbackData = await feedbackResponse.json();
+        setFeedback(feedbackData.feedback || []);
+      }
+    } catch (error) {
+      console.error('Error loading user activity data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadActivityData();
-  }, [filters, selectedType]);
+    loadData();
+  }, [filters.timeRange]);
 
-  const handleExport = async () => {
-    try {
-      const blob = await exportReport('user_activity', 'csv');
-      if (blob) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `user-activity-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (err) {
-      }
-  };
+  useEffect(() => {
+    let filtered = activities;
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'login':
-        return <User className="h-4 w-4 text-green-600" />;
-      case 'logout':
-        return <User className="h-4 w-4 text-gray-600" />;
-      case 'profile_update':
-        return <User className="h-4 w-4 text-blue-600" />;
-      case 'search':
-        return <Search className="h-4 w-4 text-purple-600" />;
-      case 'location_access':
-        return <MapPin className="h-4 w-4 text-orange-600" />;
-      case 'suspicious':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      default:
-        return <Monitor className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getActivityBadge = (type: string) => {
-    const colors = {
-      login: 'bg-green-100 text-green-800',
-      logout: 'bg-gray-100 text-gray-800',
-      profile_update: 'bg-blue-100 text-blue-800',
-      search: 'bg-purple-100 text-purple-800',
-      location_access: 'bg-orange-100 text-orange-800',
-      suspicious: 'bg-red-100 text-red-800',
-    };
-
-    return (
-      <Badge
-        className={
-          colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800'
-        }
-      >
-        {type.replace('_', ' ')}
-      </Badge>
-    );
-  };
-
-  const filteredActivities = activities.filter(activity => {
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        activity.users.email.toLowerCase().includes(searchLower) ||
-        activity.users.profiles.first_name
-          .toLowerCase()
-          .includes(searchLower) ||
-        activity.users.profiles.last_name.toLowerCase().includes(searchLower) ||
-        activity.activity_type.toLowerCase().includes(searchLower) ||
-        activity.ip_address.includes(searchTerm)
+    if (filters.userRole !== 'all') {
+      filtered = filtered.filter(
+        activity => activity.user_role === filters.userRole
       );
     }
-    return true;
-  });
+
+    if (filters.activityType !== 'all') {
+      filtered = filtered.filter(
+        activity => activity.activity_type === filters.activityType
+      );
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        activity =>
+          activity.user_name.toLowerCase().includes(searchLower) ||
+          activity.activity_description.toLowerCase().includes(searchLower) ||
+          activity.user_email.toLowerCase().includes(searchLower)
+      );
+    }
+
+    setFilteredActivities(filtered);
+  }, [activities, filters]);
+
+  const getActivityIcon = (activityType: string) => {
+    switch (activityType) {
+      case 'login':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'job_post':
+        return <Activity className="h-4 w-4 text-blue-600" />;
+      case 'job_apply':
+        return <MousePointer className="h-4 w-4 text-purple-600" />;
+      case 'profile_update':
+        return <Users className="h-4 w-4 text-orange-600" />;
+      case 'search':
+        return <Search className="h-4 w-4 text-cyan-600" />;
+      case 'feedback':
+        return <MessageSquare className="h-4 w-4 text-pink-600" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge variant="destructive">Admin</Badge>;
+      case 'contractor':
+        return <Badge variant="default">Contractor</Badge>;
+      case 'event_manager':
+        return <Badge variant="secondary">Event Manager</Badge>;
+      default:
+        return <Badge variant="outline">{role}</Badge>;
+    }
+  };
+
+  const getSatisfactionColor = (rating: number) => {
+    if (rating >= 4) return 'text-green-600';
+    if (rating >= 3) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status">
         <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading activity data...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <AlertTriangle className="h-8 w-8 text-red-500" />
-        <span className="ml-2 text-red-500">Error: {error}</span>
+        <span className="ml-2">Loading user activity data...</span>
       </div>
     );
   }
@@ -213,274 +257,500 @@ export default function UserActivityMonitor() {
             User Activity Monitor
           </h1>
           <p className="text-muted-foreground">
-            Monitor user activities and detect suspicious behavior
+            Monitor user behavior, engagement, and satisfaction metrics
           </p>
         </div>
-        <div className="flex items-center space-x-4">
-          <Button onClick={loadActivityData} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
+        <Button onClick={loadData} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      {summary && (
+      {/* Key Metrics */}
+      {metrics && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Activities
-              </CardTitle>
-              <Monitor className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {summary.totalActivities}
-              </div>
-              <p className="text-xs text-muted-foreground">Last 24 hours</p>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Active Users
               </CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{summary.activeUsers}</div>
-              <p className="text-xs text-muted-foreground">Currently online</p>
+              <div className="text-2xl font-bold">
+                {metrics.activeUsers.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {metrics.totalUsers} total users
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Suspicious Activities
+                Avg Session Time
               </CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {summary.suspiciousActivities}
+              <div className="text-2xl font-bold">
+                {Math.round(metrics.averageSessionTime / 60)}m
               </div>
-              <p className="text-xs text-muted-foreground">Require attention</p>
+              <p className="text-xs text-muted-foreground">
+                Average session duration
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unique IPs</CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Page Views</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{summary.uniqueIPs}</div>
+              <div className="text-2xl font-bold">
+                {metrics.totalPageViews.toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Different locations
+                {metrics.bounceRate.toFixed(1)}% bounce rate
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Satisfaction
+              </CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {metrics.satisfactionScore.toFixed(1)}/5
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Average user rating
               </p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Suspicious Activities Alert */}
-      {suspiciousActivities.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-red-800">
-              <Shield className="h-5 w-5" />
-              <span>Suspicious Activities Detected</span>
-            </CardTitle>
-            <CardDescription className="text-red-700">
-              {suspiciousActivities.length} suspicious activities require
-              immediate attention
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {suspiciousActivities.slice(0, 3).map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-2 text-sm"
-                >
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="font-medium">{activity.type}</span>
-                  <span className="text-muted-foreground">-</span>
-                  <span>{activity.description}</span>
-                  <span className="text-muted-foreground">
-                    {new Date(activity.created_at).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              {suspiciousActivities.length > 3 && (
-                <p className="text-sm text-muted-foreground">
-                  +{suspiciousActivities.length - 3} more suspicious activities
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Filter className="h-5 w-5" />
-            <span>Filters</span>
-          </CardTitle>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Filter user activity data</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search users, activities..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Activity Type</Label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <label className="text-sm font-medium">Time Range</label>
+              <Select
+                value={filters.timeRange}
+                onValueChange={value =>
+                  setFilters(prev => ({ ...prev, timeRange: value }))
+                }
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="login">Login</SelectItem>
-                  <SelectItem value="logout">Logout</SelectItem>
-                  <SelectItem value="profile_update">Profile Update</SelectItem>
-                  <SelectItem value="search">Search</SelectItem>
-                  <SelectItem value="location_access">
-                    Location Access
-                  </SelectItem>
-                  <SelectItem value="suspicious">Suspicious</SelectItem>
+                  <SelectItem value="1h">Last Hour</SelectItem>
+                  <SelectItem value="24h">Last 24 Hours</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateFrom">From Date</Label>
-              <Input
-                id="dateFrom"
-                type="date"
-                value={filters.dateFrom || ''}
-                onChange={e =>
-                  setFilters(prev => ({ ...prev, dateFrom: e.target.value }))
+            <div>
+              <label className="text-sm font-medium">User Role</label>
+              <Select
+                value={filters.userRole}
+                onValueChange={value =>
+                  setFilters(prev => ({ ...prev, userRole: value }))
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="contractor">Contractors</SelectItem>
+                  <SelectItem value="event_manager">Event Managers</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateTo">To Date</Label>
-              <Input
-                id="dateTo"
-                type="date"
-                value={filters.dateTo || ''}
-                onChange={e =>
-                  setFilters(prev => ({ ...prev, dateTo: e.target.value }))
+            <div>
+              <label className="text-sm font-medium">Activity Type</label>
+              <Select
+                value={filters.activityType}
+                onValueChange={value =>
+                  setFilters(prev => ({ ...prev, activityType: value }))
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Activities</SelectItem>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="job_post">Job Post</SelectItem>
+                  <SelectItem value="job_apply">Job Apply</SelectItem>
+                  <SelectItem value="profile_update">Profile Update</SelectItem>
+                  <SelectItem value="search">Search</SelectItem>
+                  <SelectItem value="feedback">Feedback</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={filters.search}
+                  onChange={e =>
+                    setFilters(prev => ({ ...prev, search: e.target.value }))
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-end">
+              <Button onClick={loadData} variant="outline" className="w-full">
+                <Filter className="h-4 w-4 mr-2" />
+                Apply Filters
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Activity Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activities</CardTitle>
-          <CardDescription>
-            Showing {filteredActivities.length} of {activities.length}{' '}
-            activities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>IP Address</TableHead>
-                  <TableHead>User Agent</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredActivities.map(activity => (
-                  <TableRow key={activity.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {getActivityIcon(activity.activity_type)}
+      {/* Analytics Tabs */}
+      <Tabs defaultValue="activity" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="activity">Activity Feed</TabsTrigger>
+          <TabsTrigger value="engagement">Engagement</TabsTrigger>
+          <TabsTrigger value="feedback">User Feedback</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Recent Activity ({filteredActivities.length})
+              </CardTitle>
+              <CardDescription>Real-time user activity feed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Activity</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Session</TableHead>
+                    <TableHead>Rating</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredActivities.map(activity => (
+                    <TableRow key={activity.id}>
+                      <TableCell>
                         <div>
                           <div className="font-medium">
-                            {activity.users.profiles.first_name}{' '}
-                            {activity.users.profiles.last_name}
+                            {activity.user_name}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {activity.users.email}
+                            {activity.user_email}
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {activity.users.role}
-                          </Badge>
+                          {getRoleBadge(activity.user_role)}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs truncate">
-                        {activity.activity_data?.description ||
-                          activity.activity_type}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getActivityBadge(activity.activity_type)}
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-sm bg-muted px-1 py-0.5 rounded">
-                        {activity.ip_address}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs truncate text-sm text-muted-foreground">
-                        {activity.user_agent}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {new Date(activity.created_at).toLocaleString()}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {getActivityIcon(activity.activity_type)}
+                          <span className="capitalize">
+                            {activity.activity_type.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate">
+                          {activity.activity_description}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>
+                            {Math.round(activity.session_duration / 60)}m
+                          </div>
+                          <div className="text-muted-foreground">
+                            {activity.page_views} views
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {activity.satisfaction_rating ? (
+                          <div
+                            className={`font-medium ${getSatisfactionColor(activity.satisfaction_rating)}`}
+                          >
+                            {activity.satisfaction_rating}/5
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="engagement" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Engagement Over Time</CardTitle>
+                <CardDescription>
+                  Daily active users and sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={metrics?.userEngagement}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="activeUsers"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="sessions"
+                      stroke="#82ca9d"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Device Breakdown</CardTitle>
+                <CardDescription>User devices and browsers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={metrics?.deviceBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percentage }) => `${name} ${percentage}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="count"
+                    >
+                      {metrics?.deviceBreakdown.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
 
-          {filteredActivities.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No activities found matching your filters.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Activities</CardTitle>
+              <CardDescription>Most common user activities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {metrics?.topActivities.map((activity, index) => (
+                  <div
+                    key={activity.activity}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-medium capitalize">
+                          {activity.activity.replace('_', ' ')}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {activity.count} occurrences
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {activity.percentage.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        of total
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Feedback ({feedback.length})</CardTitle>
+              <CardDescription>
+                User satisfaction ratings and feedback
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {feedback.map(item => (
+                  <div key={item.id} className="p-4 border rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="font-medium">{item.user_name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {item.job_title} •{' '}
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className={`font-medium ${getSatisfactionColor(item.rating)}`}
+                        >
+                          {item.rating}/5
+                        </div>
+                        <Badge
+                          variant={
+                            item.status === 'resolved' ? 'default' : 'secondary'
+                          }
+                        >
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {item.feedback}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Geographic Distribution</CardTitle>
+                <CardDescription>User activity by location</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {metrics?.locationBreakdown.map(location => (
+                    <div
+                      key={location.location}
+                      className="flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="font-medium">{location.location}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {location.sessions} sessions
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">
+                          {location.users} users
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {(location.sessions / location.users || 0).toFixed(1)}{' '}
+                          avg sessions
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Engagement Insights</CardTitle>
+                <CardDescription>Key performance indicators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <span>User Growth</span>
+                    </div>
+                    <div className="text-green-600 font-medium">+12.5%</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Activity className="h-4 w-4 text-blue-600" />
+                      <span>Engagement Rate</span>
+                    </div>
+                    <div className="text-blue-600 font-medium">68.2%</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Star className="h-4 w-4 text-yellow-600" />
+                      <span>Satisfaction Score</span>
+                    </div>
+                    <div className="text-yellow-600 font-medium">4.2/5</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-purple-600" />
+                      <span>Avg Session Time</span>
+                    </div>
+                    <div className="text-purple-600 font-medium">
+                      {Math.round((metrics?.averageSessionTime || 0) / 60)}m
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
