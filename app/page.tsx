@@ -1616,6 +1616,81 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Jobs Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                💼 Jobs Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/jobs"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💼</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Jobs Dashboard
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Browse available jobs</p>
+                </Link>
+
+                <Link
+                  href="/jobs/create"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">➕</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Create Job
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Post a new job</p>
+                </Link>
+
+                <Link
+                  href="/jobs/[id]"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👁️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Job Details
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View job details</p>
+                </Link>
+
+                <Link
+                  href="/jobs/[id]/apply"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">📝</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Apply for Job
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Apply to a job</p>
+                </Link>
+
+                <Link
+                  href="/jobs/[id]/apply/success"
+                  className="group block bg-blue-50 hover:bg-blue-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">✅</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      Application Success
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Job application submitted
+                  </p>
+                </Link>
+              </div>
+            </div>
+
             {/* Search & History Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
