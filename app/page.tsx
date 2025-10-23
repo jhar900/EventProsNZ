@@ -2,11 +2,15 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import Link from 'next/link';
 import { TestimonialCarousel } from '@/components/features/testimonials/platform/TestimonialCarousel';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
+
+  // Initialize scroll restoration for the home page
+  useScrollRestoration({ key: 'home-page', enabled: true });
 
   // Check for bypass flag in URL parameters
   const [bypassAuth, setBypassAuth] = React.useState(false);
