@@ -9,8 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TestimonialModeration } from '@/components/features/testimonials/platform/TestimonialModeration';
-import { TestimonialAnalytics } from '@/components/features/testimonials/platform/TestimonialAnalytics';
+import { TestimonialApprovalDashboard } from '@/components/features/testimonials/platform/TestimonialApprovalDashboard';
+import { TestimonialAnalyticsDashboard } from '@/components/features/testimonials/platform/TestimonialAnalyticsDashboard';
+import { FeaturedTestimonialManager } from '@/components/features/testimonials/platform/FeaturedTestimonialManager';
+import { TestimonialExport } from '@/components/features/testimonials/platform/TestimonialExport';
 import { Shield, BarChart3, Users } from 'lucide-react';
 
 interface Testimonial {
@@ -125,7 +127,7 @@ export default function AdminTestimonialsPage() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger
             value="moderation"
             className="flex items-center space-x-2"
@@ -140,27 +142,32 @@ export default function AdminTestimonialsPage() {
             <BarChart3 className="h-4 w-4" />
             <span>Analytics</span>
           </TabsTrigger>
+          <TabsTrigger value="featured" className="flex items-center space-x-2">
+            <Shield className="h-4 w-4" />
+            <span>Featured</span>
+          </TabsTrigger>
+          <TabsTrigger value="export" className="flex items-center space-x-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Export</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="moderation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Testimonial Moderation</CardTitle>
-              <CardDescription>
-                Review and approve platform testimonials
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TestimonialModeration
-                testimonials={testimonials}
-                onTestimonialUpdate={handleTestimonialUpdate}
-              />
-            </CardContent>
-          </Card>
+          <TestimonialApprovalDashboard
+            onTestimonialUpdate={handleTestimonialUpdate}
+          />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <TestimonialAnalytics />
+          <TestimonialAnalyticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="featured" className="space-y-6">
+          <FeaturedTestimonialManager />
+        </TabsContent>
+
+        <TabsContent value="export" className="space-y-6">
+          <TestimonialExport />
         </TabsContent>
       </Tabs>
     </div>
