@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { TestimonialCarousel } from '@/components/features/testimonials/platform/TestimonialCarousel';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
@@ -142,6 +143,19 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Platform Testimonials Section */}
+        <div className="w-full max-w-6xl mx-auto mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              What Our Users Say
+            </h2>
+            <p className="text-lg text-gray-600">
+              Discover why event managers and contractors trust Event Pros NZ
+            </p>
+          </div>
+          <TestimonialCarousel testimonials={[]} />
+        </div>
 
         {/* View All Pages Section - Show for all users */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -1601,6 +1615,21 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-gray-600">
                     Submit new testimonial
+                  </p>
+                </Link>
+
+                <Link
+                  href="/testimonials/platform"
+                  className="group block bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⭐</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-yellow-600">
+                      Platform Testimonials
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Platform experience testimonials
                   </p>
                 </Link>
               </div>
