@@ -1472,49 +1472,6 @@ export default function Home() {
                     Feature support and help
                   </p>
                 </Link>
-
-                <Link
-                  href="/features/analytics"
-                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
-                >
-                  <div className="flex items-center mb-2">
-                    <span className="text-2xl mr-3">📊</span>
-                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
-                      Feature Analytics
-                    </h4>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Feature usage analytics
-                  </p>
-                </Link>
-
-                <Link
-                  href="/features/early-access"
-                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
-                >
-                  <div className="flex items-center mb-2">
-                    <span className="text-2xl mr-3">🚀</span>
-                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
-                      Early Access
-                    </h4>
-                  </div>
-                  <p className="text-sm text-gray-600">Early access features</p>
-                </Link>
-
-                <Link
-                  href="/features/spotlight"
-                  className="group block bg-rose-50 hover:bg-rose-100 rounded-lg p-4 transition-colors"
-                >
-                  <div className="flex items-center mb-2">
-                    <span className="text-2xl mr-3">✨</span>
-                    <h4 className="font-semibold text-gray-900 group-hover:text-rose-600">
-                      Feature Spotlight
-                    </h4>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Featured platform features
-                  </p>
-                </Link>
               </div>
             </div>
 
@@ -1853,6 +1810,55 @@ export default function Home() {
                     </h4>
                   </div>
                   <p className="text-sm text-gray-600">View search history</p>
+                </Link>
+              </div>
+            </div>
+
+            {/* Error & System Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                ⚠️ Error & System Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/error"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">⚠️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Error Page
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Application error page
+                  </p>
+                </Link>
+
+                <Link
+                  href="/not-found"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🔍</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      404 Not Found
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Page not found</p>
+                </Link>
+
+                <Link
+                  href="/global-error"
+                  className="group block bg-red-50 hover:bg-red-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚨</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-red-600">
+                      Global Error
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Global error handler</p>
                 </Link>
               </div>
             </div>
