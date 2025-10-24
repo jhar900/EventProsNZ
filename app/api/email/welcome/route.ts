@@ -17,94 +17,93 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      templateId,
-      recipientEmail,
-      emailType = 'test',
-      variables = {},
+      userId,
+      userType = 'event_manager',
+      emailType = 'welcome_series',
     } = body;
 
-    if (!templateId || !recipientEmail) {
+    if (!userId) {
       return NextResponse.json(
-        {
-          error: 'Template ID and recipient email are required',
-        },
+        { error: 'User ID is required' },
         { status: 400 }
       );
     }
 
+    // Get user details
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Get email template
     const templateManager = new EmailTemplateManager();
-    const template = await templateManager.getTemplate(templateId);
+    const template = await templateManager.getTemplate(
+      'welcome-series-template'
+    );
 
     if (!template) {
       return NextResponse.json(
-        { error: 'Email template not found' },
+        { error: 'Welcome email template not found' },
         { status: 404 }
       );
     }
 
-    // Prepare test variables
-    const testVariables = {
-      firstName: 'Test',
-      lastName: 'User',
-      email: recipientEmail,
+    // Prepare template variables
+    const templateVariables = {
+      firstName: userData.first_name || 'User',
+      lastName: userData.last_name || '',
+      email: userData.email,
+      userType: userType,
       company: 'EventProsNZ',
       date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString(),
-      ...variables,
     };
 
     // Render template
     const renderedTemplate = await templateManager.renderTemplate(
       template.id,
-      testVariables
+      templateVariables
     );
 
-    // Send test email
+    // Send email
     const sendGridService = new SendGridService();
     const emailResponse = await sendGridService.sendEmail({
-      to: recipientEmail,
-      subject: `[TEST] ${renderedTemplate.subject}`,
+      to: userData.email,
+      subject: renderedTemplate.subject,
       html: renderedTemplate.html,
       text: renderedTemplate.text,
       templateId: template.id,
-      dynamicTemplateData: testVariables,
-      categories: ['test', emailType],
+      dynamicTemplateData: templateVariables,
+      categories: ['welcome', 'onboarding'],
     });
 
     if (!emailResponse.success) {
       return NextResponse.json(
-        {
-          error: 'Failed to send test email',
-          details: emailResponse.error,
-        },
+        { error: 'Failed to send welcome email' },
         { status: 500 }
       );
     }
 
-    // Log test email (optional - for testing purposes)
+    // Log email communication
     await supabase.from('email_communications').insert({
-      user_id: user.id,
-      email_type: `test_${emailType}`,
+      user_id: userId,
+      email_type: emailType,
       template_id: template.id,
       status: 'sent',
       sent_at: new Date().toISOString(),
-      metadata: {
-        test_email: true,
-        recipient: recipientEmail,
-        variables: testVariables,
-      },
     });
 
     return NextResponse.json({
       success: true,
       messageId: emailResponse.messageId,
-      message: 'Test email sent successfully',
-      recipient: recipientEmail,
-      template: template.name,
+      message: 'Welcome email sent successfully',
     });
   } catch (error) {
-    console.error('Send test email error:', error);
+    console.error('Welcome email error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -125,45 +124,36 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const templateId = searchParams.get('templateId');
+    const userId = searchParams.get('userId');
 
-    if (!templateId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Template ID is required' },
+        { error: 'User ID is required' },
         { status: 400 }
       );
     }
 
-    // Get template preview
-    const templateManager = new EmailTemplateManager();
-    const template = await templateManager.getTemplate(templateId);
+    // Get welcome email series status
+    const { data: welcomeEmails, error } = await supabase
+      .from('email_communications')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('email_type', 'welcome_series')
+      .order('sent_at', { ascending: false });
 
-    if (!template) {
+    if (error) {
       return NextResponse.json(
-        { error: 'Email template not found' },
-        { status: 404 }
+        { error: 'Failed to fetch welcome emails' },
+        { status: 500 }
       );
     }
 
-    // Generate preview with sample data
-    const preview = await templateManager.previewTemplate(templateId);
-
     return NextResponse.json({
       success: true,
-      template: {
-        id: template.id,
-        name: template.name,
-        subject: template.subject,
-        variables: template.variables,
-      },
-      preview: {
-        subject: preview.subject,
-        html: preview.html,
-        text: preview.text,
-      },
+      welcomeEmails: welcomeEmails || [],
     });
   } catch (error) {
-    console.error('Get template preview error:', error);
+    console.error('Get welcome emails error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
