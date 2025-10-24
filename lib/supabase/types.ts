@@ -18,6 +18,15 @@ export type PromotionalCode = Tables<'promotional_codes'>;
 export type SubscriptionFeature = Tables<'subscription_features'>;
 export type SubscriptionPricing = Tables<'subscription_pricing'>;
 export type SubscriptionAnalytics = Tables<'subscription_analytics'>;
+export type FeatureRequestCategory = Tables<'feature_request_categories'>;
+export type FeatureRequestTag = Tables<'feature_request_tags'>;
+export type FeatureRequest = Tables<'feature_requests'>;
+export type FeatureRequestTagAssignment =
+  Tables<'feature_request_tag_assignments'>;
+export type FeatureRequestVote = Tables<'feature_request_votes'>;
+export type FeatureRequestStatusHistory =
+  Tables<'feature_request_status_history'>;
+export type FeatureRequestComment = Tables<'feature_request_comments'>;
 
 export type UserRole = Enums<'user_role'>;
 export type EventStatus = Enums<'event_status'>;

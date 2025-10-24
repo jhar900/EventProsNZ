@@ -1199,5 +1199,226 @@ export interface Database {
         referrer?: string | null;
       };
     };
+    feature_request_categories: {
+      Row: {
+        id: string;
+        name: string;
+        description: string | null;
+        color: string;
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+      };
+      Insert: {
+        id?: string;
+        name: string;
+        description?: string | null;
+        color?: string;
+        is_active?: boolean;
+        created_at?: string;
+        updated_at?: string;
+      };
+      Update: {
+        id?: string;
+        name?: string;
+        description?: string | null;
+        color?: string;
+        is_active?: boolean;
+        created_at?: string;
+        updated_at?: string;
+      };
+    };
+    feature_request_tags: {
+      Row: {
+        id: string;
+        name: string;
+        usage_count: number;
+        created_at: string;
+        updated_at: string;
+      };
+      Insert: {
+        id?: string;
+        name: string;
+        usage_count?: number;
+        created_at?: string;
+        updated_at?: string;
+      };
+      Update: {
+        id?: string;
+        name?: string;
+        usage_count?: number;
+        created_at?: string;
+        updated_at?: string;
+      };
+    };
+    feature_requests: {
+      Row: {
+        id: string;
+        user_id: string;
+        title: string;
+        description: string;
+        category_id: string | null;
+        status:
+          | 'submitted'
+          | 'under_review'
+          | 'planned'
+          | 'in_development'
+          | 'completed'
+          | 'rejected';
+        priority: 'low' | 'medium' | 'high' | 'urgent';
+        vote_count: number;
+        view_count: number;
+        is_public: boolean;
+        is_featured: boolean;
+        admin_notes: string | null;
+        created_at: string;
+        updated_at: string;
+      };
+      Insert: {
+        id?: string;
+        user_id: string;
+        title: string;
+        description: string;
+        category_id?: string | null;
+        status?:
+          | 'submitted'
+          | 'under_review'
+          | 'planned'
+          | 'in_development'
+          | 'completed'
+          | 'rejected';
+        priority?: 'low' | 'medium' | 'high' | 'urgent';
+        vote_count?: number;
+        view_count?: number;
+        is_public?: boolean;
+        is_featured?: boolean;
+        admin_notes?: string | null;
+        created_at?: string;
+        updated_at?: string;
+      };
+      Update: {
+        id?: string;
+        user_id?: string;
+        title?: string;
+        description?: string;
+        category_id?: string | null;
+        status?:
+          | 'submitted'
+          | 'under_review'
+          | 'planned'
+          | 'in_development'
+          | 'completed'
+          | 'rejected';
+        priority?: 'low' | 'medium' | 'high' | 'urgent';
+        vote_count?: number;
+        view_count?: number;
+        is_public?: boolean;
+        is_featured?: boolean;
+        admin_notes?: string | null;
+        created_at?: string;
+        updated_at?: string;
+      };
+    };
+    feature_request_tag_assignments: {
+      Row: {
+        id: string;
+        feature_request_id: string;
+        tag_id: string;
+        created_at: string;
+      };
+      Insert: {
+        id?: string;
+        feature_request_id: string;
+        tag_id: string;
+        created_at?: string;
+      };
+      Update: {
+        id?: string;
+        feature_request_id?: string;
+        tag_id?: string;
+        created_at?: string;
+      };
+    };
+    feature_request_votes: {
+      Row: {
+        id: string;
+        feature_request_id: string;
+        user_id: string;
+        vote_type: 'upvote' | 'downvote';
+        created_at: string;
+        updated_at: string;
+      };
+      Insert: {
+        id?: string;
+        feature_request_id: string;
+        user_id: string;
+        vote_type: 'upvote' | 'downvote';
+        created_at?: string;
+        updated_at?: string;
+      };
+      Update: {
+        id?: string;
+        feature_request_id?: string;
+        user_id?: string;
+        vote_type?: 'upvote' | 'downvote';
+        created_at?: string;
+        updated_at?: string;
+      };
+    };
+    feature_request_status_history: {
+      Row: {
+        id: string;
+        feature_request_id: string;
+        status: string;
+        changed_by: string;
+        comments: string | null;
+        created_at: string;
+      };
+      Insert: {
+        id?: string;
+        feature_request_id: string;
+        status: string;
+        changed_by: string;
+        comments?: string | null;
+        created_at?: string;
+      };
+      Update: {
+        id?: string;
+        feature_request_id?: string;
+        status?: string;
+        changed_by?: string;
+        comments?: string | null;
+        created_at?: string;
+      };
+    };
+    feature_request_comments: {
+      Row: {
+        id: string;
+        feature_request_id: string;
+        user_id: string;
+        content: string;
+        is_admin_comment: boolean;
+        created_at: string;
+        updated_at: string;
+      };
+      Insert: {
+        id?: string;
+        feature_request_id: string;
+        user_id: string;
+        content: string;
+        is_admin_comment?: boolean;
+        created_at?: string;
+        updated_at?: string;
+      };
+      Update: {
+        id?: string;
+        feature_request_id?: string;
+        user_id?: string;
+        content?: string;
+        is_admin_comment?: boolean;
+        created_at?: string;
+        updated_at?: string;
+      };
+    };
   };
 }
