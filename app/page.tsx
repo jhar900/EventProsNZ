@@ -1596,6 +1596,57 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Feature Requests Pages */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                💡 Feature Requests Pages
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  href="/feature-requests"
+                  className="group block bg-orange-50 hover:bg-orange-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">💡</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-orange-600">
+                      Feature Requests
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">View feature requests</p>
+                </Link>
+
+                <Link
+                  href="/feature-requests/new"
+                  className="group block bg-orange-50 hover:bg-orange-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">➕</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-orange-600">
+                      Submit Feature Request
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Submit new feature request
+                  </p>
+                </Link>
+
+                <Link
+                  href="/feature-requests/[id]"
+                  className="group block bg-orange-50 hover:bg-orange-100 rounded-lg p-4 transition-colors"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">👁️</span>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-orange-600">
+                      Feature Request Details
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    View feature request details
+                  </p>
+                </Link>
+              </div>
+            </div>
+
             {/* Event Management Pages */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
