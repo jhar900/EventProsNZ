@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -118,6 +119,7 @@ export default function PublicRoadmap() {
 
       setRoadmapItems(data.items || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching roadmap items:', err);
       setError(
         err instanceof Error ? err.message : 'Failed to fetch roadmap items'
@@ -140,6 +142,7 @@ export default function PublicRoadmap() {
 
       setSettings(data.settings || settings);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching settings:', err);
     }
   };

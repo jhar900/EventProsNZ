@@ -168,4 +168,38 @@ export class AuditLogger {
       throw error;
     }
   }
+
+  /**
+   * Generic log event method for any audit event
+   */
+  async logEvent(event: {
+    action: string;
+    details?: any;
+    userId?: string;
+    resource?: string;
+    resourceId?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<void> {
+    try {
+      const { error } = await this.supabase.from('audit_logs').insert({
+        user_id: event.userId || 'system',
+        action: event.action,
+        resource: event.resource || 'system',
+        resource_id: event.resourceId,
+        details: event.details,
+        ip_address: event.ipAddress,
+        user_agent: event.userAgent,
+        timestamp: new Date().toISOString(),
+        category: 'general',
+      });
+
+      if (error) {
+        console.error('Failed to log audit event:', error);
+        // Don't throw error to avoid breaking the main flow
+      }
+    } catch (error) {
+      console.error('Failed to log audit event:', error);
+    }
+  }
 }
