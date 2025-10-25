@@ -1,0 +1,333 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - generic [ref=e5]:
+            - heading "Get in Touch" [level=1] [ref=e6]
+            - paragraph [ref=e7]: We're here to help with your event planning needs. Reach out to our team for support, inquiries, or partnership opportunities.
+            - generic [ref=e8]:
+                - generic [ref=e9]:
+                    - img [ref=e10]
+                    - text: 24/7 Support
+                - generic [ref=e13]:
+                    - img [ref=e14]
+                    - text: Quick Response
+                - generic [ref=e16]:
+                    - img [ref=e17]
+                    - text: Secure Communication
+        - generic [ref=e21]:
+            - generic [ref=e22]:
+                - heading "Business Information" [level=3] [ref=e24]:
+                    - img [ref=e25]
+                    - text: Business Information
+                - generic [ref=e29]:
+                    - generic [ref=e30]:
+                        - heading "Event Pros NZ Ltd" [level=4] [ref=e31]
+                        - paragraph [ref=e32]:
+                            - text: 123 Queen Street
+                            - text: Auckland 1010
+                            - text: New Zealand
+                    - generic [ref=e33]:
+                        - heading "Business Hours" [level=4] [ref=e34]
+                        - paragraph [ref=e35]:
+                            - text: 'Monday - Friday: 9:00 AM - 6:00 PM'
+                            - text: 'Saturday: 10:00 AM - 4:00 PM'
+                            - text: 'Sunday: Closed'
+                    - generic [ref=e36]:
+                        - heading "NZBN" [level=4] [ref=e37]
+                        - paragraph [ref=e38]: '9429041234567'
+            - generic [ref=e39]:
+                - heading "Contact Methods" [level=3] [ref=e41]:
+                    - img [ref=e42]
+                    - text: Contact Methods
+                - generic [ref=e45]:
+                    - generic [ref=e46]:
+                        - heading "Phone" [level=4] [ref=e47]
+                        - paragraph [ref=e48]:
+                            - link "+64 9 123 4567" [ref=e49] [cursor=pointer]:
+                                - /url: tel:+6491234567
+                    - generic [ref=e50]:
+                        - heading "Email" [level=4] [ref=e51]
+                        - paragraph [ref=e52]:
+                            - link "hello@eventprosnz.co.nz" [ref=e53] [cursor=pointer]:
+                                - /url: mailto:hello@eventprosnz.co.nz
+                    - generic [ref=e54]:
+                        - heading "Support" [level=4] [ref=e55]
+                        - paragraph [ref=e56]:
+                            - link "support@eventprosnz.co.nz" [ref=e57] [cursor=pointer]:
+                                - /url: mailto:support@eventprosnz.co.nz
+                    - generic [ref=e58]:
+                        - heading "Partnerships" [level=4] [ref=e59]
+                        - paragraph [ref=e60]:
+                            - link "partnerships@eventprosnz.co.nz" [ref=e61] [cursor=pointer]:
+                                - /url: mailto:partnerships@eventprosnz.co.nz
+            - generic [ref=e62]:
+                - heading "Response Times" [level=3] [ref=e64]:
+                    - img [ref=e65]
+                    - text: Response Times
+                - generic [ref=e69]:
+                    - generic [ref=e70]:
+                        - heading "General Inquiries" [level=4] [ref=e71]
+                        - paragraph [ref=e72]: Within 24 hours
+                    - generic [ref=e73]:
+                        - heading "Technical Support" [level=4] [ref=e74]
+                        - paragraph [ref=e75]: Within 4 hours
+                    - generic [ref=e76]:
+                        - heading "Urgent Issues" [level=4] [ref=e77]
+                        - paragraph [ref=e78]: Within 1 hour
+                    - generic [ref=e79]:
+                        - heading "Partnership Inquiries" [level=4] [ref=e80]
+                        - paragraph [ref=e81]: Within 48 hours
+        - generic [ref=e83]:
+            - generic [ref=e84]:
+                - heading "Send Us a Message" [level=2] [ref=e85]
+                - paragraph [ref=e86]: Fill out the form below and we'll get back to you as soon as possible.
+            - generic [ref=e87]:
+                - heading "Contact Form" [level=3] [ref=e89]:
+                    - img [ref=e90]
+                    - text: Contact Form
+                - generic [ref=e94]:
+                    - generic [ref=e95]:
+                        - generic [ref=e96]:
+                            - generic [ref=e97]: Name *
+                            - textbox "Name *" [ref=e98]
+                        - generic [ref=e99]:
+                            - generic [ref=e100]: Email *
+                            - textbox "Email *" [ref=e101]
+                    - generic [ref=e102]:
+                        - generic [ref=e103]:
+                            - generic [ref=e104]: Phone (Optional)
+                            - textbox "Phone (Optional)" [ref=e105]
+                        - generic [ref=e106]:
+                            - generic [ref=e107]: Company (Optional)
+                            - textbox "Company (Optional)" [ref=e108]
+                    - generic [ref=e109]:
+                        - generic [ref=e110]: Inquiry Category *
+                        - combobox [ref=e111] [cursor=pointer]:
+                            - generic: Select a category
+                            - img [ref=e112] [cursor=pointer]
+                        - combobox [ref=e114]
+                    - generic [ref=e115]:
+                        - generic [ref=e116]: Subject *
+                        - textbox "Subject *" [ref=e117]
+                    - generic [ref=e118]:
+                        - generic [ref=e119]: Message *
+                        - textbox "Message *" [ref=e120]
+                    - generic [ref=e121]:
+                        - generic [ref=e122]:
+                            - checkbox "Subscribe to our newsletter for event planning tips and updates" [ref=e123] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e124]: Subscribe to our newsletter for event planning tips and updates
+                        - generic [ref=e125]:
+                            - checkbox "I agree to receive marketing communications from Event Pros NZ" [ref=e126] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e127]: I agree to receive marketing communications from Event Pros NZ
+                    - button "Send Message" [ref=e128] [cursor=pointer]:
+                        - img [ref=e129] [cursor=pointer]
+                        - text: Send Message
+                    - paragraph [ref=e132]: By submitting this form, you agree to our privacy policy and terms of service.
+        - generic [ref=e134]:
+            - generic [ref=e135]:
+                - heading "Follow Us" [level=2] [ref=e136]
+                - paragraph [ref=e137]: Stay connected with Event Pros NZ on social media for the latest updates, tips, and success stories.
+            - generic [ref=e138]:
+                - generic [ref=e140]:
+                    - img [ref=e142]
+                    - heading "Facebook" [level=3] [ref=e144]
+                    - paragraph [ref=e145]: 2,500 followers
+                    - link "Follow" [ref=e146] [cursor=pointer]:
+                        - /url: https://facebook.com/eventprosnz
+                        - text: Follow
+                        - img [ref=e147] [cursor=pointer]
+                - generic [ref=e152]:
+                    - img [ref=e154]
+                    - heading "Instagram" [level=3] [ref=e157]
+                    - paragraph [ref=e158]: 3,200 followers
+                    - link "Follow" [ref=e159] [cursor=pointer]:
+                        - /url: https://instagram.com/eventprosnz
+                        - text: Follow
+                        - img [ref=e160] [cursor=pointer]
+                - generic [ref=e165]:
+                    - img [ref=e167]
+                    - heading "LinkedIn" [level=3] [ref=e171]
+                    - paragraph [ref=e172]: 1,800 followers
+                    - link "Follow" [ref=e173] [cursor=pointer]:
+                        - /url: https://linkedin.com/company/eventprosnz
+                        - text: Follow
+                        - img [ref=e174] [cursor=pointer]
+                - generic [ref=e179]:
+                    - img [ref=e181]
+                    - heading "Twitter" [level=3] [ref=e183]
+                    - paragraph [ref=e184]: 1,200 followers
+                    - link "Follow" [ref=e185] [cursor=pointer]:
+                        - /url: https://twitter.com/eventprosnz
+                        - text: Follow
+                        - img [ref=e186] [cursor=pointer]
+                - generic [ref=e191]:
+                    - img [ref=e193]
+                    - heading "YouTube" [level=3] [ref=e196]
+                    - paragraph [ref=e197]: 800 followers
+                    - link "Follow" [ref=e198] [cursor=pointer]:
+                        - /url: https://youtube.com/@eventprosnz
+                        - text: Follow
+                        - img [ref=e199] [cursor=pointer]
+            - generic [ref=e203]:
+                - heading "Latest Updates" [level=3] [ref=e204]
+                - generic [ref=e205]:
+                    - generic [ref=e206]:
+                        - generic [ref=e208]:
+                            - img [ref=e209]
+                            - generic [ref=e212]: Instagram
+                            - generic [ref=e213]: 12/18/2024
+                        - generic [ref=e214]:
+                            - paragraph [ref=e215]: 'Check out this amazing wedding we helped plan in Queenstown! 🏔️ #EventProsNZ #QueenstownWedding'
+                            - img "Social media post" [ref=e217]
+                            - generic [ref=e219]:
+                                - generic [ref=e220]:
+                                    - img [ref=e221]
+                                    - text: '45'
+                                - generic [ref=e223]:
+                                    - img [ref=e224]
+                                    - text: '12'
+                            - link "View Post" [ref=e229] [cursor=pointer]:
+                                - /url: https://instagram.com/p/xyz123
+                                - text: View Post
+                                - img [ref=e230] [cursor=pointer]
+                    - generic [ref=e234]:
+                        - generic [ref=e236]:
+                            - img [ref=e237]
+                            - generic [ref=e239]: Facebook
+                            - generic [ref=e240]: 12/18/2024
+                        - generic [ref=e241]:
+                            - paragraph [ref=e242]: 'New contractor spotlight: Meet Sarah from Auckland who specializes in corporate events. Read her story on our blog!'
+                            - generic [ref=e244]:
+                                - generic [ref=e245]:
+                                    - img [ref=e246]
+                                    - text: '23'
+                                - generic [ref=e248]:
+                                    - img [ref=e249]
+                                    - text: '8'
+                            - link "View Post" [ref=e254] [cursor=pointer]:
+                                - /url: https://facebook.com/eventprosnz/posts/xyz456
+                                - text: View Post
+                                - img [ref=e255] [cursor=pointer]
+                    - generic [ref=e259]:
+                        - generic [ref=e261]:
+                            - img [ref=e262]
+                            - generic [ref=e266]: LinkedIn
+                            - generic [ref=e267]: 12/16/2024
+                        - generic [ref=e268]:
+                            - paragraph [ref=e269]: We're proud to announce our partnership with the New Zealand Event Industry Association. Together, we're raising standards across the industry.
+                            - generic [ref=e271]:
+                                - generic [ref=e272]:
+                                    - img [ref=e273]
+                                    - text: '67'
+                                - generic [ref=e275]:
+                                    - img [ref=e276]
+                                    - text: '15'
+                            - link "View Post" [ref=e281] [cursor=pointer]:
+                                - /url: https://linkedin.com/company/eventprosnz/posts/xyz789
+                                - text: View Post
+                                - img [ref=e282] [cursor=pointer]
+            - generic [ref=e286]:
+                - heading "Share Event Pros NZ" [level=3] [ref=e288]
+                - generic [ref=e289]:
+                    - paragraph [ref=e290]: Help us spread the word about Event Pros NZ to your network!
+                    - generic [ref=e291]:
+                        - link "Share on Facebook" [ref=e292] [cursor=pointer]:
+                            - /url: https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Feventprosnz.co.nz
+                            - img [ref=e293] [cursor=pointer]
+                            - text: Share on Facebook
+                        - link "Share on Twitter" [ref=e295] [cursor=pointer]:
+                            - /url: https://twitter.com/intent/tweet?url=https%3A%2F%2Feventprosnz.co.nz&text=Check%20out%20Event%20Pros%20NZ%20-%20the%20best%20platform%20for%20event%20planning%20in%20New%20Zealand!
+                            - img [ref=e296] [cursor=pointer]
+                            - text: Share on Twitter
+                        - link "Share on LinkedIn" [ref=e298] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Feventprosnz.co.nz
+                            - img [ref=e299] [cursor=pointer]
+                            - text: Share on LinkedIn
+        - generic [ref=e305]:
+            - generic [ref=e306]:
+                - img [ref=e308]
+                - heading "Stay in the Loop" [level=3] [ref=e311]
+                - paragraph [ref=e312]: Subscribe to our newsletter for the latest event planning tips, platform updates, and industry insights.
+            - generic [ref=e314]:
+                - generic [ref=e315]:
+                    - generic [ref=e316]: Email Address *
+                    - textbox "Email Address *" [ref=e317]
+                - generic [ref=e318]:
+                    - generic [ref=e319]: What would you like to hear about? *
+                    - generic [ref=e320]:
+                        - generic [ref=e321]:
+                            - checkbox "Event Planning Tips & Best Practices" [ref=e322] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e323]:
+                                - generic [ref=e324] [cursor=pointer]: Event Planning Tips & Best Practices
+                                - paragraph [ref=e325]: Weekly tips to improve your event planning skills
+                        - generic [ref=e326]:
+                            - checkbox "Platform Updates & New Features" [ref=e327] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e328]:
+                                - generic [ref=e329] [cursor=pointer]: Platform Updates & New Features
+                                - paragraph [ref=e330]: Stay informed about new features and improvements
+                        - generic [ref=e331]:
+                            - checkbox "Success Stories & Case Studies" [ref=e332] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e333]:
+                                - generic [ref=e334] [cursor=pointer]: Success Stories & Case Studies
+                                - paragraph [ref=e335]: Real stories from successful events on our platform
+                        - generic [ref=e336]:
+                            - checkbox "Industry News & Trends" [ref=e337] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e338]:
+                                - generic [ref=e339] [cursor=pointer]: Industry News & Trends
+                                - paragraph [ref=e340]: Latest news and trends in the New Zealand event industry
+                        - generic [ref=e341]:
+                            - checkbox "New Contractor Spotlights" [ref=e342] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e343]:
+                                - generic [ref=e344] [cursor=pointer]: New Contractor Spotlights
+                                - paragraph [ref=e345]: Meet new contractors joining our platform
+                        - generic [ref=e346]:
+                            - checkbox "Upcoming Events & Webinars" [ref=e347] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=e348]:
+                                - generic [ref=e349] [cursor=pointer]: Upcoming Events & Webinars
+                                - paragraph [ref=e350]: Information about events and educational webinars
+                - generic [ref=e351]:
+                    - heading "What you'll get:" [level=4] [ref=e352]:
+                        - img [ref=e353]
+                        - text: "What you'll get:"
+                    - list [ref=e356]:
+                        - listitem [ref=e357]: • Weekly event planning tips and best practices
+                        - listitem [ref=e358]: • Early access to new platform features
+                        - listitem [ref=e359]: • Success stories from real events
+                        - listitem [ref=e360]: • Industry insights and trends
+                        - listitem [ref=e361]: • Exclusive contractor spotlights
+                - generic [ref=e362]:
+                    - img [ref=e363]
+                    - generic [ref=e365]: We send newsletters weekly, with special updates as needed.
+                - button "Subscribe to Newsletter" [ref=e366] [cursor=pointer]:
+                    - img [ref=e367] [cursor=pointer]
+                    - text: Subscribe to Newsletter
+                - paragraph [ref=e370]: You can unsubscribe at any time. We respect your privacy and never share your email.
+        - generic [ref=e372]:
+            - generic [ref=e373]:
+                - heading "Frequently Asked Questions" [level=2] [ref=e374]
+                - paragraph [ref=e375]: Quick answers to common questions about our platform and services.
+            - generic [ref=e376]:
+                - generic [ref=e377]:
+                    - heading "How do I get started?" [level=3] [ref=e379]
+                    - paragraph [ref=e381]: Simply create an account, complete your profile, and start browsing contractors or posting events. Our platform is designed to be intuitive and user-friendly.
+                - generic [ref=e382]:
+                    - heading "Are contractors verified?" [level=3] [ref=e384]
+                    - paragraph [ref=e386]: Yes, all contractors go through a thorough verification process including background checks, insurance verification, and portfolio review.
+                - generic [ref=e387]:
+                    - heading "What areas do you cover?" [level=3] [ref=e389]
+                    - paragraph [ref=e391]: We cover all of New Zealand, from Northland to Southland, with contractors available in all major cities and regions.
+                - generic [ref=e392]:
+                    - heading "How do you ensure quality?" [level=3] [ref=e394]
+                    - paragraph [ref=e396]: We maintain high standards through contractor verification, customer reviews, and continuous monitoring of service quality.
+    - alert [ref=e397]
+```
