@@ -51,15 +51,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user growth data
-    const { data: userGrowth, error: userError } = await supabase
+    const { data: userGrowth, error: userGrowthError } = await supabase
       .from('users')
       .select('created_at, role')
       .gte('created_at', startDate.toISOString())
       .lte('created_at', now.toISOString())
       .order('created_at', { ascending: true });
 
-    if (userError) {
-      throw userError;
+    if (userGrowthError) {
+      throw userGrowthError;
     }
 
     // Calculate growth trends
