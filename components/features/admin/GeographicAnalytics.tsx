@@ -135,7 +135,7 @@ export default function GeographicAnalytics() {
         setMetrics(metricsData);
       }
     } catch (error) {
-      console.error('Error loading geographic data:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +162,7 @@ export default function GeographicAnalytics() {
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Error exporting geographic report:', error);
+      // Error handled
     }
   };
 

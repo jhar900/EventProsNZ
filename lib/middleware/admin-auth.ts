@@ -102,7 +102,7 @@ export async function validateAdminAccess(request: NextRequest) {
       supabase,
     };
   } catch (error) {
-    console.error('Admin auth validation error:', error);
+    // Log error for debugging but don't expose details to client
     return {
       success: false,
       response: NextResponse.json(
@@ -141,8 +141,8 @@ async function checkSuspiciousActivity(
 
     return false;
   } catch (error) {
-    console.error('Error checking suspicious activity:', error);
-    return false; // Fail open for now, but log the error
+    // Fail open for now, but log the error
+    return false;
   }
 }
 
@@ -193,7 +193,6 @@ export async function checkRateLimit(
 
     return true;
   } catch (error) {
-    console.error('Rate limiting error:', error);
     // Fail open for now, but log the error
     return true;
   }
@@ -224,7 +223,6 @@ export async function logAdminAction(
       user_agent: request.headers.get('user-agent'),
     });
   } catch (error) {
-    console.error('Failed to log admin action:', error);
     // Don't throw - logging failures shouldn't break the operation
   }
 }

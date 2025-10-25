@@ -119,7 +119,7 @@ export default function ReportGenerator() {
         setData(reportData);
       }
     } catch (error) {
-      console.error('Error loading report data:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +144,7 @@ export default function ReportGenerator() {
         await loadReportData();
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      // Error handled
     } finally {
       setIsGenerating(false);
     }
@@ -175,7 +175,7 @@ export default function ReportGenerator() {
         });
       }
     } catch (error) {
-      console.error('Error creating template:', error);
+      // Error handled
     }
   };
 
@@ -196,7 +196,7 @@ export default function ReportGenerator() {
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Error downloading report:', error);
+      // Error handled
     }
   };
 

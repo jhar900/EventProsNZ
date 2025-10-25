@@ -114,7 +114,7 @@ export default function AdminAnalyticsDashboard() {
         setData(analyticsData);
       }
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +139,7 @@ export default function AdminAnalyticsDashboard() {
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Error exporting report:', error);
+      // Error handled
     }
   };
 

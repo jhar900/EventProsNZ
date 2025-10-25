@@ -160,7 +160,7 @@ graph TB
 interface User {
   id: string;
   email: string;
-  role: "event_manager" | "contractor" | "admin";
+  role: 'event_manager' | 'contractor' | 'admin';
   created_at: Date;
   updated_at: Date;
   is_verified: boolean;
@@ -289,7 +289,7 @@ interface Event {
   attendee_count: number;
   duration_hours: number;
   budget: number;
-  status: "draft" | "planning" | "confirmed" | "completed" | "cancelled";
+  status: 'draft' | 'planning' | 'confirmed' | 'completed' | 'cancelled';
   created_at: Date;
   updated_at: Date;
 }
@@ -367,7 +367,7 @@ interface EventService {
   id: string;
   event_id: string;
   service_id: string;
-  status: "required" | "optional" | "confirmed" | "rejected";
+  status: 'required' | 'optional' | 'confirmed' | 'rejected';
   budget_allocated: number | null;
   quoted_price: number | null;
   quoted_at: Date | null;
@@ -407,7 +407,7 @@ interface EventServiceAssignment {
   id: string;
   event_service_id: string;
   contractor_user_id: string;
-  status: "pending" | "accepted" | "declined" | "completed";
+  status: 'pending' | 'accepted' | 'declined' | 'completed';
   response_deadline: Date | null;
   service_deadline: Date | null;
   assigned_at: Date;
@@ -444,7 +444,7 @@ interface Enquiry {
   event_id: string;
   contractor_user_id: string;
   message: string;
-  status: "sent" | "viewed" | "responded" | "quoted";
+  status: 'sent' | 'viewed' | 'responded' | 'quoted';
   created_at: Date;
   responded_at: Date | null;
 }
@@ -478,7 +478,7 @@ interface EnquiryMessage {
   enquiry_id: string;
   sender_user_id: string;
   message: string;
-  message_type: "text" | "quote" | "file" | "phone_call" | "meeting";
+  message_type: 'text' | 'quote' | 'file' | 'phone_call' | 'meeting';
   attachment_url: string | null;
   created_at: Date;
 }
@@ -516,13 +516,13 @@ interface Job {
   posted_by_user_id: string;
   title: string;
   description: string;
-  job_type: "event_manager" | "contractor_internal";
+  job_type: 'event_manager' | 'contractor_internal';
   service_category: string;
   budget_range_min: number;
   budget_range_max: number;
   location: string | null;
   is_remote: boolean;
-  status: "active" | "filled" | "completed" | "cancelled";
+  status: 'active' | 'filled' | 'completed' | 'cancelled';
   created_at: Date;
 }
 ```
@@ -563,7 +563,7 @@ interface JobApplication {
   attachment_1_name: string | null;
   attachment_2_url: string | null;
   attachment_2_name: string | null;
-  status: "submitted" | "viewed" | "shortlisted" | "rejected" | "accepted";
+  status: 'submitted' | 'viewed' | 'shortlisted' | 'rejected' | 'accepted';
   submitted_at: Date;
   viewed_at: Date | null;
   responded_at: Date | null;
@@ -643,12 +643,12 @@ interface Testimonial {
 interface Subscription {
   id: string;
   user_id: string;
-  tier: "essential" | "showcase" | "spotlight";
-  status: "active" | "cancelled" | "expired" | "trial";
-  billing_cycle: "monthly" | "yearly" | "2year";
+  tier: 'essential' | 'showcase' | 'spotlight';
+  status: 'active' | 'cancelled' | 'expired' | 'trial';
+  billing_cycle: 'monthly' | 'yearly' | '2year';
   price: number;
   payment_method_id: string | null;
-  payment_method_type: "card" | "bank_transfer" | null;
+  payment_method_type: 'card' | 'bank_transfer' | null;
   trial_ends_at: Date | null;
   current_period_start: Date;
   current_period_end: Date;
@@ -695,7 +695,7 @@ interface PortfolioItem {
   business_profile_id: string;
   title: string;
   description: string;
-  media_type: "image" | "youtube" | "vimeo";
+  media_type: 'image' | 'youtube' | 'vimeo';
   media_url: string;
   thumbnail_url: string | null;
   event_name: string | null;
@@ -756,14 +756,14 @@ paths:
                 last_name:
                   type: string
       responses:
-        "201":
+        '201':
           description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "400":
-          $ref: "#/components/responses/BadRequest"
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
   /auth/login:
     post:
@@ -782,7 +782,7 @@ paths:
                 password:
                   type: string
       responses:
-        "200":
+        '200':
           description: Login successful
           content:
             application/json:
@@ -790,7 +790,7 @@ paths:
                 type: object
                 properties:
                   user:
-                    $ref: "#/components/schemas/User"
+                    $ref: '#/components/schemas/User'
                   access_token:
                     type: string
                   refresh_token:
@@ -802,15 +802,15 @@ paths:
       summary: Get current user profile
       tags: [Users]
       responses:
-        "200":
+        '200':
           description: User profile retrieved
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/User"
-                  - $ref: "#/components/schemas/Profile"
-                  - $ref: "#/components/schemas/BusinessProfile"
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Profile'
+                  - $ref: '#/components/schemas/BusinessProfile'
 
     put:
       summary: Update user profile
@@ -820,14 +820,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProfileUpdate"
+              $ref: '#/components/schemas/ProfileUpdate'
       responses:
-        "200":
+        '200':
           description: Profile updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Profile"
+                $ref: '#/components/schemas/Profile'
 
   # Events
   /events:
@@ -851,7 +851,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Events retrieved successfully
           content:
             application/json:
@@ -861,7 +861,7 @@ paths:
                   events:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Event"
+                      $ref: '#/components/schemas/Event'
                   total:
                     type: integer
 
@@ -873,14 +873,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventCreate"
+              $ref: '#/components/schemas/EventCreate'
       responses:
-        "201":
+        '201':
           description: Event created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Event"
+                $ref: '#/components/schemas/Event'
 
   /events/{eventId}:
     get:
@@ -893,12 +893,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Event details retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Event"
+                $ref: '#/components/schemas/Event'
 
     put:
       summary: Update event
@@ -914,14 +914,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventUpdate"
+              $ref: '#/components/schemas/EventUpdate'
       responses:
-        "200":
+        '200':
           description: Event updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Event"
+                $ref: '#/components/schemas/Event'
 
     delete:
       summary: Delete event
@@ -933,7 +933,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Event deleted successfully
 
   # Event Service Management
@@ -948,14 +948,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Event services retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/EventService"
+                  $ref: '#/components/schemas/EventService'
 
     post:
       summary: Add service to event
@@ -971,14 +971,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventServiceCreate"
+              $ref: '#/components/schemas/EventServiceCreate'
       responses:
-        "201":
+        '201':
           description: Service added to event
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventService"
+                $ref: '#/components/schemas/EventService'
 
   /events/{eventId}/services/{serviceId}:
     put:
@@ -1000,14 +1000,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventServiceUpdate"
+              $ref: '#/components/schemas/EventServiceUpdate'
       responses:
-        "200":
+        '200':
           description: Event service updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventService"
+                $ref: '#/components/schemas/EventService'
 
     delete:
       summary: Remove service from event
@@ -1024,7 +1024,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Service removed from event
 
   # Contractors Directory
@@ -1066,7 +1066,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Contractors retrieved successfully
           content:
             application/json:
@@ -1076,7 +1076,7 @@ paths:
                   contractors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ContractorSummary"
+                      $ref: '#/components/schemas/ContractorSummary'
                   total:
                     type: integer
 
@@ -1091,12 +1091,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Contractor profile retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ContractorProfile"
+                $ref: '#/components/schemas/ContractorProfile'
 
   # Contractor Service Management
   /contractors/me/services:
@@ -1104,14 +1104,14 @@ paths:
       summary: Get contractor's services
       tags: [Contractors]
       responses:
-        "200":
+        '200':
           description: Services retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Service"
+                  $ref: '#/components/schemas/Service'
 
     post:
       summary: Create new service
@@ -1121,14 +1121,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ServiceCreate"
+              $ref: '#/components/schemas/ServiceCreate'
       responses:
-        "201":
+        '201':
           description: Service created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
 
   /contractors/me/services/{serviceId}:
     get:
@@ -1141,12 +1141,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Service details retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
 
     put:
       summary: Update service
@@ -1162,14 +1162,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ServiceUpdate"
+              $ref: '#/components/schemas/ServiceUpdate'
       responses:
-        "200":
+        '200':
           description: Service updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
 
     delete:
       summary: Delete service
@@ -1181,7 +1181,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Service deleted
 
   # Portfolio Management
@@ -1190,14 +1190,14 @@ paths:
       summary: Get contractor's portfolio
       tags: [Contractors]
       responses:
-        "200":
+        '200':
           description: Portfolio retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PortfolioItem"
+                  $ref: '#/components/schemas/PortfolioItem'
 
     post:
       summary: Add portfolio item
@@ -1207,14 +1207,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PortfolioItemCreate"
+              $ref: '#/components/schemas/PortfolioItemCreate'
       responses:
-        "201":
+        '201':
           description: Portfolio item created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PortfolioItem"
+                $ref: '#/components/schemas/PortfolioItem'
 
   /contractors/me/portfolio/{itemId}:
     get:
@@ -1227,12 +1227,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Portfolio item retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PortfolioItem"
+                $ref: '#/components/schemas/PortfolioItem'
 
     put:
       summary: Update portfolio item
@@ -1248,14 +1248,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PortfolioItemUpdate"
+              $ref: '#/components/schemas/PortfolioItemUpdate'
       responses:
-        "200":
+        '200':
           description: Portfolio item updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PortfolioItem"
+                $ref: '#/components/schemas/PortfolioItem'
 
     delete:
       summary: Delete portfolio item
@@ -1267,7 +1267,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Portfolio item deleted
 
   # Enquiries
@@ -1280,14 +1280,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnquiryCreate"
+              $ref: '#/components/schemas/EnquiryCreate'
       responses:
-        "201":
+        '201':
           description: Enquiry sent successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Enquiry"
+                $ref: '#/components/schemas/Enquiry'
 
   /enquiries/{enquiryId}:
     get:
@@ -1300,12 +1300,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Enquiry details retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Enquiry"
+                $ref: '#/components/schemas/Enquiry'
 
   /enquiries/{enquiryId}/messages:
     get:
@@ -1318,14 +1318,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Messages retrieved successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/EnquiryMessage"
+                  $ref: '#/components/schemas/EnquiryMessage'
 
     post:
       summary: Send message in enquiry
@@ -1341,14 +1341,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnquiryMessageCreate"
+              $ref: '#/components/schemas/EnquiryMessageCreate'
       responses:
-        "201":
+        '201':
           description: Message sent successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnquiryMessage"
+                $ref: '#/components/schemas/EnquiryMessage'
 
   # Job Board
   /jobs:
@@ -1384,7 +1384,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Jobs retrieved successfully
           content:
             application/json:
@@ -1394,7 +1394,7 @@ paths:
                   jobs:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Job"
+                      $ref: '#/components/schemas/Job'
                   total:
                     type: integer
 
@@ -1406,14 +1406,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JobCreate"
+              $ref: '#/components/schemas/JobCreate'
       responses:
-        "201":
+        '201':
           description: Job created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
+                $ref: '#/components/schemas/Job'
 
   /jobs/{jobId}:
     get:
@@ -1426,12 +1426,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Job details retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
+                $ref: '#/components/schemas/Job'
 
     put:
       summary: Update job posting
@@ -1447,14 +1447,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JobUpdate"
+              $ref: '#/components/schemas/JobUpdate'
       responses:
-        "200":
+        '200':
           description: Job updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
+                $ref: '#/components/schemas/Job'
 
     delete:
       summary: Delete job posting
@@ -1466,7 +1466,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Job deleted successfully
 
   /jobs/{jobId}/applications:
@@ -1480,14 +1480,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Applications retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/JobApplication"
+                  $ref: '#/components/schemas/JobApplication'
 
     post:
       summary: Apply to job
@@ -1503,14 +1503,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JobApplicationCreate"
+              $ref: '#/components/schemas/JobApplicationCreate'
       responses:
-        "201":
+        '201':
           description: Application submitted successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobApplication"
+                $ref: '#/components/schemas/JobApplication'
 
   # File Upload
   /upload/profile-photo:
@@ -1528,7 +1528,7 @@ paths:
                   type: string
                   format: binary
       responses:
-        "201":
+        '201':
           description: Profile photo uploaded
           content:
             application/json:
@@ -1555,7 +1555,7 @@ paths:
                   type: string
                   format: binary
       responses:
-        "201":
+        '201':
           description: Portfolio image uploaded
           content:
             application/json:
@@ -1582,7 +1582,7 @@ paths:
                   type: string
                   format: binary
       responses:
-        "201":
+        '201':
           description: File uploaded
           content:
             application/json:
@@ -1600,12 +1600,12 @@ paths:
       summary: Get user subscription
       tags: [Subscriptions]
       responses:
-        "200":
+        '200':
           description: Subscription retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Subscription"
+                $ref: '#/components/schemas/Subscription'
 
     post:
       summary: Create subscription
@@ -1615,14 +1615,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SubscriptionCreate"
+              $ref: '#/components/schemas/SubscriptionCreate'
       responses:
-        "201":
+        '201':
           description: Subscription created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Subscription"
+                $ref: '#/components/schemas/Subscription'
 
   /subscriptions/{subscriptionId}:
     put:
@@ -1639,14 +1639,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SubscriptionUpdate"
+              $ref: '#/components/schemas/SubscriptionUpdate'
       responses:
-        "200":
+        '200':
           description: Subscription updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Subscription"
+                $ref: '#/components/schemas/Subscription'
 
     delete:
       summary: Cancel subscription
@@ -1658,7 +1658,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Subscription cancelled successfully
 
   # Testimonials
@@ -1682,7 +1682,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Testimonials retrieved
           content:
             application/json:
@@ -1692,7 +1692,7 @@ paths:
                   testimonials:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Testimonial"
+                      $ref: '#/components/schemas/Testimonial'
                   total:
                     type: integer
 
@@ -1704,14 +1704,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TestimonialCreate"
+              $ref: '#/components/schemas/TestimonialCreate'
       responses:
-        "201":
+        '201':
           description: Testimonial created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Testimonial"
+                $ref: '#/components/schemas/Testimonial'
 
   /testimonials/{testimonialId}/response:
     post:
@@ -1734,7 +1734,7 @@ paths:
                   type: string
                   maxLength: 500
       responses:
-        "200":
+        '200':
           description: Response added successfully
 
   # Admin Endpoints
@@ -1764,7 +1764,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Users retrieved
           content:
             application/json:
@@ -1774,7 +1774,7 @@ paths:
                   users:
                     type: array
                     items:
-                      $ref: "#/components/schemas/User"
+                      $ref: '#/components/schemas/User'
                   total:
                     type: integer
 
@@ -1789,7 +1789,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: User verified successfully
 
   /admin/users/{userId}/suspend:
@@ -1812,7 +1812,7 @@ paths:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: User suspended successfully
 
   /admin/analytics:
@@ -1827,7 +1827,7 @@ paths:
             enum: [day, week, month, year]
             default: month
       responses:
-        "200":
+        '200':
           description: Analytics retrieved
           content:
             application/json:
@@ -1867,7 +1867,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Notifications retrieved
           content:
             application/json:
@@ -1877,7 +1877,7 @@ paths:
                   notifications:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Notification"
+                      $ref: '#/components/schemas/Notification'
                   total:
                     type: integer
 
@@ -1892,7 +1892,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Notification marked as read
 
   # Search & Discovery
@@ -1955,7 +1955,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Search results retrieved
           content:
             application/json:
@@ -1965,7 +1965,7 @@ paths:
                   contractors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ContractorSummary"
+                      $ref: '#/components/schemas/ContractorSummary'
                   total:
                     type: integer
                   filters_applied:
@@ -1998,7 +1998,7 @@ paths:
             default: 10
             maximum: 20
       responses:
-        "200":
+        '200':
           description: Search suggestions retrieved
           content:
             application/json:
@@ -2038,7 +2038,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Favorite contractors retrieved
           content:
             application/json:
@@ -2048,7 +2048,7 @@ paths:
                   contractors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ContractorSummary"
+                      $ref: '#/components/schemas/ContractorSummary'
                   total:
                     type: integer
 
@@ -2066,7 +2066,7 @@ paths:
                 contractor_id:
                   type: string
       responses:
-        "201":
+        '201':
           description: Contractor added to favorites
           content:
             application/json:
@@ -2088,7 +2088,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Contractor removed from favorites
           content:
             application/json:
@@ -2114,7 +2114,7 @@ paths:
             type: integer
             default: 0
       responses:
-        "200":
+        '200':
           description: Event templates retrieved
           content:
             application/json:
@@ -2124,7 +2124,7 @@ paths:
                   templates:
                     type: array
                     items:
-                      $ref: "#/components/schemas/EventTemplate"
+                      $ref: '#/components/schemas/EventTemplate'
                   total:
                     type: integer
 
@@ -2146,12 +2146,12 @@ paths:
                 description:
                   type: string
       responses:
-        "201":
+        '201':
           description: Event saved as template
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventTemplate"
+                $ref: '#/components/schemas/EventTemplate'
 
   /favorites/event-templates/{templateId}:
     get:
@@ -2164,12 +2164,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Event template retrieved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventTemplate"
+                $ref: '#/components/schemas/EventTemplate'
 
     put:
       summary: Update event template
@@ -2192,12 +2192,12 @@ paths:
                 description:
                   type: string
       responses:
-        "200":
+        '200':
           description: Event template updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventTemplate"
+                $ref: '#/components/schemas/EventTemplate'
 
     delete:
       summary: Delete event template
@@ -2209,7 +2209,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Event template deleted
 
     post:
@@ -2238,12 +2238,12 @@ paths:
                 budget:
                   type: number
       responses:
-        "201":
+        '201':
           description: Event created from template
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Event"
+                $ref: '#/components/schemas/Event'
 
 components:
   securitySchemes:
@@ -2515,21 +2515,21 @@ components:
 
     ContractorProfile:
       allOf:
-        - $ref: "#/components/schemas/ContractorSummary"
+        - $ref: '#/components/schemas/ContractorSummary'
         - type: object
           properties:
             services:
               type: array
               items:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
             portfolio:
               type: array
               items:
-                $ref: "#/components/schemas/PortfolioItem"
+                $ref: '#/components/schemas/PortfolioItem'
             testimonials:
               type: array
               items:
-                $ref: "#/components/schemas/Testimonial"
+                $ref: '#/components/schemas/Testimonial'
 
     Service:
       type: object
@@ -3098,31 +3098,31 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     Forbidden:
       description: Forbidden
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Not found
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     InternalServerError:
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
 ```
 
 ### Real-time Subscriptions
@@ -3443,11 +3443,11 @@ const EventForm = ({ initialData, onSubmit }: EventFormProps) => {
 
 ```typescript
 const breakpoints = {
-  sm: "640px", // Mobile landscape
-  md: "768px", // Tablet
-  lg: "1024px", // Desktop
-  xl: "1280px", // Large desktop
-  "2xl": "1536px", // Extra large
+  sm: '640px', // Mobile landscape
+  md: '768px', // Tablet
+  lg: '1024px', // Desktop
+  xl: '1280px', // Large desktop
+  '2xl': '1536px', // Extra large
 };
 ```
 
@@ -3516,9 +3516,9 @@ describe("EventForm Integration", () => {
 
 ```typescript
 // Lazy loading for heavy components
-const ContractorProfile = lazy(() => import("./ContractorProfile"));
-const EventTimeline = lazy(() => import("./EventTimeline"));
-const PortfolioGallery = lazy(() => import("./PortfolioGallery"));
+const ContractorProfile = lazy(() => import('./ContractorProfile'));
+const EventTimeline = lazy(() => import('./EventTimeline'));
+const PortfolioGallery = lazy(() => import('./PortfolioGallery'));
 ```
 
 **Memoization:**
@@ -3660,34 +3660,34 @@ class AuthService {
 
 ```typescript
 enum UserRole {
-  EVENT_MANAGER = "event_manager",
-  CONTRACTOR = "contractor",
-  ADMIN = "admin",
+  EVENT_MANAGER = 'event_manager',
+  CONTRACTOR = 'contractor',
+  ADMIN = 'admin',
 }
 
 enum Permission {
   // Event permissions
-  CREATE_EVENT = "create:event",
-  READ_EVENT = "read:event",
-  UPDATE_EVENT = "update:event",
-  DELETE_EVENT = "delete:event",
+  CREATE_EVENT = 'create:event',
+  READ_EVENT = 'read:event',
+  UPDATE_EVENT = 'update:event',
+  DELETE_EVENT = 'delete:event',
 
   // Contractor permissions
-  CREATE_CONTRACTOR_PROFILE = "create:contractor_profile",
-  READ_CONTRACTOR_PROFILE = "read:contractor_profile",
-  UPDATE_CONTRACTOR_PROFILE = "update:contractor_profile",
+  CREATE_CONTRACTOR_PROFILE = 'create:contractor_profile',
+  READ_CONTRACTOR_PROFILE = 'read:contractor_profile',
+  UPDATE_CONTRACTOR_PROFILE = 'update:contractor_profile',
 
   // Job permissions
-  CREATE_JOB = "create:job",
-  READ_JOB = "read:job",
-  UPDATE_JOB = "update:job",
-  DELETE_JOB = "delete:job",
-  APPLY_JOB = "apply:job",
+  CREATE_JOB = 'create:job',
+  READ_JOB = 'read:job',
+  UPDATE_JOB = 'update:job',
+  DELETE_JOB = 'delete:job',
+  APPLY_JOB = 'apply:job',
 
   // Admin permissions
-  MANAGE_USERS = "manage:users",
-  VIEW_ANALYTICS = "view:analytics",
-  MANAGE_SUBSCRIPTIONS = "manage:subscriptions",
+  MANAGE_USERS = 'manage:users',
+  VIEW_ANALYTICS = 'view:analytics',
+  MANAGE_SUBSCRIPTIONS = 'manage:subscriptions',
 }
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -3723,10 +3723,10 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 // API route protection
 export function withAuth(handler: NextApiHandler) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
@@ -3736,13 +3736,13 @@ export function withAuth(handler: NextApiHandler) {
       } = await supabase.auth.getUser(token);
 
       if (error || !user) {
-        return res.status(401).json({ error: "Invalid token" });
+        return res.status(401).json({ error: 'Invalid token' });
       }
 
       req.user = user;
       return handler(req, res);
     } catch (error) {
-      return res.status(401).json({ error: "Authentication failed" });
+      return res.status(401).json({ error: 'Authentication failed' });
     }
   };
 }
@@ -3755,7 +3755,7 @@ export function withPermission(permission: Permission) {
       const userPermissions = ROLE_PERMISSIONS[userRole];
 
       if (!userPermissions.includes(permission)) {
-        return res.status(403).json({ error: "Insufficient permissions" });
+        return res.status(403).json({ error: 'Insufficient permissions' });
       }
 
       return handler(req, res);
@@ -3830,33 +3830,33 @@ export default function EventsPage() {
 ```typescript
 // lib/validations/auth.ts
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email('Invalid email address'),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
+    .min(8, 'Password must be at least 8 characters')
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain uppercase, lowercase, and number"
+      'Password must contain uppercase, lowercase, and number'
     ),
-  first_name: z.string().min(2, "First name must be at least 2 characters"),
-  last_name: z.string().min(2, "Last name must be at least 2 characters"),
-  role: z.enum(["event_manager", "contractor"]),
+  first_name: z.string().min(2, 'First name must be at least 2 characters'),
+  last_name: z.string().min(2, 'Last name must be at least 2 characters'),
+  role: z.enum(['event_manager', 'contractor']),
 });
 
 // lib/validations/event.ts
 export const eventSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title too long"),
-  event_type: z.string().min(1, "Event type is required"),
-  event_date: z.date().min(new Date(), "Event date must be in the future"),
-  location: z.string().min(1, "Location is required"),
-  attendee_count: z.number().min(1, "Must have at least 1 attendee"),
-  duration_hours: z.number().min(0.5, "Duration must be at least 30 minutes"),
-  budget: z.number().min(0, "Budget must be positive"),
+  title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
+  event_type: z.string().min(1, 'Event type is required'),
+  event_date: z.date().min(new Date(), 'Event date must be in the future'),
+  location: z.string().min(1, 'Location is required'),
+  attendee_count: z.number().min(1, 'Must have at least 1 attendee'),
+  duration_hours: z.number().min(0.5, 'Duration must be at least 30 minutes'),
+  budget: z.number().min(0, 'Budget must be positive'),
 });
 ```
 
@@ -3864,11 +3864,11 @@ export const eventSchema = z.object({
 
 ```typescript
 // lib/utils/sanitize.ts
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from 'isomorphic-dompurify';
 
 export function sanitizeHtml(input: string): string {
   return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br"],
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
     ALLOWED_ATTR: [],
   });
 }
@@ -3876,9 +3876,9 @@ export function sanitizeHtml(input: string): string {
 export function sanitizeText(input: string): string {
   return input
     .trim()
-    .replace(/[<>]/g, "") // Remove potential HTML tags
-    .replace(/javascript:/gi, "") // Remove javascript: protocol
-    .replace(/on\w+=/gi, ""); // Remove event handlers
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, ''); // Remove event handlers
 }
 
 // API route validation
@@ -3887,7 +3887,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new ValidationError("Invalid input data", error.errors);
+      throw new ValidationError('Invalid input data', error.errors);
     }
     throw error;
   }
@@ -3901,7 +3901,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
 ```typescript
 // Using Supabase client with parameterized queries
 export async function getContractors(filters: ContractorFilters) {
-  let query = supabase.from("contractors").select(`
+  let query = supabase.from('contractors').select(`
       id,
       company_name,
       description,
@@ -3913,15 +3913,15 @@ export async function getContractors(filters: ContractorFilters) {
 
   // Safe parameter binding
   if (filters.search) {
-    query = query.ilike("company_name", `%${filters.search}%`);
+    query = query.ilike('company_name', `%${filters.search}%`);
   }
 
   if (filters.categories?.length) {
-    query = query.overlaps("service_categories", filters.categories);
+    query = query.overlaps('service_categories', filters.categories);
   }
 
   if (filters.min_rating) {
-    query = query.gte("average_rating", filters.min_rating);
+    query = query.gte('average_rating', filters.min_rating);
   }
 
   const { data, error } = await query;
@@ -3941,10 +3941,10 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: '/(.*)',
         headers: [
           {
-            key: "Content-Security-Policy",
+            key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
@@ -3953,19 +3953,19 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://*.supabase.co https://api.stripe.com",
               "frame-src 'self' https://js.stripe.com",
-            ].join("; "),
+            ].join('; '),
           },
           {
-            key: "X-Frame-Options",
-            value: "DENY",
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },
@@ -4008,8 +4008,8 @@ export function SafeInput({ value, onChange, ...props }: InputProps) {
 
 ```typescript
 // lib/rate-limit.ts
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -4018,23 +4018,23 @@ const redis = new Redis({
 
 export const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"), // 100 requests per minute
+  limiter: Ratelimit.slidingWindow(100, '1 m'), // 100 requests per minute
 });
 
 // API route protection
 export async function withRateLimit(req: NextApiRequest, res: NextApiResponse) {
-  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   const { success, limit, reset, remaining } = await ratelimit.limit(
     ip as string
   );
 
-  res.setHeader("X-RateLimit-Limit", limit.toString());
-  res.setHeader("X-RateLimit-Remaining", remaining.toString());
-  res.setHeader("X-RateLimit-Reset", new Date(reset).toISOString());
+  res.setHeader('X-RateLimit-Limit', limit.toString());
+  res.setHeader('X-RateLimit-Remaining', remaining.toString());
+  res.setHeader('X-RateLimit-Reset', new Date(reset).toISOString());
 
   if (!success) {
     return res.status(429).json({
-      error: "Too many requests",
+      error: 'Too many requests',
       retryAfter: Math.round((reset - Date.now()) / 1000),
     });
   }
@@ -4047,26 +4047,26 @@ export async function withRateLimit(req: NextApiRequest, res: NextApiResponse) {
 
 ```typescript
 // lib/cors.ts
-import Cors from "cors";
+import Cors from 'cors';
 
 const cors = Cors({
   origin: [
-    "https://eventpros.co.nz",
-    "https://www.eventpros.co.nz",
-    "https://staging.eventpros.co.nz",
-    ...(process.env.NODE_ENV === "development"
-      ? ["http://localhost:3000"]
+    'https://eventpros.co.nz',
+    'https://www.eventpros.co.nz',
+    'https://staging.eventpros.co.nz',
+    ...(process.env.NODE_ENV === 'development'
+      ? ['http://localhost:3000']
       : []),
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
 });
 
 export function withCors(handler: NextApiHandler) {
   return (req: NextApiRequest, res: NextApiResponse) => {
     return new Promise((resolve, reject) => {
-      cors(req, res, (result) => {
+      cors(req, res, result => {
         if (result instanceof Error) {
           return reject(result);
         }
@@ -4085,35 +4085,35 @@ export function withCors(handler: NextApiHandler) {
 
 ```typescript
 // lib/file-upload.ts
-import { createHash } from "crypto";
-import sharp from "sharp";
+import { createHash } from 'crypto';
+import sharp from 'sharp';
 
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_DOCUMENT_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function validateFile(file: File): Promise<ValidationResult> {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: "File too large" };
+    return { valid: false, error: 'File too large' };
   }
 
   // Check file type
   const allowedTypes = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES];
   if (!allowedTypes.includes(file.type)) {
-    return { valid: false, error: "Invalid file type" };
+    return { valid: false, error: 'Invalid file type' };
   }
 
   // Generate secure filename
-  const fileHash = createHash("sha256")
+  const fileHash = createHash('sha256')
     .update(file.name + Date.now())
-    .digest("hex");
+    .digest('hex');
 
-  const extension = file.name.split(".").pop();
+  const extension = file.name.split('.').pop();
   const secureFilename = `${fileHash}.${extension}`;
 
   return { valid: true, filename: secureFilename };
@@ -4121,7 +4121,7 @@ export async function validateFile(file: File): Promise<ValidationResult> {
 
 export async function processImage(file: Buffer): Promise<Buffer> {
   return await sharp(file)
-    .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+    .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
     .jpeg({ quality: 85 })
     .toBuffer();
 }
@@ -4133,14 +4133,14 @@ export async function processImage(file: Buffer): Promise<Buffer> {
 
 ```typescript
 // lib/security-scan.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 export async function scanFileForMalware(fileBuffer: Buffer): Promise<boolean> {
   // Integration with cloud security service (e.g., VirusTotal API)
   const scanResult = await fetch(
-    "https://www.virustotal.com/vtapi/v2/file/scan",
+    'https://www.virustotal.com/vtapi/v2/file/scan',
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         apikey: process.env.VIRUSTOTAL_API_KEY!,
       },
@@ -4190,10 +4190,10 @@ CREATE POLICY "Contractors are viewable by all" ON contractors
 
 ```typescript
 // lib/encryption.ts
-import crypto from "crypto";
+import crypto from 'crypto';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
-const ALGORITHM = "aes-256-gcm";
+const ALGORITHM = 'aes-256-gcm';
 
 export function encrypt(text: string): {
   encrypted: string;
@@ -4201,18 +4201,18 @@ export function encrypt(text: string): {
   tag: string;
 } {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
-  cipher.setAAD(Buffer.from("eventpros", "utf8"));
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+  cipher.setAAD(Buffer.from('eventpros', 'utf8'));
 
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
 
   const tag = cipher.getAuthTag();
 
   return {
     encrypted,
-    iv: iv.toString("hex"),
-    tag: tag.toString("hex"),
+    iv: iv.toString('hex'),
+    tag: tag.toString('hex'),
   };
 }
 
@@ -4221,12 +4221,16 @@ export function decrypt(encryptedData: {
   iv: string;
   tag: string;
 }): string {
-  const decipher = crypto.createDecipher(ALGORITHM, ENCRYPTION_KEY);
-  decipher.setAAD(Buffer.from("eventpros", "utf8"));
-  decipher.setAuthTag(Buffer.from(encryptedData.tag, "hex"));
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    ENCRYPTION_KEY,
+    Buffer.from(encryptedData.iv, 'hex')
+  );
+  decipher.setAAD(Buffer.from('eventpros', 'utf8'));
+  decipher.setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
 
-  let decrypted = decipher.update(encryptedData.encrypted, "hex", "utf8");
-  decrypted += decipher.final("utf8");
+  let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
 
   return decrypted;
 }
@@ -4241,13 +4245,13 @@ export function decrypt(encryptedData: {
 ```typescript
 // lib/audit-logger.ts
 export enum SecurityEvent {
-  LOGIN_SUCCESS = "login_success",
-  LOGIN_FAILED = "login_failed",
-  LOGOUT = "logout",
-  PASSWORD_RESET = "password_reset",
-  PROFILE_UPDATE = "profile_update",
-  FILE_UPLOAD = "file_upload",
-  SUSPICIOUS_ACTIVITY = "suspicious_activity",
+  LOGIN_SUCCESS = 'login_success',
+  LOGIN_FAILED = 'login_failed',
+  LOGOUT = 'logout',
+  PASSWORD_RESET = 'password_reset',
+  PROFILE_UPDATE = 'profile_update',
+  FILE_UPLOAD = 'file_upload',
+  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
 }
 
 export async function logSecurityEvent(
@@ -4255,7 +4259,7 @@ export async function logSecurityEvent(
   userId: string | null,
   metadata: Record<string, any> = {}
 ) {
-  await supabase.from("security_logs").insert({
+  await supabase.from('security_logs').insert({
     event_type: event,
     user_id: userId,
     ip_address: metadata.ip,
@@ -4275,19 +4279,19 @@ export default async function loginHandler(
     const result = await authService.login(email, password);
 
     await logSecurityEvent(SecurityEvent.LOGIN_SUCCESS, result.user.id, {
-      ip: req.headers["x-forwarded-for"],
-      userAgent: req.headers["user-agent"],
+      ip: req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
     });
 
     res.json(result);
   } catch (error) {
     await logSecurityEvent(SecurityEvent.LOGIN_FAILED, null, {
       email: req.body.email,
-      ip: req.headers["x-forwarded-for"],
+      ip: req.headers['x-forwarded-for'],
       error: error.message,
     });
 
-    res.status(401).json({ error: "Login failed" });
+    res.status(401).json({ error: 'Login failed' });
   }
 }
 ```
@@ -4307,15 +4311,15 @@ export class IntrusionDetector {
   ];
 
   static detectSuspiciousActivity(input: string): boolean {
-    return this.SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(input));
+    return this.SUSPICIOUS_PATTERNS.some(pattern => pattern.test(input));
   }
 
   static async checkRateLimitViolations(userId: string): Promise<boolean> {
     const recentRequests = await supabase
-      .from("api_requests")
-      .select("timestamp")
-      .eq("user_id", userId)
-      .gte("timestamp", new Date(Date.now() - 60000).toISOString()); // Last minute
+      .from('api_requests')
+      .select('timestamp')
+      .eq('user_id', userId)
+      .gte('timestamp', new Date(Date.now() - 60000).toISOString()); // Last minute
 
     return recentRequests.data.length > 100; // More than 100 requests per minute
   }
@@ -4325,11 +4329,11 @@ export class IntrusionDetector {
     currentIP: string
   ): Promise<boolean> {
     const recentLogins = await supabase
-      .from("security_logs")
-      .select("metadata")
-      .eq("user_id", userId)
-      .eq("event_type", SecurityEvent.LOGIN_SUCCESS)
-      .order("timestamp", { ascending: false })
+      .from('security_logs')
+      .select('metadata')
+      .eq('user_id', userId)
+      .eq('event_type', SecurityEvent.LOGIN_SUCCESS)
+      .order('timestamp', { ascending: false })
       .limit(5);
 
     // Check if login is from significantly different location
@@ -4350,10 +4354,10 @@ export class IntrusionDetector {
 export class GDPRCompliance {
   static async exportUserData(userId: string): Promise<UserDataExport> {
     const [user, profile, events, contractors] = await Promise.all([
-      supabase.from("users").select("*").eq("id", userId).single(),
-      supabase.from("profiles").select("*").eq("user_id", userId).single(),
-      supabase.from("events").select("*").eq("user_id", userId),
-      supabase.from("contractors").select("*").eq("user_id", userId),
+      supabase.from('users').select('*').eq('id', userId).single(),
+      supabase.from('profiles').select('*').eq('user_id', userId).single(),
+      supabase.from('events').select('*').eq('user_id', userId),
+      supabase.from('contractors').select('*').eq('user_id', userId),
     ]);
 
     return {
@@ -4368,33 +4372,33 @@ export class GDPRCompliance {
   static async deleteUserData(userId: string): Promise<void> {
     // Soft delete - mark as deleted but retain for legal requirements
     await supabase
-      .from("users")
+      .from('users')
       .update({
         deleted_at: new Date().toISOString(),
         email: `deleted_${userId}@deleted.com`,
-        first_name: "Deleted",
-        last_name: "User",
+        first_name: 'Deleted',
+        last_name: 'User',
       })
-      .eq("id", userId);
+      .eq('id', userId);
 
     // Anonymize related data
     await supabase
-      .from("events")
+      .from('events')
       .update({
-        title: "Deleted Event",
-        location: "Deleted",
+        title: 'Deleted Event',
+        location: 'Deleted',
         user_id: null,
       })
-      .eq("user_id", userId);
+      .eq('user_id', userId);
   }
 
   static async getDataRetentionPolicy(): Promise<DataRetentionPolicy> {
     return {
-      user_data: "7 years after account deletion",
-      event_data: "3 years after event completion",
-      contractor_data: "5 years after last activity",
-      security_logs: "2 years",
-      analytics_data: "1 year",
+      user_data: '7 years after account deletion',
+      event_data: '3 years after event completion',
+      contractor_data: '5 years after last activity',
+      security_logs: '2 years',
+      analytics_data: '1 year',
     };
   }
 }
@@ -4489,12 +4493,12 @@ The testing approach follows a pyramid structure with comprehensive coverage acr
 
 ```typescript
 // __tests__/setup.ts
-import "@testing-library/jest-dom";
-import { configure } from "@testing-library/react";
-import { server } from "./mocks/server";
+import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
+import { server } from './mocks/server';
 
 // Configure testing library
-configure({ testIdAttribute: "data-testid" });
+configure({ testIdAttribute: 'data-testid' });
 
 // Setup MSW for API mocking
 beforeAll(() => server.listen());
@@ -4502,16 +4506,16 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 // Mock Next.js router
-jest.mock("next/router", () => ({
+jest.mock('next/router', () => ({
   useRouter: () => ({
     push: jest.fn(),
-    pathname: "/",
+    pathname: '/',
     query: {},
   }),
 }));
 
 // Mock Supabase client
-jest.mock("@supabase/supabase-js", () => ({
+jest.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: {
       getUser: jest.fn(),
@@ -4702,22 +4706,22 @@ describe("EventForm", () => {
 
 ```typescript
 // __tests__/api/events.test.ts
-import { createMocks } from "node-mocks-http";
-import handler from "@/pages/api/events";
-import { supabase } from "@/lib/supabase";
+import { createMocks } from 'node-mocks-http';
+import handler from '@/pages/api/events';
+import { supabase } from '@/lib/supabase';
 
-jest.mock("@/lib/supabase");
+jest.mock('@/lib/supabase');
 
-describe("/api/events", () => {
+describe('/api/events', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("GET /api/events", () => {
-    it("returns events for authenticated user", async () => {
+  describe('GET /api/events', () => {
+    it('returns events for authenticated user', async () => {
       const mockEvents = [
-        { id: "1", title: "Event 1", user_id: "user-1" },
-        { id: "2", title: "Event 2", user_id: "user-1" },
+        { id: '1', title: 'Event 1', user_id: 'user-1' },
+        { id: '2', title: 'Event 2', user_id: 'user-1' },
       ];
 
       (supabase.from as jest.Mock).mockReturnValue({
@@ -4727,15 +4731,15 @@ describe("/api/events", () => {
       });
 
       const { req, res } = createMocks({
-        method: "GET",
+        method: 'GET',
         headers: {
-          authorization: "Bearer valid-token",
+          authorization: 'Bearer valid-token',
         },
       });
 
       // Mock authenticated user
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({
-        data: { user: { id: "user-1" } },
+        data: { user: { id: 'user-1' } },
         error: null,
       });
 
@@ -4745,31 +4749,31 @@ describe("/api/events", () => {
       expect(JSON.parse(res._getData())).toEqual({ events: mockEvents });
     });
 
-    it("returns 401 for unauthenticated request", async () => {
+    it('returns 401 for unauthenticated request', async () => {
       const { req, res } = createMocks({
-        method: "GET",
+        method: 'GET',
       });
 
       await handler(req, res);
 
       expect(res._getStatusCode()).toBe(401);
-      expect(JSON.parse(res._getData())).toEqual({ error: "Unauthorized" });
+      expect(JSON.parse(res._getData())).toEqual({ error: 'Unauthorized' });
     });
   });
 
-  describe("POST /api/events", () => {
-    it("creates new event", async () => {
+  describe('POST /api/events', () => {
+    it('creates new event', async () => {
       const eventData = {
-        title: "New Event",
-        event_type: "wedding",
-        event_date: "2024-12-25",
-        location: "Auckland",
+        title: 'New Event',
+        event_type: 'wedding',
+        event_date: '2024-12-25',
+        location: 'Auckland',
         attendee_count: 100,
         duration_hours: 8,
         budget: 5000,
       };
 
-      const mockCreatedEvent = { id: "new-event-id", ...eventData };
+      const mockCreatedEvent = { id: 'new-event-id', ...eventData };
 
       (supabase.from as jest.Mock).mockReturnValue({
         insert: jest.fn().mockReturnValue({
@@ -4781,16 +4785,16 @@ describe("/api/events", () => {
       });
 
       const { req, res } = createMocks({
-        method: "POST",
+        method: 'POST',
         headers: {
-          authorization: "Bearer valid-token",
-          "content-type": "application/json",
+          authorization: 'Bearer valid-token',
+          'content-type': 'application/json',
         },
         body: eventData,
       });
 
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({
-        data: { user: { id: "user-1" } },
+        data: { user: { id: 'user-1' } },
         error: null,
       });
 
@@ -4800,30 +4804,30 @@ describe("/api/events", () => {
       expect(JSON.parse(res._getData())).toEqual(mockCreatedEvent);
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const invalidData = {
-        title: "", // Missing required field
-        event_type: "wedding",
+        title: '', // Missing required field
+        event_type: 'wedding',
       };
 
       const { req, res } = createMocks({
-        method: "POST",
+        method: 'POST',
         headers: {
-          authorization: "Bearer valid-token",
-          "content-type": "application/json",
+          authorization: 'Bearer valid-token',
+          'content-type': 'application/json',
         },
         body: invalidData,
       });
 
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({
-        data: { user: { id: "user-1" } },
+        data: { user: { id: 'user-1' } },
         error: null,
       });
 
       await handler(req, res);
 
       expect(res._getStatusCode()).toBe(400);
-      expect(JSON.parse(res._getData())).toHaveProperty("error");
+      expect(JSON.parse(res._getData())).toHaveProperty('error');
     });
   });
 });
@@ -4833,31 +4837,31 @@ describe("/api/events", () => {
 
 ```typescript
 // __tests__/lib/database.test.ts
-import { createEvent, getEventsByUser, updateEvent } from "@/lib/database";
-import { supabase } from "@/lib/supabase";
+import { createEvent, getEventsByUser, updateEvent } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 
-jest.mock("@/lib/supabase");
+jest.mock('@/lib/supabase');
 
-describe("Database Operations", () => {
+describe('Database Operations', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("createEvent", () => {
-    it("creates event successfully", async () => {
+  describe('createEvent', () => {
+    it('creates event successfully', async () => {
       const eventData = {
-        title: "Test Event",
-        user_id: "user-1",
-        event_type: "wedding",
-        event_date: "2024-12-25",
-        location: "Auckland",
+        title: 'Test Event',
+        user_id: 'user-1',
+        event_type: 'wedding',
+        event_date: '2024-12-25',
+        location: 'Auckland',
         attendee_count: 100,
         duration_hours: 8,
         budget: 5000,
       };
 
       const mockResponse = {
-        data: [{ id: "event-1", ...eventData }],
+        data: [{ id: 'event-1', ...eventData }],
         error: null,
       };
 
@@ -4870,12 +4874,12 @@ describe("Database Operations", () => {
       const result = await createEvent(eventData);
 
       expect(result).toEqual(mockResponse.data[0]);
-      expect(supabase.from).toHaveBeenCalledWith("events");
+      expect(supabase.from).toHaveBeenCalledWith('events');
     });
 
-    it("handles database errors", async () => {
-      const eventData = { title: "Test Event", user_id: "user-1" };
-      const mockError = { message: "Database error" };
+    it('handles database errors', async () => {
+      const eventData = { title: 'Test Event', user_id: 'user-1' };
+      const mockError = { message: 'Database error' };
 
       (supabase.from as jest.Mock).mockReturnValue({
         insert: jest.fn().mockReturnValue({
@@ -4883,7 +4887,7 @@ describe("Database Operations", () => {
         }),
       });
 
-      await expect(createEvent(eventData)).rejects.toThrow("Database error");
+      await expect(createEvent(eventData)).rejects.toThrow('Database error');
     });
   });
 });
@@ -4897,23 +4901,23 @@ describe("Database Operations", () => {
 
 ```typescript
 // __tests__/integration/api.test.ts
-import request from "supertest";
-import { app } from "@/pages/api/events";
-import { setupTestDatabase, cleanupTestDatabase } from "../helpers/database";
+import request from 'supertest';
+import { app } from '@/pages/api/events';
+import { setupTestDatabase, cleanupTestDatabase } from '../helpers/database';
 
-describe("Events API Integration", () => {
+describe('Events API Integration', () => {
   let authToken: string;
   let userId: string;
 
   beforeAll(async () => {
     await setupTestDatabase();
     // Create test user and get auth token
-    const authResponse = await request(app).post("/api/auth/register").send({
-      email: "test@example.com",
-      password: "TestPassword123",
-      first_name: "Test",
-      last_name: "User",
-      role: "event_manager",
+    const authResponse = await request(app).post('/api/auth/register').send({
+      email: 'test@example.com',
+      password: 'TestPassword123',
+      first_name: 'Test',
+      last_name: 'User',
+      role: 'event_manager',
     });
 
     authToken = authResponse.body.access_token;
@@ -4924,23 +4928,23 @@ describe("Events API Integration", () => {
     await cleanupTestDatabase();
   });
 
-  describe("Event CRUD Operations", () => {
+  describe('Event CRUD Operations', () => {
     let eventId: string;
 
-    it("creates a new event", async () => {
+    it('creates a new event', async () => {
       const eventData = {
-        title: "Integration Test Event",
-        event_type: "wedding",
-        event_date: "2024-12-25T10:00:00Z",
-        location: "Auckland",
+        title: 'Integration Test Event',
+        event_type: 'wedding',
+        event_date: '2024-12-25T10:00:00Z',
+        location: 'Auckland',
         attendee_count: 100,
         duration_hours: 8,
         budget: 5000,
       };
 
       const response = await request(app)
-        .post("/api/events")
-        .set("Authorization", `Bearer ${authToken}`)
+        .post('/api/events')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(eventData)
         .expect(201);
 
@@ -4948,25 +4952,25 @@ describe("Events API Integration", () => {
       eventId = response.body.id;
     });
 
-    it("retrieves events for user", async () => {
+    it('retrieves events for user', async () => {
       const response = await request(app)
-        .get("/api/events")
-        .set("Authorization", `Bearer ${authToken}`)
+        .get('/api/events')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body.events).toHaveLength(1);
       expect(response.body.events[0].id).toBe(eventId);
     });
 
-    it("updates an existing event", async () => {
+    it('updates an existing event', async () => {
       const updateData = {
-        title: "Updated Event Title",
+        title: 'Updated Event Title',
         budget: 6000,
       };
 
       const response = await request(app)
         .put(`/api/events/${eventId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
         .expect(200);
 
@@ -4974,31 +4978,31 @@ describe("Events API Integration", () => {
       expect(response.body.budget).toBe(updateData.budget);
     });
 
-    it("deletes an event", async () => {
+    it('deletes an event', async () => {
       await request(app)
         .delete(`/api/events/${eventId}`)
-        .set("Authorization", `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(204);
 
       // Verify event is deleted
       const response = await request(app)
-        .get("/api/events")
-        .set("Authorization", `Bearer ${authToken}`)
+        .get('/api/events')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body.events).toHaveLength(0);
     });
   });
 
-  describe("Authentication and Authorization", () => {
-    it("rejects requests without authentication", async () => {
-      await request(app).get("/api/events").expect(401);
+  describe('Authentication and Authorization', () => {
+    it('rejects requests without authentication', async () => {
+      await request(app).get('/api/events').expect(401);
     });
 
-    it("rejects requests with invalid token", async () => {
+    it('rejects requests with invalid token', async () => {
       await request(app)
-        .get("/api/events")
-        .set("Authorization", "Bearer invalid-token")
+        .get('/api/events')
+        .set('Authorization', 'Bearer invalid-token')
         .expect(401);
     });
   });
@@ -5011,10 +5015,10 @@ describe("Events API Integration", () => {
 
 ```typescript
 // __tests__/integration/database.test.ts
-import { supabase } from "@/lib/supabase";
-import { setupTestDatabase, cleanupTestDatabase } from "../helpers/database";
+import { supabase } from '@/lib/supabase';
+import { setupTestDatabase, cleanupTestDatabase } from '../helpers/database';
 
-describe("Database Schema Integration", () => {
+describe('Database Schema Integration', () => {
   beforeAll(async () => {
     await setupTestDatabase();
   });
@@ -5023,14 +5027,14 @@ describe("Database Schema Integration", () => {
     await cleanupTestDatabase();
   });
 
-  describe("User and Profile Relationships", () => {
-    it("creates user with profile", async () => {
+  describe('User and Profile Relationships', () => {
+    it('creates user with profile', async () => {
       const userData = {
-        email: "test@example.com",
-        password: "TestPassword123",
-        first_name: "Test",
-        last_name: "User",
-        role: "event_manager",
+        email: 'test@example.com',
+        password: 'TestPassword123',
+        first_name: 'Test',
+        last_name: 'User',
+        role: 'event_manager',
       };
 
       // Create user
@@ -5051,13 +5055,13 @@ describe("Database Schema Integration", () => {
 
       // Create profile
       const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .insert({
           user_id: authData.user.id,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          phone: "+64 21 123 4567",
-          address: "123 Test Street, Auckland",
+          phone: '+64 21 123 4567',
+          address: '123 Test Street, Auckland',
         })
         .select()
         .single();
@@ -5067,7 +5071,7 @@ describe("Database Schema Integration", () => {
     });
   });
 
-  describe("Event and Service Relationships", () => {
+  describe('Event and Service Relationships', () => {
     let userId: string;
     let eventId: string;
     let serviceId: string;
@@ -5075,20 +5079,20 @@ describe("Database Schema Integration", () => {
     beforeEach(async () => {
       // Create test user
       const { data: authData } = await supabase.auth.signUp({
-        email: "eventtest@example.com",
-        password: "TestPassword123",
+        email: 'eventtest@example.com',
+        password: 'TestPassword123',
       });
       userId = authData.user.id;
 
       // Create test event
       const { data: eventData } = await supabase
-        .from("events")
+        .from('events')
         .insert({
           user_id: userId,
-          title: "Test Event",
-          event_type: "wedding",
-          event_date: "2024-12-25T10:00:00Z",
-          location: "Auckland",
+          title: 'Test Event',
+          event_type: 'wedding',
+          event_date: '2024-12-25T10:00:00Z',
+          location: 'Auckland',
           attendee_count: 100,
           duration_hours: 8,
           budget: 5000,
@@ -5099,12 +5103,12 @@ describe("Database Schema Integration", () => {
 
       // Create test service
       const { data: serviceData } = await supabase
-        .from("services")
+        .from('services')
         .insert({
-          business_profile_id: "test-business-profile",
-          name: "DJ Services",
-          description: "Professional DJ services",
-          category: "entertainment",
+          business_profile_id: 'test-business-profile',
+          name: 'DJ Services',
+          description: 'Professional DJ services',
+          category: 'entertainment',
           price_range_min: 500,
           price_range_max: 1500,
         })
@@ -5113,13 +5117,13 @@ describe("Database Schema Integration", () => {
       serviceId = serviceData.id;
     });
 
-    it("creates event-service relationship", async () => {
+    it('creates event-service relationship', async () => {
       const { data, error } = await supabase
-        .from("event_services")
+        .from('event_services')
         .insert({
           event_id: eventId,
           service_id: serviceId,
-          status: "required",
+          status: 'required',
           budget_allocated: 1000,
         })
         .select()
@@ -5141,53 +5145,53 @@ describe("Database Schema Integration", () => {
 
 ```typescript
 // e2e/auth.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Authentication Flow", () => {
-  test("user can register and login", async ({ page }) => {
+test.describe('Authentication Flow', () => {
+  test('user can register and login', async ({ page }) => {
     // Navigate to registration page
-    await page.goto("/register");
+    await page.goto('/register');
 
     // Fill registration form
-    await page.fill('[data-testid="email-input"]', "test@example.com");
-    await page.fill('[data-testid="password-input"]', "TestPassword123");
-    await page.fill('[data-testid="first-name-input"]', "Test");
-    await page.fill('[data-testid="last-name-input"]', "User");
-    await page.selectOption('[data-testid="role-select"]', "event_manager");
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'TestPassword123');
+    await page.fill('[data-testid="first-name-input"]', 'Test');
+    await page.fill('[data-testid="last-name-input"]', 'User');
+    await page.selectOption('[data-testid="role-select"]', 'event_manager');
 
     // Submit form
     await page.click('[data-testid="register-button"]');
 
     // Should redirect to email verification page
-    await expect(page).toHaveURL("/verify-email");
-    await expect(page.locator("text=Check your email")).toBeVisible();
+    await expect(page).toHaveURL('/verify-email');
+    await expect(page.locator('text=Check your email')).toBeVisible();
   });
 
-  test("user can login with valid credentials", async ({ page }) => {
+  test('user can login with valid credentials', async ({ page }) => {
     // Navigate to login page
-    await page.goto("/login");
+    await page.goto('/login');
 
     // Fill login form
-    await page.fill('[data-testid="email-input"]', "test@example.com");
-    await page.fill('[data-testid="password-input"]', "TestPassword123");
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'TestPassword123');
 
     // Submit form
     await page.click('[data-testid="login-button"]');
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL("/dashboard");
-    await expect(page.locator("text=Welcome to your dashboard")).toBeVisible();
+    await expect(page).toHaveURL('/dashboard');
+    await expect(page.locator('text=Welcome to your dashboard')).toBeVisible();
   });
 
-  test("user cannot access protected routes without authentication", async ({
+  test('user cannot access protected routes without authentication', async ({
     page,
   }) => {
     // Try to access protected route
-    await page.goto("/events");
+    await page.goto('/events');
 
     // Should redirect to login page
-    await expect(page).toHaveURL("/login");
-    await expect(page.locator("text=Please log in to continue")).toBeVisible();
+    await expect(page).toHaveURL('/login');
+    await expect(page.locator('text=Please log in to continue')).toBeVisible();
   });
 });
 ```
@@ -5196,63 +5200,63 @@ test.describe("Authentication Flow", () => {
 
 ```typescript
 // e2e/events.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Event Management", () => {
+test.describe('Event Management', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
-    await page.goto("/login");
-    await page.fill('[data-testid="email-input"]', "test@example.com");
-    await page.fill('[data-testid="password-input"]', "TestPassword123");
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'TestPassword123');
     await page.click('[data-testid="login-button"]');
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL('/dashboard');
   });
 
-  test("user can create a new event", async ({ page }) => {
+  test('user can create a new event', async ({ page }) => {
     // Navigate to events page
-    await page.goto("/events");
+    await page.goto('/events');
 
     // Click create event button
     await page.click('[data-testid="create-event-button"]');
 
     // Fill event form
-    await page.fill('[data-testid="event-title-input"]', "Test Wedding");
-    await page.selectOption('[data-testid="event-type-select"]', "wedding");
-    await page.fill('[data-testid="event-date-input"]', "2024-12-25");
-    await page.fill('[data-testid="event-location-input"]', "Auckland");
-    await page.fill('[data-testid="attendee-count-input"]', "100");
-    await page.fill('[data-testid="duration-input"]', "8");
-    await page.fill('[data-testid="budget-input"]', "5000");
+    await page.fill('[data-testid="event-title-input"]', 'Test Wedding');
+    await page.selectOption('[data-testid="event-type-select"]', 'wedding');
+    await page.fill('[data-testid="event-date-input"]', '2024-12-25');
+    await page.fill('[data-testid="event-location-input"]', 'Auckland');
+    await page.fill('[data-testid="attendee-count-input"]', '100');
+    await page.fill('[data-testid="duration-input"]', '8');
+    await page.fill('[data-testid="budget-input"]', '5000');
 
     // Submit form
     await page.click('[data-testid="submit-event-button"]');
 
     // Should show success message and redirect to events list
-    await expect(page.locator("text=Event created successfully")).toBeVisible();
-    await expect(page.locator("text=Test Wedding")).toBeVisible();
+    await expect(page.locator('text=Event created successfully')).toBeVisible();
+    await expect(page.locator('text=Test Wedding')).toBeVisible();
   });
 
-  test("user can edit an existing event", async ({ page }) => {
+  test('user can edit an existing event', async ({ page }) => {
     // Navigate to events page
-    await page.goto("/events");
+    await page.goto('/events');
 
     // Click edit button on first event
     await page.click('[data-testid="edit-event-button"]');
 
     // Update event title
-    await page.fill('[data-testid="event-title-input"]', "Updated Event Title");
+    await page.fill('[data-testid="event-title-input"]', 'Updated Event Title');
 
     // Submit form
     await page.click('[data-testid="submit-event-button"]');
 
     // Should show success message
-    await expect(page.locator("text=Event updated successfully")).toBeVisible();
-    await expect(page.locator("text=Updated Event Title")).toBeVisible();
+    await expect(page.locator('text=Event updated successfully')).toBeVisible();
+    await expect(page.locator('text=Updated Event Title')).toBeVisible();
   });
 
-  test("user can delete an event", async ({ page }) => {
+  test('user can delete an event', async ({ page }) => {
     // Navigate to events page
-    await page.goto("/events");
+    await page.goto('/events');
 
     // Click delete button on first event
     await page.click('[data-testid="delete-event-button"]');
@@ -5261,7 +5265,7 @@ test.describe("Event Management", () => {
     await page.click('[data-testid="confirm-delete-button"]');
 
     // Should show success message
-    await expect(page.locator("text=Event deleted successfully")).toBeVisible();
+    await expect(page.locator('text=Event deleted successfully')).toBeVisible();
   });
 });
 ```
@@ -5270,15 +5274,15 @@ test.describe("Event Management", () => {
 
 ```typescript
 // e2e/contractors.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Contractor Search and Discovery", () => {
-  test("user can search for contractors", async ({ page }) => {
+test.describe('Contractor Search and Discovery', () => {
+  test('user can search for contractors', async ({ page }) => {
     // Navigate to contractors page
-    await page.goto("/contractors");
+    await page.goto('/contractors');
 
     // Search for DJ services
-    await page.fill('[data-testid="search-input"]', "DJ");
+    await page.fill('[data-testid="search-input"]', 'DJ');
     await page.click('[data-testid="search-button"]');
 
     // Should show search results
@@ -5287,7 +5291,7 @@ test.describe("Contractor Search and Discovery", () => {
     ).toHaveCount.greaterThan(0);
 
     // Filter by location
-    await page.selectOption('[data-testid="location-filter"]', "Auckland");
+    await page.selectOption('[data-testid="location-filter"]', 'Auckland');
 
     // Should update results
     await expect(
@@ -5295,9 +5299,9 @@ test.describe("Contractor Search and Discovery", () => {
     ).toHaveCount.greaterThan(0);
   });
 
-  test("user can view contractor profile", async ({ page }) => {
+  test('user can view contractor profile', async ({ page }) => {
     // Navigate to contractors page
-    await page.goto("/contractors");
+    await page.goto('/contractors');
 
     // Click on first contractor card
     await page.click('[data-testid="contractor-card"]:first-child');
@@ -5315,15 +5319,15 @@ test.describe("Contractor Search and Discovery", () => {
     ).toBeVisible();
   });
 
-  test("user can send enquiry to contractor", async ({ page }) => {
+  test('user can send enquiry to contractor', async ({ page }) => {
     // Login first
-    await page.goto("/login");
-    await page.fill('[data-testid="email-input"]', "test@example.com");
-    await page.fill('[data-testid="password-input"]', "TestPassword123");
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'TestPassword123');
     await page.click('[data-testid="login-button"]');
 
     // Navigate to contractor profile
-    await page.goto("/contractors/test-contractor-id");
+    await page.goto('/contractors/test-contractor-id');
 
     // Click send enquiry button
     await page.click('[data-testid="send-enquiry-button"]');
@@ -5331,14 +5335,14 @@ test.describe("Contractor Search and Discovery", () => {
     // Fill enquiry form
     await page.fill(
       '[data-testid="enquiry-message-textarea"]',
-      "Hi, I am interested in your DJ services for my wedding on December 25th."
+      'Hi, I am interested in your DJ services for my wedding on December 25th.'
     );
 
     // Submit enquiry
     await page.click('[data-testid="submit-enquiry-button"]');
 
     // Should show success message
-    await expect(page.locator("text=Enquiry sent successfully")).toBeVisible();
+    await expect(page.locator('text=Enquiry sent successfully')).toBeVisible();
   });
 });
 ```
@@ -5351,33 +5355,33 @@ test.describe("Contractor Search and Discovery", () => {
 
 ```typescript
 // __tests__/performance/api-load.test.ts
-import { check, sleep } from "k6";
-import http from "k6/http";
+import { check, sleep } from 'k6';
+import http from 'k6/http';
 
 export let options = {
   stages: [
-    { duration: "2m", target: 100 }, // Ramp up to 100 users
-    { duration: "5m", target: 100 }, // Stay at 100 users
-    { duration: "2m", target: 200 }, // Ramp up to 200 users
-    { duration: "5m", target: 200 }, // Stay at 200 users
-    { duration: "2m", target: 0 }, // Ramp down to 0 users
+    { duration: '2m', target: 100 }, // Ramp up to 100 users
+    { duration: '5m', target: 100 }, // Stay at 100 users
+    { duration: '2m', target: 200 }, // Ramp up to 200 users
+    { duration: '5m', target: 200 }, // Stay at 200 users
+    { duration: '2m', target: 0 }, // Ramp down to 0 users
   ],
   thresholds: {
-    http_req_duration: ["p(95)<500"], // 95% of requests must complete below 500ms
-    http_req_failed: ["rate<0.1"], // Error rate must be below 10%
+    http_req_duration: ['p(95)<500'], // 95% of requests must complete below 500ms
+    http_req_failed: ['rate<0.1'], // Error rate must be below 10%
   },
 };
 
-const BASE_URL = "https://api.eventpros.co.nz/v1";
+const BASE_URL = 'https://api.eventpros.co.nz/v1';
 
 export default function () {
   // Test contractor search endpoint
   let response = http.get(`${BASE_URL}/contractors?search=DJ&limit=20`);
 
   check(response, {
-    "contractor search status is 200": (r) => r.status === 200,
-    "contractor search response time < 500ms": (r) => r.timings.duration < 500,
-    "contractor search returns data": (r) =>
+    'contractor search status is 200': r => r.status === 200,
+    'contractor search response time < 500ms': r => r.timings.duration < 500,
+    'contractor search returns data': r =>
       JSON.parse(r.body).contractors.length > 0,
   });
 
@@ -5385,22 +5389,22 @@ export default function () {
 
   // Test event creation endpoint
   const eventData = {
-    title: "Load Test Event",
-    event_type: "wedding",
-    event_date: "2024-12-25T10:00:00Z",
-    location: "Auckland",
+    title: 'Load Test Event',
+    event_type: 'wedding',
+    event_date: '2024-12-25T10:00:00Z',
+    location: 'Auckland',
     attendee_count: 100,
     duration_hours: 8,
     budget: 5000,
   };
 
   response = http.post(`${BASE_URL}/events`, JSON.stringify(eventData), {
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 
   check(response, {
-    "event creation status is 201": (r) => r.status === 201,
-    "event creation response time < 1000ms": (r) => r.timings.duration < 1000,
+    'event creation status is 201': r => r.status === 201,
+    'event creation response time < 1000ms': r => r.timings.duration < 1000,
   });
 
   sleep(1);
@@ -5413,19 +5417,19 @@ export default function () {
 
 ```typescript
 // e2e/performance.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Performance Tests", () => {
-  test("homepage meets performance standards", async ({ page }) => {
+test.describe('Performance Tests', () => {
+  test('homepage meets performance standards', async ({ page }) => {
     // Navigate to homepage
-    await page.goto("/");
+    await page.goto('/');
 
     // Run Lighthouse audit
     const lighthouse = await page.evaluate(() => {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         // This would integrate with Lighthouse CI
         // For now, we'll check basic performance metrics
-        const navigation = performance.getEntriesByType("navigation")[0];
+        const navigation = performance.getEntriesByType('navigation')[0];
         resolve({
           loadTime: navigation.loadEventEnd - navigation.loadEventStart,
           domContentLoaded:
@@ -5439,10 +5443,10 @@ test.describe("Performance Tests", () => {
     expect(lighthouse.domContentLoaded).toBeLessThan(1500); // 1.5 seconds
   });
 
-  test("contractor search page loads quickly", async ({ page }) => {
+  test('contractor search page loads quickly', async ({ page }) => {
     const startTime = Date.now();
 
-    await page.goto("/contractors");
+    await page.goto('/contractors');
     await page.waitForSelector('[data-testid="contractor-card"]');
 
     const loadTime = Date.now() - startTime;
@@ -5459,17 +5463,17 @@ test.describe("Performance Tests", () => {
 
 ```typescript
 // __tests__/factories/eventFactory.ts
-import { faker } from "@faker-js/faker";
+import { faker } from '@faker-js/faker';
 
 export const createMockEvent = (overrides = {}) => ({
   id: faker.string.uuid(),
   user_id: faker.string.uuid(),
   title: faker.lorem.words(3),
   event_type: faker.helpers.arrayElement([
-    "wedding",
-    "corporate",
-    "party",
-    "conference",
+    'wedding',
+    'corporate',
+    'party',
+    'conference',
   ]),
   event_date: faker.date.future().toISOString(),
   location: faker.location.city(),
@@ -5477,10 +5481,10 @@ export const createMockEvent = (overrides = {}) => ({
   duration_hours: faker.number.float({ min: 1, max: 12, fractionDigits: 1 }),
   budget: faker.number.int({ min: 1000, max: 50000 }),
   status: faker.helpers.arrayElement([
-    "draft",
-    "planning",
-    "confirmed",
-    "completed",
+    'draft',
+    'planning',
+    'confirmed',
+    'completed',
   ]),
   created_at: faker.date.past().toISOString(),
   updated_at: faker.date.recent().toISOString(),
@@ -5492,7 +5496,7 @@ export const createMockContractor = (overrides = {}) => ({
   company_name: faker.company.name(),
   description: faker.lorem.paragraph(),
   service_categories: faker.helpers.arrayElements(
-    ["DJ Services", "Photography", "Catering", "Floral", "Venue"],
+    ['DJ Services', 'Photography', 'Catering', 'Floral', 'Venue'],
     { min: 1, max: 3 }
   ),
   location: faker.location.city(),
@@ -5500,9 +5504,9 @@ export const createMockContractor = (overrides = {}) => ({
   review_count: faker.number.int({ min: 0, max: 100 }),
   is_verified: faker.datatype.boolean(),
   subscription_tier: faker.helpers.arrayElement([
-    "essential",
-    "showcase",
-    "spotlight",
+    'essential',
+    'showcase',
+    'spotlight',
   ]),
   ...overrides,
 });
@@ -5510,7 +5514,7 @@ export const createMockContractor = (overrides = {}) => ({
 export const createMockUser = (overrides = {}) => ({
   id: faker.string.uuid(),
   email: faker.internet.email(),
-  role: faker.helpers.arrayElement(["event_manager", "contractor", "admin"]),
+  role: faker.helpers.arrayElement(['event_manager', 'contractor', 'admin']),
   is_verified: faker.datatype.boolean(),
   created_at: faker.date.past().toISOString(),
   updated_at: faker.date.recent().toISOString(),
@@ -5522,33 +5526,33 @@ export const createMockUser = (overrides = {}) => ({
 
 ```typescript
 // __tests__/mocks/handlers.ts
-import { rest } from "msw";
+import { rest } from 'msw';
 
 export const handlers = [
   // Auth endpoints
-  rest.post("/api/auth/login", (req, res, ctx) => {
+  rest.post('/api/auth/login', (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json({
-        user: { id: "user-1", email: "test@example.com" },
-        access_token: "mock-access-token",
-        refresh_token: "mock-refresh-token",
+        user: { id: 'user-1', email: 'test@example.com' },
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
       })
     );
   }),
 
   // Events endpoints
-  rest.get("/api/events", (req, res, ctx) => {
+  rest.get('/api/events', (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json({
         events: [
           {
-            id: "event-1",
-            title: "Test Event",
-            event_type: "wedding",
-            location: "Auckland",
-            status: "confirmed",
+            id: 'event-1',
+            title: 'Test Event',
+            event_type: 'wedding',
+            location: 'Auckland',
+            status: 'confirmed',
           },
         ],
         total: 1,
@@ -5556,11 +5560,11 @@ export const handlers = [
     );
   }),
 
-  rest.post("/api/events", (req, res, ctx) => {
+  rest.post('/api/events', (req, res, ctx) => {
     return res(
       ctx.status(201),
       ctx.json({
-        id: "new-event-id",
+        id: 'new-event-id',
         ...req.body,
         created_at: new Date().toISOString(),
       })
@@ -5568,16 +5572,16 @@ export const handlers = [
   }),
 
   // Contractors endpoints
-  rest.get("/api/contractors", (req, res, ctx) => {
+  rest.get('/api/contractors', (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json({
         contractors: [
           {
-            id: "contractor-1",
-            company_name: "Test DJ Services",
-            description: "Professional DJ services",
-            location: "Auckland",
+            id: 'contractor-1',
+            company_name: 'Test DJ Services',
+            description: 'Professional DJ services',
+            location: 'Auckland',
             average_rating: 4.5,
             is_verified: true,
           },
@@ -5597,22 +5601,22 @@ export const handlers = [
 
 ```javascript
 // jest.config.js
-const nextJest = require("next/jest");
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
-  dir: "./",
+  dir: './',
 });
 
 const customJestConfig = {
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  testEnvironment: "jest-environment-jsdom",
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
   moduleNameMapping: {
-    "^@/(.*)$": "<rootDir>/src/$1",
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   collectCoverageFrom: [
-    "src/**/*.{js,jsx,ts,tsx}",
-    "!src/**/*.d.ts",
-    "!src/**/*.stories.{js,jsx,ts,tsx}",
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
   coverageThreshold: {
     global: {
@@ -5623,8 +5627,8 @@ const customJestConfig = {
     },
   },
   testMatch: [
-    "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
-    "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+    '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
 };
 
@@ -5637,44 +5641,44 @@ module.exports = createJestConfig(customJestConfig);
 
 ```typescript
 // playwright.config.ts
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  reporter: 'html',
   use: {
-    baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
     },
     {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
     {
-      name: "Mobile Chrome",
-      use: { ...devices["Pixel 5"] },
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
     },
     {
-      name: "Mobile Safari",
-      use: { ...devices["iPhone 12"] },
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
     },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
 });
@@ -5733,7 +5737,7 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: "18.x"
+  NODE_VERSION: '18.x'
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
@@ -5750,7 +5754,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -5791,7 +5795,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -5826,7 +5830,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -5861,7 +5865,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -5879,7 +5883,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ env.VERCEL_ORG_ID }}
           vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
-          vercel-args: "--prod"
+          vercel-args: '--prod'
           working-directory: ./
 
   # Security Scanning
@@ -5894,15 +5898,15 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: "trivy-results.sarif"
+          sarif_file: 'trivy-results.sarif'
 
       - name: Run npm audit
         run: npm audit --audit-level moderate
@@ -5921,7 +5925,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -6329,12 +6333,12 @@ function ErrorFallback({
 
 ```typescript
 // lib/web-vitals.ts
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from "web-vitals";
+import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
 
 function sendToAnalytics(metric: any) {
   // Send to Vercel Analytics
-  if (typeof window !== "undefined" && window.analytics) {
-    window.analytics.track("web_vital", {
+  if (typeof window !== 'undefined' && window.analytics) {
+    window.analytics.track('web_vital', {
       name: metric.name,
       value: metric.value,
       delta: metric.delta,
@@ -6344,12 +6348,12 @@ function sendToAnalytics(metric: any) {
   }
 
   // Send to Google Analytics
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", metric.name, {
-      event_category: "Web Vitals",
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', metric.name, {
+      event_category: 'Web Vitals',
       event_label: metric.id,
       value: Math.round(
-        metric.name === "CLS" ? metric.value * 1000 : metric.value
+        metric.name === 'CLS' ? metric.value * 1000 : metric.value
       ),
       non_interaction: true,
     });
@@ -6412,7 +6416,7 @@ name: Database Backup
 
 on:
   schedule:
-    - cron: "0 2 * * *" # Daily at 2 AM UTC
+    - cron: '0 2 * * *' # Daily at 2 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -6472,7 +6476,7 @@ name: Security Scan
 
 on:
   schedule:
-    - cron: "0 0 * * 1" # Weekly on Monday
+    - cron: '0 0 * * 1' # Weekly on Monday
   push:
     branches: [main]
 
@@ -6507,7 +6511,7 @@ name: Infrastructure Security
 
 on:
   schedule:
-    - cron: "0 6 * * *" # Daily at 6 AM UTC
+    - cron: '0 6 * * *' # Daily at 6 AM UTC
 
 jobs:
   security-scan:
@@ -6519,15 +6523,15 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: "trivy-results.sarif"
+          sarif_file: 'trivy-results.sarif'
 ```
 
 ### Disaster Recovery
@@ -6649,19 +6653,16 @@ curl -X POST -H 'Content-type: application/json' \
 ## Response Process
 
 1. **Acknowledge** (5 minutes)
-
    - Confirm incident
    - Assign severity level
    - Notify team
 
 2. **Investigate** (15 minutes)
-
    - Check monitoring dashboards
    - Review recent deployments
    - Identify root cause
 
 3. **Mitigate** (30 minutes)
-
    - Implement fix or rollback
    - Verify resolution
    - Monitor for stability

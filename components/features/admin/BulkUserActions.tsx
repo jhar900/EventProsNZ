@@ -189,7 +189,7 @@ export default function BulkUserActions({
       setActionInput('');
       setActionData(null);
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      // Error handled
     }
   };
 

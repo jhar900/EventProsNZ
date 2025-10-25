@@ -102,23 +102,14 @@ export class FraudDetectionService {
       score += 40;
     }
 
-    // Check for suspicious IP addresses
+    // Check for suspicious IP addresses (only private/local IPs)
     const suspiciousIPs = ['192.168.1.1', '10.0.0.1', '127.0.0.1'];
     if (suspiciousIPs.includes(paymentData.ip_address)) {
       factors.push('Suspicious IP address');
       score += 30;
     }
 
-    // Check for suspicious user agents
-    const suspiciousAgents = ['curl', 'wget', 'python', 'bot'];
-    if (
-      suspiciousAgents.some(agent =>
-        paymentData.user_agent.toLowerCase().includes(agent)
-      )
-    ) {
-      factors.push('Suspicious user agent');
-      score += 25;
-    }
+    // User agent checking is handled in checkDeviceFingerprint method
 
     // Determine risk level and action
     let riskLevel: 'low' | 'medium' | 'high';

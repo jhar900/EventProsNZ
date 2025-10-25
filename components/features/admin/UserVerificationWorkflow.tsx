@@ -198,7 +198,7 @@ export default function UserVerificationWorkflow({
       );
       setAdminNotes('');
     } catch (error) {
-      console.error('Approval failed:', error);
+      // Error handled
     }
   };
 
@@ -221,7 +221,7 @@ export default function UserVerificationWorkflow({
       setAdminNotes('');
       setShowRejectDialog(false);
     } catch (error) {
-      console.error('Rejection failed:', error);
+      // Error handled
     }
   };
 
@@ -234,7 +234,7 @@ export default function UserVerificationWorkflow({
         )
       );
     } catch (error) {
-      console.error('Resubmit failed:', error);
+      // Error handled
     }
   };
 

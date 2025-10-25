@@ -37,6 +37,7 @@ import {
   Monitor,
   Smartphone,
   Globe,
+  Shield,
 } from 'lucide-react';
 import { format } from 'date-fns';
 

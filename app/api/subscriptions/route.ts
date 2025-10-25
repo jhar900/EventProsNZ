@@ -8,7 +8,7 @@ import { headers } from 'next/headers';
 export async function GET(request: NextRequest) {
   try {
     // Apply rate limiting
-    const rateLimitResult = rateLimit(request, subscriptionRateLimiter);
+    const rateLimitResult = await subscriptionRateLimiter(request);
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: rateLimitResult.message },
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Apply rate limiting
-    const rateLimitResult = rateLimit(request, subscriptionRateLimiter);
+    const rateLimitResult = await subscriptionRateLimiter(request);
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: rateLimitResult.message },

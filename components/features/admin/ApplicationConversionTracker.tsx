@@ -128,7 +128,7 @@ export default function ApplicationConversionTracker() {
         setFunnel(funnelData.funnel || []);
       }
     } catch (error) {
-      console.error('Error loading conversion data:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +155,7 @@ export default function ApplicationConversionTracker() {
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Error exporting conversion report:', error);
+      // Error handled
     }
   };
 

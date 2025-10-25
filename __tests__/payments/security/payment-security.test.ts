@@ -189,6 +189,32 @@ describe('Payment Security', () => {
           timestamp: '2024-01-15T10:30:00Z', // Use a weekday timestamp
         };
 
+        // Mock all database calls to return no risk factors
+        mockSupabase.from.mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST116', message: 'No rows found' },
+              }),
+              gte: jest.fn().mockReturnValue({
+                order: jest.fn().mockReturnValue({
+                  limit: jest.fn().mockResolvedValue({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+              order: jest.fn().mockReturnValue({
+                limit: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        });
+
         const riskAnalysis =
           await fraudDetectionService.analyzePaymentRisk(paymentData);
 
@@ -207,6 +233,32 @@ describe('Payment Security', () => {
           user_agent: 'curl/7.68.0', // Suspicious user agent
           timestamp: '2024-01-15T10:30:00Z',
         };
+
+        // Mock database calls to return no additional risk factors
+        mockSupabase.from.mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST116', message: 'No rows found' },
+              }),
+              gte: jest.fn().mockReturnValue({
+                order: jest.fn().mockReturnValue({
+                  limit: jest.fn().mockResolvedValue({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+              order: jest.fn().mockReturnValue({
+                limit: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        });
 
         const riskAnalysis =
           await fraudDetectionService.analyzePaymentRisk(paymentData);
@@ -312,7 +364,7 @@ describe('Payment Security', () => {
           .eq()
           .single.mockResolvedValue({
             data: null,
-            error: { message: 'No rows found' },
+            error: { code: 'PGRST116', message: 'No rows found' },
           });
 
         const isBlacklisted =

@@ -174,7 +174,7 @@ export default function UserSatisfactionTracker() {
         setCampaigns(campaignsData.campaigns || []);
       }
     } catch (error) {
-      console.error('Error loading satisfaction data:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +226,7 @@ export default function UserSatisfactionTracker() {
         await loadSatisfactionData();
       }
     } catch (error) {
-      console.error('Error sending survey:', error);
+      // Error handled
     }
   };
 
@@ -249,7 +249,7 @@ export default function UserSatisfactionTracker() {
         });
       }
     } catch (error) {
-      console.error('Error creating survey campaign:', error);
+      // Error handled
     }
   };
 

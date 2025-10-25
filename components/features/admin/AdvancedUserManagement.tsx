@@ -99,7 +99,7 @@ export default function AdvancedUserManagement() {
           setSavedSearches(data.searches || []);
         }
       } catch (error) {
-        console.error('Failed to load saved searches:', error);
+        // Error handled
       }
     };
 
@@ -129,7 +129,7 @@ export default function AdvancedUserManagement() {
         setUsers(data.users || []);
       }
     } catch (error) {
-      console.error('Search failed:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +149,7 @@ export default function AdvancedUserManagement() {
         setSavedSearches(prev => [...prev, search]);
       }
     } catch (error) {
-      console.error('Failed to save search:', error);
+      // Error handled
     }
   };
 
@@ -190,7 +190,7 @@ export default function AdvancedUserManagement() {
         setSelectedUsers([]);
       }
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }

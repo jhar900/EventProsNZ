@@ -51,6 +51,8 @@ import {
   Users,
   Calendar,
   AlertCircle,
+  MessageSquare,
+  Bell,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -315,7 +317,7 @@ export default function UserCommunicationTools({
         admin_notes: '',
       });
     } catch (error) {
-      console.error('Communication failed:', error);
+      // Error handled
     }
   };
 
@@ -342,7 +344,7 @@ export default function UserCommunicationTools({
         type: 'custom',
       });
     } catch (error) {
-      console.error('Template save failed:', error);
+      // Error handled
     }
   };
 

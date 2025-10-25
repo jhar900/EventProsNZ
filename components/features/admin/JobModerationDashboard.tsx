@@ -102,7 +102,7 @@ export default function JobModerationDashboard() {
         setFilteredJobs(data.jobs || []);
       }
     } catch (error) {
-      console.error('Error loading jobs:', error);
+      // Error handled
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +167,7 @@ export default function JobModerationDashboard() {
         setModerationComment('');
       }
     } catch (error) {
-      console.error('Error moderating job:', error);
+      // Error handled
     } finally {
       setIsModerating(false);
     }

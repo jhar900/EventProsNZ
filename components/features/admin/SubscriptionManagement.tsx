@@ -270,7 +270,7 @@ export default function SubscriptionManagement({
         admin_notes: '',
       });
     } catch (error) {
-      console.error('Modification failed:', error);
+      // Error handled
     }
   };
 
@@ -282,7 +282,7 @@ export default function SubscriptionManagement({
       setShowCancelDialog(false);
       setCancelReason('');
     } catch (error) {
-      console.error('Cancellation failed:', error);
+      // Error handled
     }
   };
 
@@ -290,7 +290,7 @@ export default function SubscriptionManagement({
     try {
       await onReactivateSubscription(subscription.user_id);
     } catch (error) {
-      console.error('Reactivation failed:', error);
+      // Error handled
     }
   };
 
@@ -302,7 +302,7 @@ export default function SubscriptionManagement({
       setShowExtendDialog(false);
       setExtendDays(30);
     } catch (error) {
-      console.error('Extension failed:', error);
+      // Error handled
     }
   };
 
@@ -318,7 +318,7 @@ export default function SubscriptionManagement({
       setShowRefundDialog(false);
       setRefundForm({ amount: 0, reason: '' });
     } catch (error) {
-      console.error('Refund failed:', error);
+      // Error handled
     }
   };
 

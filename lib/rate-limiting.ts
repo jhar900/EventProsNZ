@@ -23,7 +23,13 @@ export function createRateLimit(config: Partial<RateLimitConfig> = {}) {
 
   return async (
     request: NextRequest
-  ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> => {
+  ): Promise<{
+    allowed: boolean;
+    remaining: number;
+    resetTime: number;
+    message?: string;
+    headers: Record<string, string>;
+  }> => {
     const ip = getClientIP(request);
     const now = Date.now();
     const windowStart = now - finalConfig.windowMs;
@@ -50,6 +56,11 @@ export function createRateLimit(config: Partial<RateLimitConfig> = {}) {
         allowed: true,
         remaining: finalConfig.maxRequests - 1,
         resetTime: newEntry.resetTime,
+        headers: {
+          'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
+          'X-RateLimit-Remaining': (finalConfig.maxRequests - 1).toString(),
+          'X-RateLimit-Reset': Math.ceil(newEntry.resetTime / 1000).toString(),
+        },
       };
     }
 
@@ -59,6 +70,12 @@ export function createRateLimit(config: Partial<RateLimitConfig> = {}) {
         allowed: false,
         remaining: 0,
         resetTime: entry.resetTime,
+        message: 'Rate limit exceeded',
+        headers: {
+          'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': Math.ceil(entry.resetTime / 1000).toString(),
+        },
       };
     }
 
@@ -70,6 +87,13 @@ export function createRateLimit(config: Partial<RateLimitConfig> = {}) {
       allowed: true,
       remaining: finalConfig.maxRequests - entry.count,
       resetTime: entry.resetTime,
+      headers: {
+        'X-RateLimit-Limit': finalConfig.maxRequests.toString(),
+        'X-RateLimit-Remaining': (
+          finalConfig.maxRequests - entry.count
+        ).toString(),
+        'X-RateLimit-Reset': Math.ceil(entry.resetTime / 1000).toString(),
+      },
     };
   };
 }

@@ -68,34 +68,34 @@ class AuthService {
 
 ```typescript
 enum UserRole {
-  EVENT_MANAGER = "event_manager",
-  CONTRACTOR = "contractor",
-  ADMIN = "admin",
+  EVENT_MANAGER = 'event_manager',
+  CONTRACTOR = 'contractor',
+  ADMIN = 'admin',
 }
 
 enum Permission {
   // Event permissions
-  CREATE_EVENT = "create:event",
-  READ_EVENT = "read:event",
-  UPDATE_EVENT = "update:event",
-  DELETE_EVENT = "delete:event",
+  CREATE_EVENT = 'create:event',
+  READ_EVENT = 'read:event',
+  UPDATE_EVENT = 'update:event',
+  DELETE_EVENT = 'delete:event',
 
   // Contractor permissions
-  CREATE_CONTRACTOR_PROFILE = "create:contractor_profile",
-  READ_CONTRACTOR_PROFILE = "read:contractor_profile",
-  UPDATE_CONTRACTOR_PROFILE = "update:contractor_profile",
+  CREATE_CONTRACTOR_PROFILE = 'create:contractor_profile',
+  READ_CONTRACTOR_PROFILE = 'read:contractor_profile',
+  UPDATE_CONTRACTOR_PROFILE = 'update:contractor_profile',
 
   // Job permissions
-  CREATE_JOB = "create:job",
-  READ_JOB = "read:job",
-  UPDATE_JOB = "update:job",
-  DELETE_JOB = "delete:job",
-  APPLY_JOB = "apply:job",
+  CREATE_JOB = 'create:job',
+  READ_JOB = 'read:job',
+  UPDATE_JOB = 'update:job',
+  DELETE_JOB = 'delete:job',
+  APPLY_JOB = 'apply:job',
 
   // Admin permissions
-  MANAGE_USERS = "manage:users",
-  VIEW_ANALYTICS = "view:analytics",
-  MANAGE_SUBSCRIPTIONS = "manage:subscriptions",
+  MANAGE_USERS = 'manage:users',
+  VIEW_ANALYTICS = 'view:analytics',
+  MANAGE_SUBSCRIPTIONS = 'manage:subscriptions',
 }
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -131,10 +131,10 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 // API route protection
 export function withAuth(handler: NextApiHandler) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
@@ -144,13 +144,13 @@ export function withAuth(handler: NextApiHandler) {
       } = await supabase.auth.getUser(token);
 
       if (error || !user) {
-        return res.status(401).json({ error: "Invalid token" });
+        return res.status(401).json({ error: 'Invalid token' });
       }
 
       req.user = user;
       return handler(req, res);
     } catch (error) {
-      return res.status(401).json({ error: "Authentication failed" });
+      return res.status(401).json({ error: 'Authentication failed' });
     }
   };
 }
@@ -163,7 +163,7 @@ export function withPermission(permission: Permission) {
       const userPermissions = ROLE_PERMISSIONS[userRole];
 
       if (!userPermissions.includes(permission)) {
-        return res.status(403).json({ error: "Insufficient permissions" });
+        return res.status(403).json({ error: 'Insufficient permissions' });
       }
 
       return handler(req, res);
@@ -238,33 +238,33 @@ export default function EventsPage() {
 ```typescript
 // lib/validations/auth.ts
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email('Invalid email address'),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
+    .min(8, 'Password must be at least 8 characters')
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain uppercase, lowercase, and number"
+      'Password must contain uppercase, lowercase, and number'
     ),
-  first_name: z.string().min(2, "First name must be at least 2 characters"),
-  last_name: z.string().min(2, "Last name must be at least 2 characters"),
-  role: z.enum(["event_manager", "contractor"]),
+  first_name: z.string().min(2, 'First name must be at least 2 characters'),
+  last_name: z.string().min(2, 'Last name must be at least 2 characters'),
+  role: z.enum(['event_manager', 'contractor']),
 });
 
 // lib/validations/event.ts
 export const eventSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title too long"),
-  event_type: z.string().min(1, "Event type is required"),
-  event_date: z.date().min(new Date(), "Event date must be in the future"),
-  location: z.string().min(1, "Location is required"),
-  attendee_count: z.number().min(1, "Must have at least 1 attendee"),
-  duration_hours: z.number().min(0.5, "Duration must be at least 30 minutes"),
-  budget: z.number().min(0, "Budget must be positive"),
+  title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
+  event_type: z.string().min(1, 'Event type is required'),
+  event_date: z.date().min(new Date(), 'Event date must be in the future'),
+  location: z.string().min(1, 'Location is required'),
+  attendee_count: z.number().min(1, 'Must have at least 1 attendee'),
+  duration_hours: z.number().min(0.5, 'Duration must be at least 30 minutes'),
+  budget: z.number().min(0, 'Budget must be positive'),
 });
 ```
 
@@ -272,11 +272,11 @@ export const eventSchema = z.object({
 
 ```typescript
 // lib/utils/sanitize.ts
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from 'isomorphic-dompurify';
 
 export function sanitizeHtml(input: string): string {
   return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br"],
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
     ALLOWED_ATTR: [],
   });
 }
@@ -284,9 +284,9 @@ export function sanitizeHtml(input: string): string {
 export function sanitizeText(input: string): string {
   return input
     .trim()
-    .replace(/[<>]/g, "") // Remove potential HTML tags
-    .replace(/javascript:/gi, "") // Remove javascript: protocol
-    .replace(/on\w+=/gi, ""); // Remove event handlers
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, ''); // Remove event handlers
 }
 
 // API route validation
@@ -295,7 +295,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new ValidationError("Invalid input data", error.errors);
+      throw new ValidationError('Invalid input data', error.errors);
     }
     throw error;
   }
@@ -309,7 +309,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
 ```typescript
 // Using Supabase client with parameterized queries
 export async function getContractors(filters: ContractorFilters) {
-  let query = supabase.from("contractors").select(`
+  let query = supabase.from('contractors').select(`
       id,
       company_name,
       description,
@@ -321,15 +321,15 @@ export async function getContractors(filters: ContractorFilters) {
 
   // Safe parameter binding
   if (filters.search) {
-    query = query.ilike("company_name", `%${filters.search}%`);
+    query = query.ilike('company_name', `%${filters.search}%`);
   }
 
   if (filters.categories?.length) {
-    query = query.overlaps("service_categories", filters.categories);
+    query = query.overlaps('service_categories', filters.categories);
   }
 
   if (filters.min_rating) {
-    query = query.gte("average_rating", filters.min_rating);
+    query = query.gte('average_rating', filters.min_rating);
   }
 
   const { data, error } = await query;
@@ -349,10 +349,10 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: '/(.*)',
         headers: [
           {
-            key: "Content-Security-Policy",
+            key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
@@ -361,19 +361,19 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://*.supabase.co https://api.stripe.com",
               "frame-src 'self' https://js.stripe.com",
-            ].join("; "),
+            ].join('; '),
           },
           {
-            key: "X-Frame-Options",
-            value: "DENY",
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },
@@ -416,8 +416,8 @@ export function SafeInput({ value, onChange, ...props }: InputProps) {
 
 ```typescript
 // lib/rate-limit.ts
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -426,23 +426,23 @@ const redis = new Redis({
 
 export const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"), // 100 requests per minute
+  limiter: Ratelimit.slidingWindow(100, '1 m'), // 100 requests per minute
 });
 
 // API route protection
 export async function withRateLimit(req: NextApiRequest, res: NextApiResponse) {
-  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   const { success, limit, reset, remaining } = await ratelimit.limit(
     ip as string
   );
 
-  res.setHeader("X-RateLimit-Limit", limit.toString());
-  res.setHeader("X-RateLimit-Remaining", remaining.toString());
-  res.setHeader("X-RateLimit-Reset", new Date(reset).toISOString());
+  res.setHeader('X-RateLimit-Limit', limit.toString());
+  res.setHeader('X-RateLimit-Remaining', remaining.toString());
+  res.setHeader('X-RateLimit-Reset', new Date(reset).toISOString());
 
   if (!success) {
     return res.status(429).json({
-      error: "Too many requests",
+      error: 'Too many requests',
       retryAfter: Math.round((reset - Date.now()) / 1000),
     });
   }
@@ -455,26 +455,26 @@ export async function withRateLimit(req: NextApiRequest, res: NextApiResponse) {
 
 ```typescript
 // lib/cors.ts
-import Cors from "cors";
+import Cors from 'cors';
 
 const cors = Cors({
   origin: [
-    "https://eventpros.co.nz",
-    "https://www.eventpros.co.nz",
-    "https://staging.eventpros.co.nz",
-    ...(process.env.NODE_ENV === "development"
-      ? ["http://localhost:3000"]
+    'https://eventpros.co.nz',
+    'https://www.eventpros.co.nz',
+    'https://staging.eventpros.co.nz',
+    ...(process.env.NODE_ENV === 'development'
+      ? ['http://localhost:3000']
       : []),
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
 });
 
 export function withCors(handler: NextApiHandler) {
   return (req: NextApiRequest, res: NextApiResponse) => {
     return new Promise((resolve, reject) => {
-      cors(req, res, (result) => {
+      cors(req, res, result => {
         if (result instanceof Error) {
           return reject(result);
         }
@@ -493,35 +493,35 @@ export function withCors(handler: NextApiHandler) {
 
 ```typescript
 // lib/file-upload.ts
-import { createHash } from "crypto";
-import sharp from "sharp";
+import { createHash } from 'crypto';
+import sharp from 'sharp';
 
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_DOCUMENT_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function validateFile(file: File): Promise<ValidationResult> {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: "File too large" };
+    return { valid: false, error: 'File too large' };
   }
 
   // Check file type
   const allowedTypes = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES];
   if (!allowedTypes.includes(file.type)) {
-    return { valid: false, error: "Invalid file type" };
+    return { valid: false, error: 'Invalid file type' };
   }
 
   // Generate secure filename
-  const fileHash = createHash("sha256")
+  const fileHash = createHash('sha256')
     .update(file.name + Date.now())
-    .digest("hex");
+    .digest('hex');
 
-  const extension = file.name.split(".").pop();
+  const extension = file.name.split('.').pop();
   const secureFilename = `${fileHash}.${extension}`;
 
   return { valid: true, filename: secureFilename };
@@ -529,7 +529,7 @@ export async function validateFile(file: File): Promise<ValidationResult> {
 
 export async function processImage(file: Buffer): Promise<Buffer> {
   return await sharp(file)
-    .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+    .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
     .jpeg({ quality: 85 })
     .toBuffer();
 }
@@ -541,14 +541,14 @@ export async function processImage(file: Buffer): Promise<Buffer> {
 
 ```typescript
 // lib/security-scan.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 export async function scanFileForMalware(fileBuffer: Buffer): Promise<boolean> {
   // Integration with cloud security service (e.g., VirusTotal API)
   const scanResult = await fetch(
-    "https://www.virustotal.com/vtapi/v2/file/scan",
+    'https://www.virustotal.com/vtapi/v2/file/scan',
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         apikey: process.env.VIRUSTOTAL_API_KEY!,
       },
@@ -598,10 +598,10 @@ CREATE POLICY "Contractors are viewable by all" ON contractors
 
 ```typescript
 // lib/encryption.ts
-import crypto from "crypto";
+import crypto from 'crypto';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
-const ALGORITHM = "aes-256-gcm";
+const ALGORITHM = 'aes-256-gcm';
 
 export function encrypt(text: string): {
   encrypted: string;
@@ -609,18 +609,18 @@ export function encrypt(text: string): {
   tag: string;
 } {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
-  cipher.setAAD(Buffer.from("eventpros", "utf8"));
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+  cipher.setAAD(Buffer.from('eventpros', 'utf8'));
 
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
 
   const tag = cipher.getAuthTag();
 
   return {
     encrypted,
-    iv: iv.toString("hex"),
-    tag: tag.toString("hex"),
+    iv: iv.toString('hex'),
+    tag: tag.toString('hex'),
   };
 }
 
@@ -629,12 +629,16 @@ export function decrypt(encryptedData: {
   iv: string;
   tag: string;
 }): string {
-  const decipher = crypto.createDecipher(ALGORITHM, ENCRYPTION_KEY);
-  decipher.setAAD(Buffer.from("eventpros", "utf8"));
-  decipher.setAuthTag(Buffer.from(encryptedData.tag, "hex"));
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    ENCRYPTION_KEY,
+    Buffer.from(encryptedData.iv, 'hex')
+  );
+  decipher.setAAD(Buffer.from('eventpros', 'utf8'));
+  decipher.setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
 
-  let decrypted = decipher.update(encryptedData.encrypted, "hex", "utf8");
-  decrypted += decipher.final("utf8");
+  let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
 
   return decrypted;
 }
@@ -649,13 +653,13 @@ export function decrypt(encryptedData: {
 ```typescript
 // lib/audit-logger.ts
 export enum SecurityEvent {
-  LOGIN_SUCCESS = "login_success",
-  LOGIN_FAILED = "login_failed",
-  LOGOUT = "logout",
-  PASSWORD_RESET = "password_reset",
-  PROFILE_UPDATE = "profile_update",
-  FILE_UPLOAD = "file_upload",
-  SUSPICIOUS_ACTIVITY = "suspicious_activity",
+  LOGIN_SUCCESS = 'login_success',
+  LOGIN_FAILED = 'login_failed',
+  LOGOUT = 'logout',
+  PASSWORD_RESET = 'password_reset',
+  PROFILE_UPDATE = 'profile_update',
+  FILE_UPLOAD = 'file_upload',
+  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
 }
 
 export async function logSecurityEvent(
@@ -663,7 +667,7 @@ export async function logSecurityEvent(
   userId: string | null,
   metadata: Record<string, any> = {}
 ) {
-  await supabase.from("security_logs").insert({
+  await supabase.from('security_logs').insert({
     event_type: event,
     user_id: userId,
     ip_address: metadata.ip,
@@ -683,19 +687,19 @@ export default async function loginHandler(
     const result = await authService.login(email, password);
 
     await logSecurityEvent(SecurityEvent.LOGIN_SUCCESS, result.user.id, {
-      ip: req.headers["x-forwarded-for"],
-      userAgent: req.headers["user-agent"],
+      ip: req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
     });
 
     res.json(result);
   } catch (error) {
     await logSecurityEvent(SecurityEvent.LOGIN_FAILED, null, {
       email: req.body.email,
-      ip: req.headers["x-forwarded-for"],
+      ip: req.headers['x-forwarded-for'],
       error: error.message,
     });
 
-    res.status(401).json({ error: "Login failed" });
+    res.status(401).json({ error: 'Login failed' });
   }
 }
 ```
@@ -715,15 +719,15 @@ export class IntrusionDetector {
   ];
 
   static detectSuspiciousActivity(input: string): boolean {
-    return this.SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(input));
+    return this.SUSPICIOUS_PATTERNS.some(pattern => pattern.test(input));
   }
 
   static async checkRateLimitViolations(userId: string): Promise<boolean> {
     const recentRequests = await supabase
-      .from("api_requests")
-      .select("timestamp")
-      .eq("user_id", userId)
-      .gte("timestamp", new Date(Date.now() - 60000).toISOString()); // Last minute
+      .from('api_requests')
+      .select('timestamp')
+      .eq('user_id', userId)
+      .gte('timestamp', new Date(Date.now() - 60000).toISOString()); // Last minute
 
     return recentRequests.data.length > 100; // More than 100 requests per minute
   }
@@ -733,11 +737,11 @@ export class IntrusionDetector {
     currentIP: string
   ): Promise<boolean> {
     const recentLogins = await supabase
-      .from("security_logs")
-      .select("metadata")
-      .eq("user_id", userId)
-      .eq("event_type", SecurityEvent.LOGIN_SUCCESS)
-      .order("timestamp", { ascending: false })
+      .from('security_logs')
+      .select('metadata')
+      .eq('user_id', userId)
+      .eq('event_type', SecurityEvent.LOGIN_SUCCESS)
+      .order('timestamp', { ascending: false })
       .limit(5);
 
     // Check if login is from significantly different location
@@ -758,10 +762,10 @@ export class IntrusionDetector {
 export class GDPRCompliance {
   static async exportUserData(userId: string): Promise<UserDataExport> {
     const [user, profile, events, contractors] = await Promise.all([
-      supabase.from("users").select("*").eq("id", userId).single(),
-      supabase.from("profiles").select("*").eq("user_id", userId).single(),
-      supabase.from("events").select("*").eq("user_id", userId),
-      supabase.from("contractors").select("*").eq("user_id", userId),
+      supabase.from('users').select('*').eq('id', userId).single(),
+      supabase.from('profiles').select('*').eq('user_id', userId).single(),
+      supabase.from('events').select('*').eq('user_id', userId),
+      supabase.from('contractors').select('*').eq('user_id', userId),
     ]);
 
     return {
@@ -776,33 +780,33 @@ export class GDPRCompliance {
   static async deleteUserData(userId: string): Promise<void> {
     // Soft delete - mark as deleted but retain for legal requirements
     await supabase
-      .from("users")
+      .from('users')
       .update({
         deleted_at: new Date().toISOString(),
         email: `deleted_${userId}@deleted.com`,
-        first_name: "Deleted",
-        last_name: "User",
+        first_name: 'Deleted',
+        last_name: 'User',
       })
-      .eq("id", userId);
+      .eq('id', userId);
 
     // Anonymize related data
     await supabase
-      .from("events")
+      .from('events')
       .update({
-        title: "Deleted Event",
-        location: "Deleted",
+        title: 'Deleted Event',
+        location: 'Deleted',
         user_id: null,
       })
-      .eq("user_id", userId);
+      .eq('user_id', userId);
   }
 
   static async getDataRetentionPolicy(): Promise<DataRetentionPolicy> {
     return {
-      user_data: "7 years after account deletion",
-      event_data: "3 years after event completion",
-      contractor_data: "5 years after last activity",
-      security_logs: "2 years",
-      analytics_data: "1 year",
+      user_data: '7 years after account deletion',
+      event_data: '3 years after event completion',
+      contractor_data: '5 years after last activity',
+      security_logs: '2 years',
+      analytics_data: '1 year',
     };
   }
 }
@@ -860,4 +864,3 @@ export function PrivacySettings() {
   );
 }
 ```
-
