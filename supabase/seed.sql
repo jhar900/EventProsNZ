@@ -108,3 +108,24 @@ INSERT INTO public.portfolio_items (business_profile_id, title, description, ima
   (3, 'Wedding DJ Setup', 'Professional DJ setup for wedding reception', 'https://example.com/images/dj-setup.jpg', 'Wedding'),
   (4, 'Conference Room', 'Professional conference room setup', 'https://example.com/images/conference-room.jpg', 'Corporate'),
   (5, 'Wedding Decoration', 'Elegant wedding decoration and styling', 'https://example.com/images/wedding-decoration.jpg', 'Wedding');
+
+-- Insert pricing FAQ data
+INSERT INTO public.pricing_faq (question, answer, category, display_order) VALUES
+('Can I change my subscription plan anytime?', 'Yes, you can upgrade or downgrade your plan at any time. Upgrades take effect immediately, while downgrades take effect at the end of your current billing cycle.', 'pricing', 1),
+('What payment methods do you accept?', 'We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers for annual subscriptions. All payments are processed securely through Stripe.', 'billing', 2),
+('Is there a free trial available?', 'Yes! We offer a 14-day free trial for both Showcase and Spotlight plans. No credit card required, and you can cancel anytime during the trial period.', 'trial', 3),
+('How does the annual discount work?', 'Annual subscriptions offer significant savings - up to 2 months free compared to monthly billing. The discount is automatically applied at checkout.', 'pricing', 4),
+('Can I cancel my subscription anytime?', 'Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period.', 'billing', 5),
+('What happens if I exceed my plan limits?', 'We will notify you if you approach your plan limits. You can upgrade your plan or purchase additional capacity as needed.', 'pricing', 6),
+('Is my data secure?', 'Absolutely. We use enterprise-grade security with SSL encryption, PCI DSS compliance, and regular security audits to protect your data.', 'security', 7),
+('Do you offer refunds?', 'Yes, we offer a 30-day money-back guarantee for all paid plans. Contact our support team to process your refund.', 'billing', 8),
+('Can I get a custom plan for my business?', 'Yes, we offer custom enterprise plans for large organizations. Contact our sales team to discuss your specific needs.', 'pricing', 9),
+('What support is included?', 'All plans include email support. Showcase and Spotlight plans include priority support with faster response times.', 'billing', 10);
+
+-- Insert pricing testimonials data
+INSERT INTO public.platform_testimonials (user_id, rating, feedback, category, status, is_verified, is_public, approved_at) VALUES
+('44444444-4444-4444-4444-444444444444', 5, 'The Showcase plan has transformed my business. I get 3x more inquiries and my profile stands out from the competition. The investment paid for itself in the first month!', 'contractor', 'approved', true, true, NOW()),
+('55555555-5555-5555-5555-555555555555', 5, 'Spotlight tier gives me everything I need to showcase my work professionally. The unlimited portfolio and priority placement have been game-changers for my photography business.', 'contractor', 'approved', true, true, NOW()),
+('66666666-6666-6666-6666-666666666666', 4, 'Even the Essential plan helped me get started. The free trial let me test the platform before committing, and I quickly saw the value in upgrading.', 'contractor', 'approved', true, true, NOW()),
+('77777777-7777-7777-7777-777777777777', 5, 'The analytics on the Showcase plan help me understand my clients better. I can see exactly what services they are looking for and tailor my offerings accordingly.', 'contractor', 'approved', true, true, NOW()),
+('88888888-8888-8888-8888-888888888888', 5, 'Spotlight tier is worth every penny. The custom branding and advanced matching features have helped me land high-end clients I never would have reached otherwise.', 'contractor', 'approved', true, true, NOW());

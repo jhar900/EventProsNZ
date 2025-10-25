@@ -428,11 +428,23 @@ global.mockContractor = {
 
 // Mock rate limiting
 jest.mock('@/lib/rate-limiting', () => ({
-  rateLimit: jest.fn(() => ({
+  createRateLimit: jest.fn(() =>
+    jest.fn(() => ({
+      allowed: true,
+      remaining: 10,
+      resetTime: Date.now() + 60000,
+    }))
+  ),
+  contactFormRateLimit: jest.fn(() => ({
     allowed: true,
-    headers: {},
+    remaining: 10,
+    resetTime: Date.now() + 60000,
   })),
-  paymentRateLimiter: {},
+  newsletterRateLimit: jest.fn(() => ({
+    allowed: true,
+    remaining: 10,
+    resetTime: Date.now() + 60000,
+  })),
 }));
 
 // Mock Mapbox context to prevent infinite loops in tests

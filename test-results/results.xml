@@ -1,0 +1,476 @@
+<testsuites id="" name="" tests="85" failures="13" skipped="0" errors="0" time="141.792882">
+<testsuite name="pricing-page.spec.ts" timestamp="2025-10-25T19:16:33.559Z" hostname="chromium" tests="17" failures="0" skipped="0" time="180.876" errors="0">
+<testcase name="Pricing Page › displays pricing page with all sections" classname="pricing-page.spec.ts" time="21.33">
+</testcase>
+<testcase name="Pricing Page › displays feature comparison table" classname="pricing-page.spec.ts" time="14.303">
+</testcase>
+<testcase name="Pricing Page › shows annual pricing with discounts" classname="pricing-page.spec.ts" time="14.576">
+</testcase>
+<testcase name="Pricing Page › displays free trial section" classname="pricing-page.spec.ts" time="14.493">
+</testcase>
+<testcase name="Pricing Page › shows testimonials section" classname="pricing-page.spec.ts" time="14.164">
+</testcase>
+<testcase name="Pricing Page › displays FAQ section" classname="pricing-page.spec.ts" time="14.212">
+</testcase>
+<testcase name="Pricing Page › shows payment methods section" classname="pricing-page.spec.ts" time="8.791">
+</testcase>
+<testcase name="Pricing Page › displays refund policy section" classname="pricing-page.spec.ts" time="8.79">
+</testcase>
+<testcase name="Pricing Page › shows upgrade/downgrade information" classname="pricing-page.spec.ts" time="9.011">
+</testcase>
+<testcase name="Pricing Page › displays call-to-action section" classname="pricing-page.spec.ts" time="8.69">
+</testcase>
+<testcase name="Pricing Page › handles tier selection" classname="pricing-page.spec.ts" time="8.752">
+</testcase>
+<testcase name="Pricing Page › toggles billing cycle" classname="pricing-page.spec.ts" time="8.207">
+</testcase>
+<testcase name="Pricing Page › displays mobile responsive design" classname="pricing-page.spec.ts" time="7.374">
+</testcase>
+<testcase name="Pricing Page › handles FAQ search" classname="pricing-page.spec.ts" time="7.215">
+</testcase>
+<testcase name="Pricing Page › displays trust indicators" classname="pricing-page.spec.ts" time="6.937">
+</testcase>
+<testcase name="Pricing Page › shows pricing comparison" classname="pricing-page.spec.ts" time="6.995">
+</testcase>
+<testcase name="Pricing Page › displays security information" classname="pricing-page.spec.ts" time="7.036">
+</testcase>
+</testsuite>
+<testsuite name="pricing-page.spec.ts" timestamp="2025-10-25T19:16:33.559Z" hostname="firefox" tests="17" failures="0" skipped="0" time="182.612" errors="0">
+<testcase name="Pricing Page › displays pricing page with all sections" classname="pricing-page.spec.ts" time="16.798">
+</testcase>
+<testcase name="Pricing Page › displays feature comparison table" classname="pricing-page.spec.ts" time="16.465">
+</testcase>
+<testcase name="Pricing Page › shows annual pricing with discounts" classname="pricing-page.spec.ts" time="19.005">
+</testcase>
+<testcase name="Pricing Page › displays free trial section" classname="pricing-page.spec.ts" time="9.542">
+</testcase>
+<testcase name="Pricing Page › shows testimonials section" classname="pricing-page.spec.ts" time="15.988">
+</testcase>
+<testcase name="Pricing Page › displays FAQ section" classname="pricing-page.spec.ts" time="10.215">
+</testcase>
+<testcase name="Pricing Page › shows payment methods section" classname="pricing-page.spec.ts" time="12.862">
+</testcase>
+<testcase name="Pricing Page › displays refund policy section" classname="pricing-page.spec.ts" time="12.039">
+</testcase>
+<testcase name="Pricing Page › shows upgrade/downgrade information" classname="pricing-page.spec.ts" time="11.146">
+</testcase>
+<testcase name="Pricing Page › displays call-to-action section" classname="pricing-page.spec.ts" time="8.58">
+</testcase>
+<testcase name="Pricing Page › handles tier selection" classname="pricing-page.spec.ts" time="8.385">
+</testcase>
+<testcase name="Pricing Page › toggles billing cycle" classname="pricing-page.spec.ts" time="7.456">
+</testcase>
+<testcase name="Pricing Page › displays mobile responsive design" classname="pricing-page.spec.ts" time="7.125">
+</testcase>
+<testcase name="Pricing Page › handles FAQ search" classname="pricing-page.spec.ts" time="7.689">
+</testcase>
+<testcase name="Pricing Page › displays trust indicators" classname="pricing-page.spec.ts" time="6.547">
+</testcase>
+<testcase name="Pricing Page › shows pricing comparison" classname="pricing-page.spec.ts" time="6.224">
+</testcase>
+<testcase name="Pricing Page › displays security information" classname="pricing-page.spec.ts" time="6.546">
+</testcase>
+</testsuite>
+<testsuite name="pricing-page.spec.ts" timestamp="2025-10-25T19:16:33.559Z" hostname="webkit" tests="17" failures="11" skipped="0" time="157.225" errors="0">
+<testcase name="Pricing Page › displays pricing page with all sections" classname="pricing-page.spec.ts" time="6.488">
+</testcase>
+<testcase name="Pricing Page › displays feature comparison table" classname="pricing-page.spec.ts" time="7.839">
+</testcase>
+<testcase name="Pricing Page › shows annual pricing with discounts" classname="pricing-page.spec.ts" time="6.576">
+</testcase>
+<testcase name="Pricing Page › displays free trial section" classname="pricing-page.spec.ts" time="2.75">
+<failure message="pricing-page.spec.ts:90:7 displays free trial section" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:90:7 › Pricing Page › displays free trial section ────────────────
+
+    Error: page.goto: Page crashed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-free-trial-section-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-free-trial-section-webkit\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Pricing Page › shows testimonials section" classname="pricing-page.spec.ts" time="3.048">
+<failure message="pricing-page.spec.ts:104:7 shows testimonials section" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:104:7 › Pricing Page › shows testimonials section ────────────────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › displays FAQ section" classname="pricing-page.spec.ts" time="2.718">
+<failure message="pricing-page.spec.ts:114:7 displays FAQ section" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:114:7 › Pricing Page › displays FAQ section ──────────────────────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › shows payment methods section" classname="pricing-page.spec.ts" time="19.74">
+</testcase>
+<testcase name="Pricing Page › displays refund policy section" classname="pricing-page.spec.ts" time="9.791">
+<failure message="pricing-page.spec.ts:138:7 displays refund policy section" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:138:7 › Pricing Page › displays refund policy section ────────────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › shows upgrade/downgrade information" classname="pricing-page.spec.ts" time="9.8">
+<failure message="pricing-page.spec.ts:147:7 shows upgrade/downgrade information" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:147:7 › Pricing Page › shows upgrade/downgrade information ───────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › displays call-to-action section" classname="pricing-page.spec.ts" time="3.407">
+<failure message="pricing-page.spec.ts:155:7 displays call-to-action section" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:155:7 › Pricing Page › displays call-to-action section ───────────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › handles tier selection" classname="pricing-page.spec.ts" time="4.999">
+</testcase>
+<testcase name="Pricing Page › toggles billing cycle" classname="pricing-page.spec.ts" time="2.773">
+<failure message="pricing-page.spec.ts:170:7 toggles billing cycle" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:170:7 › Pricing Page › toggles billing cycle ─────────────────────
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › displays mobile responsive design" classname="pricing-page.spec.ts" time="35.065">
+<failure message="pricing-page.spec.ts:184:7 displays mobile responsive design" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:184:7 › Pricing Page › displays mobile responsive design ─────────
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+       7 |
+       8 | test.describe('Pricing Page', () => {
+    >  9 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      10 |     // Mock API responses to prevent loading timeouts
+      11 |     await page.route('**/api/pricing/tiers', route =>
+      12 |       route.fulfill({
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:9:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › handles FAQ search" classname="pricing-page.spec.ts" time="35.077">
+<failure message="pricing-page.spec.ts:194:7 handles FAQ search" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:194:7 › Pricing Page › handles FAQ search ────────────────────────
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+       7 |
+       8 | test.describe('Pricing Page', () => {
+    >  9 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      10 |     // Mock API responses to prevent loading timeouts
+      11 |     await page.route('**/api/pricing/tiers', route =>
+      12 |       route.fulfill({
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:9:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › displays trust indicators" classname="pricing-page.spec.ts" time="1.987">
+<failure message="pricing-page.spec.ts:207:7 displays trust indicators" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:207:7 › Pricing Page › displays trust indicators ─────────────────
+
+    Error: page.goto: Page crashed
+    Call log:
+      - navigating to "http://localhost:3000/pricing", waiting until "load"
+
+
+      33 |     );
+      34 |
+    > 35 |     await page.goto('/pricing');
+         |                ^
+      36 |   });
+      37 |
+      38 |   test('displays pricing page with all sections', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:35:16
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-trust-indicators-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-trust-indicators-webkit\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Pricing Page › shows pricing comparison" classname="pricing-page.spec.ts" time="2.746">
+<failure message="pricing-page.spec.ts:217:7 shows pricing comparison" type="FAILURE">
+<![CDATA[  [webkit] › pricing-page.spec.ts:217:7 › Pricing Page › shows pricing comparison ──────────────────
+
+    Error: browserContext.close: Target page, context or browser has been closed
+]]>
+</failure>
+</testcase>
+<testcase name="Pricing Page › displays security information" classname="pricing-page.spec.ts" time="2.421">
+</testcase>
+</testsuite>
+<testsuite name="pricing-page.spec.ts" timestamp="2025-10-25T19:16:33.559Z" hostname="Mobile Chrome" tests="17" failures="1" skipped="0" time="42.572" errors="0">
+<testcase name="Pricing Page › displays pricing page with all sections" classname="pricing-page.spec.ts" time="2.722">
+</testcase>
+<testcase name="Pricing Page › displays feature comparison table" classname="pricing-page.spec.ts" time="8.246">
+<failure message="pricing-page.spec.ts:69:7 displays feature comparison table" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › pricing-page.spec.ts:69:7 › Pricing Page › displays feature comparison table ───
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="features-table"]').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="features-table"]').first()
+        9 × locator resolved to <div class="hidden lg:block" data-testid="features-table">…</div>
+          - unexpected value "hidden"
+
+
+      77 |     await expect(
+      78 |       page.locator('[data-testid="features-table"]').first()
+    > 79 |     ).toBeVisible();
+         |       ^
+      80 |   });
+      81 |
+      82 |   test('shows annual pricing with discounts', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:79:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\test-failed-1.png]]
+
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\video.webm]]
+
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Pricing Page › shows annual pricing with discounts" classname="pricing-page.spec.ts" time="1.359">
+</testcase>
+<testcase name="Pricing Page › displays free trial section" classname="pricing-page.spec.ts" time="1.866">
+</testcase>
+<testcase name="Pricing Page › shows testimonials section" classname="pricing-page.spec.ts" time="1.903">
+</testcase>
+<testcase name="Pricing Page › displays FAQ section" classname="pricing-page.spec.ts" time="2.031">
+</testcase>
+<testcase name="Pricing Page › shows payment methods section" classname="pricing-page.spec.ts" time="1.938">
+</testcase>
+<testcase name="Pricing Page › displays refund policy section" classname="pricing-page.spec.ts" time="2.061">
+</testcase>
+<testcase name="Pricing Page › shows upgrade/downgrade information" classname="pricing-page.spec.ts" time="2.882">
+</testcase>
+<testcase name="Pricing Page › displays call-to-action section" classname="pricing-page.spec.ts" time="2.639">
+</testcase>
+<testcase name="Pricing Page › handles tier selection" classname="pricing-page.spec.ts" time="1.786">
+</testcase>
+<testcase name="Pricing Page › toggles billing cycle" classname="pricing-page.spec.ts" time="1.907">
+</testcase>
+<testcase name="Pricing Page › displays mobile responsive design" classname="pricing-page.spec.ts" time="2.713">
+</testcase>
+<testcase name="Pricing Page › handles FAQ search" classname="pricing-page.spec.ts" time="2.127">
+</testcase>
+<testcase name="Pricing Page › displays trust indicators" classname="pricing-page.spec.ts" time="2.195">
+</testcase>
+<testcase name="Pricing Page › shows pricing comparison" classname="pricing-page.spec.ts" time="2.108">
+</testcase>
+<testcase name="Pricing Page › displays security information" classname="pricing-page.spec.ts" time="2.089">
+</testcase>
+</testsuite>
+<testsuite name="pricing-page.spec.ts" timestamp="2025-10-25T19:16:33.559Z" hostname="Mobile Safari" tests="17" failures="1" skipped="0" time="48.839" errors="0">
+<testcase name="Pricing Page › displays pricing page with all sections" classname="pricing-page.spec.ts" time="3.239">
+</testcase>
+<testcase name="Pricing Page › displays feature comparison table" classname="pricing-page.spec.ts" time="8.051">
+<failure message="pricing-page.spec.ts:69:7 displays feature comparison table" type="FAILURE">
+<![CDATA[  [Mobile Safari] › pricing-page.spec.ts:69:7 › Pricing Page › displays feature comparison table ───
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="features-table"]').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="features-table"]').first()
+        9 × locator resolved to <div class="hidden lg:block" data-testid="features-table">…</div>
+          - unexpected value "hidden"
+
+
+      77 |     await expect(
+      78 |       page.locator('[data-testid="features-table"]').first()
+    > 79 |     ).toBeVisible();
+         |       ^
+      80 |   });
+      81 |
+      82 |   test('shows annual pricing with discounts', async ({ page }) => {
+        at C:\dev\EventProsNZ\e2e\pricing-page.spec.ts:79:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\test-failed-1.png]]
+
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\video.webm]]
+
+[[ATTACHMENT|pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Pricing Page › shows annual pricing with discounts" classname="pricing-page.spec.ts" time="2.775">
+</testcase>
+<testcase name="Pricing Page › displays free trial section" classname="pricing-page.spec.ts" time="2.714">
+</testcase>
+<testcase name="Pricing Page › shows testimonials section" classname="pricing-page.spec.ts" time="2.423">
+</testcase>
+<testcase name="Pricing Page › displays FAQ section" classname="pricing-page.spec.ts" time="2.888">
+</testcase>
+<testcase name="Pricing Page › shows payment methods section" classname="pricing-page.spec.ts" time="2.179">
+</testcase>
+<testcase name="Pricing Page › displays refund policy section" classname="pricing-page.spec.ts" time="2.124">
+</testcase>
+<testcase name="Pricing Page › shows upgrade/downgrade information" classname="pricing-page.spec.ts" time="2.406">
+</testcase>
+<testcase name="Pricing Page › displays call-to-action section" classname="pricing-page.spec.ts" time="2.266">
+</testcase>
+<testcase name="Pricing Page › handles tier selection" classname="pricing-page.spec.ts" time="2.658">
+</testcase>
+<testcase name="Pricing Page › toggles billing cycle" classname="pricing-page.spec.ts" time="3.211">
+</testcase>
+<testcase name="Pricing Page › displays mobile responsive design" classname="pricing-page.spec.ts" time="2.368">
+</testcase>
+<testcase name="Pricing Page › handles FAQ search" classname="pricing-page.spec.ts" time="2.664">
+</testcase>
+<testcase name="Pricing Page › displays trust indicators" classname="pricing-page.spec.ts" time="2.641">
+</testcase>
+<testcase name="Pricing Page › shows pricing comparison" classname="pricing-page.spec.ts" time="2.211">
+</testcase>
+<testcase name="Pricing Page › displays security information" classname="pricing-page.spec.ts" time="2.021">
+</testcase>
+</testsuite>
+</testsuites>

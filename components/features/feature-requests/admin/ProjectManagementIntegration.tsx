@@ -45,7 +45,7 @@ import {
   Eye,
   Link,
   Unlink,
-  Sync,
+  RefreshCw,
   Calendar,
   Users,
   Target,
@@ -413,7 +413,7 @@ export default function ProjectManagementIntegration() {
                 Settings
               </Button>
               <Button variant="outline" onClick={handleSyncTasks}>
-                <Sync className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Sync
               </Button>
             </div>

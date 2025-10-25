@@ -1,0 +1,1378 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - generic [ref=e5]:
+            - generic [ref=e6]:
+                - img [ref=e7]
+                - text: 14-day free trial on all paid plans
+            - heading "Simple, transparent pricing" [level=1] [ref=e9]:
+                - text: Simple, transparent
+                - generic [ref=e10]: pricing
+            - paragraph [ref=e11]: Choose the perfect plan for your event planning business. Start free, upgrade when you're ready, and scale as you grow.
+            - generic [ref=e12]:
+                - generic [ref=e15]: No setup fees
+                - generic [ref=e18]: Cancel anytime
+                - generic [ref=e21]: 30-day money-back guarantee
+            - generic [ref=e22]:
+                - button "Start Free Trial" [ref=e23] [cursor=pointer]:
+                    - text: Start Free Trial
+                    - img [ref=e24] [cursor=pointer]
+                - button "View All Features" [ref=e26] [cursor=pointer]
+            - generic [ref=e27]:
+                - paragraph [ref=e28]: Trusted by event planners across New Zealand
+                - generic [ref=e29]:
+                    - generic [ref=e30]: 500+
+                    - generic [ref=e31]: Active Users
+                    - generic [ref=e32]: 4.9★
+                    - generic [ref=e33]: Rating
+        - generic [ref=e34]:
+            - generic [ref=e35]:
+                - generic [ref=e36]:
+                    - heading "Choose Your Plan" [level=2] [ref=e37]
+                    - paragraph [ref=e38]: Start with our free plan and upgrade as you grow
+                    - generic [ref=e39]:
+                        - generic [ref=e40]: Monthly
+                        - switch "Switch to annual billing" [ref=e41] [cursor=pointer]
+                        - generic [ref=e43]: Annual
+                - generic [ref=e44]:
+                    - generic [ref=e45]:
+                        - generic [ref=e46]:
+                            - img [ref=e48]
+                            - heading "Essential" [level=3] [ref=e50]
+                            - paragraph [ref=e51]: Perfect for getting started
+                            - generic [ref=e54]: Free
+                        - generic [ref=e55]:
+                            - list [ref=e56]:
+                                - listitem [ref=e57]:
+                                    - img [ref=e58]
+                                    - generic [ref=e60]: Basic Profile
+                                - listitem [ref=e61]:
+                                    - img [ref=e62]
+                                    - generic [ref=e64]: Portfolio Upload (5 items)
+                                - listitem [ref=e65]:
+                                    - img [ref=e66]
+                                    - generic [ref=e68]: Basic Search Visibility
+                                - listitem [ref=e69]:
+                                    - img [ref=e70]
+                                    - generic [ref=e72]: Contact Form
+                                - listitem [ref=e73]:
+                                    - img [ref=e74]
+                                    - generic [ref=e76]: Basic Analytics
+                            - button "Get Started Free" [ref=e78] [cursor=pointer]
+                    - generic [ref=e79]:
+                        - generic [ref=e81]: Most Popular
+                        - generic [ref=e82]:
+                            - img [ref=e84]
+                            - heading "Showcase" [level=3] [ref=e86]
+                            - paragraph [ref=e87]: Ideal for growing businesses
+                            - generic [ref=e89]:
+                                - generic [ref=e90]: $29
+                                - generic [ref=e91]: /month
+                        - generic [ref=e92]:
+                            - list [ref=e93]:
+                                - listitem [ref=e94]:
+                                    - img [ref=e95]
+                                    - generic [ref=e97]: Enhanced Profile
+                                - listitem [ref=e98]:
+                                    - img [ref=e99]
+                                    - generic [ref=e101]: Portfolio Upload (20 items)
+                                - listitem [ref=e102]:
+                                    - img [ref=e103]
+                                    - generic [ref=e105]: Priority Search Visibility
+                                - listitem [ref=e106]:
+                                    - img [ref=e107]
+                                    - generic [ref=e109]: Direct Contact
+                                - listitem [ref=e110]:
+                                    - img [ref=e111]
+                                    - generic [ref=e113]: Advanced Analytics
+                                - listitem [ref=e114]:
+                                    - img [ref=e115]
+                                    - generic [ref=e117]: Featured Badge
+                                - listitem [ref=e118]: +2 more features
+                            - generic [ref=e120]:
+                                - button "Start Free Trial" [ref=e121] [cursor=pointer]
+                                - button "Choose Showcase" [ref=e122] [cursor=pointer]:
+                                    - text: Choose Showcase
+                                    - img [ref=e123] [cursor=pointer]
+                    - generic [ref=e125]:
+                        - generic [ref=e126]:
+                            - img [ref=e128]
+                            - heading "Spotlight" [level=3] [ref=e130]
+                            - paragraph [ref=e131]: Maximum visibility and features
+                            - generic [ref=e133]:
+                                - generic [ref=e134]: $69
+                                - generic [ref=e135]: /month
+                        - generic [ref=e136]:
+                            - list [ref=e137]:
+                                - listitem [ref=e138]:
+                                    - img [ref=e139]
+                                    - generic [ref=e141]: Premium Profile
+                                - listitem [ref=e142]:
+                                    - img [ref=e143]
+                                    - generic [ref=e145]: Unlimited Portfolio
+                                - listitem [ref=e146]:
+                                    - img [ref=e147]
+                                    - generic [ref=e149]: Top Search Visibility
+                                - listitem [ref=e150]:
+                                    - img [ref=e151]
+                                    - generic [ref=e153]: Direct Contact
+                                - listitem [ref=e154]:
+                                    - img [ref=e155]
+                                    - generic [ref=e157]: Premium Analytics
+                                - listitem [ref=e158]:
+                                    - img [ref=e159]
+                                    - generic [ref=e161]: Premium Badge
+                                - listitem [ref=e162]: +5 more features
+                            - generic [ref=e164]:
+                                - button "Start Free Trial" [ref=e165] [cursor=pointer]
+                                - button "Choose Spotlight" [ref=e166] [cursor=pointer]:
+                                    - text: Choose Spotlight
+                                    - img [ref=e167] [cursor=pointer]
+                - generic [ref=e169]:
+                    - paragraph [ref=e170]: All plans include 24/7 support and regular updates
+                    - generic [ref=e171]:
+                        - generic [ref=e172]: ✓ No setup fees
+                        - generic [ref=e173]: ✓ Cancel anytime
+                        - generic [ref=e174]: ✓ 30-day money-back guarantee
+            - generic [ref=e175]:
+                - generic [ref=e176]:
+                    - heading "Feature Comparison" [level=2] [ref=e177]
+                    - paragraph [ref=e178]: Compare features across all subscription tiers
+                - generic [ref=e180]:
+                    - generic [ref=e181]:
+                        - generic [ref=e182]:
+                            - heading "Essential" [level=3] [ref=e183]:
+                                - img [ref=e184]
+                                - text: Essential
+                            - paragraph [ref=e186]: Free forever
+                        - generic [ref=e187]:
+                            - generic [ref=e188]:
+                                - generic [ref=e189]:
+                                    - heading "Profile" [level=4] [ref=e190]
+                                    - generic [ref=e192]:
+                                        - img [ref=e193]
+                                        - generic [ref=e195]:
+                                            - generic [ref=e196]: Profile Listings
+                                            - generic [ref=e197]: Basic profile
+                                - generic [ref=e198]:
+                                    - heading "Visibility" [level=4] [ref=e199]
+                                    - generic [ref=e200]:
+                                        - generic [ref=e201]:
+                                            - img [ref=e202]
+                                            - generic [ref=e204]:
+                                                - generic [ref=e205]: Search Visibility
+                                                - generic [ref=e206]: Standard
+                                        - generic [ref=e207]:
+                                            - img [ref=e208]
+                                            - generic [ref=e211]:
+                                                - generic [ref=e212]: Featured Listings
+                                                - generic [ref=e213]: Not included
+                                - generic [ref=e214]:
+                                    - heading "Events" [level=4] [ref=e215]
+                                    - generic [ref=e217]:
+                                        - img [ref=e218]
+                                        - generic [ref=e220]:
+                                            - generic [ref=e221]: Event Listings
+                                            - generic [ref=e222]: 3 events
+                                - generic [ref=e223]:
+                                    - heading "Portfolio" [level=4] [ref=e224]
+                                    - generic [ref=e226]:
+                                        - img [ref=e227]
+                                        - generic [ref=e229]:
+                                            - generic [ref=e230]: Portfolio Uploads
+                                            - generic [ref=e231]: 5 images
+                                - generic [ref=e232]:
+                                    - heading "Reviews" [level=4] [ref=e233]
+                                    - generic [ref=e235]:
+                                        - img [ref=e236]
+                                        - generic [ref=e238]:
+                                            - generic [ref=e239]: Customer Reviews
+                                            - generic [ref=e240]: Included
+                                - generic [ref=e241]:
+                                    - heading "Analytics" [level=4] [ref=e242]
+                                    - generic [ref=e244]:
+                                        - img [ref=e245]
+                                        - generic [ref=e248]:
+                                            - generic [ref=e249]: Analytics Dashboard
+                                            - generic [ref=e250]: Not included
+                                - generic [ref=e251]:
+                                    - heading "Support" [level=4] [ref=e252]
+                                    - generic [ref=e254]:
+                                        - img [ref=e255]
+                                        - generic [ref=e258]:
+                                            - generic [ref=e259]: Priority Support
+                                            - generic [ref=e260]: Not included
+                                - generic [ref=e261]:
+                                    - heading "Branding" [level=4] [ref=e262]
+                                    - generic [ref=e264]:
+                                        - img [ref=e265]
+                                        - generic [ref=e268]:
+                                            - generic [ref=e269]: Custom Branding
+                                            - generic [ref=e270]: Not included
+                                - generic [ref=e271]:
+                                    - heading "Technical" [level=4] [ref=e272]
+                                    - generic [ref=e274]:
+                                        - img [ref=e275]
+                                        - generic [ref=e278]:
+                                            - generic [ref=e279]: API Access
+                                            - generic [ref=e280]: Not included
+                            - button "Choose Essential" [ref=e282] [cursor=pointer]:
+                                - text: Choose Essential
+                                - img [ref=e283] [cursor=pointer]
+                    - generic [ref=e285]:
+                        - generic [ref=e286]:
+                            - heading "Showcase Popular" [level=3] [ref=e287]:
+                                - img [ref=e288]
+                                - text: Showcase
+                                - generic [ref=e290]: Popular
+                            - paragraph [ref=e291]: $29/month
+                        - generic [ref=e292]:
+                            - generic [ref=e293]:
+                                - generic [ref=e294]:
+                                    - heading "Profile" [level=4] [ref=e295]
+                                    - generic [ref=e297]:
+                                        - img [ref=e298]
+                                        - generic [ref=e300]:
+                                            - generic [ref=e301]: Profile Listings
+                                            - generic [ref=e302]: Enhanced profile
+                                - generic [ref=e303]:
+                                    - heading "Visibility" [level=4] [ref=e304]
+                                    - generic [ref=e305]:
+                                        - generic [ref=e306]:
+                                            - img [ref=e307]
+                                            - generic [ref=e309]:
+                                                - generic [ref=e310]: Search Visibility
+                                                - generic [ref=e311]: Priority
+                                        - generic [ref=e312]:
+                                            - img [ref=e313]
+                                            - generic [ref=e315]:
+                                                - generic [ref=e316]: Featured Listings
+                                                - generic [ref=e317]: 1 featured listing
+                                - generic [ref=e318]:
+                                    - heading "Events" [level=4] [ref=e319]
+                                    - generic [ref=e321]:
+                                        - img [ref=e322]
+                                        - generic [ref=e324]:
+                                            - generic [ref=e325]: Event Listings
+                                            - generic [ref=e326]: Unlimited
+                                - generic [ref=e327]:
+                                    - heading "Portfolio" [level=4] [ref=e328]
+                                    - generic [ref=e330]:
+                                        - img [ref=e331]
+                                        - generic [ref=e333]:
+                                            - generic [ref=e334]: Portfolio Uploads
+                                            - generic [ref=e335]: 50 images
+                                - generic [ref=e336]:
+                                    - heading "Reviews" [level=4] [ref=e337]
+                                    - generic [ref=e339]:
+                                        - img [ref=e340]
+                                        - generic [ref=e342]:
+                                            - generic [ref=e343]: Customer Reviews
+                                            - generic [ref=e344]: Included
+                                - generic [ref=e345]:
+                                    - heading "Analytics" [level=4] [ref=e346]
+                                    - generic [ref=e348]:
+                                        - img [ref=e349]
+                                        - generic [ref=e351]:
+                                            - generic [ref=e352]: Analytics Dashboard
+                                            - generic [ref=e353]: Basic analytics
+                                - generic [ref=e354]:
+                                    - heading "Support" [level=4] [ref=e355]
+                                    - generic [ref=e357]:
+                                        - img [ref=e358]
+                                        - generic [ref=e360]:
+                                            - generic [ref=e361]: Priority Support
+                                            - generic [ref=e362]: Included
+                                - generic [ref=e363]:
+                                    - heading "Branding" [level=4] [ref=e364]
+                                    - generic [ref=e366]:
+                                        - img [ref=e367]
+                                        - generic [ref=e370]:
+                                            - generic [ref=e371]: Custom Branding
+                                            - generic [ref=e372]: Not included
+                                - generic [ref=e373]:
+                                    - heading "Technical" [level=4] [ref=e374]
+                                    - generic [ref=e376]:
+                                        - img [ref=e377]
+                                        - generic [ref=e380]:
+                                            - generic [ref=e381]: API Access
+                                            - generic [ref=e382]: Not included
+                            - button "Choose Showcase" [ref=e384] [cursor=pointer]:
+                                - text: Choose Showcase
+                                - img [ref=e385] [cursor=pointer]
+                    - generic [ref=e387]:
+                        - generic [ref=e388]:
+                            - heading "Spotlight" [level=3] [ref=e389]:
+                                - img [ref=e390]
+                                - text: Spotlight
+                            - paragraph [ref=e392]: $69/month
+                        - generic [ref=e393]:
+                            - generic [ref=e394]:
+                                - generic [ref=e395]:
+                                    - heading "Profile" [level=4] [ref=e396]
+                                    - generic [ref=e398]:
+                                        - img [ref=e399]
+                                        - generic [ref=e401]:
+                                            - generic [ref=e402]: Profile Listings
+                                            - generic [ref=e403]: Premium profile
+                                - generic [ref=e404]:
+                                    - heading "Visibility" [level=4] [ref=e405]
+                                    - generic [ref=e406]:
+                                        - generic [ref=e407]:
+                                            - img [ref=e408]
+                                            - generic [ref=e410]:
+                                                - generic [ref=e411]: Search Visibility
+                                                - generic [ref=e412]: Top placement
+                                        - generic [ref=e413]:
+                                            - img [ref=e414]
+                                            - generic [ref=e416]:
+                                                - generic [ref=e417]: Featured Listings
+                                                - generic [ref=e418]: Unlimited featured listings
+                                - generic [ref=e419]:
+                                    - heading "Events" [level=4] [ref=e420]
+                                    - generic [ref=e422]:
+                                        - img [ref=e423]
+                                        - generic [ref=e425]:
+                                            - generic [ref=e426]: Event Listings
+                                            - generic [ref=e427]: Unlimited
+                                - generic [ref=e428]:
+                                    - heading "Portfolio" [level=4] [ref=e429]
+                                    - generic [ref=e431]:
+                                        - img [ref=e432]
+                                        - generic [ref=e434]:
+                                            - generic [ref=e435]: Portfolio Uploads
+                                            - generic [ref=e436]: Unlimited
+                                - generic [ref=e437]:
+                                    - heading "Reviews" [level=4] [ref=e438]
+                                    - generic [ref=e440]:
+                                        - img [ref=e441]
+                                        - generic [ref=e443]:
+                                            - generic [ref=e444]: Customer Reviews
+                                            - generic [ref=e445]: Included
+                                - generic [ref=e446]:
+                                    - heading "Analytics" [level=4] [ref=e447]
+                                    - generic [ref=e449]:
+                                        - img [ref=e450]
+                                        - generic [ref=e452]:
+                                            - generic [ref=e453]: Analytics Dashboard
+                                            - generic [ref=e454]: Advanced analytics
+                                - generic [ref=e455]:
+                                    - heading "Support" [level=4] [ref=e456]
+                                    - generic [ref=e458]:
+                                        - img [ref=e459]
+                                        - generic [ref=e461]:
+                                            - generic [ref=e462]: Priority Support
+                                            - generic [ref=e463]: Included
+                                - generic [ref=e464]:
+                                    - heading "Branding" [level=4] [ref=e465]
+                                    - generic [ref=e467]:
+                                        - img [ref=e468]
+                                        - generic [ref=e470]:
+                                            - generic [ref=e471]: Custom Branding
+                                            - generic [ref=e472]: Included
+                                - generic [ref=e473]:
+                                    - heading "Technical" [level=4] [ref=e474]
+                                    - generic [ref=e476]:
+                                        - img [ref=e477]
+                                        - generic [ref=e479]:
+                                            - generic [ref=e480]: API Access
+                                            - generic [ref=e481]: Included
+                            - button "Choose Spotlight" [ref=e483] [cursor=pointer]:
+                                - text: Choose Spotlight
+                                - img [ref=e484] [cursor=pointer]
+            - generic [ref=e486]:
+                - generic [ref=e487]:
+                    - heading "Annual Plans Save You Money" [level=2] [ref=e488]
+                    - paragraph [ref=e489]: Get up to 20% off when you pay annually
+                - generic [ref=e490]:
+                    - tablist [ref=e492]:
+                        - tab "Monthly" [ref=e493] [cursor=pointer]
+                        - tab "Annual Save 20%" [selected] [ref=e494] [cursor=pointer]:
+                            - text: Annual
+                            - generic [ref=e495] [cursor=pointer]: Save 20%
+                    - tabpanel "Annual Save 20%" [ref=e496]:
+                        - generic [ref=e497]:
+                            - generic [ref=e498]:
+                                - generic [ref=e499]:
+                                    - img [ref=e501]
+                                    - heading "Essential" [level=3] [ref=e503]
+                                    - paragraph [ref=e504]: Free forever
+                                    - generic [ref=e506]:
+                                        - generic [ref=e507]: Free
+                                        - generic [ref=e508]: /year
+                                - generic [ref=e509]:
+                                    - list [ref=e510]:
+                                        - listitem [ref=e511]:
+                                            - img [ref=e512]
+                                            - generic [ref=e514]: Basic Profile
+                                        - listitem [ref=e515]:
+                                            - img [ref=e516]
+                                            - generic [ref=e518]: Portfolio Upload (5 items)
+                                        - listitem [ref=e519]:
+                                            - img [ref=e520]
+                                            - generic [ref=e522]: Basic Search Visibility
+                                        - listitem [ref=e523]:
+                                            - img [ref=e524]
+                                            - generic [ref=e526]: Contact Form
+                                        - listitem [ref=e527]:
+                                            - img [ref=e528]
+                                            - generic [ref=e530]: Basic Analytics
+                                    - button "Get Started Free" [ref=e532] [cursor=pointer]
+                            - generic [ref=e533]:
+                                - generic [ref=e535]: Most Popular
+                                - generic [ref=e537]:
+                                    - img [ref=e538]
+                                    - text: Save 14%
+                                - generic [ref=e542]:
+                                    - img [ref=e544]
+                                    - heading "Showcase" [level=3] [ref=e546]
+                                    - paragraph [ref=e547]: Perfect for growing businesses
+                                    - generic [ref=e548]:
+                                        - generic [ref=e549]:
+                                            - generic [ref=e550]: $299
+                                            - generic [ref=e551]: /year
+                                        - generic [ref=e552]:
+                                            - paragraph [ref=e553]: $25/month
+                                            - paragraph [ref=e554]: Save $49 per year
+                                - generic [ref=e555]:
+                                    - list [ref=e556]:
+                                        - listitem [ref=e557]:
+                                            - img [ref=e558]
+                                            - generic [ref=e560]: Enhanced Profile
+                                        - listitem [ref=e561]:
+                                            - img [ref=e562]
+                                            - generic [ref=e564]: Portfolio Upload (20 items)
+                                        - listitem [ref=e565]:
+                                            - img [ref=e566]
+                                            - generic [ref=e568]: Priority Search Visibility
+                                        - listitem [ref=e569]:
+                                            - img [ref=e570]
+                                            - generic [ref=e572]: Direct Contact
+                                        - listitem [ref=e573]:
+                                            - img [ref=e574]
+                                            - generic [ref=e576]: Advanced Analytics
+                                    - generic [ref=e577]:
+                                        - heading "Annual Benefits" [level=4] [ref=e578]
+                                        - list [ref=e579]:
+                                            - listitem [ref=e580]: • Save $49 per year
+                                            - listitem [ref=e581]: • Priority customer support
+                                            - listitem [ref=e582]: • Early access to new features
+                                            - listitem [ref=e583]: • Free setup consultation
+                                    - generic [ref=e585]:
+                                        - button "Start Free Trial" [ref=e586] [cursor=pointer]
+                                        - button "Choose Showcase" [ref=e587] [cursor=pointer]:
+                                            - text: Choose Showcase
+                                            - img [ref=e588] [cursor=pointer]
+                            - generic [ref=e590]:
+                                - generic [ref=e592]:
+                                    - img [ref=e593]
+                                    - text: Save 16%
+                                - generic [ref=e597]:
+                                    - img [ref=e599]
+                                    - heading "Spotlight" [level=3] [ref=e601]
+                                    - paragraph [ref=e602]: Maximum visibility and features
+                                    - generic [ref=e603]:
+                                        - generic [ref=e604]:
+                                            - generic [ref=e605]: $699
+                                            - generic [ref=e606]: /year
+                                        - generic [ref=e607]:
+                                            - paragraph [ref=e608]: $58/month
+                                            - paragraph [ref=e609]: Save $129 per year
+                                - generic [ref=e610]:
+                                    - list [ref=e611]:
+                                        - listitem [ref=e612]:
+                                            - img [ref=e613]
+                                            - generic [ref=e615]: Premium Profile
+                                        - listitem [ref=e616]:
+                                            - img [ref=e617]
+                                            - generic [ref=e619]: Unlimited Portfolio
+                                        - listitem [ref=e620]:
+                                            - img [ref=e621]
+                                            - generic [ref=e623]: Top Search Visibility
+                                        - listitem [ref=e624]:
+                                            - img [ref=e625]
+                                            - generic [ref=e627]: Direct Contact
+                                        - listitem [ref=e628]:
+                                            - img [ref=e629]
+                                            - generic [ref=e631]: Premium Analytics
+                                    - generic [ref=e632]:
+                                        - heading "Annual Benefits" [level=4] [ref=e633]
+                                        - list [ref=e634]:
+                                            - listitem [ref=e635]: • Save $129 per year
+                                            - listitem [ref=e636]: • Priority customer support
+                                            - listitem [ref=e637]: • Early access to new features
+                                            - listitem [ref=e638]: • Free setup consultation
+                                    - generic [ref=e640]:
+                                        - button "Start Free Trial" [ref=e641] [cursor=pointer]
+                                        - button "Choose Spotlight" [ref=e642] [cursor=pointer]:
+                                            - text: Choose Spotlight
+                                            - img [ref=e643] [cursor=pointer]
+                        - generic [ref=e645]:
+                            - generic [ref=e646]:
+                                - heading "Pricing Comparison" [level=3] [ref=e647]
+                                - paragraph [ref=e648]: See how much you save with annual billing
+                            - table [ref=e651]:
+                                - rowgroup [ref=e652]:
+                                    - row "Plan Monthly Annual Savings" [ref=e653]:
+                                        - cell "Plan" [ref=e654]
+                                        - cell "Monthly" [ref=e655]
+                                        - cell "Annual" [ref=e656]
+                                        - cell "Savings" [ref=e657]
+                                - rowgroup [ref=e658]:
+                                    - row "Essential Free Free -" [ref=e659]:
+                                        - cell "Essential" [ref=e660]
+                                        - cell "Free" [ref=e661]
+                                        - cell "Free" [ref=e662]
+                                        - cell "-" [ref=e663]:
+                                            - generic [ref=e664]: '-'
+                                    - row "Showcase $29/month $299/year Save 14%" [ref=e665]:
+                                        - cell "Showcase" [ref=e666]
+                                        - cell "$29/month" [ref=e667]
+                                        - cell "$299/year" [ref=e668]
+                                        - cell "Save 14%" [ref=e669]:
+                                            - generic [ref=e670]: Save 14%
+                                    - row "Spotlight $69/month $699/year Save 16%" [ref=e671]:
+                                        - cell "Spotlight" [ref=e672]
+                                        - cell "$69/month" [ref=e673]
+                                        - cell "$699/year" [ref=e674]
+                                        - cell "Save 16%" [ref=e675]:
+                                            - generic [ref=e676]: Save 16%
+            - generic [ref=e678]:
+                - generic [ref=e679]:
+                    - generic [ref=e680]:
+                        - img [ref=e681]
+                        - text: Limited Time Offer
+                    - heading "Start Your Free Trial Today" [level=2] [ref=e685]:
+                        - text: Start Your
+                        - generic [ref=e686]: Free Trial
+                        - text: Today
+                    - paragraph [ref=e687]: Experience all premium features for 14 days. No credit card required, cancel anytime.
+                - generic [ref=e688]:
+                    - generic [ref=e689]:
+                        - generic [ref=e690]:
+                            - generic [ref=e691]:
+                                - heading "Trial Details" [level=3] [ref=e692]:
+                                    - img [ref=e693]
+                                    - text: Trial Details
+                                - paragraph [ref=e696]: Everything you need to know about your free trial
+                            - generic [ref=e697]:
+                                - generic [ref=e698]:
+                                    - generic [ref=e699]:
+                                        - generic [ref=e700]: Trial Duration
+                                        - generic [ref=e701]: 14 days
+                                    - generic [ref=e702]: '14'
+                                - generic [ref=e703]:
+                                    - heading "What's Included:" [level=4] [ref=e704]
+                                    - list [ref=e705]:
+                                        - listitem [ref=e706]:
+                                            - img [ref=e707]
+                                            - generic [ref=e709]: Full access to all premium features
+                                        - listitem [ref=e710]:
+                                            - img [ref=e711]
+                                            - generic [ref=e713]: Create unlimited event listings
+                                        - listitem [ref=e714]:
+                                            - img [ref=e715]
+                                            - generic [ref=e717]: Upload unlimited portfolio images
+                                        - listitem [ref=e718]:
+                                            - img [ref=e719]
+                                            - generic [ref=e721]: Access to analytics dashboard
+                                        - listitem [ref=e722]:
+                                            - img [ref=e723]
+                                            - generic [ref=e725]: Priority customer support
+                                        - listitem [ref=e726]:
+                                            - img [ref=e727]
+                                            - generic [ref=e729]: No credit card required
+                                        - listitem [ref=e730]:
+                                            - img [ref=e731]
+                                            - generic [ref=e733]: Cancel anytime during trial
+                                        - listitem [ref=e734]:
+                                            - img [ref=e735]
+                                            - generic [ref=e737]: Easy upgrade to paid plan
+                        - generic [ref=e738]:
+                            - generic [ref=e741]:
+                                - img [ref=e742]
+                                - generic [ref=e746]:
+                                    - heading "14 Days Free" [level=4] [ref=e747]
+                                    - paragraph [ref=e748]: Full access to all features for 14 days
+                            - generic [ref=e751]:
+                                - img [ref=e752]
+                                - generic [ref=e754]:
+                                    - heading "No Commitment" [level=4] [ref=e755]
+                                    - paragraph [ref=e756]: Cancel anytime, no questions asked
+                            - generic [ref=e759]:
+                                - img [ref=e760]
+                                - generic [ref=e762]:
+                                    - heading "Premium Support" [level=4] [ref=e763]
+                                    - paragraph [ref=e764]: Get priority support during your trial
+                    - generic [ref=e765]:
+                        - generic [ref=e766]:
+                            - generic [ref=e767]:
+                                - heading "Start Your Free Trial" [level=3] [ref=e768]
+                                - paragraph [ref=e769]: Choose a plan to start your 14-day free trial
+                            - generic [ref=e772]:
+                                - paragraph [ref=e773]: Or start with our free plan
+                                - button "Get Started Free" [ref=e774] [cursor=pointer]:
+                                    - text: Get Started Free
+                                    - img [ref=e775] [cursor=pointer]
+                        - alert [ref=e777]:
+                            - generic [ref=e778]:
+                                - strong [ref=e779]: 'Free Trial Terms:'
+                                - text: 14-day free trial available for Showcase and Spotlight plans. No credit card required. Cancel anytime during the trial period. After 14 days, you'll be automatically charged unless you cancel.
+                        - generic [ref=e780]:
+                            - generic [ref=e781]:
+                                - generic [ref=e782]: ✓ No setup fees
+                                - generic [ref=e783]: ✓ Cancel anytime
+                                - generic [ref=e784]: ✓ 30-day money-back guarantee
+                            - generic [ref=e785]: Join 500+ event planners who trust EventProsNZ
+            - generic [ref=e786]:
+                - generic [ref=e787]:
+                    - heading "What Our Contractors Say" [level=2] [ref=e788]:
+                        - text: What Our
+                        - generic [ref=e789]: Contractors
+                        - text: Say
+                    - paragraph [ref=e790]: See how EventProsNZ has helped event planners grow their business
+                - generic [ref=e791]:
+                    - generic [ref=e792]:
+                        - button "All Plans" [ref=e793] [cursor=pointer]
+                        - button "Showcase" [ref=e794] [cursor=pointer]
+                        - button "Spotlight" [ref=e795] [cursor=pointer]
+                    - generic [ref=e798]:
+                        - img [ref=e800]
+                        - blockquote [ref=e803]: '"EventProsNZ has transformed how I find and work with contractors. The quality of matches and ease of communication is unmatched."'
+                        - generic [ref=e805]:
+                            - img [ref=e806]
+                            - img [ref=e808]
+                            - img [ref=e810]
+                            - img [ref=e812]
+                            - img [ref=e814]
+                        - generic [ref=e816]:
+                            - generic [ref=e818]: SM
+                            - generic [ref=e819]:
+                                - generic [ref=e820]: Sarah Mitchell
+                                - generic [ref=e821]: Event Planner
+                            - generic [ref=e822]: Showcase
+                    - generic [ref=e823]:
+                        - button [ref=e824] [cursor=pointer]:
+                            - img [ref=e825] [cursor=pointer]
+                        - generic [ref=e827]:
+                            - button [ref=e828] [cursor=pointer]
+                            - button [ref=e829] [cursor=pointer]
+                            - button [ref=e830] [cursor=pointer]
+                        - button [ref=e831] [cursor=pointer]:
+                            - img [ref=e832] [cursor=pointer]
+                    - generic [ref=e834]:
+                        - generic [ref=e835]:
+                            - generic [ref=e836]: 500+
+                            - generic [ref=e837]: Active Contractors
+                        - generic [ref=e838]:
+                            - generic [ref=e839]: 4.9★
+                            - generic [ref=e840]: Average Rating
+                        - generic [ref=e841]:
+                            - generic [ref=e842]: 95%
+                            - generic [ref=e843]: Customer Satisfaction
+            - generic [ref=e844]:
+                - generic [ref=e845]:
+                    - heading "Flexible Plan Management" [level=2] [ref=e846]:
+                        - text: Flexible
+                        - generic [ref=e847]: Plan Management
+                    - paragraph [ref=e848]: Upgrade or downgrade your plan anytime to match your business needs
+                - generic [ref=e849]:
+                    - generic [ref=e850]:
+                        - generic [ref=e851]:
+                            - heading "Upgrading Your Plan" [level=3] [ref=e852]:
+                                - img [ref=e853]
+                                - text: Upgrading Your Plan
+                            - paragraph [ref=e855]: Get immediate access to premium features when you upgrade
+                        - generic [ref=e856]:
+                            - generic [ref=e857]:
+                                - heading "Upgrade Process" [level=4] [ref=e858]
+                                - generic [ref=e859]:
+                                    - generic [ref=e860]:
+                                        - generic [ref=e861]: '1'
+                                        - generic [ref=e862]:
+                                            - generic [ref=e863]: Choose your new plan
+                                            - generic [ref=e864]: Select from Essential, Showcase, or Spotlight
+                                    - generic [ref=e865]:
+                                        - generic [ref=e866]: '2'
+                                        - generic [ref=e867]:
+                                            - generic [ref=e868]: Immediate activation
+                                            - generic [ref=e869]: New features are available instantly
+                                    - generic [ref=e870]:
+                                        - generic [ref=e871]: '3'
+                                        - generic [ref=e872]:
+                                            - generic [ref=e873]: Prorated billing
+                                            - generic [ref=e874]: You only pay the difference for the remaining billing period
+                            - generic [ref=e875]:
+                                - heading "Upgrade Benefits" [level=4] [ref=e876]
+                                - list [ref=e877]:
+                                    - listitem [ref=e878]:
+                                        - img [ref=e879]
+                                        - generic [ref=e881]: Immediate access to new features
+                                    - listitem [ref=e882]:
+                                        - img [ref=e883]
+                                        - generic [ref=e885]: No downtime during upgrade
+                                    - listitem [ref=e886]:
+                                        - img [ref=e887]
+                                        - generic [ref=e889]: Prorated billing for the current month
+                                    - listitem [ref=e890]:
+                                        - img [ref=e891]
+                                        - generic [ref=e893]: Keep all your existing data
+                                    - listitem [ref=e894]:
+                                        - img [ref=e895]
+                                        - generic [ref=e897]: Priority support during transition
+                            - generic [ref=e898]:
+                                - generic [ref=e899]:
+                                    - img [ref=e900]
+                                    - generic [ref=e903]: Instant Upgrade
+                                - paragraph [ref=e904]: Upgrades take effect immediately. You'll have access to all new features right away.
+                    - generic [ref=e905]:
+                        - generic [ref=e906]:
+                            - heading "Downgrading Your Plan" [level=3] [ref=e907]:
+                                - img [ref=e908]
+                                - text: Downgrading Your Plan
+                            - paragraph [ref=e910]: Downgrade at the end of your current billing cycle
+                        - generic [ref=e911]:
+                            - generic [ref=e912]:
+                                - heading "Downgrade Process" [level=4] [ref=e913]
+                                - generic [ref=e914]:
+                                    - generic [ref=e915]:
+                                        - generic [ref=e916]: '1'
+                                        - generic [ref=e917]:
+                                            - generic [ref=e918]: Request downgrade
+                                            - generic [ref=e919]: Contact support or use the dashboard
+                                    - generic [ref=e920]:
+                                        - generic [ref=e921]: '2'
+                                        - generic [ref=e922]:
+                                            - generic [ref=e923]: End of cycle
+                                            - generic [ref=e924]: Changes take effect at your next billing date
+                                    - generic [ref=e925]:
+                                        - generic [ref=e926]: '3'
+                                        - generic [ref=e927]:
+                                            - generic [ref=e928]: Feature adjustment
+                                            - generic [ref=e929]: Some features may be limited based on your new plan
+                            - generic [ref=e930]:
+                                - heading "Important Information" [level=4] [ref=e931]
+                                - list [ref=e932]:
+                                    - listitem [ref=e933]:
+                                        - img [ref=e934]
+                                        - generic [ref=e936]: Downgrade takes effect at next billing cycle
+                                    - listitem [ref=e937]:
+                                        - img [ref=e938]
+                                        - generic [ref=e940]: You keep access to current features until renewal
+                                    - listitem [ref=e941]:
+                                        - img [ref=e942]
+                                        - generic [ref=e944]: Data is preserved but some features may be limited
+                                    - listitem [ref=e945]:
+                                        - img [ref=e946]
+                                        - generic [ref=e948]: No refunds for unused time
+                                    - listitem [ref=e949]:
+                                        - img [ref=e950]
+                                        - generic [ref=e952]: Easy to upgrade again anytime
+                            - generic [ref=e953]:
+                                - generic [ref=e954]:
+                                    - img [ref=e955]
+                                    - generic [ref=e958]: End of Cycle Downgrade
+                                - paragraph [ref=e959]: Downgrades take effect at the end of your current billing cycle to ensure you get full value from your current plan.
+                - generic [ref=e961]:
+                    - generic [ref=e962]:
+                        - heading "Plan Comparison" [level=3] [ref=e963]
+                        - paragraph [ref=e964]: Compare features across all subscription tiers
+                    - generic [ref=e966]:
+                        - generic [ref=e967]:
+                            - img [ref=e969]
+                            - generic [ref=e971]:
+                                - heading "Essential" [level=4] [ref=e972]
+                                - paragraph [ref=e973]: Free
+                            - button "Learn More" [ref=e974] [cursor=pointer]
+                        - generic [ref=e975]:
+                            - img [ref=e977]
+                            - generic [ref=e979]:
+                                - heading "Showcase" [level=4] [ref=e980]
+                                - paragraph [ref=e981]: $29/month
+                            - button "Learn More" [ref=e982] [cursor=pointer]
+                        - generic [ref=e983]:
+                            - img [ref=e985]
+                            - generic [ref=e987]:
+                                - heading "Spotlight" [level=4] [ref=e988]
+                                - paragraph [ref=e989]: $69/month
+                            - button "Learn More" [ref=e990] [cursor=pointer]
+                - generic [ref=e991]:
+                    - paragraph [ref=e992]: Need help choosing the right plan?
+                    - generic [ref=e993]:
+                        - button "Contact Support" [ref=e994] [cursor=pointer]
+                        - button "Schedule Consultation" [ref=e995] [cursor=pointer]
+            - generic [ref=e996]:
+                - generic [ref=e997]:
+                    - heading "Secure Payment Methods" [level=2] [ref=e998]:
+                        - text: Secure
+                        - generic [ref=e999]: Payment Methods
+                    - paragraph [ref=e1000]: Choose from multiple secure payment options
+                - generic [ref=e1001]:
+                    - generic [ref=e1002]:
+                        - generic [ref=e1003]:
+                            - generic [ref=e1004]:
+                                - heading "Credit Cards" [level=3] [ref=e1005]:
+                                    - img [ref=e1006]
+                                    - text: Credit Cards
+                                - paragraph [ref=e1008]: Visa, Mastercard, American Express
+                            - generic [ref=e1009]:
+                                - generic [ref=e1010]:
+                                    - heading "Features" [level=4] [ref=e1011]
+                                    - list [ref=e1012]:
+                                        - listitem [ref=e1013]:
+                                            - img [ref=e1014]
+                                            - text: Instant processing
+                                        - listitem [ref=e1016]:
+                                            - img [ref=e1017]
+                                            - text: Secure encryption
+                                        - listitem [ref=e1019]:
+                                            - img [ref=e1020]
+                                            - text: Global acceptance
+                                - generic [ref=e1022]:
+                                    - heading "Supported" [level=4] [ref=e1023]
+                                    - generic [ref=e1024]:
+                                        - generic [ref=e1025]: Visa
+                                        - generic [ref=e1026]: Mastercard
+                                        - generic [ref=e1027]: American Express
+                                        - generic [ref=e1028]: Discover
+                        - generic [ref=e1029]:
+                            - generic [ref=e1030]:
+                                - heading "PayPal" [level=3] [ref=e1031]:
+                                    - img [ref=e1032]
+                                    - text: PayPal
+                                - paragraph [ref=e1034]: Pay with your PayPal account
+                            - generic [ref=e1035]:
+                                - generic [ref=e1036]:
+                                    - heading "Features" [level=4] [ref=e1037]
+                                    - list [ref=e1038]:
+                                        - listitem [ref=e1039]:
+                                            - img [ref=e1040]
+                                            - text: Quick checkout
+                                        - listitem [ref=e1042]:
+                                            - img [ref=e1043]
+                                            - text: Buyer protection
+                                        - listitem [ref=e1045]:
+                                            - img [ref=e1046]
+                                            - text: No fees for you
+                                - generic [ref=e1048]:
+                                    - heading "Supported" [level=4] [ref=e1049]
+                                    - generic [ref=e1050]:
+                                        - generic [ref=e1051]: PayPal Balance
+                                        - generic [ref=e1052]: Bank Account
+                                        - generic [ref=e1053]: Credit Cards
+                        - generic [ref=e1054]:
+                            - generic [ref=e1055]:
+                                - heading "Bank Transfer" [level=3] [ref=e1056]:
+                                    - img [ref=e1057]
+                                    - text: Bank Transfer
+                                - paragraph [ref=e1060]: Direct bank transfer for annual plans
+                            - generic [ref=e1061]:
+                                - generic [ref=e1062]:
+                                    - heading "Features" [level=4] [ref=e1063]
+                                    - list [ref=e1064]:
+                                        - listitem [ref=e1065]:
+                                            - img [ref=e1066]
+                                            - text: Lower fees
+                                        - listitem [ref=e1068]:
+                                            - img [ref=e1069]
+                                            - text: Direct from bank
+                                        - listitem [ref=e1071]:
+                                            - img [ref=e1072]
+                                            - text: Annual billing only
+                                - generic [ref=e1074]:
+                                    - heading "Supported" [level=4] [ref=e1075]
+                                    - generic [ref=e1076]:
+                                        - generic [ref=e1077]: NZ Bank Transfer
+                                        - generic [ref=e1078]: International Wire
+                    - generic [ref=e1079]:
+                        - generic [ref=e1080]:
+                            - heading "Security & Compliance" [level=3] [ref=e1081]:
+                                - img [ref=e1082]
+                                - text: Security & Compliance
+                            - paragraph [ref=e1084]: Your payment information is protected with industry-leading security
+                        - generic [ref=e1086]:
+                            - generic [ref=e1087]:
+                                - heading "Security Features" [level=4] [ref=e1088]
+                                - list [ref=e1089]:
+                                    - listitem [ref=e1090]:
+                                        - img [ref=e1091]
+                                        - generic [ref=e1093]: 256-bit SSL encryption
+                                    - listitem [ref=e1094]:
+                                        - img [ref=e1095]
+                                        - generic [ref=e1097]: PCI DSS compliant
+                                    - listitem [ref=e1098]:
+                                        - img [ref=e1099]
+                                        - generic [ref=e1101]: Secure tokenization
+                                    - listitem [ref=e1102]:
+                                        - img [ref=e1103]
+                                        - generic [ref=e1105]: Fraud protection
+                                    - listitem [ref=e1106]:
+                                        - img [ref=e1107]
+                                        - generic [ref=e1109]: Regular security audits
+                                    - listitem [ref=e1110]:
+                                        - img [ref=e1111]
+                                        - generic [ref=e1113]: GDPR compliant data handling
+                            - generic [ref=e1114]:
+                                - heading "Compliance" [level=4] [ref=e1115]
+                                - generic [ref=e1116]:
+                                    - generic [ref=e1117]:
+                                        - generic [ref=e1118]: PCI DSS
+                                        - generic [ref=e1119]: Level 1 Service Provider
+                                    - generic [ref=e1120]:
+                                        - generic [ref=e1121]: SOC 2
+                                        - generic [ref=e1122]: Type II Certified
+                                    - generic [ref=e1123]:
+                                        - generic [ref=e1124]: GDPR
+                                        - generic [ref=e1125]: EU Data Protection
+                                    - generic [ref=e1126]:
+                                        - generic [ref=e1127]: ISO 27001
+                                        - generic [ref=e1128]: Information Security
+                    - generic [ref=e1129]:
+                        - generic [ref=e1130]:
+                            - generic [ref=e1131]:
+                                - heading "Billing Cycle" [level=3] [ref=e1132]
+                                - paragraph [ref=e1133]: Monthly or annual billing available
+                            - list [ref=e1135]:
+                                - listitem [ref=e1136]:
+                                    - img [ref=e1137]
+                                    - text: 'Monthly: Billed on the same date each month'
+                                - listitem [ref=e1139]:
+                                    - img [ref=e1140]
+                                    - text: 'Annual: Billed once per year with discount'
+                        - generic [ref=e1142]:
+                            - generic [ref=e1143]:
+                                - heading "Payment Processing" [level=3] [ref=e1144]
+                                - paragraph [ref=e1145]: Secure payment processing with Stripe
+                            - list [ref=e1147]:
+                                - listitem [ref=e1148]:
+                                    - img [ref=e1149]
+                                    - text: Industry-leading security
+                                - listitem [ref=e1151]:
+                                    - img [ref=e1152]
+                                    - text: 99.9% uptime
+                                - listitem [ref=e1154]:
+                                    - img [ref=e1155]
+                                    - text: Global payment methods
+                        - generic [ref=e1157]:
+                            - generic [ref=e1158]:
+                                - heading "Refunds" [level=3] [ref=e1159]
+                                - paragraph [ref=e1160]: 30-day money-back guarantee
+                            - list [ref=e1162]:
+                                - listitem [ref=e1163]:
+                                    - img [ref=e1164]
+                                    - text: Full refund within 30 days
+                                - listitem [ref=e1166]:
+                                    - img [ref=e1167]
+                                    - text: No questions asked
+                                - listitem [ref=e1169]:
+                                    - img [ref=e1170]
+                                    - text: Processed within 5-7 business days
+                    - generic [ref=e1174]:
+                        - img [ref=e1175]
+                        - generic [ref=e1177]:
+                            - heading "Important Payment Information" [level=4] [ref=e1178]
+                            - list [ref=e1179]:
+                                - listitem [ref=e1180]: • All prices are in New Zealand Dollars (NZD)
+                                - listitem [ref=e1181]: • International cards are accepted with currency conversion
+                                - listitem [ref=e1182]: • Bank transfers are only available for annual subscriptions
+                                - listitem [ref=e1183]: • Failed payments will automatically retry for 3 days
+                                - listitem [ref=e1184]: • You can update your payment method anytime in your account settings
+                    - generic [ref=e1185]:
+                        - heading "Trusted by Event Planners" [level=3] [ref=e1186]
+                        - generic [ref=e1187]:
+                            - generic [ref=e1188]:
+                                - generic [ref=e1189]: 500+
+                                - generic [ref=e1190]: Active Users
+                            - generic [ref=e1191]:
+                                - generic [ref=e1192]: $2M+
+                                - generic [ref=e1193]: Processed
+                            - generic [ref=e1194]:
+                                - generic [ref=e1195]: 99.9%
+                                - generic [ref=e1196]: Uptime
+                            - generic [ref=e1197]:
+                                - generic [ref=e1198]: 4.9★
+                                - generic [ref=e1199]: Rating
+            - generic [ref=e1200]:
+                - generic [ref=e1201]:
+                    - heading "Refund & Cancellation Policy" [level=2] [ref=e1202]:
+                        - text: Refund &
+                        - generic [ref=e1203]: Cancellation Policy
+                    - paragraph [ref=e1204]: We offer a 30-day money-back guarantee and flexible cancellation options
+                - generic [ref=e1205]:
+                    - generic [ref=e1206]:
+                        - generic [ref=e1207]:
+                            - heading "30-Day Money-Back Guarantee" [level=3] [ref=e1208]:
+                                - img [ref=e1209]
+                                - text: 30-Day Money-Back Guarantee
+                            - paragraph [ref=e1211]: We stand behind our service with a full 30-day money-back guarantee.
+                        - generic [ref=e1213]:
+                            - generic [ref=e1214]:
+                                - heading "Refund Details" [level=4] [ref=e1215]
+                                - list [ref=e1216]:
+                                    - listitem [ref=e1217]: '• Timeframe: 30 days from subscription start'
+                                    - listitem [ref=e1218]: '• Process: Simple online request'
+                                    - listitem [ref=e1219]: '• Processing: 5-7 business days'
+                                    - listitem [ref=e1220]: '• Coverage: Full refund of subscription fees'
+                            - generic [ref=e1221]:
+                                - heading "What's Included" [level=4] [ref=e1222]
+                                - list [ref=e1223]:
+                                    - listitem [ref=e1224]: • Full subscription fee refund
+                                    - listitem [ref=e1225]: • No cancellation fees
+                                    - listitem [ref=e1226]: • Keep access until period end
+                                    - listitem [ref=e1227]: • Easy reactivation anytime
+                    - generic [ref=e1228]:
+                        - heading "How to Request a Refund" [level=3] [ref=e1229]
+                        - generic [ref=e1230]:
+                            - generic [ref=e1231]:
+                                - generic [ref=e1232]:
+                                    - heading "1 Request Refund" [level=3] [ref=e1233]:
+                                        - generic [ref=e1234]: '1'
+                                        - text: Request Refund
+                                    - paragraph [ref=e1235]: Contact support or use the cancellation form
+                                - generic [ref=e1237]:
+                                    - img [ref=e1238]
+                                    - text: Anytime within 30 days
+                            - generic [ref=e1241]:
+                                - generic [ref=e1242]:
+                                    - heading "2 Review Process" [level=3] [ref=e1243]:
+                                        - generic [ref=e1244]: '2'
+                                        - text: Review Process
+                                    - paragraph [ref=e1245]: We review your request (usually within 24 hours)
+                                - generic [ref=e1247]:
+                                    - img [ref=e1248]
+                                    - text: 1-2 business days
+                            - generic [ref=e1251]:
+                                - generic [ref=e1252]:
+                                    - heading "3 Refund Processing" [level=3] [ref=e1253]:
+                                        - generic [ref=e1254]: '3'
+                                        - text: Refund Processing
+                                    - paragraph [ref=e1255]: Refund is processed to your original payment method
+                                - generic [ref=e1257]:
+                                    - img [ref=e1258]
+                                    - text: 5-7 business days
+                    - generic [ref=e1260]:
+                        - generic [ref=e1261]:
+                            - heading "Eligible for Refund" [level=3] [ref=e1263]:
+                                - img [ref=e1264]
+                                - text: Eligible for Refund
+                            - list [ref=e1267]:
+                                - listitem [ref=e1268]: Within 30 days of initial subscription
+                                - listitem [ref=e1270]: No significant usage of premium features
+                                - listitem [ref=e1272]: Valid payment method on file
+                                - listitem [ref=e1274]: Account in good standing
+                        - generic [ref=e1276]:
+                            - heading "Not Eligible for Refund" [level=3] [ref=e1278]:
+                                - img [ref=e1279]
+                                - text: Not Eligible for Refund
+                            - list [ref=e1282]:
+                                - listitem [ref=e1283]: After 30 days from subscription start
+                                - listitem [ref=e1285]: Excessive usage of premium features
+                                - listitem [ref=e1287]: Violation of terms of service
+                                - listitem [ref=e1289]: Fraudulent activity detected
+                    - generic [ref=e1291]:
+                        - heading "Cancellation Options" [level=3] [ref=e1292]
+                        - generic [ref=e1293]:
+                            - generic [ref=e1294]:
+                                - generic [ref=e1295]:
+                                    - heading "Immediate Cancellation" [level=3] [ref=e1296]
+                                    - paragraph [ref=e1297]: Cancel anytime from your account dashboard
+                                - list [ref=e1299]:
+                                    - listitem [ref=e1300]:
+                                        - img [ref=e1301]
+                                        - text: No questions asked
+                                    - listitem [ref=e1303]:
+                                        - img [ref=e1304]
+                                        - text: Immediate effect
+                                    - listitem [ref=e1306]:
+                                        - img [ref=e1307]
+                                        - text: Access until period end
+                            - generic [ref=e1309]:
+                                - generic [ref=e1310]:
+                                    - heading "End of Billing Cycle" [level=3] [ref=e1311]
+                                    - paragraph [ref=e1312]: Cancellation takes effect at the end of your current billing period
+                                - list [ref=e1314]:
+                                    - listitem [ref=e1315]:
+                                        - img [ref=e1316]
+                                        - text: Keep access until renewal
+                                    - listitem [ref=e1318]:
+                                        - img [ref=e1319]
+                                        - text: No prorated refunds
+                                    - listitem [ref=e1321]:
+                                        - img [ref=e1322]
+                                        - text: Easy to reactivate
+                    - generic [ref=e1324]:
+                        - generic [ref=e1325]:
+                            - heading "Need Help with Refunds or Cancellations?" [level=3] [ref=e1326]
+                            - paragraph [ref=e1327]: Our support team is here to help with any questions about refunds or cancellations
+                        - generic [ref=e1329]:
+                            - generic [ref=e1330]:
+                                - img [ref=e1332]
+                                - generic [ref=e1335]:
+                                    - heading "Email Support" [level=4] [ref=e1336]
+                                    - paragraph [ref=e1337]: support@eventpros.co.nz
+                                    - paragraph [ref=e1338]: Within 24 hours
+                            - generic [ref=e1339]:
+                                - img [ref=e1341]
+                                - generic [ref=e1343]:
+                                    - heading "Phone Support" [level=4] [ref=e1344]
+                                    - paragraph [ref=e1345]: +64 9 123 4567
+                                    - paragraph [ref=e1346]: Mon-Fri 9AM-5PM NZST
+                            - generic [ref=e1347]:
+                                - img [ref=e1349]
+                                - generic [ref=e1351]:
+                                    - heading "Live Chat" [level=4] [ref=e1352]
+                                    - paragraph [ref=e1353]: Available on website
+                                    - paragraph [ref=e1354]: Mon-Fri 9AM-5PM NZST
+                    - alert [ref=e1355]:
+                        - img [ref=e1356]
+                        - generic [ref=e1358]:
+                            - strong [ref=e1359]: 'Important:'
+                            - text: Refunds are processed to the original payment method. Processing times may vary depending on your bank or payment provider. If you have any questions about your refund, please contact our support team.
+                    - generic [ref=e1360]:
+                        - heading "Ready to Get Started?" [level=3] [ref=e1361]
+                        - paragraph [ref=e1362]: Start your free trial today with confidence knowing you're protected by our money-back guarantee.
+                        - generic [ref=e1363]:
+                            - button "Start Free Trial" [ref=e1364] [cursor=pointer]
+                            - button "Contact Support" [ref=e1365] [cursor=pointer]
+            - generic [ref=e1366]:
+                - generic [ref=e1367]:
+                    - heading "Frequently Asked Questions" [level=2] [ref=e1368]:
+                        - text: Frequently Asked
+                        - generic [ref=e1369]: Questions
+                    - paragraph [ref=e1370]: Find answers to common questions about our pricing and plans
+                - generic [ref=e1371]:
+                    - generic [ref=e1372]:
+                        - generic [ref=e1373]:
+                            - img [ref=e1374]
+                            - textbox "Search FAQ..." [ref=e1377]
+                        - generic [ref=e1378]:
+                            - button "All Questions" [ref=e1379] [cursor=pointer]:
+                                - img [ref=e1380] [cursor=pointer]
+                                - text: All Questions
+                            - button "Pricing" [ref=e1383] [cursor=pointer]:
+                                - img [ref=e1384] [cursor=pointer]
+                                - text: Pricing
+                            - button "Billing" [ref=e1386] [cursor=pointer]:
+                                - img [ref=e1387] [cursor=pointer]
+                                - text: Billing
+                            - button "Free Trial" [ref=e1389] [cursor=pointer]:
+                                - img [ref=e1390] [cursor=pointer]
+                                - text: Free Trial
+                            - button "Security" [ref=e1393] [cursor=pointer]:
+                                - img [ref=e1394] [cursor=pointer]
+                                - text: Security
+                    - generic [ref=e1396]:
+                        - generic [ref=e1399] [cursor=pointer]:
+                            - generic [ref=e1400] [cursor=pointer]:
+                                - img [ref=e1401] [cursor=pointer]
+                                - heading "What subscription plan should I choose?" [level=3] [ref=e1403] [cursor=pointer]
+                            - generic [ref=e1404] [cursor=pointer]:
+                                - generic [ref=e1405] [cursor=pointer]: pricing
+                                - img [ref=e1406] [cursor=pointer]
+                        - generic [ref=e1410] [cursor=pointer]:
+                            - generic [ref=e1411] [cursor=pointer]:
+                                - img [ref=e1412] [cursor=pointer]
+                                - heading "What payment methods do you accept?" [level=3] [ref=e1414] [cursor=pointer]
+                            - generic [ref=e1415] [cursor=pointer]:
+                                - generic [ref=e1416] [cursor=pointer]: billing
+                                - img [ref=e1417] [cursor=pointer]
+                        - generic [ref=e1421] [cursor=pointer]:
+                            - generic [ref=e1422] [cursor=pointer]:
+                                - img [ref=e1423] [cursor=pointer]
+                                - heading "Can I cancel my subscription anytime?" [level=3] [ref=e1425] [cursor=pointer]
+                            - generic [ref=e1426] [cursor=pointer]:
+                                - generic [ref=e1427] [cursor=pointer]: billing
+                                - img [ref=e1428] [cursor=pointer]
+                        - generic [ref=e1432] [cursor=pointer]:
+                            - generic [ref=e1433] [cursor=pointer]:
+                                - img [ref=e1434] [cursor=pointer]
+                                - heading "Is there a free trial available?" [level=3] [ref=e1437] [cursor=pointer]
+                            - generic [ref=e1438] [cursor=pointer]:
+                                - generic [ref=e1439] [cursor=pointer]: trial
+                                - img [ref=e1440] [cursor=pointer]
+                        - generic [ref=e1444] [cursor=pointer]:
+                            - generic [ref=e1445] [cursor=pointer]:
+                                - img [ref=e1446] [cursor=pointer]
+                                - heading "How secure is my payment information?" [level=3] [ref=e1448] [cursor=pointer]
+                            - generic [ref=e1449] [cursor=pointer]:
+                                - generic [ref=e1450] [cursor=pointer]: security
+                                - img [ref=e1451] [cursor=pointer]
+                    - generic [ref=e1453]:
+                        - generic [ref=e1454]:
+                            - heading "Popular Questions" [level=3] [ref=e1455]
+                            - paragraph [ref=e1456]: Most commonly asked questions about our pricing
+                        - generic [ref=e1458]:
+                            - generic [ref=e1459]:
+                                - heading "Pricing" [level=4] [ref=e1460]
+                                - list [ref=e1461]:
+                                    - listitem [ref=e1462]: • Can I change my plan anytime?
+                                    - listitem [ref=e1463]: • Are there any setup fees?
+                                    - listitem [ref=e1464]: • Do you offer discounts for annual billing?
+                                    - listitem [ref=e1465]: • What payment methods do you accept?
+                            - generic [ref=e1466]:
+                                - heading "Billing" [level=4] [ref=e1467]
+                                - list [ref=e1468]:
+                                    - listitem [ref=e1469]: • When will I be charged?
+                                    - listitem [ref=e1470]: • Can I cancel anytime?
+                                    - listitem [ref=e1471]: • Do you offer refunds?
+                                    - listitem [ref=e1472]: • How do I update my payment method?
+                    - generic [ref=e1473]:
+                        - heading "Still Have Questions?" [level=3] [ref=e1474]
+                        - paragraph [ref=e1475]: Can't find what you're looking for? Our support team is here to help.
+                        - generic [ref=e1476]:
+                            - button "Contact Support" [ref=e1477] [cursor=pointer]
+                            - button "Schedule a Call" [ref=e1478] [cursor=pointer]
+            - generic [ref=e1480]:
+                - generic [ref=e1481]:
+                    - generic [ref=e1482]:
+                        - img [ref=e1483]
+                        - text: 'Limited Time: 14-Day Free Trial'
+                    - heading "Ready to Grow Your Event Business?" [level=2] [ref=e1487]:
+                        - text: Ready to Grow Your
+                        - generic [ref=e1488]: Event Business
+                        - text: '?'
+                    - paragraph [ref=e1489]: Join hundreds of event planners who trust EventProsNZ to connect them with the best contractors and grow their business.
+                - generic [ref=e1490]:
+                    - generic [ref=e1492]:
+                        - img [ref=e1494]
+                        - heading "14-Day Free Trial" [level=3] [ref=e1498]
+                        - paragraph [ref=e1499]: Try all premium features risk-free
+                    - generic [ref=e1501]:
+                        - img [ref=e1503]
+                        - heading "30-Day Money-Back Guarantee" [level=3] [ref=e1505]
+                        - paragraph [ref=e1506]: Full refund if not satisfied
+                    - generic [ref=e1508]:
+                        - img [ref=e1510]
+                        - heading "Cancel Anytime" [level=3] [ref=e1513]
+                        - paragraph [ref=e1514]: No long-term commitments
+                - generic [ref=e1515]:
+                    - generic [ref=e1516]:
+                        - generic [ref=e1517]:
+                            - img [ref=e1519]
+                            - heading "Essential" [level=3] [ref=e1521]
+                            - paragraph [ref=e1522]: Perfect for getting started
+                            - generic [ref=e1523]:
+                                - generic [ref=e1524]: Free
+                                - generic [ref=e1525]: forever
+                        - generic [ref=e1526]:
+                            - list [ref=e1527]:
+                                - listitem [ref=e1528]:
+                                    - img [ref=e1529]
+                                    - text: Basic Profile
+                                - listitem [ref=e1531]:
+                                    - img [ref=e1532]
+                                    - text: Portfolio Upload (5 items)
+                                - listitem [ref=e1534]:
+                                    - img [ref=e1535]
+                                    - text: Basic Search Visibility
+                                - listitem [ref=e1537]:
+                                    - img [ref=e1538]
+                                    - text: Contact Form
+                            - button "Get Started Free" [ref=e1541] [cursor=pointer]:
+                                - text: Get Started Free
+                                - img [ref=e1542] [cursor=pointer]
+                    - generic [ref=e1544]:
+                        - generic [ref=e1546]: Most Popular
+                        - generic [ref=e1547]:
+                            - img [ref=e1549]
+                            - heading "Showcase" [level=3] [ref=e1551]
+                            - paragraph [ref=e1552]: Ideal for growing businesses
+                            - generic [ref=e1553]:
+                                - generic [ref=e1554]: $29
+                                - generic [ref=e1555]: /month
+                        - generic [ref=e1556]:
+                            - list [ref=e1557]:
+                                - listitem [ref=e1558]:
+                                    - img [ref=e1559]
+                                    - text: Enhanced Profile
+                                - listitem [ref=e1561]:
+                                    - img [ref=e1562]
+                                    - text: Portfolio Upload (20 items)
+                                - listitem [ref=e1564]:
+                                    - img [ref=e1565]
+                                    - text: Priority Search Visibility
+                                - listitem [ref=e1567]:
+                                    - img [ref=e1568]
+                                    - text: Direct Contact
+                            - generic [ref=e1571]:
+                                - button "Start Free Trial" [ref=e1572] [cursor=pointer]:
+                                    - text: Start Free Trial
+                                    - img [ref=e1573] [cursor=pointer]
+                                - button "Choose Showcase" [ref=e1575] [cursor=pointer]
+                    - generic [ref=e1576]:
+                        - generic [ref=e1577]:
+                            - img [ref=e1579]
+                            - heading "Spotlight" [level=3] [ref=e1581]
+                            - paragraph [ref=e1582]: Maximum visibility and features
+                            - generic [ref=e1583]:
+                                - generic [ref=e1584]: $69
+                                - generic [ref=e1585]: /month
+                        - generic [ref=e1586]:
+                            - list [ref=e1587]:
+                                - listitem [ref=e1588]:
+                                    - img [ref=e1589]
+                                    - text: Premium Profile
+                                - listitem [ref=e1591]:
+                                    - img [ref=e1592]
+                                    - text: Unlimited Portfolio
+                                - listitem [ref=e1594]:
+                                    - img [ref=e1595]
+                                    - text: Top Search Visibility
+                                - listitem [ref=e1597]:
+                                    - img [ref=e1598]
+                                    - text: Direct Contact
+                            - generic [ref=e1601]:
+                                - button "Start Free Trial" [ref=e1602] [cursor=pointer]:
+                                    - text: Start Free Trial
+                                    - img [ref=e1603] [cursor=pointer]
+                                - button "Choose Spotlight" [ref=e1605] [cursor=pointer]
+                - generic [ref=e1606]:
+                    - generic [ref=e1607]:
+                        - generic [ref=e1608]:
+                            - generic [ref=e1609]: 500+
+                            - generic [ref=e1610]: Active Users
+                        - generic [ref=e1611]:
+                            - generic [ref=e1612]: 4.9★
+                            - generic [ref=e1613]: Average Rating
+                        - generic [ref=e1614]:
+                            - generic [ref=e1615]: 99.9%
+                            - generic [ref=e1616]: Uptime
+                        - generic [ref=e1617]:
+                            - generic [ref=e1618]: 24/7
+                            - generic [ref=e1619]: Support
+                    - generic [ref=e1620]:
+                        - heading "Join Event Planners Across New Zealand" [level=3] [ref=e1621]
+                        - paragraph [ref=e1622]: '"EventProsNZ has transformed how I find and work with contractors. The quality of matches and ease of communication is unmatched."'
+                        - generic [ref=e1623]:
+                            - generic [ref=e1624]: — Sarah M., Wedding Planner
+                            - generic [ref=e1625]:
+                                - img [ref=e1626]
+                                - img [ref=e1628]
+                                - img [ref=e1630]
+                                - img [ref=e1632]
+                                - img [ref=e1634]
+                    - generic [ref=e1636]:
+                        - heading "Start Your Journey Today" [level=3] [ref=e1637]
+                        - paragraph [ref=e1638]: No credit card required. Cancel anytime. 30-day money-back guarantee.
+                        - generic [ref=e1639]:
+                            - button "Start Free Trial" [ref=e1640] [cursor=pointer]:
+                                - text: Start Free Trial
+                                - img [ref=e1641] [cursor=pointer]
+                            - button "View All Features" [ref=e1643] [cursor=pointer]
+                    - generic [ref=e1644]:
+                        - generic [ref=e1645]:
+                            - img [ref=e1646]
+                            - text: No setup fees
+                        - generic [ref=e1648]:
+                            - img [ref=e1649]
+                            - text: Cancel anytime
+                        - generic [ref=e1651]:
+                            - img [ref=e1652]
+                            - text: 30-day guarantee
+                        - generic [ref=e1654]:
+                            - img [ref=e1655]
+                            - text: Priority support
+    - alert [ref=e1657]
+```

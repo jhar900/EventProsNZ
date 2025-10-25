@@ -107,4 +107,10 @@ async function handler(request: NextRequest) {
 }
 
 // Export the rate-limited handler
-export const GET = withRateLimit(analyticsRateLimit)(handler);
+export const GET = async (request: NextRequest) => {
+  const rateLimitResult = await analyticsRateLimit(request);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+  return handler(request);
+};

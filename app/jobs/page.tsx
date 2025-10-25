@@ -13,8 +13,8 @@ import {
   BriefcaseIcon,
   DocumentTextIcon,
   ClockIcon,
-  TemplateIcon,
 } from '@heroicons/react/24/outline';
+import { FileText } from 'lucide-react';
 import { Job, JobApplicationWithDetails } from '@/types/jobs';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -102,7 +102,7 @@ export default function JobsPage() {
               value="templates"
               className="flex items-center space-x-2"
             >
-              <TemplateIcon className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
               <span>Templates</span>
             </TabsTrigger>
             <TabsTrigger

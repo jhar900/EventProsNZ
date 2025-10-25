@@ -106,3 +106,49 @@ export const newsletterRateLimit = createRateLimit({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: 3, // 3 requests per minute per IP
 });
+
+// Additional rate limiters for different endpoints
+export const rateLimit = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 10, // 10 requests per minute per IP
+});
+
+export const withRateLimit = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 requests per minute per IP
+});
+
+export const applyRateLimit = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 requests per minute per IP
+});
+
+export const analyticsRateLimit = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 20, // 20 requests per minute per IP
+});
+
+export const uploadRateLimiter = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 3, // 3 uploads per minute per IP
+});
+
+export const userUploadRateLimiter = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 uploads per minute per IP
+});
+
+export const paymentRateLimiter = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 5, // 5 payment requests per minute per IP
+});
+
+export const subscriptionRateLimiter = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 3, // 3 subscription requests per minute per IP
+});
+
+export const testimonialRateLimiter = createRateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 2, // 2 testimonial requests per minute per IP
+});

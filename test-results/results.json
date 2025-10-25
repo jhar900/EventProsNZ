@@ -1,0 +1,3385 @@
+{
+  "config": {
+    "configFile": "C:\\dev\\EventProsNZ\\playwright.config.ts",
+    "rootDir": "C:/dev/EventProsNZ/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 6
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      ["html", null],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/results.xml"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/dev/EventProsNZ/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/dev/EventProsNZ/e2e",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/dev/EventProsNZ/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/dev/EventProsNZ/e2e",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/dev/EventProsNZ/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/dev/EventProsNZ/e2e",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/dev/EventProsNZ/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/dev/EventProsNZ/e2e",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/dev/EventProsNZ/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "C:/dev/EventProsNZ/e2e",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 6,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "pricing-page.spec.ts",
+      "file": "pricing-page.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Pricing Page",
+          "file": "pricing-page.spec.ts",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "displays pricing page with all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 21330,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.569Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-3583ae755f2a72bc3088",
+              "file": "pricing-page.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "displays feature comparison table",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 14303,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.544Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-62eddd517e6e578222d2",
+              "file": "pricing-page.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "shows annual pricing with discounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 14576,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.542Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-bb296037e8c158f30dbe",
+              "file": "pricing-page.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "displays free trial section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 14493,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.570Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-f3f35551dc3086d7fde1",
+              "file": "pricing-page.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "shows testimonials section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 14164,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.595Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-8583d11ad4d616f84710",
+              "file": "pricing-page.spec.ts",
+              "line": 104,
+              "column": 7
+            },
+            {
+              "title": "displays FAQ section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 14212,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:35.593Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-859f763da8526f703443",
+              "file": "pricing-page.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "shows payment methods section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 8791,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:50.146Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-faafd51d363059890737",
+              "file": "pricing-page.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "displays refund policy section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 8790,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:50.164Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-0382dd148b108f66d0e0",
+              "file": "pricing-page.spec.ts",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "shows upgrade/downgrade information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 9011,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:50.212Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-258fcbd51f5fbe1e2daf",
+              "file": "pricing-page.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "displays call-to-action section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 8690,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:50.389Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-7f68e66c6710f27b9c0d",
+              "file": "pricing-page.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "handles tier selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 8752,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:50.390Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-1010efc7e232a24eeec8",
+              "file": "pricing-page.spec.ts",
+              "line": 162,
+              "column": 7
+            },
+            {
+              "title": "toggles billing cycle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8207,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:57.200Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-4f2b8aac1877089ba582",
+              "file": "pricing-page.spec.ts",
+              "line": 170,
+              "column": 7
+            },
+            {
+              "title": "displays mobile responsive design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 7374,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:59.003Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-b88739ecd4ce58305948",
+              "file": "pricing-page.spec.ts",
+              "line": 184,
+              "column": 7
+            },
+            {
+              "title": "handles FAQ search",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 7215,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:59.004Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-039b5fea88158e0561da",
+              "file": "pricing-page.spec.ts",
+              "line": 194,
+              "column": 7
+            },
+            {
+              "title": "displays trust indicators",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 6937,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:59.122Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-32afcd0c2bd3d826c75f",
+              "file": "pricing-page.spec.ts",
+              "line": 207,
+              "column": 7
+            },
+            {
+              "title": "shows pricing comparison",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 6995,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:59.180Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-edb937d057e2f7ae7cd1",
+              "file": "pricing-page.spec.ts",
+              "line": 217,
+              "column": 7
+            },
+            {
+              "title": "displays security information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 7036,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:16:59.260Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-8dca03ecf47822e56fbc",
+              "file": "pricing-page.spec.ts",
+              "line": 231,
+              "column": 7
+            },
+            {
+              "title": "displays pricing page with all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16798,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:08.645Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-bc224e772fc79adf3169",
+              "file": "pricing-page.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "displays feature comparison table",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 16465,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:08.799Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-b181bf05321a7dcd4a38",
+              "file": "pricing-page.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "shows annual pricing with discounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 19005,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:08.710Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-a11e4e24c8cefa6655f8",
+              "file": "pricing-page.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "displays free trial section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 9542,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:08.763Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-0ec8b56cc5b6587708c8",
+              "file": "pricing-page.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "shows testimonials section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 15988,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:08.950Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-c022460e72b1ed24aaf1",
+              "file": "pricing-page.spec.ts",
+              "line": 104,
+              "column": 7
+            },
+            {
+              "title": "displays FAQ section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 10215,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:09.022Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-a26393283719388d749b",
+              "file": "pricing-page.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "shows payment methods section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 12862,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:19.514Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-2a9b62f5f2365df44783",
+              "file": "pricing-page.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "displays refund policy section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 12039,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:21.293Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-cda2458857f0946ded36",
+              "file": "pricing-page.spec.ts",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "shows upgrade/downgrade information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11146,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:29.201Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-68cc60d1ff2efb9f8b5c",
+              "file": "pricing-page.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "displays call-to-action section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 8580,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:32.436Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-f9528cdb17e8b9faa679",
+              "file": "pricing-page.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "handles tier selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 8385,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:33.373Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-8f213c17e153d220eddf",
+              "file": "pricing-page.spec.ts",
+              "line": 162,
+              "column": 7
+            },
+            {
+              "title": "toggles billing cycle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 7456,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:33.829Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-44769ed27a5652966eb3",
+              "file": "pricing-page.spec.ts",
+              "line": 170,
+              "column": 7
+            },
+            {
+              "title": "displays mobile responsive design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 7125,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:33.829Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-d7b7615a55352aad1736",
+              "file": "pricing-page.spec.ts",
+              "line": 184,
+              "column": 7
+            },
+            {
+              "title": "handles FAQ search",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 7689,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:34.025Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-9ae8d271edb8291092e2",
+              "file": "pricing-page.spec.ts",
+              "line": 194,
+              "column": 7
+            },
+            {
+              "title": "displays trust indicators",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6547,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:40.473Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-f7bb466825cd5ece86ba",
+              "file": "pricing-page.spec.ts",
+              "line": 207,
+              "column": 7
+            },
+            {
+              "title": "shows pricing comparison",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 6224,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:41.004Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-3e0b1123bf386600b540",
+              "file": "pricing-page.spec.ts",
+              "line": 217,
+              "column": 7
+            },
+            {
+              "title": "displays security information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 6546,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:41.058Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-4ef40bfebf4cc6399915",
+              "file": "pricing-page.spec.ts",
+              "line": 231,
+              "column": 7
+            },
+            {
+              "title": "displays pricing page with all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 6488,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:51.599Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-9ab0424319d1f8e0af8c",
+              "file": "pricing-page.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "displays feature comparison table",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 7839,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:50.151Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-70091bbcb385eceb4ddf",
+              "file": "pricing-page.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "shows annual pricing with discounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 6576,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:51.323Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-2ea9c599e4e3570012ef",
+              "file": "pricing-page.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "displays free trial section",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2750,
+                      "error": {
+                        "message": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:52.982Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-free-trial-section-webkit\\video.webm"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-21e2f74b0076d588af86",
+              "file": "pricing-page.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "shows testimonials section",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 3048,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:52.790Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-64ff7f643af519364d92",
+              "file": "pricing-page.spec.ts",
+              "line": 104,
+              "column": 7
+            },
+            {
+              "title": "displays FAQ section",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 2718,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:53.072Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-0c043a3e6c274d8f4246",
+              "file": "pricing-page.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "shows payment methods section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 19740,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:59.476Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-d31b99a01a8fd8c8bec0",
+              "file": "pricing-page.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "displays refund policy section",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 9791,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:59.348Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-9ce7b066e41896edccaa",
+              "file": "pricing-page.spec.ts",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "shows upgrade/downgrade information",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 20,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 9800,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:59.389Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-c6d22b64468a1d062048",
+              "file": "pricing-page.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "displays call-to-action section",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 3407,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:58.154Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-a52c03892df14ea4998a",
+              "file": "pricing-page.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "handles tier selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 4999,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:58.247Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-a476850d2961ca7b7615",
+              "file": "pricing-page.spec.ts",
+              "line": 162,
+              "column": 7
+            },
+            {
+              "title": "toggles billing cycle",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 2773,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:17:58.447Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-8393f53e3a6262a8b59d",
+              "file": "pricing-page.spec.ts",
+              "line": 170,
+              "column": 7
+            },
+            {
+              "title": "displays mobile responsive design",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 21,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 35065,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:9:8",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 8,
+                          "line": 9
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  7 |\u001b[39m\n \u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'Pricing Page'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// Mock API responses to prevent loading timeouts\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mroute(\u001b[32m'**/api/pricing/tiers'\u001b[39m\u001b[33m,\u001b[39m route \u001b[33m=>\u001b[39m\n \u001b[90m 12 |\u001b[39m       route\u001b[33m.\u001b[39mfulfill({\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 8,
+                            "line": 9
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  7 |\u001b[39m\n \u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'Pricing Page'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// Mock API responses to prevent loading timeouts\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mroute(\u001b[32m'**/api/pricing/tiers'\u001b[39m\u001b[33m,\u001b[39m route \u001b[33m=>\u001b[39m\n \u001b[90m 12 |\u001b[39m       route\u001b[33m.\u001b[39mfulfill({\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:9:8\u001b[22m"
+                        },
+                        {
+                          "message": "Error: browserContext.newPage: Test timeout of 30000ms exceeded."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:03.601Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 8,
+                        "line": 9
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-058233ae0471afd85cfa",
+              "file": "pricing-page.spec.ts",
+              "line": 184,
+              "column": 7
+            },
+            {
+              "title": "handles FAQ search",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 22,
+                      "parallelIndex": 4,
+                      "status": "timedOut",
+                      "duration": 35077,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:9:8",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 8,
+                          "line": 9
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  7 |\u001b[39m\n \u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'Pricing Page'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// Mock API responses to prevent loading timeouts\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mroute(\u001b[32m'**/api/pricing/tiers'\u001b[39m\u001b[33m,\u001b[39m route \u001b[33m=>\u001b[39m\n \u001b[90m 12 |\u001b[39m       route\u001b[33m.\u001b[39mfulfill({\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 8,
+                            "line": 9
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m  7 |\u001b[39m\n \u001b[90m  8 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'Pricing Page'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// Mock API responses to prevent loading timeouts\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mroute(\u001b[32m'**/api/pricing/tiers'\u001b[39m\u001b[33m,\u001b[39m route \u001b[33m=>\u001b[39m\n \u001b[90m 12 |\u001b[39m       route\u001b[33m.\u001b[39mfulfill({\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:9:8\u001b[22m"
+                        },
+                        {
+                          "message": "Error: browserContext.newPage: Test timeout of 30000ms exceeded."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:03.649Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 8,
+                        "line": 9
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-a96d81298b6a40130ba8",
+              "file": "pricing-page.spec.ts",
+              "line": 194,
+              "column": 7
+            },
+            {
+              "title": "displays trust indicators",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 1987,
+                      "error": {
+                        "message": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 16,
+                          "line": 35
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 16,
+                            "line": 35
+                          },
+                          "message": "Error: page.goto: Page crashed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/pricing\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 34 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/pricing'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m   test(\u001b[32m'displays pricing page with all sections'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:35:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:03.287Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-trust-indicators-webkit\\video.webm"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 16,
+                        "line": 35
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-062a4e168c0d3d98835a",
+              "file": "pricing-page.spec.ts",
+              "line": 207,
+              "column": 7
+            },
+            {
+              "title": "shows pricing comparison",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 2746,
+                      "error": {
+                        "message": "Error: browserContext.close: Target page, context or browser has been closed",
+                        "stack": "Error: browserContext.close: Target page, context or browser has been closed"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserContext.close: Target page, context or browser has been closed"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:06.531Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-fde64d8af22f86f0bf50",
+              "file": "pricing-page.spec.ts",
+              "line": 217,
+              "column": 7
+            },
+            {
+              "title": "displays security information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2421,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:10.702Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-49f1fd8516ad98a01fa7",
+              "file": "pricing-page.spec.ts",
+              "line": 231,
+              "column": 7
+            },
+            {
+              "title": "displays pricing page with all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2722,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:10.704Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-6f705fe3ae0b45f55c67",
+              "file": "pricing-page.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "displays feature comparison table",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 26,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 8246,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:79:7",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 7,
+                          "line": 79
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 78 |\u001b[39m       page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"features-table\"]'\u001b[39m)\u001b[33m.\u001b[39mfirst()\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m\n \u001b[90m 82 |\u001b[39m   test(\u001b[32m'shows annual pricing with discounts'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 7,
+                            "line": 79
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 78 |\u001b[39m       page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"features-table\"]'\u001b[39m)\u001b[33m.\u001b[39mfirst()\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m\n \u001b[90m 82 |\u001b[39m   test(\u001b[32m'shows annual pricing with discounts'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:79:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:10.724Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 7,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-10eaec7f73abe2333463",
+              "file": "pricing-page.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "shows annual pricing with discounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1359,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:14.526Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-4ef7c9fe27ffb0e80edd",
+              "file": "pricing-page.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "displays free trial section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1866,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:13.710Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-df42f795c5e7665a6711",
+              "file": "pricing-page.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "shows testimonials section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1903,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:15.592Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-068a50ad90b10a25f13c",
+              "file": "pricing-page.spec.ts",
+              "line": 104,
+              "column": 7
+            },
+            {
+              "title": "displays FAQ section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2031,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:16.032Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-1f0aeb4de4fa056cb5c3",
+              "file": "pricing-page.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "shows payment methods section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1938,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:17.512Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-90a7701aefbcdfb26031",
+              "file": "pricing-page.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "displays refund policy section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2061,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:18.090Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-7b03a56769096741a351",
+              "file": "pricing-page.spec.ts",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "shows upgrade/downgrade information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 28,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2882,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:21.310Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-f62239846d8a8b14982c",
+              "file": "pricing-page.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "displays call-to-action section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 29,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2639,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:21.486Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-066752ca8e965cb80085",
+              "file": "pricing-page.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "handles tier selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1786,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:19.472Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-d72099c4524169b1d567",
+              "file": "pricing-page.spec.ts",
+              "line": 162,
+              "column": 7
+            },
+            {
+              "title": "toggles billing cycle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1907,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:20.170Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-58a4ed5b89d2850ec331",
+              "file": "pricing-page.spec.ts",
+              "line": 170,
+              "column": 7
+            },
+            {
+              "title": "displays mobile responsive design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2713,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:21.279Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-ec4a45b0484111295965",
+              "file": "pricing-page.spec.ts",
+              "line": 184,
+              "column": 7
+            },
+            {
+              "title": "handles FAQ search",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2127,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:22.104Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-6720e188078bdf497a61",
+              "file": "pricing-page.spec.ts",
+              "line": 194,
+              "column": 7
+            },
+            {
+              "title": "displays trust indicators",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2195,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:24.012Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-2bbbb9e7c723ca82b3e1",
+              "file": "pricing-page.spec.ts",
+              "line": 207,
+              "column": 7
+            },
+            {
+              "title": "shows pricing comparison",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2108,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:24.261Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-89bb240f1a9888a00ea5",
+              "file": "pricing-page.spec.ts",
+              "line": 217,
+              "column": 7
+            },
+            {
+              "title": "displays security information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 28,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2089,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:24.402Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-baad8e28cff3b34c465a",
+              "file": "pricing-page.spec.ts",
+              "line": 231,
+              "column": 7
+            },
+            {
+              "title": "displays pricing page with all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 3239,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:26.680Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-0e13cad940b53c819d82",
+              "file": "pricing-page.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "displays feature comparison table",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 8051,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:79:7",
+                        "location": {
+                          "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                          "column": 7,
+                          "line": 79
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 78 |\u001b[39m       page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"features-table\"]'\u001b[39m)\u001b[33m.\u001b[39mfirst()\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m\n \u001b[90m 82 |\u001b[39m   test(\u001b[32m'shows annual pricing with discounts'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                            "column": 7,
+                            "line": 79
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('[data-testid=\"features-table\"]').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"features-table\"]').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"hidden lg:block\" data-testid=\"features-table\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 78 |\u001b[39m       page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"features-table\"]'\u001b[39m)\u001b[33m.\u001b[39mfirst()\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m\n \u001b[90m 82 |\u001b[39m   test(\u001b[32m'shows annual pricing with discounts'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts:79:7\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:27.964Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\dev\\EventProsNZ\\test-results\\pricing-page-Pricing-Page-displays-feature-comparison-table-Mobile-Safari\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\dev\\EventProsNZ\\e2e\\pricing-page.spec.ts",
+                        "column": 7,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-d3a9b87d030286b699b9",
+              "file": "pricing-page.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "shows annual pricing with discounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2775,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:28.179Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-70187ee673e4bea2d992",
+              "file": "pricing-page.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "displays free trial section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2714,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:28.358Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-eeb24e200b34c87ebb0c",
+              "file": "pricing-page.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "shows testimonials section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2423,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:30.035Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-29fb22900c58a2af8ced",
+              "file": "pricing-page.spec.ts",
+              "line": 104,
+              "column": 7
+            },
+            {
+              "title": "displays FAQ section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2888,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:31.095Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-26e371bacce15ed40cba",
+              "file": "pricing-page.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "shows payment methods section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2179,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:31.239Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-2e6e7eb58fed1b076269",
+              "file": "pricing-page.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "displays refund policy section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2124,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:32.491Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-ad2f77c60f1adddf2c0a",
+              "file": "pricing-page.spec.ts",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "shows upgrade/downgrade information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2406,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:33.450Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-b405e92cce931ef424b0",
+              "file": "pricing-page.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "displays call-to-action section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2266,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:34.013Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-7c27b2b21a2fed656b12",
+              "file": "pricing-page.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "handles tier selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2658,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:34.638Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-6dffcfcbd82be5e0aeee",
+              "file": "pricing-page.spec.ts",
+              "line": 162,
+              "column": 7
+            },
+            {
+              "title": "toggles billing cycle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3211,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:35.885Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-b2bc0d0b36a8330562b9",
+              "file": "pricing-page.spec.ts",
+              "line": 170,
+              "column": 7
+            },
+            {
+              "title": "displays mobile responsive design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 34,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2368,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:38.195Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-c9184cec73b20625f5cc",
+              "file": "pricing-page.spec.ts",
+              "line": 184,
+              "column": 7
+            },
+            {
+              "title": "handles FAQ search",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2664,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:36.303Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-8089a110b283e6598174",
+              "file": "pricing-page.spec.ts",
+              "line": 194,
+              "column": 7
+            },
+            {
+              "title": "displays trust indicators",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2641,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:37.322Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-6bcd6035dc5c93e5ce49",
+              "file": "pricing-page.spec.ts",
+              "line": 207,
+              "column": 7
+            },
+            {
+              "title": "shows pricing comparison",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 35,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 2211,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:40.600Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-995306730ae4bceb7b12",
+              "file": "pricing-page.spec.ts",
+              "line": 217,
+              "column": 7
+            },
+            {
+              "title": "displays security information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 36,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 2021,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-25T19:18:40.677Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "64ab4d2809cbf785383c-1cf2c6547c8e8d59b72d",
+              "file": "pricing-page.spec.ts",
+              "line": 231,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-25T19:16:21.461Z",
+    "duration": 141792.88199999998,
+    "expected": 72,
+    "skipped": 0,
+    "unexpected": 13,
+    "flaky": 0
+  }
+}
