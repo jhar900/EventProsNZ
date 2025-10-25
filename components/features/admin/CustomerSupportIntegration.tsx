@@ -8,25 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Flag, Eye, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
-export default function ContentModeration() {
+export default function CustomerSupportIntegration() {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Flag className="h-5 w-5" />
-          Content Moderation
+          <AlertTriangle className="h-5 w-5" />
+          Customer Support Integration
         </CardTitle>
         <CardDescription>
-          Review and moderate user-generated content
+          Integrate with customer support systems
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8 text-muted-foreground">
-          Content moderation component will be implemented here
+          Customer support integration component will be implemented here
         </div>
       </CardContent>
     </Card>

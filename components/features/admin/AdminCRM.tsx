@@ -8,25 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Flag, Eye, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
-export default function ContentModeration() {
+export default function AdminCRM() {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Flag className="h-5 w-5" />
-          Content Moderation
+          <Settings className="h-5 w-5" />
+          Admin CRM
         </CardTitle>
         <CardDescription>
-          Review and moderate user-generated content
+          Comprehensive CRM functionality for admin users
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8 text-muted-foreground">
-          Content moderation component will be implemented here
+          Admin CRM component will be implemented here
         </div>
       </CardContent>
     </Card>

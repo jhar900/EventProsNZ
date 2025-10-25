@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -26,334 +27,233 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
-import {
-  Users,
   Activity,
   Eye,
-  MousePointer,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Search,
-  Filter,
-  RefreshCw,
   AlertTriangle,
   CheckCircle,
-  Star,
-  MessageSquare,
-  Heart,
+  Clock,
+  MapPin,
+  Monitor,
+  Smartphone,
+  Globe,
 } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface UserActivity {
+interface ActivityLog {
   id: string;
   user_id: string;
-  user_name: string;
   user_email: string;
-  user_role: 'contractor' | 'event_manager' | 'admin';
-  activity_type: string;
-  activity_description: string;
-  timestamp: string;
-  session_duration: number;
-  page_views: number;
-  actions_count: number;
-  satisfaction_rating?: number;
-  feedback?: string;
-  location: string;
-  device_type: string;
-  browser: string;
-}
-
-interface ActivityMetrics {
-  totalUsers: number;
-  activeUsers: number;
-  averageSessionTime: number;
-  totalPageViews: number;
-  bounceRate: number;
-  satisfactionScore: number;
-  topActivities: Array<{
-    activity: string;
-    count: number;
-    percentage: number;
-  }>;
-  userEngagement: Array<{
-    date: string;
-    activeUsers: number;
-    sessions: number;
-    pageViews: number;
-  }>;
-  deviceBreakdown: Array<{
-    device: string;
-    count: number;
-    percentage: number;
-  }>;
-  locationBreakdown: Array<{
-    location: string;
-    users: number;
-    sessions: number;
-  }>;
-}
-
-interface UserFeedback {
-  id: string;
-  user_id: string;
   user_name: string;
-  rating: number;
-  feedback: string;
-  job_id: string;
-  job_title: string;
+  action: string;
+  details: any;
+  ip_address: string;
+  user_agent: string;
   created_at: string;
-  status: 'pending' | 'reviewed' | 'resolved';
+  location?: {
+    city: string;
+    country: string;
+    region: string;
+  };
+  device?: {
+    type: 'desktop' | 'mobile' | 'tablet';
+    browser: string;
+    os: string;
+  };
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+interface UserActivityMonitorProps {
+  onViewDetails?: (activityId: string) => void;
+  loading?: boolean;
+}
 
-export default function UserActivityMonitor() {
-  const [activities, setActivities] = useState<UserActivity[]>([]);
-  const [filteredActivities, setFilteredActivities] = useState<UserActivity[]>(
-    []
-  );
-  const [metrics, setMetrics] = useState<ActivityMetrics | null>(null);
-  const [feedback, setFeedback] = useState<UserFeedback[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    timeRange: '24h',
-    userRole: 'all',
-    activityType: 'all',
-    search: '',
+export default function UserActivityMonitor({
+  onViewDetails,
+  loading = false,
+}: UserActivityMonitorProps) {
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [timeRange, setTimeRange] = useState('24h');
+
+  // Mock data - replace with actual API call
+  useEffect(() => {
+    const mockActivities: ActivityLog[] = [
+      {
+        id: '1',
+        user_id: 'user1',
+        user_email: 'john.doe@example.com',
+        user_name: 'John Doe',
+        action: 'login',
+        details: { method: 'email', success: true },
+        ip_address: '192.168.1.1',
+        user_agent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        created_at: '2024-01-15T10:30:00Z',
+        location: {
+          city: 'Auckland',
+          country: 'New Zealand',
+          region: 'Auckland',
+        },
+        device: {
+          type: 'desktop',
+          browser: 'Chrome',
+          os: 'Windows 10',
+        },
+      },
+      {
+        id: '2',
+        user_id: 'user2',
+        user_email: 'jane.smith@example.com',
+        user_name: 'Jane Smith',
+        action: 'profile_update',
+        details: { fields: ['first_name', 'bio'], success: true },
+        ip_address: '192.168.1.2',
+        user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
+        created_at: '2024-01-15T09:15:00Z',
+        location: {
+          city: 'Wellington',
+          country: 'New Zealand',
+          region: 'Wellington',
+        },
+        device: {
+          type: 'mobile',
+          browser: 'Safari',
+          os: 'iOS 14',
+        },
+      },
+      {
+        id: '3',
+        user_id: 'user3',
+        user_email: 'bob.wilson@example.com',
+        user_name: 'Bob Wilson',
+        action: 'failed_login',
+        details: { method: 'email', reason: 'invalid_password', attempts: 3 },
+        ip_address: '192.168.1.3',
+        user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+        created_at: '2024-01-15T08:45:00Z',
+        location: {
+          city: 'Christchurch',
+          country: 'New Zealand',
+          region: 'Canterbury',
+        },
+        device: {
+          type: 'desktop',
+          browser: 'Firefox',
+          os: 'macOS',
+        },
+      },
+    ];
+    setActivities(mockActivities);
+  }, []);
+
+  const filteredActivities = activities.filter(activity => {
+    const matchesFilter = filter === 'all' || activity.action === filter;
+    const matchesSearch =
+      search === '' ||
+      activity.user_name.toLowerCase().includes(search.toLowerCase()) ||
+      activity.user_email.toLowerCase().includes(search.toLowerCase()) ||
+      activity.action.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [activitiesResponse, metricsResponse, feedbackResponse] =
-        await Promise.all([
-          fetch(`/api/admin/users/activity?timeRange=${filters.timeRange}`),
-          fetch('/api/admin/users/activity/metrics'),
-          fetch('/api/admin/users/feedback'),
-        ]);
-
-      if (activitiesResponse.ok) {
-        const activitiesData = await activitiesResponse.json();
-        setActivities(activitiesData.activities || []);
-        setFilteredActivities(activitiesData.activities || []);
-      }
-
-      if (metricsResponse.ok) {
-        const metricsData = await metricsResponse.json();
-        setMetrics(metricsData);
-      }
-
-      if (feedbackResponse.ok) {
-        const feedbackData = await feedbackResponse.json();
-        setFeedback(feedbackData.feedback || []);
-      }
-    } catch (error) {
-      console.error('Error loading user activity data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [filters.timeRange]);
-
-  useEffect(() => {
-    let filtered = activities;
-
-    if (filters.userRole !== 'all') {
-      filtered = filtered.filter(
-        activity => activity.user_role === filters.userRole
-      );
-    }
-
-    if (filters.activityType !== 'all') {
-      filtered = filtered.filter(
-        activity => activity.activity_type === filters.activityType
-      );
-    }
-
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        activity =>
-          activity.user_name.toLowerCase().includes(searchLower) ||
-          activity.activity_description.toLowerCase().includes(searchLower) ||
-          activity.user_email.toLowerCase().includes(searchLower)
-      );
-    }
-
-    setFilteredActivities(filtered);
-  }, [activities, filters]);
-
-  const getActivityIcon = (activityType: string) => {
-    switch (activityType) {
+  const getActionIcon = (action: string) => {
+    switch (action) {
       case 'login':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'job_post':
-        return <Activity className="h-4 w-4 text-blue-600" />;
-      case 'job_apply':
-        return <MousePointer className="h-4 w-4 text-purple-600" />;
+      case 'failed_login':
+        return <AlertTriangle className="h-4 w-4 text-red-600" />;
       case 'profile_update':
-        return <Users className="h-4 w-4 text-orange-600" />;
-      case 'search':
-        return <Search className="h-4 w-4 text-cyan-600" />;
-      case 'feedback':
-        return <MessageSquare className="h-4 w-4 text-pink-600" />;
+        return <Activity className="h-4 w-4 text-blue-600" />;
+      case 'password_change':
+        return <Shield className="h-4 w-4 text-yellow-600" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
+        return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <Badge variant="destructive">Admin</Badge>;
-      case 'contractor':
-        return <Badge variant="default">Contractor</Badge>;
-      case 'event_manager':
-        return <Badge variant="secondary">Event Manager</Badge>;
-      default:
-        return <Badge variant="outline">{role}</Badge>;
-    }
-  };
+  const getActionBadge = (action: string) => {
+    const variants = {
+      login: 'default',
+      failed_login: 'destructive',
+      profile_update: 'secondary',
+      password_change: 'outline',
+    } as const;
 
-  const getSatisfactionColor = (rating: number) => {
-    if (rating >= 4) return 'text-green-600';
-    if (rating >= 3) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64" role="status">
-        <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading user activity data...</span>
-      </div>
+      <Badge variant={variants[action as keyof typeof variants] || 'secondary'}>
+        {action.replace('_', ' ').toUpperCase()}
+      </Badge>
     );
-  }
+  };
+
+  const getDeviceIcon = (deviceType: string) => {
+    switch (deviceType) {
+      case 'desktop':
+        return <Monitor className="h-4 w-4" />;
+      case 'mobile':
+        return <Smartphone className="h-4 w-4" />;
+      case 'tablet':
+        return <Monitor className="h-4 w-4" />;
+      default:
+        return <Globe className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            User Activity Monitor
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor user behavior, engagement, and satisfaction metrics
-          </p>
-        </div>
-        <Button onClick={loadData} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Key Metrics */}
-      {metrics && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Users
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {metrics.activeUsers.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {metrics.totalUsers} total users
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg Session Time
-              </CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round(metrics.averageSessionTime / 60)}m
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Average session duration
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {metrics.totalPageViews.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {metrics.bounceRate.toFixed(1)}% bounce rate
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Satisfaction
-              </CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {metrics.satisfactionScore.toFixed(1)}/5
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Average user rating
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter user activity data</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                User Activity Monitor
+              </CardTitle>
+              <CardDescription>
+                Monitor user activities, login attempts, and system interactions
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">
+                {filteredActivities.length} Activities
+              </Badge>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="search">Search</Label>
+              <Input
+                id="search"
+                placeholder="Search activities..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
             <div>
-              <label className="text-sm font-medium">Time Range</label>
-              <Select
-                value={filters.timeRange}
-                onValueChange={value =>
-                  setFilters(prev => ({ ...prev, timeRange: value }))
-                }
-              >
-                <SelectTrigger>
+              <Label htmlFor="filter">Action Type</Label>
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Actions</SelectItem>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="failed_login">Failed Login</SelectItem>
+                  <SelectItem value="profile_update">Profile Update</SelectItem>
+                  <SelectItem value="password_change">
+                    Password Change
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="timeRange">Time Range</Label>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -364,393 +264,130 @@ export default function UserActivityMonitor() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div>
-              <label className="text-sm font-medium">User Role</label>
-              <Select
-                value={filters.userRole}
-                onValueChange={value =>
-                  setFilters(prev => ({ ...prev, userRole: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="contractor">Contractors</SelectItem>
-                  <SelectItem value="event_manager">Event Managers</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Activity Type</label>
-              <Select
-                value={filters.activityType}
-                onValueChange={value =>
-                  setFilters(prev => ({ ...prev, activityType: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Activities</SelectItem>
-                  <SelectItem value="login">Login</SelectItem>
-                  <SelectItem value="job_post">Job Post</SelectItem>
-                  <SelectItem value="job_apply">Job Apply</SelectItem>
-                  <SelectItem value="profile_update">Profile Update</SelectItem>
-                  <SelectItem value="search">Search</SelectItem>
-                  <SelectItem value="feedback">Feedback</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={filters.search}
-                  onChange={e =>
-                    setFilters(prev => ({ ...prev, search: e.target.value }))
-                  }
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-end">
-              <Button onClick={loadData} variant="outline" className="w-full">
-                <Filter className="h-4 w-4 mr-2" />
-                Apply Filters
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Analytics Tabs */}
-      <Tabs defaultValue="activity" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="activity">Activity Feed</TabsTrigger>
-          <TabsTrigger value="engagement">Engagement</TabsTrigger>
-          <TabsTrigger value="feedback">User Feedback</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="activity" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Recent Activity ({filteredActivities.length})
-              </CardTitle>
-              <CardDescription>Real-time user activity feed</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Session</TableHead>
-                    <TableHead>Rating</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredActivities.map(activity => (
-                    <TableRow key={activity.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {activity.user_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {activity.user_email}
-                          </div>
-                          {getRoleBadge(activity.user_role)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getActivityIcon(activity.activity_type)}
-                          <span className="capitalize">
-                            {activity.activity_type.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-xs truncate">
-                          {activity.activity_description}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div>
-                            {Math.round(activity.session_duration / 60)}m
-                          </div>
-                          <div className="text-muted-foreground">
-                            {activity.page_views} views
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {activity.satisfaction_rating ? (
-                          <div
-                            className={`font-medium ${getSatisfactionColor(activity.satisfaction_rating)}`}
-                          >
-                            {activity.satisfaction_rating}/5
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="engagement" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Engagement Over Time</CardTitle>
-                <CardDescription>
-                  Daily active users and sessions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={metrics?.userEngagement}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="activeUsers"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="sessions"
-                      stroke="#82ca9d"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Device Breakdown</CardTitle>
-                <CardDescription>User devices and browsers</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={metrics?.deviceBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percentage }) => `${name} ${percentage}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="count"
-                    >
-                      {metrics?.deviceBreakdown.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Activities</CardTitle>
-              <CardDescription>Most common user activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {metrics?.topActivities.map((activity, index) => (
-                  <div
-                    key={activity.activity}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="font-medium capitalize">
-                          {activity.activity.replace('_', ' ')}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {activity.count} occurrences
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">
-                        {activity.percentage.toFixed(1)}%
-                      </div>
+      {/* Activity Logs */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Device</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredActivities.map(activity => (
+                <TableRow key={activity.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{activity.user_name}</div>
                       <div className="text-sm text-muted-foreground">
-                        of total
+                        {activity.user_email}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="feedback" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Feedback ({feedback.length})</CardTitle>
-              <CardDescription>
-                User satisfaction ratings and feedback
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {feedback.map(item => (
-                  <div key={item.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="font-medium">{item.user_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.job_title} •{' '}
-                          {new Date(item.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getActionIcon(activity.action)}
+                      {getActionBadge(activity.action)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-xs">
+                      <div className="text-sm">
+                        {activity.details.success !== undefined && (
+                          <span
+                            className={
+                              activity.details.success
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }
+                          >
+                            {activity.details.success ? 'Success' : 'Failed'}
+                          </span>
+                        )}
+                        {activity.details.method && (
+                          <div className="text-xs text-muted-foreground">
+                            Method: {activity.details.method}
+                          </div>
+                        )}
+                        {activity.details.attempts && (
+                          <div className="text-xs text-muted-foreground">
+                            Attempts: {activity.details.attempts}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {activity.location ? (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <div className="text-sm">
+                          <div>{activity.location.city}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {activity.location.country}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className={`font-medium ${getSatisfactionColor(item.rating)}`}
-                        >
-                          {item.rating}/5
+                    ) : (
+                      <span className="text-muted-foreground">Unknown</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {activity.device ? (
+                      <div className="flex items-center gap-1">
+                        {getDeviceIcon(activity.device.type)}
+                        <div className="text-sm">
+                          <div className="capitalize">
+                            {activity.device.type}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {activity.device.browser} on {activity.device.os}
+                          </div>
                         </div>
-                        <Badge
-                          variant={
-                            item.status === 'resolved' ? 'default' : 'secondary'
-                          }
-                        >
-                          {item.status}
-                        </Badge>
                       </div>
+                    ) : (
+                      <span className="text-muted-foreground">Unknown</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                      {activity.ip_address}
+                    </code>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {format(new Date(activity.created_at), 'MMM dd, yyyy')}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {item.feedback}
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(activity.created_at), 'HH:mm:ss')}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="insights" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Geographic Distribution</CardTitle>
-                <CardDescription>User activity by location</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {metrics?.locationBreakdown.map(location => (
-                    <div
-                      key={location.location}
-                      className="flex items-center justify-between"
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails?.(activity.id)}
                     >
-                      <div>
-                        <div className="font-medium">{location.location}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {location.sessions} sessions
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">
-                          {location.users} users
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {(location.sessions / location.users || 0).toFixed(1)}{' '}
-                          avg sessions
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Engagement Insights</CardTitle>
-                <CardDescription>Key performance indicators</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                      <span>User Growth</span>
-                    </div>
-                    <div className="text-green-600 font-medium">+12.5%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Activity className="h-4 w-4 text-blue-600" />
-                      <span>Engagement Rate</span>
-                    </div>
-                    <div className="text-blue-600 font-medium">68.2%</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Star className="h-4 w-4 text-yellow-600" />
-                      <span>Satisfaction Score</span>
-                    </div>
-                    <div className="text-yellow-600 font-medium">4.2/5</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-purple-600" />
-                      <span>Avg Session Time</span>
-                    </div>
-                    <div className="text-purple-600 font-medium">
-                      {Math.round((metrics?.averageSessionTime || 0) / 60)}m
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

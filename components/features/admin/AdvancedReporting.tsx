@@ -8,25 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Flag, Eye, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
-export default function ContentModeration() {
+export default function AdvancedReporting() {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Flag className="h-5 w-5" />
-          Content Moderation
+          <BarChart3 className="h-5 w-5" />
+          Advanced Reporting
         </CardTitle>
         <CardDescription>
-          Review and moderate user-generated content
+          Generate advanced reports and analytics
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8 text-muted-foreground">
-          Content moderation component will be implemented here
+          Advanced reporting component will be implemented here
         </div>
       </CardContent>
     </Card>
