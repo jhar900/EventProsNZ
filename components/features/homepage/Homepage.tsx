@@ -1,0 +1,56 @@
+'use client';
+
+import React from 'react';
+import { HeroSection } from './HeroSection';
+import { TestimonialsSection } from './TestimonialsSection';
+import { InteractiveMapSection } from './InteractiveMapSection';
+import { ServiceCategoriesSection } from './ServiceCategoriesSection';
+import { HowItWorksSection } from './HowItWorksSection';
+import { FeaturedContractorsSection } from './FeaturedContractorsSection';
+import { StatisticsSection } from './StatisticsSection';
+import { NZPrideSection } from './NZPrideSection';
+import { HomepageFooter } from './HomepageFooter';
+import { HomepageNavigation } from './HomepageNavigation';
+
+interface HomepageProps {
+  className?: string;
+}
+
+export function Homepage({ className = '' }: HomepageProps) {
+  return (
+    <div className={`min-h-screen ${className}`}>
+      {/* Navigation */}
+      <HomepageNavigation />
+
+      {/* Main content */}
+      <main>
+        {/* Hero Section */}
+        <HeroSection />
+
+        {/* Testimonials Section */}
+        <TestimonialsSection />
+
+        {/* Interactive Map Section */}
+        <InteractiveMapSection />
+
+        {/* Service Categories Section */}
+        <ServiceCategoriesSection />
+
+        {/* How It Works Section */}
+        <HowItWorksSection />
+
+        {/* Featured Contractors Section */}
+        <FeaturedContractorsSection />
+
+        {/* Statistics Section */}
+        <StatisticsSection />
+
+        {/* New Zealand Pride Section */}
+        <NZPrideSection />
+      </main>
+
+      {/* Footer */}
+      <HomepageFooter />
+    </div>
+  );
+}
