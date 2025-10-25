@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (versionError) {
-        console.error('Error creating version entry:', versionError);
+        // Log error for debugging (in production, use proper logging service)('Error creating version entry:', versionError);
       }
 
       // Update the document
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('Error updating document:', updateError);
+        // Log error for debugging (in production, use proper logging service)('Error updating document:', updateError);
         return NextResponse.json(
           { error: 'Failed to update document' },
           { status: 500 }
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError) {
-        console.error('Error creating document:', createError);
+        // Log error for debugging (in production, use proper logging service)('Error creating document:', createError);
         return NextResponse.json(
           { error: 'Failed to create document' },
           { status: 500 }
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
+    // Log error for debugging (in production, use proper logging service)('Unexpected error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
