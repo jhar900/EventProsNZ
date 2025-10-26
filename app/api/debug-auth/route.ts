@@ -14,11 +14,29 @@ export async function GET(request: NextRequest) {
       isLocalhost: request.url.includes('localhost'),
     };
 
+    // Get all cookies
+    const cookies = Object.fromEntries(
+      request.cookies.getAll().map(cookie => [cookie.name, cookie.value])
+    );
+
+    // Check for Supabase auth cookies specifically
+    const supabaseCookies = {
+      'sb-access-token': cookies['sb-access-token'],
+      'sb-refresh-token': cookies['sb-refresh-token'],
+      'supabase-auth-token': cookies['supabase-auth-token'],
+    };
+
     // Try to get authenticated user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+
+    // Try to get session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
     let userInfo = null;
     if (user) {
@@ -46,9 +64,21 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       environment: envInfo,
+      cookies: {
+        all: cookies,
+        supabase: supabaseCookies,
+      },
       auth: {
         user: userInfo,
+        session: session
+          ? {
+              access_token: session.access_token ? 'present' : 'missing',
+              refresh_token: session.refresh_token ? 'present' : 'missing',
+              expires_at: session.expires_at,
+            }
+          : null,
         authError: authError?.message,
+        sessionError: sessionError?.message,
       },
       database: {
         usersCount: count,
