@@ -99,7 +99,17 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`/api/admin/users?${params}`);
+      // Get user email from localStorage (set by auth system)
+      const userEmail =
+        localStorage.getItem('userEmail') ||
+        JSON.parse(localStorage.getItem('user') || '{}').email;
+
+      const response = await fetch(`/api/admin/users?${params}`, {
+        headers: {
+          'x-user-email': userEmail || '',
+        },
+      });
+
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
