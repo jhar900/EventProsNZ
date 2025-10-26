@@ -84,6 +84,25 @@ async function processAdminUsersRequest(
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    // Debug: Log the parameters
+    console.log('Admin Users API Debug:', {
+      role,
+      status,
+      verification,
+      subscription,
+      location,
+      company,
+      lastLogin,
+      dateFrom,
+      dateTo,
+      search,
+      sortBy,
+      sortOrder,
+      limit,
+      offset,
+      url: request.url,
+    });
+
     // Build query
     let query = dbClient.from('users').select(
       `
@@ -208,6 +227,31 @@ async function processAdminUsersRequest(
     query = query.range(offset, offset + limit - 1);
 
     const { data: users, error: usersError, count } = await query;
+
+    // Debug: Log the query results
+    console.log('Admin Users Query Results:', {
+      usersCount: users?.length || 0,
+      totalCount: count,
+      users:
+        users?.map(u => ({ id: u.id, email: u.email, role: u.role })) || [],
+      error: usersError?.message,
+      queryParams: {
+        role,
+        status,
+        verification,
+        subscription,
+        location,
+        company,
+        lastLogin,
+        dateFrom,
+        dateTo,
+        search,
+        sortBy,
+        sortOrder,
+        limit,
+        offset,
+      },
+    });
 
     if (usersError) {
       return NextResponse.json(
