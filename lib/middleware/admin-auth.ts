@@ -8,9 +8,16 @@ import { supabaseAdmin } from '@/lib/supabase/server';
  */
 export async function validateAdminAccess(request: NextRequest) {
   try {
+    const { supabase } = createClient(request);
+
     // For development: Simple bypass - just return success
     // This allows access to admin endpoints without authentication
-    if (process.env.NODE_ENV === 'development') {
+    const isDevelopment =
+      process.env.NODE_ENV === 'development' ||
+      process.env.VERCEL_ENV === 'development' ||
+      request.url.includes('localhost');
+
+    if (isDevelopment) {
       return {
         success: true,
         user: {

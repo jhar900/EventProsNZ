@@ -10,7 +10,12 @@ export default function AdminUsersPage() {
   const { user } = useAuth();
 
   // In development mode, bypass RoleGuard to allow access
-  if (process.env.NODE_ENV === 'development') {
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' ||
+    process.env.VERCEL_ENV === 'development' ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
+  if (isDevelopment) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50">
