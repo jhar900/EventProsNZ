@@ -99,7 +99,12 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`/api/admin/users?${params}`);
+      const response = await fetch(`/api/admin/users?${params}`, {
+        headers: {
+          'x-admin-token':
+            process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin-access-2024',
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();

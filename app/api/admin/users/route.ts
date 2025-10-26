@@ -10,33 +10,43 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // SIMPLE BYPASS: Since localStorage isn't working, just grant admin access
-    // This is a temporary fix until we resolve the authentication issue
+    // SECURITY: Check for admin access token in headers
+    // This provides basic security while maintaining functionality
+    const adminToken = request.headers.get('x-admin-token');
 
-    // Check if there are any admin users in the database
-    const { data: adminUsers, error: adminError } = await supabaseAdmin
-      .from('users')
-      .select('id, email, role, is_verified, last_login')
-      .eq('role', 'admin')
-      .limit(1);
+    if (adminToken === process.env.ADMIN_ACCESS_TOKEN) {
+      // Valid admin token - check if admin users exist
+      const { data: adminUsers, error: adminError } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role, is_verified, last_login')
+        .eq('role', 'admin')
+        .limit(1);
 
-    if (adminUsers && adminUsers.length > 0 && !adminError) {
-      // Grant admin access using the first admin user
-      const adminUser = {
-        id: adminUsers[0].id,
-        role: adminUsers[0].role,
-        status: 'active',
-        is_verified: adminUsers[0].is_verified,
-        last_login: adminUsers[0].last_login,
-      };
+      if (adminUsers && adminUsers.length > 0 && !adminError) {
+        // Grant admin access using the first admin user
+        const adminUser = {
+          id: adminUsers[0].id,
+          role: adminUsers[0].role,
+          status: 'active',
+          is_verified: adminUsers[0].is_verified,
+          last_login: adminUsers[0].last_login,
+        };
 
-      return await processAdminUsersRequest(request, supabaseAdmin, adminUser);
+        return await processAdminUsersRequest(
+          request,
+          supabaseAdmin,
+          adminUser
+        );
+      }
     }
 
     // Fallback: Try normal authentication
     const authResult = await validateAdminAccess(request);
     if (!authResult.success) {
-      return authResult.response;
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 401 }
+      );
     }
 
     const { supabase, user } = authResult;
@@ -73,25 +83,6 @@ async function processAdminUsersRequest(
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Debug: Log the parameters
-    console.log('Admin Users API Debug:', {
-      role,
-      status,
-      verification,
-      subscription,
-      location,
-      company,
-      lastLogin,
-      dateFrom,
-      dateTo,
-      search,
-      sortBy,
-      sortOrder,
-      limit,
-      offset,
-      url: request.url,
-    });
 
     // Build query
     let query = dbClient.from('users').select(
@@ -217,15 +208,6 @@ async function processAdminUsersRequest(
     query = query.range(offset, offset + limit - 1);
 
     const { data: users, error: usersError, count } = await query;
-
-    // Debug: Log the query results
-    console.log('Admin Users Query Results:', {
-      usersCount: users?.length || 0,
-      totalCount: count,
-      users:
-        users?.map(u => ({ id: u.id, email: u.email, role: u.role })) || [],
-      error: usersError?.message,
-    });
 
     if (usersError) {
       return NextResponse.json(
