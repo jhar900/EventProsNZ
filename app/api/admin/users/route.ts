@@ -14,7 +14,19 @@ export async function GET(request: NextRequest) {
     // This provides basic security while maintaining functionality
     const adminToken = request.headers.get('x-admin-token');
 
-    if (adminToken === process.env.ADMIN_ACCESS_TOKEN) {
+    // Check against both environment variable and hardcoded fallback
+    const expectedToken =
+      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
+
+    // Debug: Log token validation
+    console.log('Admin Token Debug:', {
+      receivedToken: adminToken,
+      expectedToken: expectedToken,
+      envToken: process.env.ADMIN_ACCESS_TOKEN,
+      tokensMatch: adminToken === expectedToken,
+    });
+
+    if (adminToken === expectedToken) {
       // Valid admin token - check if admin users exist
       const { data: adminUsers, error: adminError } = await supabaseAdmin
         .from('users')
