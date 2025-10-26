@@ -23,7 +23,7 @@ const recordConsentSchema = z.object({
     marketing: z.boolean(),
     preferences: z.boolean(),
   }),
-  ipAddress: z.string().ip().optional(),
+  ipAddress: z.string().optional(),
   userAgent: z.string().optional(),
   consentVersion: z.string().optional(),
 });
@@ -120,7 +120,7 @@ export const GET = withSecurity(
 
         if (error instanceof z.ZodError) {
           return NextResponse.json(
-            { error: 'Invalid request parameters', details: error.errors },
+            { error: 'Invalid request parameters', details: error.issues },
             { status: 400 }
           );
         }
@@ -190,7 +190,7 @@ export const POST = withSecurity(
 
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Invalid request data', details: error.errors },
+          { error: 'Invalid request data', details: error.issues },
           { status: 400 }
         );
       }
@@ -246,7 +246,7 @@ export const PUT = withSecurity(
 
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Invalid request data', details: error.errors },
+          { error: 'Invalid request data', details: error.issues },
           { status: 400 }
         );
       }
@@ -309,7 +309,7 @@ export const DELETE = withSecurity(
 
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Invalid request data', details: error.errors },
+          { error: 'Invalid request data', details: error.issues },
           { status: 400 }
         );
       }
