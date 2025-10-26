@@ -122,7 +122,7 @@ export async function validateAdminAccess(request: NextRequest) {
         is_verified: userData.is_verified,
         last_login: userData.last_login,
       },
-      supabase,
+      supabase, // Always return the authenticated supabase client in production
     };
   } catch (error) {
     // Log error for debugging but don't expose details to client

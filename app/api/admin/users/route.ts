@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
 
     const { supabase, user } = authResult;
 
-    // Use supabaseAdmin for database operations in development
+    // Use the authenticated supabase client
+    // In development bypass, supabase will be null, so fallback to supabaseAdmin
     const dbClient = supabase || supabaseAdmin;
 
     // Get query parameters
