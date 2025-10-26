@@ -50,7 +50,7 @@ interface User {
   email: string;
   role: 'event_manager' | 'contractor' | 'admin';
   is_verified: boolean;
-  status: 'active' | 'suspended' | 'deleted';
+  status?: 'active' | 'suspended' | 'deleted'; // Optional since it doesn't exist in DB
   last_login: string | null;
   created_at: string;
   profiles?: {
@@ -74,8 +74,8 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [updateForm, setUpdateForm] = useState({
-    status: 'active',
-    role: 'event_manager',
+    status: 'active' as 'active' | 'suspended' | 'deleted',
+    role: 'event_manager' as 'event_manager' | 'contractor' | 'admin',
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -109,7 +109,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         }));
       }
     } catch (error) {
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -136,8 +136,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         await loadUsers();
         onUserUpdate?.(userId, data);
       }
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleUpdateUser = async () => {
@@ -151,7 +150,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const openUpdateDialog = (user: User) => {
     setSelectedUser(user);
     setUpdateForm({
-      status: user.status,
+      status: user.status || 'active',
       role: user.role,
     });
     setIsUpdateDialogOpen(true);
@@ -182,7 +181,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     {
       key: 'status',
       label: 'Status',
-      render: (value: string) => <StatusBadge status={value} />,
+      render: (value: string) => <StatusBadge status={value || 'active'} />,
     },
     {
       key: 'is_verified',
@@ -227,7 +226,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         <Eye className="h-4 w-4 mr-2" />
         View Details
       </DropdownMenuItem>
-      {user.status === 'active' ? (
+      {(user.status || 'active') === 'active' ? (
         <DropdownMenuItem
           onClick={() => handleUserAction(user.id, 'suspend')}
           className="text-yellow-600"

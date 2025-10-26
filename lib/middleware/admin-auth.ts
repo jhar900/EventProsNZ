@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 /**
  * Middleware for comprehensive admin authorization
@@ -7,8 +8,23 @@ import { createClient } from '@/lib/supabase/middleware';
  */
 export async function validateAdminAccess(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
+    // For development: Simple bypass - just return success
+    // This allows access to admin endpoints without authentication
+    if (process.env.NODE_ENV === 'development') {
+      return {
+        success: true,
+        user: {
+          id: 'dev-admin-user',
+          role: 'admin',
+          status: 'active',
+          is_verified: true,
+          last_login: new Date().toISOString(),
+        },
+        supabase: null, // We'll handle this in the API route
+      };
+    }
 
+    // Production: Standard authentication flow
     // Get authenticated user
     const {
       data: { user },

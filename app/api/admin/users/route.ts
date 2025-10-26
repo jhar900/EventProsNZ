@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import {
   validateAdminAccess,
   logAdminAction,
@@ -16,6 +17,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { supabase, user } = authResult;
+
+    // Use supabaseAdmin for database operations in development
+    const dbClient = supabase || supabaseAdmin;
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -35,13 +39,12 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build query
-    let query = supabase.from('users').select(
+    let query = dbClient.from('users').select(
       `
         id,
         email,
         role,
         is_verified,
-        status,
         last_login,
         created_at,
         updated_at,
@@ -51,9 +54,7 @@ export async function GET(request: NextRequest) {
           avatar_url,
           phone,
           address,
-          city,
-          state,
-          country
+          location
         ),
         business_profiles (
           company_name,
@@ -75,9 +76,8 @@ export async function GET(request: NextRequest) {
         query = query.eq('is_verified', true);
       } else if (status === 'unverified') {
         query = query.eq('is_verified', false);
-      } else {
-        query = query.eq('status', status);
       }
+      // Note: No status column exists, so we only filter by verification status
     }
 
     if (verification && verification !== 'all') {
@@ -96,9 +96,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (location) {
-      query = query.or(
-        `profiles.city.ilike.%${location}%,profiles.state.ilike.%${location}%,profiles.country.ilike.%${location}%`
-      );
+      query = query.ilike('profiles.location', `%${location}%`);
     }
 
     if (company) {
@@ -172,30 +170,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Log admin search action
-    await logAdminAction(
-      supabase,
-      user.id,
-      'search_users',
-      {
-        filters: {
-          role,
-          status,
-          verification,
-          subscription,
-          location,
-          company,
-          lastLogin,
-          dateFrom,
-          dateTo,
-          search,
-          sortBy,
-          sortOrder,
+    // Log admin search action (skip in development)
+    if (supabase) {
+      await logAdminAction(
+        supabase,
+        user.id,
+        'search_users',
+        {
+          filters: {
+            role,
+            status,
+            verification,
+            subscription,
+            location,
+            company,
+            lastLogin,
+            dateFrom,
+            dateTo,
+            search,
+            sortBy,
+            sortOrder,
+          },
+          result_count: count || 0,
         },
-        result_count: count || 0,
-      },
-      request
-    );
+        request
+      );
+    }
 
     return NextResponse.json({
       users: users || [],

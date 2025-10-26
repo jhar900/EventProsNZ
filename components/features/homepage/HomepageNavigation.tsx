@@ -29,7 +29,6 @@ export function HomepageNavigation({
   }, []);
 
   const navigationLinks = [
-    { name: 'How It Works', href: '/how-it-works' },
     { name: 'Contractors', href: '/contractors' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'About', href: '/about' },
