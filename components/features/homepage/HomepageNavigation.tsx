@@ -7,10 +7,12 @@ import { Menu, X, User, LogIn, UserPlus, Search, Bell } from 'lucide-react';
 
 interface HomepageNavigationProps {
   className?: string;
+  onLoginClick?: () => void;
 }
 
 export function HomepageNavigation({
   className = '',
+  onLoginClick,
 }: HomepageNavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -74,15 +76,14 @@ export function HomepageNavigation({
 
           {/* Desktop CTA buttons */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="text-gray-700 hover:text-orange-600"
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              className="text-gray-700 hover:text-orange-600"
+              onClick={onLoginClick}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Button>
             <Link href="/register">
               <Button className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
                 <UserPlus className="w-4 h-4 mr-2" />
@@ -122,12 +123,17 @@ export function HomepageNavigation({
 
               {/* Mobile CTA buttons */}
               <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Link href="/login" className="block">
-                  <Button variant="outline" className="w-full justify-center">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Login
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  onClick={() => {
+                    onLoginClick?.();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
                 <Link href="/register" className="block">
                   <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
                     <UserPlus className="w-4 h-4 mr-2" />

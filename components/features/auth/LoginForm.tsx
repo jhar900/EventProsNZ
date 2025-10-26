@@ -67,7 +67,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+      <div className="bg-white rounded-lg px-8 pb-8 mb-2">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
           Sign In
         </h2>
@@ -84,7 +84,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
               {...register('email')}
               type="email"
               id="email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder="Enter your email"
             />
             {errors.email && (
@@ -105,7 +105,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
               {...register('password')}
               type="password"
               id="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder="Enter your password"
             />
             {errors.password && (
@@ -124,7 +124,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
@@ -152,7 +152,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
             Don&apos;t have an account?{' '}
             <Link
               href="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-orange-600 hover:text-orange-500"
             >
               Sign up
             </Link>
@@ -160,7 +160,7 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
           <p className="text-sm text-gray-600 mt-2">
             <Link
               href="/forgot-password"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-orange-600 hover:text-orange-500"
             >
               Forgot your password?
             </Link>
@@ -218,7 +218,7 @@ function GoogleSignInButton({
       type="button"
       onClick={handleGoogleSignIn}
       disabled={isLoading}
-      className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
         <path

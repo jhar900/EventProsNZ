@@ -10,7 +10,7 @@ import { FeaturedContractorsSection } from './FeaturedContractorsSection';
 import { StatisticsSection } from './StatisticsSection';
 import { NZPrideSection } from './NZPrideSection';
 import { HomepageFooter } from './HomepageFooter';
-import { HomepageNavigation } from './HomepageNavigation';
+import { HomepageLayout } from './HomepageLayout';
 
 interface HomepageProps {
   className?: string;
@@ -18,10 +18,7 @@ interface HomepageProps {
 
 export function Homepage({ className = '' }: HomepageProps) {
   return (
-    <div className={`min-h-screen ${className}`}>
-      {/* Navigation */}
-      <HomepageNavigation />
-
+    <HomepageLayout className={`min-h-screen ${className}`}>
       {/* Main content with top padding to account for fixed navigation */}
       <main className="pt-16">
         {/* Hero Section */}
@@ -51,6 +48,6 @@ export function Homepage({ className = '' }: HomepageProps) {
 
       {/* Footer */}
       <HomepageFooter />
-    </div>
+    </HomepageLayout>
   );
 }

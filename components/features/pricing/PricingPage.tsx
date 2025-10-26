@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Container } from '@/components/ui/container';
-import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
+import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
 import { PricingHero } from './PricingHero';
 import { SubscriptionTiers } from './SubscriptionTiers';
 import { FeatureComparisonTable } from './FeatureComparisonTable';
@@ -122,10 +122,10 @@ export function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="pricing-page">
-      {/* Navigation */}
-      <HomepageNavigation />
-
+    <HomepageLayout
+      className="min-h-screen bg-background"
+      data-testid="pricing-page"
+    >
       {/* Content with top padding to account for fixed navigation */}
       <div className="pt-16">
         {/* Hero Section */}
@@ -165,6 +165,6 @@ export function PricingPage() {
           <CTASection tiers={tiers} />
         </Container>
       </div>
-    </div>
+    </HomepageLayout>
   );
 }

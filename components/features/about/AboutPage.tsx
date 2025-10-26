@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Users, Heart, Award, Clock, Star } from 'lucide-react';
-import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
+import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
 import TeamSection from './TeamSection';
 import CompanyValuesSection from './CompanyValuesSection';
 import CompanyHistoryTimeline from './CompanyHistoryTimeline';
@@ -50,12 +50,9 @@ export default function AboutPage({ className }: AboutPageProps) {
   }
 
   return (
-    <div
+    <HomepageLayout
       className={`min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 ${className}`}
     >
-      {/* Navigation */}
-      <HomepageNavigation />
-
       {/* Content with top padding to account for fixed navigation */}
       <div className="pt-16">
         {/* Hero Section */}
@@ -234,6 +231,6 @@ export default function AboutPage({ className }: AboutPageProps) {
           </div>
         </section>
       </div>
-    </div>
+    </HomepageLayout>
   );
 }
