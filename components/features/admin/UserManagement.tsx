@@ -101,8 +101,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
 
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
-          'x-admin-token':
-            process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin-access-2024',
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
       });
 
