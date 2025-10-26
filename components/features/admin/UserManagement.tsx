@@ -104,6 +104,14 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         localStorage.getItem('userEmail') ||
         JSON.parse(localStorage.getItem('user') || '{}').email;
 
+      console.log('Admin API Debug:', {
+        userEmail,
+        localStorage: {
+          userEmail: localStorage.getItem('userEmail'),
+          user: localStorage.getItem('user'),
+        },
+      });
+
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
           'x-user-email': userEmail || '',
