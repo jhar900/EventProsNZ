@@ -8,11 +8,13 @@ import { Menu, X, User, LogIn, UserPlus, Search, Bell } from 'lucide-react';
 interface HomepageNavigationProps {
   className?: string;
   onLoginClick?: () => void;
+  onRegisterClick?: () => void;
 }
 
 export function HomepageNavigation({
   className = '',
   onLoginClick,
+  onRegisterClick,
 }: HomepageNavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -78,18 +80,19 @@ export function HomepageNavigation({
           <div className="hidden lg:flex items-center gap-4">
             <Button
               variant="ghost"
-              className="text-gray-700 hover:text-orange-600"
+              className="text-gray-700 hover:text-orange-600 transition-colors duration-300 ease-in-out"
               onClick={onLoginClick}
             >
               <LogIn className="w-4 h-4 mr-2" />
               Login
             </Button>
-            <Link href="/register">
-              <Button className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Get Started
-              </Button>
-            </Link>
+            <Button
+              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
+              onClick={onRegisterClick}
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Get Started
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -125,7 +128,7 @@ export function HomepageNavigation({
               <div className="pt-4 border-t border-gray-200 space-y-3">
                 <Button
                   variant="outline"
-                  className="w-full justify-center"
+                  className="w-full justify-center transition-colors duration-300 ease-in-out"
                   onClick={() => {
                     onLoginClick?.();
                     setIsMenuOpen(false);
@@ -134,12 +137,16 @@ export function HomepageNavigation({
                   <LogIn className="w-4 h-4 mr-2" />
                   Login
                 </Button>
-                <Link href="/register" className="block">
-                  <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Get Started
-                  </Button>
-                </Link>
+                <Button
+                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
+                  onClick={() => {
+                    onRegisterClick?.();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Get Started
+                </Button>
               </div>
             </div>
           </div>

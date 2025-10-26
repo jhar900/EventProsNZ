@@ -3,15 +3,15 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import LoginForm from '@/components/features/auth/LoginForm';
+import RegisterForm from '@/components/features/auth/RegisterForm';
 import { X } from 'lucide-react';
 
-interface LoginModalProps {
+interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -20,16 +20,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     onClose();
 
     // Redirect based on user role
-    if (user?.role === 'admin') {
+    if (user.role === 'admin') {
       router.push('/admin/dashboard');
+    } else if (user.role === 'contractor') {
+      router.push('/contractor/dashboard');
     } else {
-      // Both contractors and event managers use the main dashboard
       router.push('/dashboard');
     }
   };
 
   const handleError = (error: string) => {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
   };
 
   if (!isOpen) return null;
@@ -42,13 +43,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className="relative bg-white rounded-lg shadow-xl max-w-md w-full"
+          className="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out z-10"
           >
             <X className="h-6 w-6" />
           </button>
@@ -65,7 +66,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
             </div>
 
-            <LoginForm onSuccess={handleSuccess} onError={handleError} />
+            <RegisterForm onSuccess={handleSuccess} onError={handleError} />
           </div>
         </div>
       </div>
