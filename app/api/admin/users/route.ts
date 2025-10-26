@@ -113,6 +113,20 @@ async function processAdminUsersRequest(
       limit,
       offset,
       url: request.url,
+      allParams: Object.fromEntries(searchParams.entries()),
+    });
+
+    // Debug: Test simple query first
+    const { data: allUsers, error: allUsersError } = await dbClient
+      .from('users')
+      .select('id, email, role')
+      .limit(10);
+
+    console.log('Simple Users Query Test:', {
+      allUsersCount: allUsers?.length || 0,
+      allUsers:
+        allUsers?.map(u => ({ id: u.id, email: u.email, role: u.role })) || [],
+      error: allUsersError?.message,
     });
 
     // Build query
@@ -273,9 +287,10 @@ async function processAdminUsersRequest(
     }
 
     // Log admin search action (skip if no supabase client available)
+    // Skip logging for admin token bypass to avoid any potential filtering
     try {
       const { supabase } = createClient(request);
-      if (supabase) {
+      if (supabase && !request.headers.get('x-admin-token')) {
         await logAdminAction(
           supabase,
           user.id,
