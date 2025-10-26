@@ -18,14 +18,6 @@ export async function GET(request: NextRequest) {
     const expectedToken =
       process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
 
-    // Debug: Log token validation
-    console.log('Admin Token Debug:', {
-      receivedToken: adminToken,
-      expectedToken: expectedToken,
-      envToken: process.env.ADMIN_ACCESS_TOKEN,
-      tokensMatch: adminToken === expectedToken,
-    });
-
     if (adminToken === expectedToken) {
       // Valid admin token - check if admin users exist
       const { data: adminUsers, error: adminError } = await supabaseAdmin
@@ -95,39 +87,6 @@ async function processAdminUsersRequest(
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Debug: Log the parameters
-    console.log('Admin Users API Debug:', {
-      role,
-      status,
-      verification,
-      subscription,
-      location,
-      company,
-      lastLogin,
-      dateFrom,
-      dateTo,
-      search,
-      sortBy,
-      sortOrder,
-      limit,
-      offset,
-      url: request.url,
-      allParams: Object.fromEntries(searchParams.entries()),
-    });
-
-    // Debug: Test simple query first
-    const { data: allUsers, error: allUsersError } = await dbClient
-      .from('users')
-      .select('id, email, role')
-      .limit(10);
-
-    console.log('Simple Users Query Test:', {
-      allUsersCount: allUsers?.length || 0,
-      allUsers:
-        allUsers?.map(u => ({ id: u.id, email: u.email, role: u.role })) || [],
-      error: allUsersError?.message,
-    });
 
     // Build query
     let query = dbClient.from('users').select(
@@ -253,31 +212,6 @@ async function processAdminUsersRequest(
     query = query.range(offset, offset + limit - 1);
 
     const { data: users, error: usersError, count } = await query;
-
-    // Debug: Log the query results
-    console.log('Admin Users Query Results:', {
-      usersCount: users?.length || 0,
-      totalCount: count,
-      users:
-        users?.map(u => ({ id: u.id, email: u.email, role: u.role })) || [],
-      error: usersError?.message,
-      queryParams: {
-        role,
-        status,
-        verification,
-        subscription,
-        location,
-        company,
-        lastLogin,
-        dateFrom,
-        dateTo,
-        search,
-        sortBy,
-        sortOrder,
-        limit,
-        offset,
-      },
-    });
 
     if (usersError) {
       return NextResponse.json(
