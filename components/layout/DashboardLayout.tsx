@@ -104,10 +104,13 @@ export default function DashboardLayout({
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <div className="flex items-center">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                E
-              </span>
+            <div className="h-8 w-8 flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="Event Pros NZ"
+                className="max-w-full max-h-full object-contain"
+                style={{ width: 'auto', height: 'auto' }}
+              />
             </div>
             <span className="ml-2 text-xl font-bold text-gray-900">
               Event Pros NZ
@@ -189,10 +192,13 @@ export default function DashboardLayout({
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  E
-                </span>
+              <div className="h-8 w-8 flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="Event Pros NZ"
+                  className="max-w-full max-h-full object-contain"
+                  style={{ width: 'auto', height: 'auto' }}
+                />
               </div>
               <span className="ml-2 text-lg font-bold text-gray-900">
                 Event Pros NZ

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Container } from '@/components/ui/container';
+import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
 import { PricingHero } from './PricingHero';
 import { SubscriptionTiers } from './SubscriptionTiers';
 import { FeatureComparisonTable } from './FeatureComparisonTable';
@@ -122,42 +123,48 @@ export function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background" data-testid="pricing-page">
-      {/* Hero Section */}
-      <PricingHero />
+      {/* Navigation */}
+      <HomepageNavigation />
 
-      <Container className="py-16">
-        {/* Subscription Tiers */}
-        <SubscriptionTiers tiers={tiers} />
+      {/* Content with top padding to account for fixed navigation */}
+      <div className="pt-16">
+        {/* Hero Section */}
+        <PricingHero />
 
-        {/* Feature Comparison Table */}
-        <FeatureComparisonTable tiers={tiers} />
+        <Container>
+          {/* Subscription Tiers */}
+          <SubscriptionTiers tiers={tiers} />
 
-        {/* Annual Pricing with Discounts */}
-        <AnnualPricing tiers={tiers} />
+          {/* Feature Comparison Table */}
+          <FeatureComparisonTable tiers={tiers} />
 
-        {/* Free Trial Section */}
-        <FreeTrialSection />
+          {/* Annual Pricing with Discounts */}
+          <AnnualPricing tiers={tiers} />
 
-        {/* Testimonials */}
-        {testimonials.length > 0 && (
-          <SubscriptionTestimonials testimonials={testimonials} />
-        )}
+          {/* Free Trial Section */}
+          <FreeTrialSection />
 
-        {/* Upgrade/Downgrade Information */}
-        <UpgradeDowngradeSection />
+          {/* Testimonials */}
+          {testimonials.length > 0 && (
+            <SubscriptionTestimonials testimonials={testimonials} />
+          )}
 
-        {/* Payment Methods */}
-        <PaymentMethodSection />
+          {/* Upgrade/Downgrade Information */}
+          <UpgradeDowngradeSection />
 
-        {/* Refund Policy */}
-        <RefundPolicySection />
+          {/* Payment Methods */}
+          <PaymentMethodSection />
 
-        {/* FAQ Section */}
-        {faqs.length > 0 && <PricingFAQ faqs={faqs} />}
+          {/* Refund Policy */}
+          <RefundPolicySection />
 
-        {/* Call to Action */}
-        <CTASection tiers={tiers} />
-      </Container>
+          {/* FAQ Section */}
+          {faqs.length > 0 && <PricingFAQ faqs={faqs} />}
+
+          {/* Call to Action */}
+          <CTASection tiers={tiers} />
+        </Container>
+      </div>
     </div>
   );
 }

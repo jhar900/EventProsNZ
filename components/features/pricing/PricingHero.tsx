@@ -7,7 +7,7 @@ import { ArrowRight, Star, Crown, Zap } from 'lucide-react';
 export function PricingHero() {
   return (
     <div
-      className="bg-gradient-to-br from-primary/5 via-background to-primary/5 py-20"
+      className="bg-gradient-to-br from-primary/5 via-background to-primary/5 py-10"
       data-testid="pricing-hero"
     >
       <div className="container mx-auto px-4">

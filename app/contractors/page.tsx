@@ -3,6 +3,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { ContractorDirectory } from '@/components/features/contractors/ContractorDirectory';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
 
 export default function ContractorsPage() {
   const { user } = useAuth();
@@ -23,8 +24,14 @@ export default function ContractorsPage() {
   // If user is not logged in, show the page without sidenav
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <ContractorDirectory showFilters={true} showFeatured={true} />
+      {/* Navigation */}
+      <HomepageNavigation />
+
+      {/* Content with top padding to account for fixed navigation */}
+      <div className="pt-16">
+        <div className="container mx-auto px-4 py-8">
+          <ContractorDirectory showFilters={true} showFeatured={true} />
+        </div>
       </div>
     </div>
   );

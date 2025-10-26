@@ -144,7 +144,7 @@ export function AnnualPricing({ tiers }: AnnualPricingProps) {
                   } ${getTierColor(tier.id)}`}
                 >
                   {isPopular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                       <Badge className="bg-primary text-primary-foreground">
                         Most Popular
                       </Badge>
@@ -152,7 +152,7 @@ export function AnnualPricing({ tiers }: AnnualPricingProps) {
                   )}
 
                   {savings > 0 && (
-                    <div className="absolute -top-3 right-4">
+                    <div className="absolute -top-3 right-4 z-10">
                       <Badge variant="destructive">
                         <Percent className="h-3 w-3 mr-1" />
                         Save {savings}%

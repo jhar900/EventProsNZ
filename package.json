@@ -30,6 +30,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^16.5.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -59,6 +60,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "ioredis": "^5.8.2",
     "isomorphic-dompurify": "^2.28.0",
     "lucide-react": "^0.544.0",
@@ -79,8 +81,7 @@
     "typescript": "^5.3.0",
     "web-vitals": "^5.1.0",
     "zod": "^4.1.11",
-    "zustand": "^5.0.8",
-    "@hello-pangea/dnd": "^16.5.0"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

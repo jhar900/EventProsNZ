@@ -41,8 +41,13 @@ export function HomepageNavigation({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">EP</span>
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="Event Pros NZ"
+                className="max-w-full max-h-full object-contain"
+                style={{ width: 'auto', height: 'auto' }}
+              />
             </div>
             <div className="hidden sm:block">
               <div className="text-xl font-bold text-gray-900">
@@ -60,7 +65,7 @@ export function HomepageNavigation({
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
               >
                 {link.name}
               </Link>
@@ -72,14 +77,14 @@ export function HomepageNavigation({
             <Link href="/login">
               <Button
                 variant="ghost"
-                className="text-gray-700 hover:text-blue-600"
+                className="text-gray-700 hover:text-orange-600"
               >
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
               </Button>
             </Link>
             <Link href="/register">
-              <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+              <Button className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Get Started
               </Button>
@@ -108,7 +113,7 @@ export function HomepageNavigation({
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="block py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="block py-2 text-gray-700 hover:text-orange-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
@@ -124,7 +129,7 @@ export function HomepageNavigation({
                   </Button>
                 </Link>
                 <Link href="/register" className="block">
-                  <Button className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                  <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
                     <UserPlus className="w-4 h-4 mr-2" />
                     Get Started
                   </Button>

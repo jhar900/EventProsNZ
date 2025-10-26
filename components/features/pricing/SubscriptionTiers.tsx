@@ -114,7 +114,7 @@ export function SubscriptionTiers({ tiers }: SubscriptionTiersProps) {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-16 mt-8">
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold mb-4">Choose Your Plan</h2>
         <p className="text-xl text-muted-foreground mb-8">
@@ -182,7 +182,7 @@ export function SubscriptionTiers({ tiers }: SubscriptionTiersProps) {
               } ${getTierColor(tier.id)}`}
             >
               {isPopular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                   <Badge className="bg-primary text-primary-foreground">
                     Most Popular
                   </Badge>
@@ -190,7 +190,7 @@ export function SubscriptionTiers({ tiers }: SubscriptionTiersProps) {
               )}
 
               {savings > 0 && (
-                <div className="absolute -top-3 right-4">
+                <div className="absolute -top-3 right-4 z-10">
                   <Badge variant="destructive">Save {savings}%</Badge>
                 </div>
               )}

@@ -203,35 +203,57 @@ export function FeatureComparisonTable({ tiers }: FeatureComparisonTableProps) {
       <div className="max-w-7xl mx-auto">
         {/* Desktop Table */}
         <div className="hidden lg:block" data-testid="features-table">
-          <Card>
+          {/* Sticky Header - Outside scrollable container */}
+          <div className="sticky top-16 z-20 bg-background border rounded-t-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed min-w-[800px]">
+                <colgroup>
+                  <col className="w-[300px]" />
+                  {tiers.map(() => (
+                    <col key={Math.random()} className="w-[200px]" />
+                  ))}
+                </colgroup>
+                <thead>
+                  <tr className="border-b">
+                    <th
+                      className="text-left p-6 font-medium bg-background"
+                      data-testid="features-table-header"
+                    >
+                      Features
+                    </th>
+                    {tiers.map(tier => (
+                      <th
+                        key={tier.id}
+                        className="text-center p-6 bg-background"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            {getTierIcon(tier.id)}
+                            <span className="font-medium">{tier.name}</span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {tier.price === 0 ? 'Free' : `$${tier.price}/month`}
+                          </div>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+
+          {/* Scrollable Table Body */}
+          <Card className="border-t-0 rounded-t-none">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th
-                        className="text-left p-6 font-medium"
-                        data-testid="features-table-header"
-                      >
-                        Features
-                      </th>
-                      {tiers.map(tier => (
-                        <th key={tier.id} className="text-center p-6">
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              {getTierIcon(tier.id)}
-                              <span className="font-medium">{tier.name}</span>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {tier.price === 0
-                                ? 'Free'
-                                : `$${tier.price}/month`}
-                            </div>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
+                <table className="w-full table-fixed min-w-[800px]">
+                  <colgroup>
+                    <col className="w-[300px]" />
+                    {tiers.map(() => (
+                      <col key={Math.random()} className="w-[200px]" />
+                    ))}
+                  </colgroup>
                   <tbody>
                     {categories.map(category => (
                       <React.Fragment key={category}>

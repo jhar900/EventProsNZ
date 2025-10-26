@@ -22,8 +22,8 @@ export function Homepage({ className = '' }: HomepageProps) {
       {/* Navigation */}
       <HomepageNavigation />
 
-      {/* Main content */}
-      <main>
+      {/* Main content with top padding to account for fixed navigation */}
+      <main className="pt-16">
         {/* Hero Section */}
         <HeroSection />
 
