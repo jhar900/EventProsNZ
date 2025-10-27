@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,12 +44,7 @@ export default function AdminSecuritySettings({
     resolver: zodResolver(securitySettingsSchema),
   });
 
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/settings/security', {
         headers: {
@@ -67,7 +62,12 @@ export default function AdminSecuritySettings({
     } catch (err) {
       // Error handling is done by the component state
     }
-  };
+  }, []);
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const onSubmit = async (data: SecuritySettingsFormData) => {
     setIsLoading(true);

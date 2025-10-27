@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,12 +43,7 @@ export default function AdminSystemSettings({
     resolver: zodResolver(systemSettingsSchema),
   });
 
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/settings/system', {
         headers: {
@@ -66,7 +61,12 @@ export default function AdminSystemSettings({
     } catch (err) {
       // Error handling is done by the component state
     }
-  };
+  }, []);
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const onSubmit = async (data: SystemSettingsFormData) => {
     setIsLoading(true);
