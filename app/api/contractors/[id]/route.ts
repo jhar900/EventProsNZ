@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
     const contractorId = params.id;
 
     if (!contractorId) {
@@ -16,51 +17,48 @@ export async function GET(
       );
     }
 
-    // Get contractor details with all related data
-    const { data: contractor, error: contractorError } = await supabase
+    // Fetch contractor with all related data
+    const { data: contractorData, error: contractorError } = await supabaseAdmin
       .from('users')
       .select(
         `
         id,
         email,
+        name,
+        role,
+        is_verified,
         created_at,
         updated_at,
-        profiles!inner(
+        profiles (
           first_name,
           last_name,
           phone,
           address,
-          avatar_url,
           location,
           bio,
+          avatar_url,
           timezone
         ),
-        business_profiles!inner(
+        business_profiles (
           company_name,
-          description,
           website,
-          location,
-          service_categories,
-          average_rating,
-          review_count,
-          is_verified,
-          subscription_tier,
+          description,
           business_address,
           nzbn,
           service_areas,
-          social_links,
-          verification_date
+          social_links
         ),
-        services(
+        services (
           id,
           service_type,
           description,
           price_range_min,
           price_range_max,
           availability,
-          created_at
+          created_at,
+          updated_at
         ),
-        portfolio(
+        portfolio_items (
           id,
           title,
           description,
@@ -69,7 +67,7 @@ export async function GET(
           event_date,
           created_at
         ),
-        contractor_testimonials(
+        testimonials (
           id,
           client_name,
           rating,
@@ -83,63 +81,88 @@ export async function GET(
       )
       .eq('id', contractorId)
       .eq('role', 'contractor')
-      .eq('is_verified', true)
       .single();
 
-    if (contractorError) {
-      if (contractorError.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Contractor not found' },
-          { status: 404 }
-        );
-      }
+    if (contractorError || !contractorData) {
       return NextResponse.json(
-        { error: 'Failed to fetch contractor details' },
-        { status: 500 }
+        { error: 'Contractor not found' },
+        { status: 404 }
       );
     }
 
-    // Transform the data to match the expected format
-    const transformedContractor = {
-      id: contractor.id,
-      email: contractor.email,
-      name: `${contractor.profiles.first_name} ${contractor.profiles.last_name}`,
-      companyName: contractor.business_profiles.company_name,
-      description: contractor.business_profiles.description,
-      website: contractor.business_profiles.website,
-      location:
-        contractor.business_profiles.location || contractor.profiles.location,
-      avatarUrl: contractor.profiles.avatar_url,
-      bio: contractor.profiles.bio,
-      phone: contractor.profiles.phone,
-      address: contractor.profiles.address,
-      timezone: contractor.profiles.timezone,
-      serviceCategories: contractor.business_profiles.service_categories || [],
-      averageRating: contractor.business_profiles.average_rating || 0,
-      reviewCount: contractor.business_profiles.review_count || 0,
-      isVerified: contractor.business_profiles.is_verified,
-      subscriptionTier: contractor.business_profiles.subscription_tier,
-      businessAddress: contractor.business_profiles.business_address,
-      nzbn: contractor.business_profiles.nzbn,
-      serviceAreas: contractor.business_profiles.service_areas || [],
-      socialLinks: contractor.business_profiles.social_links,
-      verificationDate: contractor.business_profiles.verification_date,
-      services: contractor.services || [],
-      portfolio: contractor.portfolio || [],
-      testimonials: contractor.contractor_testimonials || [],
-      createdAt: contractor.created_at,
-      updatedAt: contractor.updated_at,
-      isPremium: ['professional', 'enterprise'].includes(
-        contractor.business_profiles.subscription_tier
+    // Transform the data to match our Contractor interface
+    const profile = Array.isArray(contractorData.profiles)
+      ? contractorData.profiles[0]
+      : contractorData.profiles;
+
+    const businessProfile = Array.isArray(contractorData.business_profiles)
+      ? contractorData.business_profiles[0]
+      : contractorData.business_profiles;
+
+    // Calculate average rating and review count
+    const testimonials = contractorData.testimonials || [];
+    const ratings = testimonials
+      .filter((t: any) => t.rating !== null)
+      .map((t: any) => t.rating);
+
+    const averageRating =
+      ratings.length > 0
+        ? ratings.reduce((sum: number, rating: number) => sum + rating, 0) /
+          ratings.length
+        : 0;
+
+    const reviewCount = ratings.length;
+
+    // Get service categories from services
+    const serviceCategories = [
+      ...new Set(
+        (contractorData.services || []).map((s: any) => s.service_type)
       ),
+    ];
+
+    // Determine subscription tier (you might want to add this to your database)
+    const subscriptionTier = 'essential'; // Default for now
+
+    const contractor = {
+      id: contractorData.id,
+      email: contractorData.email,
+      name: contractorData.name,
+      companyName: businessProfile?.company_name || contractorData.name,
+      description: businessProfile?.description || null,
+      website: businessProfile?.website || null,
+      location:
+        profile?.location || businessProfile?.service_areas?.[0] || null,
+      avatarUrl: profile?.avatar_url || null,
+      bio: profile?.bio || null,
+      phone: profile?.phone || null,
+      address: profile?.address || null,
+      timezone: profile?.timezone || 'Pacific/Auckland',
+      serviceCategories,
+      averageRating,
+      reviewCount,
+      isVerified: contractorData.is_verified || false,
+      subscriptionTier,
+      businessAddress: businessProfile?.business_address || null,
+      nzbn: businessProfile?.nzbn || null,
+      serviceAreas: businessProfile?.service_areas || [],
+      socialLinks: businessProfile?.social_links || null,
+      verificationDate: contractorData.is_verified
+        ? contractorData.created_at
+        : null,
+      services: contractorData.services || [],
+      portfolio: contractorData.portfolio_items || [],
+      testimonials,
+      createdAt: contractorData.created_at,
+      updatedAt: contractorData.updated_at,
+      isPremium: subscriptionTier !== 'essential',
+      isFeatured: false, // You might want to add this to your database
     };
 
-    return NextResponse.json({
-      contractor: transformedContractor,
-    });
+    return NextResponse.json({ contractor });
   } catch (error) {
+    // Error handling
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch contractor' },
       { status: 500 }
     );
   }
