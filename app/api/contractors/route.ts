@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
           location,
           bio
         )
-      `
+      `,
+        { count: 'exact' }
       )
-      .eq('role', 'contractor')
-      .eq('is_verified', true);
+      .eq('role', 'contractor');
 
     // Apply sorting
     switch (sort) {
@@ -83,22 +83,28 @@ export async function GET(request: NextRequest) {
           bp => bp.user_id === contractor.id
         );
 
+        // Handle profiles array (it should be an array from the join)
+        const profile = Array.isArray(contractor.profiles)
+          ? contractor.profiles[0]
+          : contractor.profiles;
+
         return {
           id: contractor.id,
           email: contractor.email,
-          name: `${contractor.profiles.first_name} ${contractor.profiles.last_name}`,
+          name: profile
+            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+            : 'Unknown User',
           companyName: businessProfile?.company_name || 'No Company Name',
           description: businessProfile?.description || '',
-          location: businessProfile?.location || contractor.profiles.location,
-          avatarUrl: contractor.profiles.avatar_url,
-          bio: contractor.profiles.bio,
+          location: businessProfile?.location || profile?.location,
+          avatarUrl: profile?.avatar_url,
+          bio: profile?.bio,
           serviceCategories: businessProfile?.service_categories || [],
           averageRating: businessProfile?.average_rating || 0,
           reviewCount: businessProfile?.review_count || 0,
           isVerified: businessProfile?.is_verified || false,
           subscriptionTier: businessProfile?.subscription_tier || 'essential',
-          businessAddress:
-            businessProfile?.location || contractor.profiles.location,
+          businessAddress: businessProfile?.location || profile?.location,
           serviceAreas: businessProfile?.service_categories || [],
           socialLinks: null,
           verificationDate: null,
