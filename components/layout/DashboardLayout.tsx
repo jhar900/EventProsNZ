@@ -103,7 +103,10 @@ export default function DashboardLayout({
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <div className="flex items-center">
+          <Link
+            href="/"
+            className="flex items-center hover:opacity-80 transition-opacity duration-200"
+          >
             <div className="h-8 w-8 flex items-center justify-center">
               <img
                 src="/logo.png"
@@ -115,7 +118,7 @@ export default function DashboardLayout({
             <span className="ml-2 text-xl font-bold text-gray-900">
               Event Pros NZ
             </span>
-          </div>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -191,7 +194,10 @@ export default function DashboardLayout({
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center">
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-80 transition-opacity duration-200"
+            >
               <div className="h-8 w-8 flex items-center justify-center">
                 <img
                   src="/logo.png"
@@ -203,7 +209,7 @@ export default function DashboardLayout({
               <span className="ml-2 text-lg font-bold text-gray-900">
                 Event Pros NZ
               </span>
-            </div>
+            </Link>
             <div className="w-8" /> {/* Spacer for centering */}
           </div>
         </div>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogIn, UserPlus, Search, Bell } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import UserProfileDropdown from '@/components/features/navigation/UserProfileDropdown';
 
 interface HomepageNavigationProps {
   className?: string;
@@ -16,6 +18,7 @@ export function HomepageNavigation({
   onLoginClick,
   onRegisterClick,
 }: HomepageNavigationProps) {
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -75,23 +78,29 @@ export function HomepageNavigation({
             ))}
           </div>
 
-          {/* Desktop CTA buttons */}
+          {/* Desktop CTA buttons or User Profile */}
           <div className="hidden lg:flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="text-gray-700 hover:text-orange-600 transition-colors duration-300 ease-in-out"
-              onClick={onLoginClick}
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
-              onClick={onRegisterClick}
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Get Started
-            </Button>
+            {user ? (
+              <UserProfileDropdown />
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-gray-700 hover:text-orange-600 transition-colors duration-300 ease-in-out"
+                  onClick={onLoginClick}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
+                  onClick={onRegisterClick}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -123,29 +132,37 @@ export function HomepageNavigation({
                 </Link>
               ))}
 
-              {/* Mobile CTA buttons */}
-              <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-center transition-colors duration-300 ease-in-out"
-                  onClick={() => {
-                    onLoginClick?.();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Login
-                </Button>
-                <Button
-                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
-                  onClick={() => {
-                    onRegisterClick?.();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Get Started
-                </Button>
+              {/* Mobile CTA buttons or User Profile */}
+              <div className="pt-4 border-t border-gray-200">
+                {user ? (
+                  <div className="flex justify-center">
+                    <UserProfileDropdown />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center transition-colors duration-300 ease-in-out"
+                      onClick={() => {
+                        onLoginClick?.();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Login
+                    </Button>
+                    <Button
+                      className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition-all duration-300 ease-in-out"
+                      onClick={() => {
+                        onRegisterClick?.();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Get Started
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
