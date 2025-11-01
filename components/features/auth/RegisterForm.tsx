@@ -32,11 +32,13 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 interface RegisterFormProps {
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
+  onSignInClick?: () => void;
 }
 
 export default function RegisterForm({
   onSuccess,
   onError,
+  onSignInClick,
 }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -318,12 +320,22 @@ export default function RegisterForm({
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link
-              href="/login"
-              className="font-medium text-orange-600 hover:text-orange-500"
-            >
-              Sign in
-            </Link>
+            {onSignInClick ? (
+              <button
+                type="button"
+                onClick={onSignInClick}
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Sign in
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Sign in
+              </Link>
+            )}
           </p>
         </div>
       </div>

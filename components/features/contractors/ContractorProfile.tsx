@@ -25,6 +25,8 @@ import {
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import Link from 'next/link';
+import LoginModal from '@/components/features/auth/LoginModal';
+import { MessageContractorModal } from './MessageContractorModal';
 
 interface ContractorProfileProps {
   contractorId: string;
@@ -35,6 +37,8 @@ export function ContractorProfile({ contractorId }: ContractorProfileProps) {
   const [contractor, setContractor] = useState<Contractor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchContractor = async () => {
@@ -238,30 +242,24 @@ export function ContractorProfile({ contractorId }: ContractorProfileProps) {
             {/* Contact Actions */}
             <div className="mt-6 lg:mt-0 lg:ml-6">
               <div className="flex flex-col space-y-3">
-                {user ? (
-                  <>
-                    <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                      <EnvelopeIcon className="h-5 w-5 mr-2" />
-                      Send Message
-                    </Button>
-                    {contractor.phone && (
-                      <Button variant="outline" className="w-full">
-                        <PhoneIcon className="h-5 w-5 mr-2" />
-                        Call Now
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-3">
-                      Sign in to contact this contractor
-                    </p>
-                    <Link href="/login">
-                      <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                        Sign In to Contact
-                      </Button>
-                    </Link>
-                  </div>
+                <Button
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  onClick={() => {
+                    if (user) {
+                      setIsMessageModalOpen(true);
+                    } else {
+                      setIsLoginModalOpen(true);
+                    }
+                  }}
+                >
+                  <EnvelopeIcon className="h-5 w-5 mr-2" />
+                  Send Message
+                </Button>
+                {contractor.phone && (
+                  <Button variant="outline" className="w-full">
+                    <PhoneIcon className="h-5 w-5 mr-2" />
+                    Call Now
+                  </Button>
                 )}
               </div>
             </div>
@@ -506,6 +504,25 @@ export function ContractorProfile({ contractorId }: ContractorProfileProps) {
           )}
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        redirectOnSuccess={false}
+      />
+
+      {/* Message Modal */}
+      {contractor && (
+        <MessageContractorModal
+          isOpen={isMessageModalOpen}
+          onClose={() => setIsMessageModalOpen(false)}
+          contractorId={contractorId}
+          contractorName={
+            contractor.companyName || contractor.name || 'this contractor'
+          }
+        />
+      )}
     </div>
   );
 }

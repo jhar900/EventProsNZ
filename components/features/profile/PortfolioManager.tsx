@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,18 +38,50 @@ interface PortfolioItem {
 }
 
 interface PortfolioManagerProps {
-  portfolio: PortfolioItem[];
-  onUpdate: (portfolio: PortfolioItem[]) => void;
+  onSuccess?: (message: string) => void;
+  onError?: (error: string) => void;
 }
 
 export function PortfolioManager({
-  portfolio,
-  onUpdate,
+  onSuccess,
+  onError,
 }: PortfolioManagerProps) {
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPortfolio();
+  }, []);
+
+  const fetchPortfolio = async () => {
+    try {
+      setIsFetching(true);
+      setError(null);
+
+      const response = await fetch('/api/profile/me/portfolio');
+      if (response.ok) {
+        const data = await response.json();
+        setPortfolio(data.portfolio || []);
+      } else {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to load portfolio';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load portfolio';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const {
     register,
@@ -99,15 +131,23 @@ export function PortfolioManager({
               p.id === editingItem.id ? result.portfolio_item : p
             )
           : [...portfolio, result.portfolio_item];
-        onUpdate(updatedPortfolio);
+        setPortfolio(updatedPortfolio);
+        onSuccess?.('Portfolio item saved successfully!');
         reset();
         setEditingItem(null);
         setIsFormOpen(false);
       } else {
-        const error = await response.json();
-        }
-    } catch (error) {
-      } finally {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to save portfolio item';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to save portfolio item';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -137,11 +177,21 @@ export function PortfolioManager({
 
       if (response.ok) {
         const updatedPortfolio = portfolio.filter(p => p.id !== itemId);
-        onUpdate(updatedPortfolio);
+        setPortfolio(updatedPortfolio);
+        onSuccess?.('Portfolio item deleted successfully!');
       } else {
-        }
-    } catch (error) {
-      } finally {
+        const errorData = await response.json();
+        const errorMessage =
+          errorData.error || 'Failed to delete portfolio item';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to delete portfolio item';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -173,9 +223,9 @@ export function PortfolioManager({
         const result = await response.json();
         setValue('image_url', result.url);
       } else {
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setIsUploading(false);
     }
   };
@@ -199,8 +249,21 @@ export function PortfolioManager({
     return new Date(dateString).toLocaleDateString();
   };
 
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-600">Loading portfolio...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -219,7 +282,7 @@ export function PortfolioManager({
             <div className="text-center py-8 text-gray-500">
               <p>No portfolio items added yet.</p>
               <p className="text-sm">
-                Click "Add Portfolio Item" to showcase your work.
+                Click &quot;Add Portfolio Item&quot; to showcase your work.
               </p>
             </div>
           ) : (

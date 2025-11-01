@@ -10,7 +10,6 @@ import BusinessProfileForm from '@/components/features/user/BusinessProfileForm'
 import UserSettings from '@/components/features/user/UserSettings';
 import { ServicesEditor } from '@/components/features/profile/ServicesEditor';
 import { PortfolioManager } from '@/components/features/profile/PortfolioManager';
-import { PrivacySettings } from '@/components/features/profile/PrivacySettings';
 import { ProfilePreview } from '@/components/features/profile/ProfilePreview';
 import ProfileCompletionTracker from '@/components/features/profile/ProfileCompletionTracker';
 
@@ -32,7 +31,6 @@ export default function ProfilePage() {
     { id: 'business', name: 'Business Profile', icon: '🏢' },
     { id: 'services', name: 'Services', icon: '🛠️' },
     { id: 'portfolio', name: 'Portfolio', icon: '📸' },
-    { id: 'privacy', name: 'Privacy', icon: '🔒' },
     { id: 'preview', name: 'Preview', icon: '👁️' },
     { id: 'settings', name: 'Settings', icon: '⚙️' },
   ];
@@ -118,15 +116,6 @@ export default function ProfilePage() {
                 {activeTab === 'portfolio' && (
                   <div>
                     <PortfolioManager
-                      onSuccess={handleSuccess}
-                      onError={handleError}
-                    />
-                  </div>
-                )}
-
-                {activeTab === 'privacy' && (
-                  <div>
-                    <PrivacySettings
                       onSuccess={handleSuccess}
                       onError={handleError}
                     />

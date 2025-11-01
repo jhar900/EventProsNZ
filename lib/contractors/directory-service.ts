@@ -291,14 +291,55 @@ export class ContractorDirectoryService {
   }
 
   /**
-   * Get contractor location display
+   * Get contractor location display (city only)
    */
   static getLocationDisplay(contractor: Contractor): string {
-    return (
-      contractor.location ||
-      contractor.businessAddress ||
-      'Location not specified'
-    );
+    const location = contractor.location || contractor.businessAddress || '';
+
+    if (!location) {
+      return 'Location not specified';
+    }
+
+    // Extract city from location string
+    // New Zealand addresses are often:
+    // - "Street, Suburb, City 1234, New Zealand"
+    // - "Street, City, Region"
+    // - "City, Region"
+    // - "City"
+    const parts = location.split(',').map(p => p.trim());
+
+    if (parts.length === 1) {
+      // Single part - might be just city or city with postal code
+      const singlePart = parts[0];
+      // Remove postal code (numbers) if present
+      return singlePart.replace(/\s*\d{4,6}\s*$/, '').trim();
+    } else if (parts.length === 2) {
+      // "City, Region" format - return the first part (city)
+      const cityPart = parts[0];
+      // Remove postal code if present
+      return cityPart.replace(/\s*\d{4,6}\s*$/, '').trim();
+    } else {
+      // Multiple parts format - find the city (usually 2nd or 3rd part)
+      // Common format: "Street, Suburb, City 1234, Country"
+      // City is typically the second-to-last part (before country) or third-to-last
+      let cityPart = '';
+
+      if (parts.length >= 3) {
+        // For "Street, Suburb, City 1234, New Zealand" format
+        // Try second-to-last part first (before "New Zealand")
+        if (parts[parts.length - 1].toLowerCase().includes('zealand')) {
+          cityPart = parts[parts.length - 2];
+        } else {
+          // Otherwise, try third-to-last part
+          cityPart = parts[parts.length - 2] || parts[1] || parts[0];
+        }
+      } else {
+        cityPart = parts[parts.length - 2] || parts[0];
+      }
+
+      // Remove postal code (numbers) if present in city name
+      return cityPart.replace(/\s*\d{4,6}\s*$/, '').trim();
+    }
   }
 
   /**

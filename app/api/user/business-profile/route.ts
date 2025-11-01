@@ -16,6 +16,32 @@ const updateBusinessProfileSchema = z.object({
     .array(z.string())
     .max(10, 'Too many service categories')
     .optional(),
+  facebook_url: z
+    .string()
+    .url('Invalid Facebook URL')
+    .optional()
+    .or(z.literal('')),
+  instagram_url: z
+    .string()
+    .url('Invalid Instagram URL')
+    .optional()
+    .or(z.literal('')),
+  linkedin_url: z
+    .string()
+    .url('Invalid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  twitter_url: z
+    .string()
+    .url('Invalid Twitter URL')
+    .optional()
+    .or(z.literal('')),
+  youtube_url: z
+    .string()
+    .url('Invalid YouTube URL')
+    .optional()
+    .or(z.literal('')),
+  tiktok_url: z.string().url('Invalid TikTok URL').optional().or(z.literal('')),
 });
 
 export async function GET(request: NextRequest) {

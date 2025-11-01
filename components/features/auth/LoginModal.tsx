@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import LoginForm from '@/components/features/auth/LoginForm';
@@ -9,22 +9,37 @@ import { X } from 'lucide-react';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  redirectOnSuccess?: boolean;
+  onSignUpClick?: () => void;
+  onForgotPasswordClick?: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export default function LoginModal({
+  isOpen,
+  onClose,
+  redirectOnSuccess = true,
+  onSignUpClick,
+  onForgotPasswordClick,
+}: LoginModalProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
-  const handleSuccess = (user: any) => {
+  const handleSuccess = async (user: any) => {
+    // Refresh user data
+    await refreshUser();
+
     // Close the modal first
     onClose();
 
-    // Redirect based on user role
-    if (user?.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
-      // Both contractors and event managers use the main dashboard
-      router.push('/dashboard');
+    // Only redirect if redirectOnSuccess is true
+    if (redirectOnSuccess) {
+      // Redirect based on user role
+      if (user?.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        // Both contractors and event managers use the main dashboard
+        router.push('/dashboard');
+      }
     }
   };
 
@@ -65,7 +80,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
             </div>
 
-            <LoginForm onSuccess={handleSuccess} onError={handleError} />
+            <LoginForm
+              onSuccess={handleSuccess}
+              onError={handleError}
+              onSignUpClick={onSignUpClick}
+              onForgotPasswordClick={() => {
+                onClose(); // Close login modal
+                onForgotPasswordClick?.(); // Open forgot password modal via parent
+              }}
+            />
           </div>
         </div>
       </div>

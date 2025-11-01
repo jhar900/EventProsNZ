@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,8 +36,8 @@ interface Service {
 }
 
 interface ServicesEditorProps {
-  services: Service[];
-  onUpdate: (services: Service[]) => void;
+  onSuccess?: (message: string) => void;
+  onError?: (error: string) => void;
 }
 
 const SERVICE_TYPES = [
@@ -55,10 +55,42 @@ const SERVICE_TYPES = [
   'Other',
 ];
 
-export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
+export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
+  const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setIsFetching(true);
+      setError(null);
+
+      const response = await fetch('/api/profile/me/services');
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data.services || []);
+      } else {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to load services';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load services';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const {
     register,
@@ -102,15 +134,23 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
         const updatedServices = editingService
           ? services.map(s => (s.id === editingService.id ? result.service : s))
           : [...services, result.service];
-        onUpdate(updatedServices);
+        setServices(updatedServices);
         reset();
         setEditingService(null);
         setIsFormOpen(false);
+        onSuccess?.('Service saved successfully!');
       } else {
-        const error = await response.json();
-        }
-    } catch (error) {
-      } finally {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to save service';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to save service';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -138,11 +178,20 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
 
       if (response.ok) {
         const updatedServices = services.filter(s => s.id !== serviceId);
-        onUpdate(updatedServices);
+        setServices(updatedServices);
+        onSuccess?.('Service deleted successfully!');
       } else {
-        }
-    } catch (error) {
-      } finally {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to delete service';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to delete service';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -161,8 +210,21 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
     return 'Price on request';
   };
 
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-600">Loading services...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -180,7 +242,9 @@ export function ServicesEditor({ services, onUpdate }: ServicesEditorProps) {
           {services.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No services added yet.</p>
-              <p className="text-sm">Click "Add Service" to get started.</p>
+              <p className="text-sm">
+                Click &quot;Add Service&quot; to get started.
+              </p>
             </div>
           ) : (
             <div className="space-y-4">

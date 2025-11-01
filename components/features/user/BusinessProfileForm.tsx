@@ -20,6 +20,32 @@ const businessProfileSchema = z.object({
     .array(z.string())
     .max(10, 'Too many service categories')
     .optional(),
+  facebook_url: z
+    .string()
+    .url('Invalid Facebook URL')
+    .optional()
+    .or(z.literal('')),
+  instagram_url: z
+    .string()
+    .url('Invalid Instagram URL')
+    .optional()
+    .or(z.literal('')),
+  linkedin_url: z
+    .string()
+    .url('Invalid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  twitter_url: z
+    .string()
+    .url('Invalid Twitter URL')
+    .optional()
+    .or(z.literal('')),
+  youtube_url: z
+    .string()
+    .url('Invalid YouTube URL')
+    .optional()
+    .or(z.literal('')),
+  tiktok_url: z.string().url('Invalid TikTok URL').optional().or(z.literal('')),
 });
 
 type BusinessProfileFormData = z.infer<typeof businessProfileSchema>;
@@ -90,6 +116,12 @@ export default function BusinessProfileForm({
         website: user.business_profile.website || '',
         location: user.business_profile.location || '',
         service_categories: user.business_profile.service_categories || [],
+        facebook_url: user.business_profile.facebook_url || '',
+        instagram_url: user.business_profile.instagram_url || '',
+        linkedin_url: user.business_profile.linkedin_url || '',
+        twitter_url: user.business_profile.twitter_url || '',
+        youtube_url: user.business_profile.youtube_url || '',
+        tiktok_url: user.business_profile.tiktok_url || '',
       });
       setIsCreating(false);
     } else {
@@ -111,6 +143,17 @@ export default function BusinessProfileForm({
         throw new Error('User not authenticated. Please log in again.');
       }
 
+      // Clean up social media URLs - convert empty strings to undefined
+      const cleanedData = {
+        ...data,
+        facebook_url: data.facebook_url?.trim() || undefined,
+        instagram_url: data.instagram_url?.trim() || undefined,
+        linkedin_url: data.linkedin_url?.trim() || undefined,
+        twitter_url: data.twitter_url?.trim() || undefined,
+        youtube_url: data.youtube_url?.trim() || undefined,
+        tiktok_url: data.tiktok_url?.trim() || undefined,
+      };
+
       const method = isCreating ? 'POST' : 'PUT';
       console.log('Submitting with method:', method, 'isCreating:', isCreating);
       const response = await fetch('/api/user/business-profile', {
@@ -119,7 +162,7 @@ export default function BusinessProfileForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
+          ...cleanedData,
           userData: user, // Include user data for authentication
         }),
       });
@@ -307,6 +350,139 @@ export default function BusinessProfileForm({
                     {errors.service_categories.message}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Social Media Links
+                </label>
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="facebook_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Facebook
+                    </label>
+                    <input
+                      {...register('facebook_url')}
+                      type="url"
+                      id="facebook_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://facebook.com/yourpage"
+                    />
+                    {errors.facebook_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.facebook_url.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="instagram_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Instagram
+                    </label>
+                    <input
+                      {...register('instagram_url')}
+                      type="url"
+                      id="instagram_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://instagram.com/yourhandle"
+                    />
+                    {errors.instagram_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.instagram_url.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="linkedin_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      LinkedIn
+                    </label>
+                    <input
+                      {...register('linkedin_url')}
+                      type="url"
+                      id="linkedin_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://linkedin.com/company/yourcompany"
+                    />
+                    {errors.linkedin_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.linkedin_url.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="twitter_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Twitter/X
+                    </label>
+                    <input
+                      {...register('twitter_url')}
+                      type="url"
+                      id="twitter_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://twitter.com/yourhandle"
+                    />
+                    {errors.twitter_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.twitter_url.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="youtube_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      YouTube
+                    </label>
+                    <input
+                      {...register('youtube_url')}
+                      type="url"
+                      id="youtube_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://youtube.com/@yourchannel"
+                    />
+                    {errors.youtube_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.youtube_url.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="tiktok_url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      TikTok
+                    </label>
+                    <input
+                      {...register('tiktok_url')}
+                      type="url"
+                      id="tiktok_url"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="https://tiktok.com/@yourhandle"
+                    />
+                    {errors.tiktok_url && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.tiktok_url.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {error && (

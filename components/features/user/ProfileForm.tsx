@@ -23,7 +23,6 @@ const profileSchema = z.object({
     .or(z.literal('')),
   address: z.string().max(200, 'Address too long').optional(),
   bio: z.string().max(500, 'Bio too long').optional(),
-  location: z.string().max(100, 'Location too long').optional(),
   timezone: z.string().max(50, 'Timezone too long').optional(),
 });
 
@@ -60,7 +59,6 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
         phone: user.profile.phone || '',
         address: user.profile.address || '',
         bio: user.profile.bio || '',
-        location: user.profile.location || '',
         timezone: user.profile.timezone || 'Pacific/Auckland',
       });
     }
@@ -202,27 +200,6 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
               {errors.address && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.address.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Location
-              </label>
-              <input
-                {...register('location')}
-                type="text"
-                id="location"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="e.g., Auckland, New Zealand"
-              />
-              {errors.location && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.location.message}
                 </p>
               )}
             </div>

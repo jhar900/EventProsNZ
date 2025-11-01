@@ -1,41 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import RegisterForm from '@/components/features/auth/RegisterForm';
+import React from 'react';
+import ForgotPasswordForm from '@/components/features/auth/ForgotPasswordForm';
 import { X } from 'lucide-react';
 
-interface RegisterModalProps {
+interface ForgotPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignInClick?: () => void;
 }
 
-export default function RegisterModal({
+export default function ForgotPasswordModal({
   isOpen,
   onClose,
   onSignInClick,
-}: RegisterModalProps) {
-  const router = useRouter();
-  const { user } = useAuth();
-
-  const handleSuccess = (user: any) => {
-    // Close the modal first
-    onClose();
-
-    // Redirect based on user role
-    if (user.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else if (user.role === 'contractor') {
-      router.push('/contractor/dashboard');
-    } else {
-      router.push('/dashboard');
-    }
+}: ForgotPasswordModalProps) {
+  const handleSuccess = () => {
+    // Keep modal open to show success message
+    // Form component will handle displaying success
   };
 
   const handleError = (error: string) => {
-    console.error('Registration error:', error);
+    console.error('Forgot password error:', error);
   };
 
   if (!isOpen) return null;
@@ -48,13 +34,13 @@ export default function RegisterModal({
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          className="relative bg-white rounded-lg shadow-xl max-w-md w-full"
           onClick={e => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out z-10"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out"
           >
             <X className="h-6 w-6" />
           </button>
@@ -71,7 +57,7 @@ export default function RegisterModal({
               </div>
             </div>
 
-            <RegisterForm
+            <ForgotPasswordForm
               onSuccess={handleSuccess}
               onError={handleError}
               onSignInClick={onSignInClick}

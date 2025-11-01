@@ -16,9 +16,16 @@ type LoginFormData = z.infer<typeof loginSchema>;
 interface LoginFormProps {
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
+  onSignUpClick?: () => void;
+  onForgotPasswordClick?: () => void;
 }
 
-export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
+export default function LoginForm({
+  onSuccess,
+  onError,
+  onSignUpClick,
+  onForgotPasswordClick,
+}: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -153,20 +160,40 @@ export default function LoginForm({ onSuccess, onError }: LoginFormProps) {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link
-              href="/register"
-              className="font-medium text-orange-600 hover:text-orange-500"
-            >
-              Sign up
-            </Link>
+            {onSignUpClick ? (
+              <button
+                type="button"
+                onClick={onSignUpClick}
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Sign up
+              </button>
+            ) : (
+              <Link
+                href="/register"
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Sign up
+              </Link>
+            )}
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            <Link
-              href="/forgot-password"
-              className="font-medium text-orange-600 hover:text-orange-500"
-            >
-              Forgot your password?
-            </Link>
+            {onForgotPasswordClick ? (
+              <button
+                type="button"
+                onClick={onForgotPasswordClick}
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Forgot your password?
+              </button>
+            ) : (
+              <Link
+                href="/forgot-password"
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Forgot your password?
+              </Link>
+            )}
           </p>
         </div>
       </div>
