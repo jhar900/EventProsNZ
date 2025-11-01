@@ -32,34 +32,28 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient();
 
-    // Build the query with proper chaining
+    // Build the query - get business profiles with addresses
+    // Try both location and business_address columns to support different database states
     let query = supabase
       .from('business_profiles')
       .select(
         `
         user_id,
         company_name,
-        business_address,
+        location,
         is_verified,
         subscription_tier,
+        service_categories,
         users!inner(
           id,
           role
-        ),
-        services!inner(
-          service_type,
-          description
         )
       `
       )
       .eq('users.role', 'contractor')
-      .not('business_address', 'is', null);
+      .not('location', 'is', null);
 
-    // Apply filters by chaining properly
-    if (serviceType) {
-      query = query.eq('services.service_type', serviceType);
-    }
-
+    // Apply filters
     if (verifiedOnly) {
       query = query.eq('is_verified', true);
     }
@@ -71,36 +65,84 @@ export async function GET(request: NextRequest) {
     const { data: contractors, error } = await query;
 
     if (error) {
+      console.error('Error fetching contractors for map:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch contractors' },
+        {
+          error: 'Failed to fetch contractors',
+          details: error.message,
+        },
         { status: 500 }
       );
     }
 
-    // Transform data for map display with proper geocoding
-    const mapContractors = await Promise.all(
-      contractors?.map(async contractor => {
-        let location = { lat: -36.8485, lng: 174.7633 }; // Default fallback
+    // If no contractors found, return empty array instead of error
+    if (!contractors || contractors.length === 0) {
+      return NextResponse.json({
+        contractors: [],
+        bounds: { north, south, east, west },
+        total: 0,
+      });
+    }
 
-        if (contractor.business_address) {
+    // Get service types for contractors that need them (if serviceType filter is applied)
+    let contractorsWithServices = contractors;
+    if (serviceType) {
+      // Fetch services for contractors and filter by service type
+      const contractorIds = contractors.map(c => c.user_id);
+      const { data: servicesData } = await supabase
+        .from('services')
+        .select('user_id, service_type')
+        .in('user_id', contractorIds)
+        .eq('service_type', serviceType);
+
+      const matchingContractorIds = new Set(
+        servicesData?.map(s => s.user_id) || []
+      );
+
+      contractorsWithServices = contractors.filter(c =>
+        matchingContractorIds.has(c.user_id)
+      );
+    }
+
+    // Transform data for map display with geocoding
+    const mapContractors = await Promise.all(
+      contractorsWithServices.map(async contractor => {
+        let location = { lat: -36.8485, lng: 174.7633 }; // Default Auckland fallback
+
+        // Use location field from business_profiles (contains the address)
+        // Location is a TEXT field with the address string
+        if (contractor.location && typeof contractor.location === 'string') {
+          // Geocode the address string to get lat/lng
           const geocodedLocation = await mapService.geocodeAddress(
-            contractor.business_address
+            contractor.location
           );
           if (geocodedLocation) {
             location = geocodedLocation;
           }
         }
 
+        // Get primary service type from service_categories array or default
+        let serviceTypeValue = 'other';
+        if (
+          contractor.service_categories &&
+          Array.isArray(contractor.service_categories) &&
+          contractor.service_categories.length > 0
+        ) {
+          serviceTypeValue = contractor.service_categories[0];
+        } else if (serviceType) {
+          serviceTypeValue = serviceType;
+        }
+
         return {
           id: contractor.user_id,
-          company_name: contractor.company_name,
-          business_address: contractor.business_address,
-          service_type: contractor.services?.[0]?.service_type || 'other',
+          company_name: contractor.company_name || 'Unnamed Business',
+          business_address: contractor.location || '', // Use location field as business_address
+          service_type: serviceTypeValue,
           location,
-          is_verified: contractor.is_verified,
-          subscription_tier: contractor.subscription_tier,
+          is_verified: contractor.is_verified || false,
+          subscription_tier: contractor.subscription_tier || 'essential',
         };
-      }) || []
+      })
     );
 
     return NextResponse.json({
@@ -109,8 +151,12 @@ export async function GET(request: NextRequest) {
       total: mapContractors.length,
     });
   } catch (error) {
+    console.error('Map contractors API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

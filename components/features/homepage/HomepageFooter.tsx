@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   MapPin,
-  Phone,
   Mail,
   Facebook,
   Twitter,
@@ -67,8 +67,14 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
           {/* Brand section */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">EP</span>
+              <div className="relative w-10 h-10 flex items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Event Pros NZ"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h3 className="text-xl font-bold">Event Pros NZ</h3>
@@ -89,10 +95,6 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
               <div className="flex items-center gap-3 text-gray-300">
                 <MapPin className="w-4 h-4 text-blue-400" />
                 <span>Auckland, New Zealand</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <Phone className="w-4 h-4 text-blue-400" />
-                <span>+64 9 123 4567</span>
               </div>
               <div className="flex items-center gap-3 text-gray-300">
                 <Mail className="w-4 h-4 text-blue-400" />
@@ -177,16 +179,26 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
             <p className="text-gray-300 mb-4">
               Get the latest news and updates from Event Pros NZ
             </p>
-            <div className="flex gap-2">
+            <form
+              className="flex gap-2"
+              onSubmit={e => {
+                e.preventDefault();
+                // Newsletter subscription logic would go here
+              }}
+            >
               <input
                 type="email"
                 placeholder="Enter your email"
                 className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
-              <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Subscribe
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

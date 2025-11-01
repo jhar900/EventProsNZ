@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Mail,
-  Phone,
   MapPin,
   Facebook,
   Twitter,
@@ -60,25 +60,25 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <div className="flex items-center mb-4">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  E
-                </span>
+              <div className="relative w-8 h-8 flex items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Event Pros NZ"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
               </div>
               <span className="ml-2 text-xl font-bold">Event Pros NZ</span>
             </div>
             <p className="text-gray-300 mb-4">
-              New Zealand's premier event ecosystem connecting event managers
-              with qualified contractors for seamless event planning.
+              New Zealand&apos;s premier event ecosystem connecting event
+              managers with qualified contractors for seamless event planning.
             </p>
             <div className="space-y-2">
               <div className="flex items-center text-gray-300">
                 <Mail className="h-4 w-4 mr-2" />
                 <span>hello@eventprosnz.co.nz</span>
-              </div>
-              <div className="flex items-center text-gray-300">
-                <Phone className="h-4 w-4 mr-2" />
-                <span>+64 9 123 4567</span>
               </div>
               <div className="flex items-center text-gray-300">
                 <MapPin className="h-4 w-4 mr-2" />

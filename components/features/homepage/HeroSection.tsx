@@ -16,7 +16,7 @@ export function HeroSection({ className = '' }: HeroSectionProps) {
     >
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <div className="absolute inset-0 bg-[url('/hero-pattern.svg')] opacity-5"></div>
+        {/* Removed hero-pattern.svg as it doesn't exist */}
       </div>
 
       {/* Animated background elements */}
