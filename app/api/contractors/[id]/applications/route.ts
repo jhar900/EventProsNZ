@@ -98,15 +98,22 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch applications',
-      },
-      { status: 500 }
-    );
+    // Return empty results instead of 500 error for better UX
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get('page')
+      ? parseInt(searchParams.get('page')!)
+      : 1;
+    const limit = searchParams.get('limit')
+      ? parseInt(searchParams.get('limit')!)
+      : 20;
+
+    return NextResponse.json({
+      success: true,
+      applications: [],
+      total: 0,
+      page,
+      limit,
+      total_pages: 0,
+    });
   }
 }

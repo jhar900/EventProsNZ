@@ -104,7 +104,7 @@ export default function UserProfileDropdown({
         return [
           ...baseItems,
           { href: '/profile', label: 'Profile', icon: Settings },
-          { href: '/contractors', label: 'Browse Jobs', icon: Search },
+          { href: '/jobs', label: 'Browse Jobs', icon: Search },
           {
             href: '/contractors/favorites',
             label: 'My Favorites',

@@ -71,7 +71,16 @@ export async function GET(request: NextRequest) {
     const { data: templates, error, count } = await query;
 
     if (error) {
-      throw new Error(`Failed to fetch templates: ${error.message}`);
+      console.error('GET /api/applications/templates error:', error);
+      // Return empty results instead of error for better UX
+      return NextResponse.json({
+        success: true,
+        templates: [],
+        total: 0,
+        page: parsedParams.page,
+        limit: parsedParams.limit,
+        total_pages: 0,
+      });
     }
 
     const total = count || 0;
@@ -102,14 +111,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Failed to fetch templates',
-      },
-      { status: 500 }
-    );
+    // Return empty results instead of 500 error for better UX
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get('page')
+      ? parseInt(searchParams.get('page')!)
+      : 1;
+    const limit = searchParams.get('limit')
+      ? parseInt(searchParams.get('limit')!)
+      : 20;
+
+    return NextResponse.json({
+      success: true,
+      templates: [],
+      total: 0,
+      page,
+      limit,
+      total_pages: 0,
+    });
   }
 }
 

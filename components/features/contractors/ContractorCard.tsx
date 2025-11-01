@@ -15,6 +15,7 @@ import {
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ContractorCardProps {
   contractor: Contractor;
@@ -29,6 +30,7 @@ export function ContractorCard({
   isFeatured = false,
   className = '',
 }: ContractorCardProps) {
+  const router = useRouter();
   const displayName = ContractorDirectoryService.getDisplayName(contractor);
   const location = ContractorDirectoryService.getLocationDisplay(contractor);
   const isPremium = ContractorDirectoryService.isPremium(contractor);
@@ -97,23 +99,32 @@ export function ContractorCard({
   };
 
   const cardClasses = `
-    group relative overflow-hidden transition-all duration-200
+    group relative transition-all duration-200
     ${
       viewMode === 'grid'
-        ? `rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-lg ${
+        ? `rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-lg overflow-visible h-full flex flex-col ${
             isFeatured ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
           }`
-        : 'rounded-lg border border-gray-200 hover:border-gray-300'
+        : 'rounded-lg border border-gray-200 hover:border-gray-300 overflow-hidden'
     }
     ${isPremium ? 'bg-gradient-to-br from-blue-50 to-indigo-50' : 'bg-white'}
     ${className}
   `;
 
+  const handleCardClick = () => {
+    router.push(`/contractors/${contractor.id}`);
+  };
+
   return (
-    <Card className={cardClasses}>
+    <Card
+      className={`${cardClasses} ${viewMode === 'grid' ? 'cursor-pointer' : ''}`}
+      onClick={viewMode === 'grid' ? handleCardClick : undefined}
+    >
       <div
         className={
-          viewMode === 'grid' ? 'p-6' : 'p-6 flex flex-col sm:flex-row'
+          viewMode === 'grid'
+            ? 'p-6 flex flex-col flex-1'
+            : 'p-6 flex flex-col sm:flex-row'
         }
       >
         {/* Premium Badge */}
@@ -131,18 +142,24 @@ export function ContractorCard({
         )}
 
         {/* Avatar */}
-        <div className={viewMode === 'grid' ? 'mb-4' : 'mb-4 sm:mb-0 sm:mr-6'}>
-          <div className="relative w-16 h-16 mx-auto sm:mx-0">
-            {contractor.avatarUrl ? (
+        <div
+          className={
+            viewMode === 'grid'
+              ? 'mb-4 flex justify-center absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+              : 'mb-4 sm:mb-0 sm:mr-6'
+          }
+        >
+          <div className="relative w-24 h-24 mx-auto sm:mx-0 z-20">
+            {contractor.logoUrl || contractor.avatarUrl ? (
               <Image
-                src={contractor.avatarUrl}
+                src={contractor.logoUrl || contractor.avatarUrl || ''}
                 alt={displayName}
                 fill
-                className="rounded-full object-cover"
+                className="rounded-full object-cover border border-gray-200 group-hover:border-gray-300 transition-colors duration-200"
               />
             ) : (
-              <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-500 font-semibold text-lg">
+              <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border border-gray-200 group-hover:border-gray-300 transition-colors duration-200">
+                <span className="text-gray-500 font-semibold text-xl">
                   {displayName.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -151,7 +168,7 @@ export function ContractorCard({
         </div>
 
         {/* Content */}
-        <div className="flex-1">
+        <div className={`flex-1 ${viewMode === 'grid' ? 'pt-8' : ''}`}>
           {/* Header */}
           <div className="mb-3">
             <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -232,13 +249,24 @@ export function ContractorCard({
         </div>
 
         {/* Action Buttons */}
-        <div className={viewMode === 'grid' ? 'mt-4' : 'mt-4 sm:mt-0 sm:ml-6'}>
+        <div
+          className={
+            viewMode === 'grid' ? 'mt-auto pt-4' : 'mt-4 sm:mt-0 sm:ml-6'
+          }
+          onClick={e => e.stopPropagation()}
+        >
           <div className="flex flex-col space-y-2">
             <Link href={`/contractors/${contractor.id}`}>
-              <Button className="w-full">Get in Touch</Button>
+              <Button className="w-full" onClick={e => e.stopPropagation()}>
+                Get in Touch
+              </Button>
             </Link>
             <Link href={`/contractors/${contractor.id}`}>
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={e => e.stopPropagation()}
+              >
                 View Profile
               </Button>
             </Link>

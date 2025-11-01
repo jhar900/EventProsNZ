@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
           description: businessProfile?.description || '',
           location: businessProfile?.location || profile?.location,
           avatarUrl: profile?.avatar_url,
+          logoUrl: businessProfile?.logo_url,
           bio: profile?.bio,
           serviceCategories: businessProfile?.service_categories || [],
           averageRating: businessProfile?.average_rating || 0,

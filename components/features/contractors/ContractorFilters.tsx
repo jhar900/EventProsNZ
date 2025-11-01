@@ -47,13 +47,6 @@ const LOCATIONS = [
   'Rotorua',
 ];
 
-const RATING_OPTIONS = [
-  { value: 4, label: '4+ Stars' },
-  { value: 3, label: '3+ Stars' },
-  { value: 2, label: '2+ Stars' },
-  { value: 1, label: '1+ Stars' },
-];
-
 export function ContractorFilters({
   filters,
   searchQuery,
@@ -87,11 +80,17 @@ export function ContractorFilters({
   };
 
   const clearFilters = () => {
-    const clearedFilters: ContractorFiltersType = {};
+    // Explicitly clear all filter properties
+    const clearedFilters: ContractorFiltersType = {
+      q: undefined,
+      serviceType: undefined,
+      location: undefined,
+    };
     setLocalFilters(clearedFilters);
     setLocalSearchQuery('');
     onSearch('');
-    onFilterChange(clearedFilters);
+    // Pass empty object to completely replace filters
+    onFilterChange({});
   };
 
   const hasActiveFilters = Object.values(filters).some(
@@ -108,36 +107,38 @@ export function ContractorFilters({
     <div className={`space-y-4 ${className}`}>
       {/* Search Bar */}
       <form onSubmit={handleSearchSubmit} className="relative">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search contractors, services, or locations..."
-            value={localSearchQuery}
-            onChange={e => setLocalSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        <div className="flex gap-2 items-stretch">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search contractors, services, or locations..."
+              value={localSearchQuery}
+              onChange={e => setLocalSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+            {localSearchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalSearchQuery('');
+                  onSearch('');
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+          <Button
+            type="submit"
             disabled={isLoading}
-          />
-          {localSearchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setLocalSearchQuery('');
-                onSearch('');
-              }}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          )}
+            className="px-6 py-3 h-auto"
+          >
+            {isLoading ? 'Searching...' : 'Search'}
+          </Button>
         </div>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="mt-2 w-full sm:w-auto"
-        >
-          {isLoading ? 'Searching...' : 'Search'}
-        </Button>
       </form>
 
       {/* Filter Toggle */}
@@ -222,95 +223,6 @@ export function ContractorFilters({
                 </Button>
               ))}
             </div>
-          </div>
-
-          {/* Rating */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Minimum Rating
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {RATING_OPTIONS.map(option => (
-                <Button
-                  key={option.value}
-                  variant={
-                    localFilters.ratingMin === option.value
-                      ? 'default'
-                      : 'outline'
-                  }
-                  size="sm"
-                  onClick={() =>
-                    handleFilterChange(
-                      'ratingMin',
-                      localFilters.ratingMin === option.value
-                        ? undefined
-                        : option.value
-                    )
-                  }
-                  className="text-xs"
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Range */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Min Price ($)
-              </label>
-              <input
-                type="number"
-                placeholder="0"
-                value={localFilters.priceMin || ''}
-                onChange={e =>
-                  handleFilterChange(
-                    'priceMin',
-                    e.target.value ? parseFloat(e.target.value) : undefined
-                  )
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min="0"
-                step="10"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Price ($)
-              </label>
-              <input
-                type="number"
-                placeholder="10000"
-                value={localFilters.priceMax || ''}
-                onChange={e =>
-                  handleFilterChange(
-                    'priceMax',
-                    e.target.value ? parseFloat(e.target.value) : undefined
-                  )
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min="0"
-                step="10"
-              />
-            </div>
-          </div>
-
-          {/* Premium Only */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="premiumOnly"
-              checked={localFilters.premiumOnly || false}
-              onChange={e =>
-                handleFilterChange('premiumOnly', e.target.checked || undefined)
-              }
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="premiumOnly" className="ml-2 text-sm text-gray-700">
-              Premium contractors only
-            </label>
           </div>
         </div>
       )}

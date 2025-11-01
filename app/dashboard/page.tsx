@@ -8,6 +8,7 @@ import RoleGuard from '@/components/features/auth/RoleGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { ProfileCompletionStatus } from '@/components/features/onboarding/ProfileCompletionStatus';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -17,19 +18,73 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleCompleteProfile = () => {
     window.location.href = '/onboarding/event-manager';
   };
 
+  const getUserName = () => {
+    if (!user) return '';
+    if (user.profile?.first_name || user.profile?.last_name) {
+      return `${user.profile.first_name || ''} ${user.profile.last_name || ''}`.trim();
+    }
+    return user.email?.split('@')[0] || 'User';
+  };
+
+  const getUserAvatar = () => {
+    if (!user) return null;
+    const profileData = Array.isArray(user.profile)
+      ? user.profile[0]
+      : user.profile;
+    return profileData?.avatar_url || null;
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    const roleMap: Record<string, string> = {
+      event_manager: 'Event Manager',
+      contractor: 'Contractor',
+      admin: 'Administrator',
+    };
+    return roleMap[role] || role;
+  };
+
   return (
     <AuthGuard>
       <DashboardLayout>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
+        <div className="max-w-7xl mx-auto pt-3 pb-1 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-0">
+            {/* User Profile Header */}
+            {user && (
+              <div className="mb-6 flex items-center space-x-4">
+                <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200">
+                  {getUserAvatar() ? (
+                    <Image
+                      src={getUserAvatar()!}
+                      alt={getUserName()}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 font-semibold text-xl">
+                        {getUserName().charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {getUserName()}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    {getRoleDisplayName(user.role)}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">

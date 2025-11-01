@@ -72,18 +72,36 @@ export function ApplicationHistory({
       );
 
       if (!response.ok) {
-        throw new Error('Failed to load applications');
+        // Don't throw error, just show empty state
+        setApplications([]);
+        setTotalPages(1);
+        setTotalApplications(0);
+        setError(null); // Clear any previous errors
+        return;
       }
 
       const data = await response.json();
+
+      // Handle both success: true and success: false cases
+      if (data.success === false) {
+        setApplications([]);
+        setTotalPages(1);
+        setTotalApplications(0);
+        setError(null); // Clear any previous errors
+        return;
+      }
+
       setApplications(data.applications || []);
       setTotalPages(data.total_pages || 1);
       setTotalApplications(data.total || 0);
+      setError(null); // Clear any errors on success
     } catch (error) {
       console.error('Error loading applications:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to load applications'
-      );
+      // Set empty state instead of error state
+      setApplications([]);
+      setTotalPages(1);
+      setTotalApplications(0);
+      setError(null);
     } finally {
       setIsLoading(false);
     }

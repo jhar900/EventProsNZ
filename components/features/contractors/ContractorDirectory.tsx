@@ -67,14 +67,25 @@ export function ContractorDirectory({
   };
 
   const handleFilterChange = async (newFilters: Partial<ContractorFilters>) => {
-    updateFilters(newFilters);
+    // If newFilters is empty object (no keys), we're clearing all filters - replace instead of merge
+    const isClearingAll = Object.keys(newFilters).length === 0;
 
-    const updatedFilters = { ...filters, ...newFilters };
+    if (isClearingAll) {
+      updateFilters({});
+      setSearchQuery('');
 
-    if (searchQuery.trim()) {
-      await searchContractors(updatedFilters);
+      // Fetch with empty filters
+      await fetchContractors({});
     } else {
-      await fetchContractors(updatedFilters);
+      // ContractorFilters component passes the complete merged filter object
+      // So we can use newFilters directly
+      updateFilters(newFilters);
+
+      if (searchQuery.trim()) {
+        await searchContractors(newFilters);
+      } else {
+        await fetchContractors(newFilters);
+      }
     }
   };
 
@@ -84,17 +95,23 @@ export function ContractorDirectory({
 
   const handleLoadMore = async () => {
     if (searchQuery.trim()) {
-      await searchContractors({}, pagination.page + 1);
+      // When searching, use search endpoint with current filters
+      const searchFilters = { ...filters, q: searchQuery };
+      await searchContractors(searchFilters, pagination.page + 1);
     } else {
+      // loadMore will use current filters from state
       await loadMore();
     }
   };
 
   const handlePageChange = async (page: number) => {
     if (searchQuery.trim()) {
-      await searchContractors({}, page);
+      // When searching, use search endpoint with current filters
+      const searchFilters = { ...filters, q: searchQuery };
+      await searchContractors(searchFilters, page);
     } else {
-      await fetchContractors({}, page);
+      // Use current filters when changing pages
+      await fetchContractors(filters, page);
     }
   };
 

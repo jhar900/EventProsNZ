@@ -7,6 +7,7 @@ export interface Contractor {
   website?: string | null;
   location: string | null;
   avatarUrl: string | null;
+  logoUrl: string | null;
   bio: string | null;
   phone?: string | null;
   address?: string | null;

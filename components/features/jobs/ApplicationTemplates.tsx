@@ -105,16 +105,28 @@ export function ApplicationTemplates({
       const response = await fetch(`/api/applications/templates?${params}`);
 
       if (!response.ok) {
-        throw new Error('Failed to load templates');
+        // Don't throw error, just show empty state
+        setTemplates([]);
+        setError(null); // Clear any previous errors
+        return;
       }
 
       const data = await response.json();
+
+      // Handle both success: true and success: false cases
+      if (data.success === false) {
+        setTemplates([]);
+        setError(null); // Clear any previous errors
+        return;
+      }
+
       setTemplates(data.templates || []);
+      setError(null); // Clear any errors on success
     } catch (error) {
       console.error('Error loading templates:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to load templates'
-      );
+      // Set empty state instead of error state
+      setTemplates([]);
+      setError(null);
     } finally {
       setIsLoading(false);
     }

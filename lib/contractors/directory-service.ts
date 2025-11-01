@@ -46,7 +46,35 @@ setInterval(() => {
 
 export class ContractorDirectoryService {
   /**
+   * Convert ContractorFilters to search API parameters
+   */
+  private static convertFiltersToSearchParams(
+    filters: ContractorFilters
+  ): Record<string, string> {
+    const params: Record<string, string> = {};
+
+    if (filters.q) {
+      params.q = filters.q;
+    }
+
+    // Convert serviceType to service_types parameter
+    // serviceType is a single string, but API expects comma-separated list
+    if (filters.serviceType) {
+      params.service_types = filters.serviceType; // API will split this
+    }
+
+    if (filters.location) {
+      params.location = filters.location;
+    }
+
+    // Price, rating, and premium filters removed per user request
+
+    return params;
+  }
+
+  /**
    * Fetch contractors with optional filters and pagination
+   * If filters are present, uses the search endpoint
    */
   static async getContractors(
     filters: ContractorFilters = {},
@@ -54,15 +82,19 @@ export class ContractorDirectoryService {
     limit: number = 12,
     sort: string = 'premium_first'
   ): Promise<ContractorDirectoryResponse> {
+    // Check if we have any filters - if so, use search endpoint
+    const hasFilters = filters.q || filters.serviceType || filters.location;
+
+    if (hasFilters) {
+      // Use search endpoint when filters are present
+      return this.searchContractors(filters, page, limit);
+    }
+
+    // No filters, use basic endpoint
     const searchParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       sort,
-      ...Object.fromEntries(
-        Object.entries(filters).filter(
-          ([_, value]) => value !== undefined && value !== null
-        )
-      ),
     });
 
     const response = await fetch(`${API_BASE_URL}?${searchParams}`);
@@ -82,14 +114,11 @@ export class ContractorDirectoryService {
     page: number = 1,
     limit: number = 12
   ): Promise<ContractorDirectoryResponse> {
+    // Convert filter names to match search API expectations
     const searchParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...Object.fromEntries(
-        Object.entries(filters).filter(
-          ([_, value]) => value !== undefined && value !== null
-        )
-      ),
+      ...this.convertFiltersToSearchParams(filters),
     });
 
     const response = await fetch(`${API_BASE_URL}/search?${searchParams}`);

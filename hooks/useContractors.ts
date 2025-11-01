@@ -59,8 +59,13 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
+        // Use the filters passed in directly (they're already the complete filter set)
+        // If filters is empty {}, use it as-is to clear filters
+        // Otherwise, use the complete filter set passed from ContractorDirectory
+        const filtersToUse = Object.keys(filters).length === 0 ? {} : filters;
+
         const response = await ContractorDirectoryService.getContractors(
-          { ...state.filters, ...filters },
+          filtersToUse,
           page,
           state.pagination.limit,
           'premium_first'
@@ -91,7 +96,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
         }));
       }
     },
-    [] // Remove dependencies to prevent infinite loops
+    [state.pagination.limit] // Only include limit as dependency
   );
 
   const searchContractors = useCallback(
@@ -99,8 +104,11 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
+        // Use the filters passed in directly (they're already the complete filter set)
+        const filtersToUse = Object.keys(filters).length === 0 ? {} : filters;
+
         const response = await ContractorDirectoryService.searchContractors(
-          { ...state.filters, ...filters },
+          filtersToUse,
           page,
           state.pagination.limit
         );
@@ -141,8 +149,7 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
         ...prev,
         featuredContractors: response.contractors,
       }));
-    } catch (error) {
-      }
+    } catch (error) {}
   }, []);
 
   const fetchContractorDetails = useCallback(async (id: string) => {
@@ -173,26 +180,38 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
   }, []);
 
   const updateFilters = useCallback((filters: Partial<ContractorFilters>) => {
+    // If filters is empty object (no keys), we're clearing all - replace instead of merge
+    // Otherwise, merge with existing filters
+    const isClearingAll = Object.keys(filters).length === 0;
+
     setState(prev => ({
       ...prev,
-      filters: { ...prev.filters, ...filters },
+      filters: isClearingAll ? {} : { ...prev.filters, ...filters },
       pagination: { ...prev.pagination, page: 1 },
     }));
   }, []);
 
   const loadMore = useCallback(async () => {
-    if (
-      state.pagination.page < state.pagination.totalPages &&
-      !state.isLoading
-    ) {
-      await fetchContractors({}, state.pagination.page + 1);
+    // Use functional update to get latest state without triggering re-render
+    let shouldLoad = false;
+    let currentFilters: ContractorFilters = {};
+    let nextPage = 1;
+
+    setState(prev => {
+      shouldLoad =
+        prev.pagination.page < prev.pagination.totalPages && !prev.isLoading;
+      if (shouldLoad) {
+        currentFilters = prev.filters;
+        nextPage = prev.pagination.page + 1;
+      }
+      return prev;
+    });
+
+    if (shouldLoad) {
+      // Use current filters from state when loading more
+      await fetchContractors(currentFilters, nextPage);
     }
-  }, [
-    state.pagination.page,
-    state.pagination.totalPages,
-    state.isLoading,
-    fetchContractors,
-  ]);
+  }, [fetchContractors]);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

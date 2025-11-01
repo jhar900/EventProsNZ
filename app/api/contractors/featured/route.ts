@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
           business_address,
           service_areas,
           social_links,
-          verification_date
+          verification_date,
+          logo_url
         ),
         services(
           service_type,
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
         location:
           contractor.business_profiles.location || contractor.profiles.location,
         avatarUrl: contractor.profiles.avatar_url,
+        logoUrl: contractor.business_profiles.logo_url,
         bio: contractor.profiles.bio,
         serviceCategories:
           contractor.business_profiles.service_categories || [],

@@ -26,6 +26,17 @@ export async function GET(
           avatar_url,
           location,
           bio
+        ),
+        business_profiles(
+          company_name,
+          description,
+          location,
+          service_categories,
+          average_rating,
+          review_count,
+          is_verified,
+          subscription_tier,
+          logo_url
         )
       `
       )
@@ -44,22 +55,27 @@ export async function GET(
       ? contractorData.profiles[0]
       : contractorData.profiles;
 
+    const businessProfile = Array.isArray(contractorData.business_profiles)
+      ? contractorData.business_profiles[0]
+      : contractorData.business_profiles;
+
     const contractor = {
       id: contractorData.id,
       email: contractorData.email,
       name: profile
         ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
         : 'Unknown User',
-      companyName: 'Test User Services', // Default for now
-      description: '',
-      location: profile?.location || null,
+      companyName: businessProfile?.company_name || 'No Company Name',
+      description: businessProfile?.description || '',
+      location: businessProfile?.location || profile?.location || null,
       avatarUrl: profile?.avatar_url || null,
+      logoUrl: businessProfile?.logo_url || null,
       bio: profile?.bio || null,
-      serviceCategories: [],
-      averageRating: 0,
-      reviewCount: 0,
-      isVerified: false,
-      subscriptionTier: 'essential',
+      serviceCategories: businessProfile?.service_categories || [],
+      averageRating: businessProfile?.average_rating || 0,
+      reviewCount: businessProfile?.review_count || 0,
+      isVerified: businessProfile?.is_verified || false,
+      subscriptionTier: businessProfile?.subscription_tier || 'essential',
       businessAddress: null,
       serviceAreas: [],
       socialLinks: null,

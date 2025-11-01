@@ -92,6 +92,7 @@ export interface Database {
           service_areas: string[] | null;
           social_links: any | null;
           verification_date: string | null;
+          logo_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -112,6 +113,7 @@ export interface Database {
           service_areas?: string[] | null;
           social_links?: any | null;
           verification_date?: string | null;
+          logo_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -132,6 +134,7 @@ export interface Database {
           service_areas?: string[] | null;
           social_links?: any | null;
           verification_date?: string | null;
+          logo_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
