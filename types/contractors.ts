@@ -21,6 +21,12 @@ export interface Contractor {
   nzbn?: string | null;
   serviceAreas: string[];
   socialLinks?: any | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  linkedinUrl?: string | null;
+  twitterUrl?: string | null;
+  youtubeUrl?: string | null;
+  tiktokUrl?: string | null;
   verificationDate?: string | null;
   services: Service[];
   portfolio?: PortfolioItem[];

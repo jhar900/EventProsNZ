@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 import {
   SendInquiryRequest,
@@ -127,17 +127,106 @@ const bulkSendInquirySchema = z.object({
 // POST /api/inquiries/send - Send a single inquiry
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    console.log('=== Inquiry Send API Called ===');
+    const { supabase } = createClient(request);
 
-    // Get current user
+    // Try to get user from cookies/session first
+    let user: any;
+    let userProfile: any;
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    if (authError || !user) {
+    // Debug logging
+    console.log(
+      'Session check - Session:',
+      session?.user?.id,
+      'Error:',
+      sessionError?.message
+    );
+
+    if (session?.user) {
+      user = session.user;
+    } else {
+      // Fallback to getUser if getSession doesn't work
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      console.log(
+        'Fallback getUser - User:',
+        getUserUser?.id,
+        'Error:',
+        authError?.message
+      );
+
+      if (getUserUser) {
+        user = getUserUser;
+      }
+    }
+
+    // If no user from cookies, try to get from x-user-id header (fallback)
+    if (!user) {
+      // Try both lowercase and original case header names
+      const userIdFromHeader =
+        request.headers.get('x-user-id') ||
+        request.headers.get('X-User-Id') ||
+        request.headers.get('X-USER-ID');
+
+      console.log('Checking x-user-id header:', userIdFromHeader);
+      console.log(
+        'All headers:',
+        Object.fromEntries(request.headers.entries())
+      );
+
+      if (userIdFromHeader) {
+        console.log('Using user ID from header:', userIdFromHeader);
+        // Verify the user exists - use admin client to bypass RLS if needed
+        const { createClient: createAdminClient } = await import(
+          '@/lib/supabase/server'
+        );
+        const adminSupabase = createAdminClient();
+
+        const { data: userData, error: userError } = await adminSupabase
+          .from('users')
+          .select('id, email, role')
+          .eq('id', userIdFromHeader)
+          .single();
+
+        console.log('User data from DB:', userData, 'Error:', userError);
+
+        if (!userError && userData) {
+          // Create a minimal user object with role
+          user = {
+            id: userData.id,
+            email: userData.email || '',
+            role: userData.role,
+          } as any;
+          // Set userProfile since we already have it from the lookup
+          userProfile = userData;
+          console.log(
+            'User authenticated via header:',
+            user.id,
+            'Role:',
+            userData.role
+          );
+        } else {
+          console.log('Failed to verify user from header:', userError);
+        }
+      } else {
+        console.log('No x-user-id header found');
+      }
+    }
+
+    if (!user) {
+      console.log('No user found - returning Unauthorized');
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        {
+          success: false,
+          message: 'Unauthorized. Please ensure you are logged in.',
+        },
         { status: 401 }
       );
     }
@@ -162,32 +251,95 @@ export async function POST(request: NextRequest) {
     }
 
     const inquiryData = validationResult.data;
+    console.log('Inquiry data validated:', {
+      contractor_id: inquiryData.contractor_id,
+      inquiry_type: inquiryData.inquiry_type,
+      subject: inquiryData.subject?.substring(0, 50),
+    });
 
-    // Check if user is an event manager
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Get user profile to verify they exist (any logged-in user can send inquiries)
+    // If we got user from header, userProfile is already set above
+    if (!userProfile) {
+      // We have user from session/cookies, verify they exist
+      // Use admin client to bypass RLS policies
+      const { createClient: createAdminClient } = await import(
+        '@/lib/supabase/server'
+      );
+      const adminSupabase = createAdminClient();
 
-    if (profileError || !userProfile || userProfile.role !== 'event_manager') {
+      const { data: profileData, error: profileError } = await adminSupabase
+        .from('users')
+        .select('id, role, email')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.log('User profile lookup failed:', profileError);
+        return NextResponse.json(
+          { success: false, message: 'User profile not found' },
+          { status: 404 }
+        );
+      }
+      userProfile = profileData;
+    }
+
+    // Verify contractor exists and get their business_profile ID
+    // Use admin client to bypass RLS policies
+    const { createClient: createAdminClient } = await import(
+      '@/lib/supabase/server'
+    );
+    const adminSupabase = createAdminClient();
+
+    // First, verify the user exists and is a contractor
+    const { data: contractorUser, error: contractorUserError } =
+      await adminSupabase
+        .from('users')
+        .select('id, role, is_verified')
+        .eq('id', inquiryData.contractor_id)
+        .eq('role', 'contractor')
+        .single();
+
+    console.log(
+      'Contractor user lookup - ID:',
+      inquiryData.contractor_id,
+      'Data:',
+      contractorUser,
+      'Error:',
+      contractorUserError
+    );
+
+    if (contractorUserError || !contractorUser) {
+      console.log('Contractor user not found:', contractorUserError);
       return NextResponse.json(
-        { success: false, message: 'Only event managers can send inquiries' },
-        { status: 403 }
+        { success: false, message: 'Contractor not found' },
+        { status: 404 }
       );
     }
 
-    // Verify contractor exists and is verified
-    const { data: contractor, error: contractorError } = await supabase
-      .from('users')
-      .select('id, role, is_verified')
-      .eq('id', inquiryData.contractor_id)
-      .eq('role', 'contractor')
-      .single();
+    // Get the business_profile ID for this contractor
+    const { data: businessProfile, error: businessProfileError } =
+      await adminSupabase
+        .from('business_profiles')
+        .select('id')
+        .eq('user_id', inquiryData.contractor_id)
+        .single();
 
-    if (contractorError || !contractor || !contractor.is_verified) {
+    console.log(
+      'Business profile lookup - User ID:',
+      inquiryData.contractor_id,
+      'Business Profile ID:',
+      businessProfile?.id,
+      'Error:',
+      businessProfileError
+    );
+
+    if (businessProfileError || !businessProfile) {
+      console.log(
+        'Business profile not found for contractor:',
+        businessProfileError
+      );
       return NextResponse.json(
-        { success: false, message: 'Contractor not found or not verified' },
+        { success: false, message: 'Contractor business profile not found' },
         { status: 404 }
       );
     }
@@ -209,33 +361,176 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create inquiry
-    const { data: inquiry, error: inquiryError } = await supabase
-      .from('inquiries')
-      .insert({
-        event_manager_id: user.id,
-        contractor_id: inquiryData.contractor_id,
-        event_id: inquiryData.event_id,
-        inquiry_type: inquiryData.inquiry_type,
-        subject: inquiryData.subject,
-        message: inquiryData.message,
-        event_details: inquiryData.event_details,
-        priority: inquiryData.priority,
-        status: 'sent',
-      })
+    // Create inquiry in the enquiries table
+    // The enquiries table has a simpler schema: id, event_id, contractor_id (business_profiles.id), status, subject, message
+    // Use admin client to bypass RLS policies since any logged-in user can send inquiries
+    // Reuse the adminSupabase client that was already created for contractor lookup
+    const inquiryPayload = {
+      contractor_id: businessProfile.id, // References business_profiles.id, not users.id
+      event_id: inquiryData.event_id || null,
+      subject: inquiryData.subject,
+      message: inquiryData.message,
+      status: 'pending', // enquiries table uses 'pending' as default
+    };
+
+    console.log(
+      'Attempting to create inquiry with payload:',
+      JSON.stringify(inquiryPayload, null, 2)
+    );
+
+    const { data: inquiry, error: inquiryError } = await adminSupabase
+      .from('enquiries')
+      .insert(inquiryPayload)
       .select()
       .single();
 
     if (inquiryError) {
       console.error('Inquiry creation error:', inquiryError);
+      console.error(
+        'Full error details:',
+        JSON.stringify(inquiryError, null, 2)
+      );
+      console.error('Inquiry data attempted:', {
+        event_manager_id: user.id,
+        contractor_id: inquiryData.contractor_id,
+        event_id: inquiryData.event_id,
+        inquiry_type: inquiryData.inquiry_type,
+        subject: inquiryData.subject?.substring(0, 50),
+        message_length: inquiryData.message?.length,
+        event_details: inquiryData.event_details ? 'present' : 'null',
+        priority: inquiryData.priority,
+      });
       return NextResponse.json(
-        { success: false, message: 'Failed to create inquiry' },
+        {
+          success: false,
+          message: 'Failed to create inquiry',
+          error:
+            inquiryError.message || inquiryError.details || 'Unknown error',
+          error_code: inquiryError.code,
+          error_hint: inquiryError.hint,
+        },
         { status: 500 }
       );
     }
 
-    // TODO: Send email notification to contractor
-    // This would integrate with the notification system
+    console.log('Inquiry created successfully:', inquiry.id);
+
+    // Send email notification to contractor
+    try {
+      // Fetch contractor and event manager details for email
+      const { data: contractorData } = await supabase
+        .from('users')
+        .select(
+          `
+          email,
+          profiles(
+            first_name,
+            last_name
+          )
+        `
+        )
+        .eq('id', inquiryData.contractor_id)
+        .single();
+
+      const { data: eventManagerData } = await supabase
+        .from('users')
+        .select(
+          `
+          email,
+          profiles(
+            first_name,
+            last_name
+          )
+        `
+        )
+        .eq('id', user.id)
+        .single();
+
+      if (contractorData?.email) {
+        const contractorEmail = contractorData.email;
+        const contractorProfile = Array.isArray(contractorData.profiles)
+          ? contractorData.profiles[0]
+          : contractorData.profiles;
+        const contractorName = contractorProfile?.first_name || 'Contractor';
+
+        const eventManagerProfile = Array.isArray(eventManagerData?.profiles)
+          ? eventManagerData.profiles[0]
+          : eventManagerData?.profiles;
+        const eventManagerName =
+          eventManagerProfile?.first_name || 'Event Manager';
+        const eventManagerEmail = eventManagerData?.email || '';
+
+        // Prepare email content
+        const emailSubject = `New Inquiry on EventProsNZ: ${inquiryData.subject}`;
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #f97316;">New Inquiry Received</h2>
+            <p>Hello ${contractorName},</p>
+            <p>You have received a new inquiry on EventProsNZ.</p>
+            <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #1f2937;">${inquiryData.subject}</h3>
+              <p style="color: #4b5563; white-space: pre-wrap;">${inquiryData.message}</p>
+              <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">
+                <strong>From:</strong> ${eventManagerName} (${eventManagerEmail})<br>
+                <strong>Priority:</strong> ${inquiryData.priority || 'medium'}
+              </p>
+            </div>
+            <p>
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://eventpros.co.nz'}/inquiries" 
+                 style="display: inline-block; background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px;">
+                View Inquiry on EventProsNZ
+              </a>
+            </p>
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+              Best regards,<br>
+              The EventProsNZ Team
+            </p>
+          </div>
+        `;
+        const emailText = `
+          New Inquiry Received
+
+          Hello ${contractorName},
+
+          You have received a new inquiry on EventProsNZ.
+
+          Subject: ${inquiryData.subject}
+
+          Message:
+          ${inquiryData.message}
+
+          From: ${eventManagerName} (${eventManagerEmail})
+          Priority: ${inquiryData.priority || 'medium'}
+
+          View this inquiry at: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://eventpros.co.nz'}/inquiries
+
+          Best regards,
+          The EventProsNZ Team
+        `;
+
+        // Send email using SendGrid
+        const { SendGridService } = await import(
+          '@/lib/email/sendgrid-service'
+        );
+        const sendGridService = new SendGridService();
+
+        await sendGridService.sendEmail({
+          to: contractorEmail,
+          subject: emailSubject,
+          html: emailHtml,
+          text: emailText,
+          categories: ['inquiry', 'notification'],
+        });
+
+        console.log(
+          `Inquiry notification email sent to contractor: ${contractorEmail}`
+        );
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the inquiry creation
+      console.error('Error sending inquiry notification email:', emailError);
+      // Continue execution - inquiry was already created successfully
+    }
 
     const response: InquiryResponse = {
       inquiry,

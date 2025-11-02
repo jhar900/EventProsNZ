@@ -36,7 +36,13 @@ export async function GET(
           review_count,
           is_verified,
           subscription_tier,
-          logo_url
+          logo_url,
+          facebook_url,
+          instagram_url,
+          linkedin_url,
+          twitter_url,
+          youtube_url,
+          tiktok_url
         )
       `
       )
@@ -79,6 +85,12 @@ export async function GET(
       businessAddress: null,
       serviceAreas: [],
       socialLinks: null,
+      facebookUrl: businessProfile?.facebook_url || null,
+      instagramUrl: businessProfile?.instagram_url || null,
+      linkedinUrl: businessProfile?.linkedin_url || null,
+      twitterUrl: businessProfile?.twitter_url || null,
+      youtubeUrl: businessProfile?.youtube_url || null,
+      tiktokUrl: businessProfile?.tiktok_url || null,
       verificationDate: null,
       services: [],
       portfolio: [],

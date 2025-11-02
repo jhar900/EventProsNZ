@@ -14,6 +14,7 @@ import {
   BarChart3,
   Menu,
   X,
+  MessageSquare,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -72,6 +73,7 @@ export default function DashboardLayout({
           ...baseItems,
           { href: '/profile', label: 'Profile', icon: Settings },
           { href: '/jobs', label: 'Browse Jobs', icon: Search },
+          { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
           {
             href: '/contractors/favorites',
             label: 'My Favorites',
