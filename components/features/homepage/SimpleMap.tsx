@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-// Import Mapbox CSS
-import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
+// Mapbox CSS will be loaded dynamically
+// DO NOT import mapbox-gl synchronously - it's large and blocks page load
 
 interface SimpleMapProps {
   className?: string;
@@ -15,8 +14,82 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
   const [map, setMap] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [contractors, setContractors] = useState<any[]>([]);
+  const [isInViewport, setIsInViewport] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+  // Lazy load map when it comes into viewport using Intersection Observer
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    let observer: IntersectionObserver | null = null;
+    let retryCount = 0;
+    const maxRetries = 10; // Max 1 second of retries
+
+    // Wait for component to render and check if already visible
+    const checkVisibility = () => {
+      if (!wrapperRef.current) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Retry after a short delay if ref not ready
+          timeoutId = setTimeout(checkVisibility, 100);
+        }
+        return;
+      }
+
+      const element = wrapperRef.current;
+
+      // Check if already visible (fallback for when observer hasn't fired yet)
+      const rect = element.getBoundingClientRect();
+      const isVisible =
+        rect.top < window.innerHeight + 200 && // 200px margin
+        rect.bottom > -200 &&
+        rect.left < window.innerWidth + 200 &&
+        rect.right > -200;
+
+      if (isVisible) {
+        console.log('SimpleMap: Already in viewport, loading immediately');
+        setIsInViewport(true);
+        return;
+      }
+
+      // Set up Intersection Observer for lazy loading
+      observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              console.log('SimpleMap: Entered viewport, starting load');
+              setIsInViewport(true);
+              if (observer) {
+                observer.disconnect();
+                observer = null;
+              }
+            }
+          });
+        },
+        {
+          rootMargin: '200px', // Start loading 200px before it's visible
+          threshold: 0.01,
+        }
+      );
+
+      observer.observe(element);
+    };
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      checkVisibility();
+    });
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, []);
 
   // Check configuration
   useEffect(() => {
@@ -65,68 +138,271 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
     }
   }, [isConfigured]);
 
-  // Initialize map when configured
+  // Initialize map when configured - using dynamic import for code splitting
+  // Only load when in viewport to improve initial page load
   useEffect(() => {
-    if (!isConfigured || !mapboxToken || map || !mapContainer.current) {
+    if (
+      !isConfigured ||
+      !mapboxToken ||
+      map ||
+      !mapContainer.current ||
+      !isInViewport
+    ) {
       return;
     }
 
-    // Add a small delay to ensure the container is rendered
-    const timer = setTimeout(() => {
-      if (mapContainer.current) {
-        try {
-          mapboxgl.accessToken = mapboxToken;
+    let isMounted = true;
+    let mapInstance: any = null;
+    let loadTimeoutId: NodeJS.Timeout | null = null;
 
-          const newMap = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [174.0, -40.5], // Center of New Zealand
-            zoom: 5.0, // Zoom level to show all of New Zealand
-            maxBounds: [
-              [166.0, -47.0], // West, South
-              [179.0, -34.0], // East, North
-            ],
-          });
+    // Dynamically import Mapbox GL and CSS for code splitting
+    const initializeMap = async () => {
+      try {
+        // Add a small delay to ensure the container is rendered
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-          newMap.on('load', () => {
-            setMapLoaded(true);
-            console.log('SimpleMap: Map loaded successfully');
+        if (!mapContainer.current || !isMounted) {
+          return;
+        }
 
-            // Fit the map to show all of New Zealand after it loads
-            // This ensures the vertical height of NZ fits within the map area
-            newMap.fitBounds(
-              [
-                [166.0, -47.0], // Southwest corner (West, South)
-                [179.0, -34.0], // Northeast corner (East, North)
-              ],
-              {
-                padding: 20,
-                duration: 0, // Instant, no animation
-              }
+        // Dynamically import Mapbox GL JS (code splitting)
+        const mapboxglModule = await import('mapbox-gl');
+        const mapboxgl = mapboxglModule.default;
+
+        if (!mapboxgl) {
+          return;
+        }
+
+        // Dynamically load CSS if not already loaded
+        // Try to load from node_modules first (more reliable than CDN)
+        if (!document.querySelector('link[href*="mapbox-gl.css"]')) {
+          try {
+            // Import CSS dynamically from node_modules
+            await import('mapbox-gl/dist/mapbox-gl.css');
+          } catch (cssImportError) {
+            // Fallback to CDN
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href =
+              'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css';
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+          }
+        }
+
+        mapboxgl.accessToken = mapboxToken;
+
+        // Ensure container has dimensions before creating map
+        const container = mapContainer.current;
+        if (
+          !container ||
+          container.offsetWidth === 0 ||
+          container.offsetHeight === 0
+        ) {
+          container.style.width = '100%';
+          container.style.height = '600px';
+          container.style.minHeight = '600px';
+          // Wait a bit for dimensions to apply
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        const newMap = new mapboxgl.Map({
+          container: container,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [174.0, -40.5], // Center of New Zealand
+          zoom: 5.0, // Zoom level to show all of New Zealand
+          maxBounds: [
+            [166.0, -47.0], // West, South
+            [179.0, -34.0], // East, North
+          ],
+        });
+
+        // Handle map load - check if already loaded first
+        let loadHandled = false;
+        const handleMapLoad = () => {
+          if (loadHandled) {
+            console.log('SimpleMap: Load already handled, skipping');
+            return;
+          }
+
+          loadHandled = true;
+          console.log('SimpleMap: Map load event fired!');
+
+          // Use setTimeout to ensure state update happens in next tick
+          // This avoids issues with React batching or cleanup timing
+          setTimeout(() => {
+            if (mapContainer.current) {
+              console.log('SimpleMap: Setting mapLoaded to true');
+              setMapLoaded(true);
+              console.log('SimpleMap: Map loaded successfully - state updated');
+            } else {
+              console.warn(
+                'SimpleMap: Container gone, but attempting state update anyway'
+              );
+              setMapLoaded(true);
+            }
+          }, 0);
+
+          // Fit the map to show all of New Zealand after it loads
+          setTimeout(() => {
+            try {
+              newMap.fitBounds(
+                [
+                  [166.0, -47.0], // Southwest corner (West, South)
+                  [179.0, -34.0], // Northeast corner (East, North)
+                ],
+                {
+                  padding: 20,
+                  duration: 0, // Instant, no animation
+                }
+              );
+            } catch (fitError) {
+              console.error('SimpleMap: Error fitting bounds:', fitError);
+            }
+          }, 100);
+        };
+
+        // Set up event listeners FIRST, before checking if loaded
+        newMap.on('load', handleMapLoad);
+
+        // Also listen to style.load as backup
+        newMap.on('style.load', () => {
+          console.log('SimpleMap: Style.load event fired');
+          if (!isMounted || loadHandled) return;
+
+          // Check if map is actually ready (using correct API)
+          try {
+            if (
+              newMap.loaded &&
+              newMap.isStyleLoaded &&
+              newMap.isStyleLoaded()
+            ) {
+              console.log(
+                'SimpleMap: Map style is loaded, triggering handleMapLoad'
+              );
+              handleMapLoad();
+            }
+          } catch (e) {
+            console.log('SimpleMap: Error checking style loaded state:', e);
+          }
+        });
+
+        // Check if map is already loaded (might happen if load event fired immediately)
+        // Use a small delay to check
+        setTimeout(() => {
+          try {
+            if (newMap && newMap.loaded) {
+              console.log(
+                'SimpleMap: Map already loaded when checked, calling handleMapLoad'
+              );
+              handleMapLoad();
+            }
+          } catch (e) {
+            console.log('SimpleMap: Error checking loaded state:', e);
+          }
+        }, 500);
+
+        // Fallback timeout - if load event doesn't fire within 2 seconds, assume it's loaded
+        // This is a safety net since the map instance exists and should be rendering
+        loadTimeoutId = setTimeout(() => {
+          if (!loadHandled && isMounted && newMap) {
+            console.warn(
+              'SimpleMap: Load event timeout (2s), assuming map is loaded and forcing state update'
             );
-          });
+            try {
+              // Try to trigger a resize to wake up the map
+              newMap.resize();
+              handleMapLoad();
+            } catch (e) {
+              console.error('SimpleMap: Error in timeout handler:', e);
+              // Even if resize fails, mark as loaded since map exists
+              if (!loadHandled) {
+                handleMapLoad();
+              }
+            }
+          }
+        }, 2000);
 
-          newMap.on('error', (e: any) => {
-            console.error('Map error:', e.error?.message || 'Unknown error');
-          });
+        newMap.on('error', (e: any) => {
+          console.error(
+            'SimpleMap: Map error event:',
+            e.error?.message || e.message || 'Unknown error',
+            e
+          );
+        });
 
+        newMap.on('styledata', () => {
+          console.log('SimpleMap: Style data loaded');
+        });
+
+        // Resize map to ensure it renders properly
+        newMap.once('style.load', () => {
+          console.log('SimpleMap: Triggering resize after style load');
+          setTimeout(() => {
+            if (newMap && isMounted) {
+              newMap.resize();
+            }
+          }, 100);
+        });
+
+        if (isMounted) {
+          mapInstance = newMap;
           setMap(newMap);
+          console.log('SimpleMap: Map instance stored in state');
+
+          // Force a resize immediately to ensure map renders
+          setTimeout(() => {
+            if (newMap && isMounted) {
+              console.log('SimpleMap: Forcing initial resize');
+              try {
+                newMap.resize();
+              } catch (e) {
+                console.error('SimpleMap: Error on initial resize:', e);
+              }
+            }
+          }, 100);
 
           // Add navigation controls
-          newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        } catch (error) {
-          console.error('Map initialization error:', error);
+          try {
+            newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            console.log('SimpleMap: Navigation controls added');
+          } catch (controlError) {
+            console.error('SimpleMap: Error adding controls:', controlError);
+          }
+        } else {
+          console.warn('SimpleMap: Component unmounted, removing map');
+          newMap.remove();
+        }
+      } catch (error) {
+        console.error('SimpleMap: Map initialization error:', error);
+        if (error instanceof Error) {
+          console.error('SimpleMap: Error details:', {
+            message: error.message,
+            stack: error.stack,
+          });
         }
       }
-    }, 100);
+    };
+
+    initializeMap();
 
     return () => {
-      clearTimeout(timer);
-      if (map) {
-        (map as any).remove();
+      isMounted = false;
+      if (loadTimeoutId) {
+        clearTimeout(loadTimeoutId);
+        loadTimeoutId = null;
+      }
+      if (mapInstance) {
+        try {
+          mapInstance.remove();
+        } catch (e) {
+          // Ignore cleanup errors
+        }
       }
     };
-  }, [isConfigured, mapboxToken, map]);
+    // NOTE: Don't include 'map' in dependencies - it causes re-initialization loop
+    // We check !map in the condition to prevent re-initialization
+  }, [isConfigured, mapboxToken, isInViewport]);
 
   // Add markers for contractors when map and contractors are loaded
   useEffect(() => {
@@ -134,47 +410,55 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
 
     // Store markers so we can clean them up
     const markers: any[] = [];
+    let isMounted = true;
 
-    console.log('Adding markers for contractors:', contractors.length);
+    // Dynamically get mapboxgl from the map instance
+    const addMarkers = async () => {
+      // Import mapboxgl to get Marker and Popup classes
+      const mapboxglModule = await import('mapbox-gl');
+      const mapboxgl = mapboxglModule.default;
 
-    // Add markers for each contractor
-    contractors.forEach(contractor => {
-      // API returns location with lat/lng (not latitude/longitude)
-      if (
-        contractor.location &&
-        contractor.location.lat &&
-        contractor.location.lng
-      ) {
-        // Create a popup with contractor info
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<div class="p-2">
-            <h3 class="font-semibold text-sm mb-1">${contractor.company_name || 'Unnamed'}</h3>
-            <p class="text-xs text-gray-600 mb-1">${contractor.service_type || 'Service provider'}</p>
-            ${contractor.business_address ? `<p class="text-xs text-gray-500">${contractor.business_address}</p>` : ''}
-            ${contractor.is_verified ? '<span class="text-xs text-green-600 font-medium">✓ Verified</span>' : ''}
-          </div>`
-        );
+      if (!isMounted || !map) return;
 
-        // Create and add marker with orange color to match brand
-        const marker = new mapboxgl.Marker({
-          color: '#f97316', // Orange color
-          scale: 0.8,
-        })
-          .setLngLat([contractor.location.lng, contractor.location.lat])
-          .setPopup(popup)
-          .addTo(map);
+      // Add markers for each contractor
+      contractors.forEach(contractor => {
+        // API returns location with lat/lng (not latitude/longitude)
+        if (
+          contractor.location &&
+          contractor.location.lat &&
+          contractor.location.lng
+        ) {
+          // Create a popup with contractor info
+          const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+            `<div class="p-2">
+              <h3 class="font-semibold text-sm mb-1">${contractor.company_name || 'Unnamed'}</h3>
+              <p class="text-xs text-gray-600 mb-1">${contractor.service_type || 'Service provider'}</p>
+              ${contractor.business_address ? `<p class="text-xs text-gray-500">${contractor.business_address}</p>` : ''}
+              ${contractor.is_verified ? '<span class="text-xs text-green-600 font-medium">✓ Verified</span>' : ''}
+            </div>`
+          );
 
-        markers.push(marker);
-      } else {
-        console.warn('Contractor missing location:', contractor);
-      }
-    });
+          // Create and add marker with orange color to match brand
+          const marker = new mapboxgl.Marker({
+            color: '#f97316', // Orange color
+            scale: 0.8,
+          })
+            .setLngLat([contractor.location.lng, contractor.location.lat])
+            .setPopup(popup)
+            .addTo(map);
 
-    // Don't auto-fit - keep showing all of New Zealand
-    // Markers will be visible but map stays at NZ-wide view
+          markers.push(marker);
+        } else {
+          console.warn('Contractor missing location:', contractor);
+        }
+      });
+    };
+
+    addMarkers();
 
     // Cleanup function - remove markers when component unmounts or dependencies change
     return () => {
+      isMounted = false;
       markers.forEach(marker => {
         if (marker && marker.remove) {
           marker.remove();
@@ -183,58 +467,58 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
     };
   }, [map, mapLoaded, contractors]);
 
-  if (isLoading) {
-    return (
-      <div
-        className={`w-full bg-gray-100 rounded-lg flex items-center justify-center ${className}`}
-        style={{
-          minHeight: '600px',
-          height: '600px',
-        }}
-      >
-        <div className="text-gray-600">Loading map...</div>
-      </div>
-    );
-  }
-
-  if (!isConfigured || !mapboxToken) {
-    return (
-      <div
-        className={`w-full bg-gray-100 rounded-lg flex items-center justify-center ${className}`}
-        style={{
-          minHeight: '600px',
-          height: '600px',
-        }}
-      >
-        <div className="text-center">
-          <div className="text-red-500 text-lg font-semibold mb-2">
-            Map Not Configured
-          </div>
-          <div className="text-gray-600 text-sm">
-            Please set NEXT_PUBLIC_MAPBOX_TOKEN environment variable
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
-      className={`w-full rounded-xl overflow-hidden border border-gray-200 ${className}`}
+      ref={wrapperRef}
+      className={`relative w-full rounded-xl overflow-hidden border border-gray-200 ${className}`}
+      style={{
+        minHeight: '600px',
+        height: '600px',
+      }}
     >
-      <div
-        ref={mapContainer}
-        className="w-full rounded-xl"
-        style={{
-          minHeight: '600px',
-          width: '100%',
-          height: '600px',
-        }}
-      />
-      {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl">
-          <div className="text-gray-600">Loading map...</div>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl z-10">
+          <div className="text-gray-600">Checking configuration...</div>
         </div>
+      )}
+
+      {!isLoading && (!isConfigured || !mapboxToken) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl z-10">
+          <div className="text-center">
+            <div className="text-red-500 text-lg font-semibold mb-2">
+              Map Not Configured
+            </div>
+            <div className="text-gray-600 text-sm">
+              Please set NEXT_PUBLIC_MAPBOX_TOKEN environment variable
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && isConfigured && mapboxToken && (
+        <>
+          <div
+            ref={mapContainer}
+            className="w-full rounded-xl"
+            style={{
+              minHeight: '600px',
+              width: '100%',
+              height: '600px',
+            }}
+          />
+          {!mapLoaded && isInViewport && map && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl z-10 bg-opacity-90">
+              <div className="text-gray-600">Loading map tiles...</div>
+            </div>
+          )}
+          {!isInViewport && !map && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-xl z-10">
+              <div className="text-gray-500 text-sm">
+                Map will load when visible
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

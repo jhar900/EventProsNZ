@@ -85,6 +85,8 @@ const getInquiriesSchema = z.object({
   priority: z
     .enum(Object.values(INQUIRY_PRIORITY) as [string, ...string[]])
     .optional(),
+  date_from: z.string().optional(),
+  date_to: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
 });
@@ -317,8 +319,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { user_id, status, inquiry_type, priority, page, limit } =
-      validationResult.data;
+    const {
+      user_id,
+      status,
+      inquiry_type,
+      priority,
+      date_from,
+      date_to,
+      page,
+      limit,
+    } = validationResult.data;
     const offset = (page - 1) * limit;
 
     // Use admin client to bypass RLS since we need to read enquiries
@@ -368,22 +378,22 @@ export async function GET(request: NextRequest) {
         );
       }
     } else if (userProfile.role === 'event_manager') {
-      // Event managers: enquiries table doesn't have event_manager_id
-      // Instead, we'll filter by event.event_manager_id if events are linked
-      // For now, we'll show all enquiries that have events they manage
-      // Or we could add a sender_id field later
-      // For now, just show all enquiries for event managers (they created the events)
+      // Event managers: show enquiries they sent OR enquiries for events they manage
+      // Get events they manage first
       const { data: userEvents } = await adminSupabase
         .from('events')
         .select('id')
-        .eq('event_manager_id', user.id);
+        .eq('user_id', user.id);
 
       if (userEvents && userEvents.length > 0) {
         const eventIds = userEvents.map(e => e.id);
-        query = query.in('event_id', eventIds);
+        // Use OR to get enquiries sent by this user OR enquiries for their events
+        query = query.or(
+          `sender_id.eq.${user.id},event_id.in.(${eventIds.join(',')})`
+        );
       } else {
-        // No events found, return empty
-        query = query.eq('event_id', '00000000-0000-0000-0000-000000000000');
+        // No events found, just show enquiries they sent
+        query = query.eq('sender_id', user.id);
       }
     } else if (userProfile.role === 'admin') {
       // Admins can see all enquiries
@@ -398,6 +408,17 @@ export async function GET(request: NextRequest) {
     // Apply filters
     if (status) {
       query = query.eq('status', status);
+    }
+
+    // Apply date filters
+    if (date_from) {
+      query = query.gte('created_at', date_from);
+    }
+    if (date_to) {
+      // Add one day to include the entire end date
+      const endDate = new Date(date_to);
+      endDate.setDate(endDate.getDate() + 1);
+      query = query.lt('created_at', endDate.toISOString());
     }
 
     // Note: enquiries table doesn't have inquiry_type or priority fields
@@ -454,21 +475,108 @@ export async function GET(request: NextRequest) {
             .from('business_profiles')
             .select('id, user_id, company_name')
             .eq('id', enquiry.contractor_id)
-            .single();
+            .maybeSingle();
           businessProfile = bp;
         }
 
-        // Try to get sender from event if available
-        if (enquiry.event_id) {
-          // Fetch event to get event_manager_id
+        // Get sender from sender_id field (primary source - backfilled by migration)
+        // This works for all enquiries, including contractor-to-contractor enquiries
+        if (enquiry.sender_id) {
+          const { data: senderData, error: senderError } = await adminSupabase
+            .from('users')
+            .select(
+              `
+              id,
+              email,
+              profiles (
+                first_name,
+                last_name,
+                avatar_url
+              )
+            `
+            )
+            .eq('id', enquiry.sender_id)
+            .maybeSingle();
+
+          if (senderData) {
+            const profile = Array.isArray(senderData.profiles)
+              ? senderData.profiles[0]
+              : senderData.profiles;
+
+            eventManager = {
+              id: senderData.id,
+              email: senderData.email,
+              profiles:
+                profile && (profile.first_name || profile.last_name)
+                  ? {
+                      first_name: profile.first_name || '',
+                      last_name: profile.last_name || '',
+                      avatar_url: profile.avatar_url || null,
+                    }
+                  : null,
+            };
+          } else if (senderError) {
+            console.error('Error fetching sender:', senderError);
+          }
+        }
+
+        // Fallback: Try to get sender from enquiry_messages (for very old enquiries without sender_id)
+        if (!eventManager) {
+          const { data: firstMessage } = await adminSupabase
+            .from('enquiry_messages')
+            .select('sender_id')
+            .eq('enquiry_id', enquiry.id)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (firstMessage?.sender_id) {
+            const { data: senderData } = await adminSupabase
+              .from('users')
+              .select(
+                `
+                id,
+                email,
+                profiles (
+                  first_name,
+                  last_name,
+                  avatar_url
+                )
+              `
+              )
+              .eq('id', firstMessage.sender_id)
+              .maybeSingle();
+
+            if (senderData) {
+              const profile = Array.isArray(senderData.profiles)
+                ? senderData.profiles[0]
+                : senderData.profiles;
+
+              eventManager = {
+                id: senderData.id,
+                email: senderData.email,
+                profiles:
+                  profile && (profile.first_name || profile.last_name)
+                    ? {
+                        first_name: profile.first_name || '',
+                        last_name: profile.last_name || '',
+                        avatar_url: profile.avatar_url || null,
+                      }
+                    : null,
+              };
+            }
+          }
+        }
+
+        // Last resort: Try to get sender from event.user_id (events table uses user_id, not event_manager_id)
+        if (!eventManager && enquiry.event_id) {
           const { data: event } = await adminSupabase
             .from('events')
-            .select('id, event_manager_id, title, event_type, event_date')
+            .select('id, user_id, title, event_type, event_date')
             .eq('id', enquiry.event_id)
-            .single();
+            .maybeSingle();
 
-          if (event?.event_manager_id) {
-            // Fetch the event manager profile
+          if (event?.user_id) {
             const { data: eventManagerData } = await adminSupabase
               .from('users')
               .select(
@@ -482,33 +590,35 @@ export async function GET(request: NextRequest) {
                 )
               `
               )
-              .eq('id', event.event_manager_id)
-              .single();
+              .eq('id', event.user_id)
+              .maybeSingle();
 
             if (eventManagerData) {
               const profile = Array.isArray(eventManagerData.profiles)
                 ? eventManagerData.profiles[0]
                 : eventManagerData.profiles;
+
               eventManager = {
                 id: eventManagerData.id,
                 email: eventManagerData.email,
-                profiles: profile
-                  ? {
-                      first_name: profile.first_name,
-                      last_name: profile.last_name,
-                      avatar_url: profile.avatar_url,
-                    }
-                  : null,
+                profiles:
+                  profile && (profile.first_name || profile.last_name)
+                    ? {
+                        first_name: profile.first_name || '',
+                        last_name: profile.last_name || '',
+                        avatar_url: profile.avatar_url || null,
+                      }
+                    : null,
               };
             }
           }
         }
 
-        // If no event manager found, create a placeholder
+        // If still no sender found, create a placeholder
         if (!eventManager) {
           eventManager = {
-            id: 'unknown',
-            email: 'Unknown',
+            id: enquiry.sender_id || 'unknown',
+            email: 'Unknown Sender',
             profiles: null,
           };
         }

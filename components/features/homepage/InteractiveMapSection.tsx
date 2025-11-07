@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { MapPin, Star, ExternalLink } from 'lucide-react';
-import { MapboxProvider } from '@/lib/maps/mapbox-context';
+import { MapboxProvider, useMapbox } from '@/lib/maps/mapbox-context';
 import { SimpleMap } from './SimpleMap';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface InteractiveMapSectionProps {
   className?: string;
@@ -122,66 +123,93 @@ function ContractorList() {
           href={`/contractors/${contractor.id}`}
           className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h4 className="font-semibold text-gray-900">
-                  {contractor.company_name || 'Unnamed Business'}
-                </h4>
-                {contractor.is_verified && (
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    Verified
+          <div className="flex items-center gap-4">
+            {/* Circular Logo on the left - larger size with even vertical spacing */}
+            <div className="flex-shrink-0">
+              {contractor.logo_url ? (
+                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                  <Image
+                    src={contractor.logo_url}
+                    alt={contractor.company_name || 'Company logo'}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center border-2 border-gray-200">
+                  <span className="text-white font-semibold text-xl">
+                    {(contractor.company_name || 'C').charAt(0).toUpperCase()}
                   </span>
-                )}
-                {contractor.subscription_tier === 'professional' ||
-                contractor.subscription_tier === 'enterprise' ? (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                    Premium
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-sm text-gray-600 mb-2">
-                {contractor.service_type || 'General Services'}
-              </p>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                {/* Rating display - API doesn't return average_rating/review_count */}
-                {contractor.business_address && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span className="truncate max-w-[120px]">
-                      {(() => {
-                        const location = contractor.business_address || '';
-                        if (!location) return 'Location not specified';
-                        const parts = location.split(',').map(p => p.trim());
-                        if (parts.length === 1) {
-                          const singlePart = parts[0];
-                          return singlePart
-                            .replace(/\s*\d{4,6}\s*$/, '')
-                            .trim();
-                        } else if (parts.length === 2) {
-                          const cityPart = parts[0];
-                          return cityPart.replace(/\s*\d{4,6}\s*$/, '').trim();
-                        } else {
-                          let cityPart = '';
-                          if (
-                            parts[parts.length - 1]
-                              .toLowerCase()
-                              .includes('zealand')
-                          ) {
-                            cityPart = parts[parts.length - 2];
-                          } else {
-                            cityPart =
-                              parts[parts.length - 2] || parts[1] || parts[0];
-                          }
-                          return cityPart.replace(/\s*\d{4,6}\s*$/, '').trim();
-                        }
-                      })()}
-                    </span>
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h4 className="font-semibold text-gray-900 truncate">
+                      {contractor.company_name || 'Unnamed Business'}
+                    </h4>
+                    {contractor.is_verified && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full flex-shrink-0">
+                        Verified
+                      </span>
+                    )}
+                    {contractor.subscription_tier === 'professional' ||
+                    contractor.subscription_tier === 'enterprise' ? (
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full flex-shrink-0">
+                        Premium
+                      </span>
+                    ) : null}
                   </div>
-                )}
+                  <p className="text-sm text-gray-600 mb-2">
+                    {contractor.service_type || 'General Services'}
+                  </p>
+                  {contractor.business_address && (
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">
+                        {(() => {
+                          const location = contractor.business_address || '';
+                          if (!location) return 'Location not specified';
+                          const parts = location.split(',').map(p => p.trim());
+                          if (parts.length === 1) {
+                            const singlePart = parts[0];
+                            return singlePart
+                              .replace(/\s*\d{4,6}\s*$/, '')
+                              .trim();
+                          } else if (parts.length === 2) {
+                            const cityPart = parts[0];
+                            return cityPart
+                              .replace(/\s*\d{4,6}\s*$/, '')
+                              .trim();
+                          } else {
+                            let cityPart = '';
+                            if (
+                              parts[parts.length - 1]
+                                .toLowerCase()
+                                .includes('zealand')
+                            ) {
+                              cityPart = parts[parts.length - 2];
+                            } else {
+                              cityPart =
+                                parts[parts.length - 2] || parts[1] || parts[0];
+                            }
+                            return cityPart
+                              .replace(/\s*\d{4,6}\s*$/, '')
+                              .trim();
+                          }
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
               </div>
             </div>
-            <ExternalLink className="w-4 h-4 text-gray-400" />
           </div>
         </Link>
       ))}

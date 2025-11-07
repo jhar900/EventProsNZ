@@ -1,10 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   MessageSquare,
@@ -12,18 +20,20 @@ import {
   User,
   MapPin,
   Clock,
-  CheckCircle,
   Eye,
   Mail,
   AlertCircle,
+  Search,
 } from 'lucide-react';
 import { Inquiry } from '@/types/inquiries';
+import { InquiryDetailDialog } from './InquiryDetailDialog';
+import { QuickResponseDialog } from './QuickResponseDialog';
 
 interface ContractorInquiriesListProps {
   className?: string;
 }
 
-interface InquiryWithRelations extends Inquiry {
+export interface InquiryWithRelations extends Inquiry {
   event_manager?: {
     id: string;
     email: string;
@@ -50,13 +60,24 @@ export default function ContractorInquiriesList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [selectedInquiry, setSelectedInquiry] =
+    useState<InquiryWithRelations | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isResponseDialogOpen, setIsResponseDialogOpen] = useState(false);
+  const [responseInquiryId, setResponseInquiryId] = useState<string>('');
+  const [responseInquirySubject, setResponseInquirySubject] =
+    useState<string>('');
 
   useEffect(() => {
     if (user) {
       fetchInquiries();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, statusFilter]);
+  }, [user, statusFilter, dateFrom, dateTo]);
 
   const fetchInquiries = async () => {
     try {
@@ -70,6 +91,14 @@ export default function ContractorInquiriesList({
 
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
+      }
+
+      if (dateFrom) {
+        params.append('date_from', dateFrom);
+      }
+
+      if (dateTo) {
+        params.append('date_to', dateTo);
       }
 
       const headers: HeadersInit = {};
@@ -110,6 +139,76 @@ export default function ContractorInquiriesList({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter and sort inquiries
+  const filteredAndSortedInquiries = useMemo(() => {
+    let filtered = [...inquiries];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        inquiry =>
+          inquiry.subject.toLowerCase().includes(query) ||
+          inquiry.message.toLowerCase().includes(query) ||
+          (inquiry.event_manager as any)?.email
+            ?.toLowerCase()
+            .includes(query) ||
+          (inquiry.event_manager as any)?.profiles?.first_name
+            ?.toLowerCase()
+            .includes(query) ||
+          (inquiry.event_manager as any)?.profiles?.last_name
+            ?.toLowerCase()
+            .includes(query) ||
+          inquiry.event?.title?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        case 'oldest':
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'priority':
+          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+          const aPriority =
+            priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+          const bPriority =
+            priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+          return bPriority - aPriority;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [inquiries, searchQuery, sortBy]);
+
+  const handleViewDetails = (inquiry: InquiryWithRelations) => {
+    setSelectedInquiry(inquiry);
+    setIsDetailDialogOpen(true);
+  };
+
+  const handleRespond = (inquiry: InquiryWithRelations) => {
+    setResponseInquiryId(inquiry.id);
+    setResponseInquirySubject(inquiry.subject);
+    setIsResponseDialogOpen(true);
+  };
+
+  const [responseSentTrigger, setResponseSentTrigger] = useState(0);
+
+  const handleResponseSuccess = () => {
+    fetchInquiries(); // Refresh the list
+    setResponseSentTrigger(prev => prev + 1); // Trigger detail dialog refresh
   };
 
   const getStatusColor = (status: string) => {
@@ -184,74 +283,159 @@ export default function ContractorInquiriesList({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Filters */}
+      {/* Search and Filters */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Filter Inquiries
-          </h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={statusFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={statusFilter === 'sent' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('sent')}
-          >
-            Sent
-          </Button>
-          <Button
-            variant={statusFilter === 'viewed' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('viewed')}
-          >
-            Viewed
-          </Button>
-          <Button
-            variant={statusFilter === 'responded' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('responded')}
-          >
-            Responded
-          </Button>
-          <Button
-            variant={statusFilter === 'quoted' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('quoted')}
-          >
-            Quoted
-          </Button>
+        <div className="space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search inquiries by subject, message, or sender..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Status
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={statusFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={statusFilter === 'sent' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('sent')}
+                >
+                  Sent
+                </Button>
+                <Button
+                  variant={statusFilter === 'viewed' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('viewed')}
+                >
+                  Viewed
+                </Button>
+                <Button
+                  variant={statusFilter === 'responded' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('responded')}
+                >
+                  Responded
+                </Button>
+                <Button
+                  variant={statusFilter === 'quoted' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('quoted')}
+                >
+                  Quoted
+                </Button>
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Sort By
+              </label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="priority">Priority</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date From */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                From Date
+              </label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+              />
+            </div>
+
+            {/* Date To */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                To Date
+              </label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                min={dateFrom}
+              />
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          {(dateFrom || dateTo || searchQuery) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDateFrom('');
+                setDateTo('');
+                setSearchQuery('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
       </Card>
 
       {/* Inquiries List */}
-      {inquiries.length === 0 ? (
+      {filteredAndSortedInquiries.length === 0 ? (
         <Card className="p-12 text-center">
           <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Inquiries Yet
+            {inquiries.length === 0
+              ? 'No Inquiries Yet'
+              : 'No Inquiries Match Your Filters'}
           </h3>
           <p className="text-gray-600">
-            You haven&apos;t received any inquiries yet. When event managers
-            contact you, they&apos;ll appear here.
+            {inquiries.length === 0
+              ? "You haven't received any inquiries yet. When event managers contact you, they'll appear here."
+              : 'Try adjusting your search or filter criteria.'}
           </p>
         </Card>
       ) : (
         <div className="space-y-4">
-          {inquiries.map(inquiry => {
+          {filteredAndSortedInquiries.map(inquiry => {
             const eventManager = inquiry.event_manager as any;
             const profile = eventManager?.profiles;
-            const managerName = profile
-              ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
-                eventManager?.email ||
-                'Unknown'
-              : eventManager?.email || 'Unknown';
+            // Build name from profile, fallback to email, then 'Unknown'
+            let managerName = 'Unknown';
+            if (profile && (profile.first_name || profile.last_name)) {
+              const fullName =
+                `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+              managerName = fullName || eventManager?.email || 'Unknown';
+            } else if (
+              eventManager?.email &&
+              eventManager.email !== 'Unknown'
+            ) {
+              managerName = eventManager.email;
+            }
 
             return (
               <Card
@@ -276,13 +460,6 @@ export default function ContractorInquiriesList({
                             <Badge className={getStatusColor(inquiry.status)}>
                               {inquiry.status}
                             </Badge>
-                            {inquiry.priority && (
-                              <Badge
-                                className={getPriorityColor(inquiry.priority)}
-                              >
-                                {inquiry.priority}
-                              </Badge>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
@@ -324,13 +501,18 @@ export default function ContractorInquiriesList({
                   </div>
                 </div>
                 <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-gray-200">
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewDetails(inquiry)}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
                   <Button
                     size="sm"
                     className="bg-orange-600 hover:bg-orange-700"
+                    onClick={() => handleRespond(inquiry)}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Respond
@@ -341,6 +523,35 @@ export default function ContractorInquiriesList({
           })}
         </div>
       )}
+
+      {/* Dialogs */}
+      <InquiryDetailDialog
+        inquiry={selectedInquiry}
+        isOpen={isDetailDialogOpen}
+        onClose={() => {
+          setIsDetailDialogOpen(false);
+          setSelectedInquiry(null);
+        }}
+        onRespond={inquiryId => {
+          const inquiry = inquiries.find(i => i.id === inquiryId);
+          if (inquiry) {
+            handleRespond(inquiry);
+          }
+        }}
+        onResponseSent={responseSentTrigger}
+      />
+
+      <QuickResponseDialog
+        inquiryId={responseInquiryId}
+        inquirySubject={responseInquirySubject}
+        isOpen={isResponseDialogOpen}
+        onClose={() => {
+          setIsResponseDialogOpen(false);
+          setResponseInquiryId('');
+          setResponseInquirySubject('');
+        }}
+        onSuccess={handleResponseSuccess}
+      />
     </div>
   );
 }

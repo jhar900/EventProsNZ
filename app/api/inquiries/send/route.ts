@@ -345,12 +345,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify event exists if provided
+    // Events table uses user_id (not event_manager_id) to reference the event manager
     if (inquiryData.event_id) {
       const { data: event, error: eventError } = await supabase
         .from('events')
-        .select('id, event_manager_id')
+        .select('id, user_id')
         .eq('id', inquiryData.event_id)
-        .eq('event_manager_id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (eventError || !event) {
@@ -371,6 +372,7 @@ export async function POST(request: NextRequest) {
       subject: inquiryData.subject,
       message: inquiryData.message,
       status: 'pending', // enquiries table uses 'pending' as default
+      sender_id: user.id, // Track who sent the enquiry - important for contractor-to-contractor enquiries
     };
 
     console.log(
@@ -414,6 +416,27 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Inquiry created successfully:', inquiry.id);
+
+    // Create initial message in enquiry_messages table with sender_id
+    // This ensures we can always identify who sent the enquiry (important for contractor-to-contractor enquiries)
+    if (inquiry?.id) {
+      const { error: messageError } = await adminSupabase
+        .from('enquiry_messages')
+        .insert({
+          enquiry_id: inquiry.id,
+          sender_id: user.id, // Store who sent it - critical for identifying sender
+          message: inquiryData.message, // Initial message content
+          is_read: false,
+        });
+
+      if (messageError) {
+        console.error('Error creating initial enquiry message:', messageError);
+        // Don't fail the whole request, but log the error
+        // The enquiry was created successfully, just missing the message record
+      } else {
+        console.log('Initial enquiry message created with sender_id:', user.id);
+      }
+    }
 
     // Send email notification to contractor
     try {

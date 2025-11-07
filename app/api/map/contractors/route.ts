@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         user_id,
         company_name,
         location,
+        logo_url,
         is_verified,
         subscription_tier,
         service_categories,
@@ -139,6 +140,7 @@ export async function GET(request: NextRequest) {
           business_address: contractor.location || '', // Use location field as business_address
           service_type: serviceTypeValue,
           location,
+          logo_url: contractor.logo_url || null,
           is_verified: contractor.is_verified || false,
           subscription_tier: contractor.subscription_tier || 'essential',
         };
