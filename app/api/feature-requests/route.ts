@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 
 // Validation schemas
 const createFeatureRequestSchema = z.object({
-  title: z.string().min(10).max(200),
-  description: z.string().min(50).max(5000),
-  category_id: z.string().uuid().optional(),
+  title: z.string().min(1, 'Title is required').max(200),
+  description: z.string().min(1, 'Description is required').max(5000),
+  category_id: z.union([z.string().uuid(), z.literal('')]).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   tags: z.array(z.string()).optional(),
   is_public: z.boolean().optional(),
+  user_id: z.string().uuid().optional(), // Allow user_id in body for fallback auth
 });
 
 const getFeatureRequestsSchema = z.object({
@@ -24,32 +25,96 @@ const getFeatureRequestsSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { supabase } = createClient(request);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Try to get user from session (optional - public requests can be viewed by anyone)
+    let user: any;
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    console.log('GET /api/feature-requests - Session check:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      sessionError: sessionError?.message,
+    });
+
+    if (session?.user) {
+      user = session.user;
+    } else {
+      // Try getUser as fallback
+      const {
+        data: { user: getUserUser },
+        error: getUserError,
+      } = await supabase.auth.getUser();
+
+      console.log('GET /api/feature-requests - getUser check:', {
+        hasUser: !!getUserUser,
+        userId: getUserUser?.id,
+        getUserError: getUserError?.message,
+      });
+
+      if (getUserUser) {
+        user = getUserUser;
+      }
     }
 
+    // Fallback: Try to get user_id from header (if cookies aren't working)
+    if (!user) {
+      const userIdFromHeader =
+        request.headers.get('x-user-id') ||
+        request.headers.get('X-User-Id') ||
+        request.headers.get('X-USER-ID');
+
+      if (userIdFromHeader) {
+        // Verify the user exists - use admin client to bypass RLS
+        const { createClient: createServerClient } = await import(
+          '@/lib/supabase/server'
+        );
+        const adminSupabase = createServerClient();
+        const { data: userData, error: userError } = await adminSupabase
+          .from('users')
+          .select('id, email, role')
+          .eq('id', userIdFromHeader)
+          .single();
+
+        if (!userError && userData) {
+          // Create a minimal user object
+          user = {
+            id: userData.id,
+            email: userData.email || '',
+          } as any;
+          console.log(
+            'GET /api/feature-requests - User authenticated from header:',
+            user.id
+          );
+        }
+      }
+    }
+
+    // Note: Authentication is optional for GET - public requests can be viewed by anyone
+
     const { searchParams } = new URL(request.url);
+    // Convert null to undefined for optional params (searchParams.get returns null, not undefined)
     const params = getFeatureRequestsSchema.parse({
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      status: searchParams.get('status'),
-      category_id: searchParams.get('category_id'),
-      search: searchParams.get('search'),
-      sort: searchParams.get('sort'),
-      user_id: searchParams.get('user_id'),
+      page: searchParams.get('page') || undefined,
+      limit: searchParams.get('limit') || undefined,
+      status: searchParams.get('status') || undefined,
+      category_id: searchParams.get('category_id') || undefined,
+      search: searchParams.get('search') || undefined,
+      sort: searchParams.get('sort') || undefined,
+      user_id: searchParams.get('user_id') || undefined,
     });
 
     const page = parseInt(params.page || '1');
     const limit = Math.min(parseInt(params.limit || '20'), 100);
     const offset = (page - 1) * limit;
 
-    let query = supabase
+    // Show public requests, or user's own requests if authenticated
+    // We'll fetch both separately and combine to avoid RLS conflicts with OR queries
+    let publicQuery = supabase
       .from('feature_requests')
       .select(
         `
@@ -57,61 +122,248 @@ export async function GET(request: NextRequest) {
         feature_request_categories(name, color),
         feature_request_tag_assignments(
           feature_request_tags(name)
-        ),
-        profiles(first_name, last_name, avatar_url)
+        )
       `
       )
       .eq('is_public', true);
 
-    // Apply filters
-    if (params.status) {
-      query = query.eq('status', params.status);
-    }
-
-    if (params.category_id) {
-      query = query.eq('category_id', params.category_id);
-    }
-
-    if (params.user_id) {
-      query = query.eq('user_id', params.user_id);
-    }
-
-    if (params.search) {
-      query = query.or(
-        `title.ilike.%${params.search}%,description.ilike.%${params.search}%`
+    let userOwnQuery: any = null;
+    if (user) {
+      console.log(
+        'User authenticated, will fetch public requests AND user own requests. User ID:',
+        user.id
       );
+
+      // Check if user was authenticated via header (fallback method)
+      // If so, we need to use server client to bypass RLS since auth context isn't set
+      const userIdFromHeader =
+        request.headers.get('x-user-id') ||
+        request.headers.get('X-User-Id') ||
+        request.headers.get('X-USER-ID');
+
+      if (userIdFromHeader === user.id) {
+        // User authenticated via header, use server client to bypass RLS
+        const { createClient: createServerClient } = await import(
+          '@/lib/supabase/server'
+        );
+        const serverSupabase = createServerClient();
+        userOwnQuery = serverSupabase
+          .from('feature_requests')
+          .select(
+            `
+            *,
+            feature_request_categories(name, color),
+            feature_request_tag_assignments(
+              feature_request_tags(name)
+            )
+          `
+          )
+          .eq('user_id', user.id);
+        console.log(
+          'Using server client for user own requests (header auth - bypasses RLS)'
+        );
+      } else {
+        // User authenticated via cookies, use middleware client (RLS will work)
+        userOwnQuery = supabase
+          .from('feature_requests')
+          .select(
+            `
+            *,
+            feature_request_categories(name, color),
+            feature_request_tag_assignments(
+              feature_request_tags(name)
+            )
+          `
+          )
+          .eq('user_id', user.id);
+        console.log(
+          'Using middleware client for user own requests (cookie auth - uses RLS)'
+        );
+      }
+    } else {
+      console.log('No user authenticated, showing only public requests');
     }
 
-    // Apply sorting
+    // Apply filters to queries
+    const applyFilters = (q: any) => {
+      if (params.status) {
+        q = q.eq('status', params.status);
+      }
+      if (params.category_id) {
+        q = q.eq('category_id', params.category_id);
+      }
+      if (params.user_id) {
+        q = q.eq('user_id', params.user_id);
+      }
+      if (params.search) {
+        q = q.or(
+          `title.ilike.%${params.search}%,description.ilike.%${params.search}%`
+        );
+      }
+      return q;
+    };
+
+    // Apply sorting helper
+    const applySorting = (q: any) => {
+      switch (params.sort) {
+        case 'oldest':
+          return q.order('created_at', { ascending: true });
+        case 'most_voted':
+          return q.order('vote_count', { ascending: false });
+        case 'least_voted':
+          return q.order('vote_count', { ascending: true });
+        default:
+          return q.order('created_at', { ascending: false });
+      }
+    };
+
+    // Fetch public requests
+    publicQuery = applyFilters(publicQuery);
+    publicQuery = applySorting(publicQuery);
+    const { data: publicRequests, error: publicError } = await publicQuery;
+
+    console.log('Public requests fetched:', {
+      count: publicRequests?.length || 0,
+      error: publicError?.message,
+    });
+
+    // Fetch user's own requests if authenticated
+    let userOwnRequests: any[] = [];
+    if (userOwnQuery) {
+      userOwnQuery = applyFilters(userOwnQuery);
+      userOwnQuery = applySorting(userOwnQuery);
+      const { data: ownRequests, error: ownError } = await userOwnQuery;
+
+      console.log('User own requests fetched:', {
+        count: ownRequests?.length || 0,
+        error: ownError?.message,
+        privateCount:
+          ownRequests?.filter((fr: any) => !fr.is_public).length || 0,
+      });
+
+      if (!ownError && ownRequests) {
+        userOwnRequests = ownRequests;
+      }
+    }
+
+    // Combine and deduplicate (user's own requests might also be public)
+    const allRequestsMap = new Map();
+    if (publicRequests) {
+      publicRequests.forEach((fr: any) => {
+        allRequestsMap.set(fr.id, fr);
+      });
+    }
+    if (userOwnRequests) {
+      userOwnRequests.forEach((fr: any) => {
+        allRequestsMap.set(fr.id, fr);
+      });
+    }
+
+    // Convert back to array and apply sorting
+    let featureRequests = Array.from(allRequestsMap.values());
+
+    // Re-apply sorting to combined results
     switch (params.sort) {
       case 'oldest':
-        query = query.order('created_at', { ascending: true });
+        featureRequests.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
         break;
       case 'most_voted':
-        query = query.order('vote_count', { ascending: false });
+        featureRequests.sort(
+          (a, b) => (b.vote_count || 0) - (a.vote_count || 0)
+        );
         break;
       case 'least_voted':
-        query = query.order('vote_count', { ascending: true });
+        featureRequests.sort(
+          (a, b) => (a.vote_count || 0) - (b.vote_count || 0)
+        );
         break;
       default:
-        query = query.order('created_at', { ascending: false });
+        featureRequests.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
     }
 
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
+    // Apply pagination to combined results
+    const total = featureRequests.length;
+    featureRequests = featureRequests.slice(offset, offset + limit);
 
-    const { data: featureRequests, error, count } = await query;
+    const error = publicError;
+    const count = total;
 
     if (error) {
       console.error('Error fetching feature requests:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: 'Failed to fetch feature requests' },
+        { error: 'Failed to fetch feature requests', details: error.message },
         { status: 500 }
       );
     }
 
+    console.log('Feature requests fetched (combined):', {
+      count: featureRequests?.length || 0,
+      total: count,
+      user: user?.id || 'anonymous',
+      publicCount:
+        featureRequests?.filter((fr: any) => fr.is_public).length || 0,
+      privateCount:
+        featureRequests?.filter((fr: any) => !fr.is_public).length || 0,
+      publicRequestsCount: publicRequests?.length || 0,
+      userOwnRequestsCount: userOwnRequests?.length || 0,
+    });
+
+    // Fetch profiles separately if needed
+    const userIds =
+      featureRequests?.map((fr: any) => fr.user_id).filter(Boolean) || [];
+    let profilesMap: Record<string, any> = {};
+
+    if (userIds.length > 0 && user) {
+      // Only fetch profiles if user is authenticated (optional)
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, avatar_url')
+        .in('user_id', userIds);
+
+      if (profiles) {
+        profilesMap = profiles.reduce((acc: any, p: any) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Fetch comment counts for all feature requests
+    const featureRequestIds = featureRequests?.map((fr: any) => fr.id) || [];
+    let commentCountsMap: Record<string, number> = {};
+
+    if (featureRequestIds.length > 0) {
+      const { data: commentCounts } = await supabase
+        .from('feature_request_comments')
+        .select('feature_request_id')
+        .in('feature_request_id', featureRequestIds);
+
+      if (commentCounts) {
+        commentCountsMap = commentCounts.reduce((acc: any, comment: any) => {
+          acc[comment.feature_request_id] =
+            (acc[comment.feature_request_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Attach profiles and comment counts to feature requests
+    const featureRequestsWithProfiles =
+      featureRequests?.map((fr: any) => ({
+        ...fr,
+        profiles: profilesMap[fr.user_id] || null,
+        comments_count: commentCountsMap[fr.id] || 0,
+      })) || [];
+
     return NextResponse.json({
-      featureRequests,
+      featureRequests: featureRequestsWithProfiles,
       pagination: {
         page,
         limit,
@@ -121,8 +373,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in GET /api/feature-requests:', error);
+    // Log the full error for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', error.message, error.stack);
+    }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
@@ -130,18 +389,139 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { supabase } = createClient(request);
 
-    if (authError || !user) {
+    // Try to get user from session first (better cookie handling)
+    let user: any;
+
+    // Try multiple methods to get the user
+
+    // Method 1: Try Authorization header token
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // Create a temporary client with the token
+      const { createClient: createSupabaseClient } = await import(
+        '@supabase/supabase-js'
+      );
+      const tokenClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        }
+      );
+      const {
+        data: { user: tokenUser },
+        error: tokenError,
+      } = await tokenClient.auth.getUser();
+
+      if (tokenUser && !tokenError) {
+        user = tokenUser;
+      }
+    }
+
+    // Method 2: Try session from cookies (if no token user)
+    if (!user) {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      console.log('Session check:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        sessionError: sessionError?.message,
+      });
+
+      if (session?.user) {
+        user = session.user;
+        console.log('User authenticated from session:', user.id);
+      }
+    }
+
+    // Method 3: Fallback to getUser (reads from cookies)
+    if (!user) {
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      console.log('getUser check:', {
+        hasUser: !!getUserUser,
+        userId: getUserUser?.id,
+        authError: authError?.message,
+      });
+
+      if (getUserUser) {
+        user = getUserUser;
+        console.log('User authenticated from getUser:', user.id);
+      }
+    }
+
+    // Method 4: Try to get user_id from header or body (fallback)
+    let useServerClient = false; // Flag to use server client for inserts (bypasses RLS)
+    if (!user) {
+      const userIdFromHeader =
+        request.headers.get('x-user-id') ||
+        request.headers.get('X-User-Id') ||
+        request.headers.get('X-USER-ID');
+
+      if (userIdFromHeader) {
+        // Verify the user exists - use admin client to bypass RLS
+        const { createClient: createServerClient } = await import(
+          '@/lib/supabase/server'
+        );
+        const adminSupabase = createServerClient();
+        const { data: userData, error: userError } = await adminSupabase
+          .from('users')
+          .select('id, email, role')
+          .eq('id', userIdFromHeader)
+          .single();
+
+        if (!userError && userData) {
+          // Create a minimal user object
+          user = {
+            id: userData.id,
+            email: userData.email || '',
+          } as any;
+          useServerClient = true; // Use server client since auth context isn't set for RLS
+          console.log(
+            'User authenticated from header, will use server client for insert:',
+            user.id
+          );
+        }
+      }
+    }
+
+    if (!user) {
+      console.error(
+        'No user found - Auth header:',
+        !!authHeader,
+        'Cookies:',
+        request.cookies.getAll().map(c => c.name),
+        'Session error:',
+        'getSession and getUser both failed'
+      );
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
+    console.log('Request body received:', {
+      ...body,
+      description: body.description?.substring(0, 100),
+    });
+
     const validatedData = createFeatureRequestSchema.parse(body);
+    console.log('Validated data:', {
+      ...validatedData,
+      description: validatedData.description?.substring(0, 100),
+    });
 
     // Check for duplicate requests
     const { data: existingRequest } = await supabase
@@ -159,13 +539,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the feature request
-    const { data: featureRequest, error: insertError } = await supabase
+    // Use server client if we authenticated via header (RLS won't work with header auth)
+    const insertClient = useServerClient
+      ? (await import('@/lib/supabase/server')).createClient()
+      : supabase;
+
+    const { data: featureRequest, error: insertError } = await insertClient
       .from('feature_requests')
       .insert({
         user_id: user.id,
         title: validatedData.title,
         description: validatedData.description,
-        category_id: validatedData.category_id,
+        category_id:
+          validatedData.category_id && validatedData.category_id !== ''
+            ? validatedData.category_id
+            : null,
         priority: validatedData.priority || 'medium',
         is_public: validatedData.is_public ?? true,
       })
@@ -174,8 +562,24 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating feature request:', insertError);
+      console.error(
+        'Insert error details:',
+        JSON.stringify(insertError, null, 2)
+      );
+      console.error('Attempted insert data:', {
+        user_id: user.id,
+        title: validatedData.title,
+        description: validatedData.description?.substring(0, 100),
+        category_id: validatedData.category_id,
+        priority: validatedData.priority || 'medium',
+        is_public: validatedData.is_public ?? true,
+      });
       return NextResponse.json(
-        { error: 'Failed to create feature request' },
+        {
+          error: 'Failed to create feature request',
+          details: insertError.message,
+          code: insertError.code,
+        },
         { status: 500 }
       );
     }

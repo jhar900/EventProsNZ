@@ -46,6 +46,10 @@ interface FeatureRequestFormProps {
   onSubmit?: (data: FeatureRequestFormData) => void;
   isEditing?: boolean;
   isLoading?: boolean;
+  showCard?: boolean;
+  showCategory?: boolean;
+  showPriority?: boolean;
+  strictValidation?: boolean;
 }
 
 export default function FeatureRequestForm({
@@ -54,13 +58,17 @@ export default function FeatureRequestForm({
   onSubmit,
   isEditing = false,
   isLoading = false,
+  showCard = true,
+  showCategory = true,
+  showPriority = true,
+  strictValidation = true,
 }: FeatureRequestFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<FeatureRequestFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
-    category_id: initialData?.category_id || '',
-    priority: initialData?.priority || 'medium',
+    category_id: initialData?.category_id || (showCategory ? '' : ''),
+    priority: initialData?.priority || (showPriority ? 'medium' : 'medium'),
     tags: initialData?.tags || [],
     is_public: initialData?.is_public ?? true,
   });
@@ -71,30 +79,34 @@ export default function FeatureRequestForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Load categories on mount
+  // Load categories on mount (only if category field is shown)
   useEffect(() => {
+    if (!showCategory) return;
+
     const loadCategories = async () => {
       try {
         const response = await fetch('/api/feature-requests/categories');
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
+        } else {
+          console.error('Failed to load categories:', response.status);
         }
       } catch (error) {
         console.error('Error loading categories:', error);
-        toast.error('Failed to load categories');
+        // Don't show toast for category loading errors - it's not critical
       }
     };
 
     loadCategories();
-  }, []);
+  }, [showCategory]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    } else if (formData.title.length < 10) {
+    } else if (strictValidation && formData.title.length < 10) {
       newErrors.title = 'Title must be at least 10 characters';
     } else if (formData.title.length > 200) {
       newErrors.title = 'Title must be less than 200 characters';
@@ -102,13 +114,13 @@ export default function FeatureRequestForm({
 
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
-    } else if (formData.description.length < 50) {
+    } else if (strictValidation && formData.description.length < 50) {
       newErrors.description = 'Description must be at least 50 characters';
     } else if (formData.description.length > 5000) {
       newErrors.description = 'Description must be less than 5000 characters';
     }
 
-    if (!formData.category_id) {
+    if (showCategory && !formData.category_id) {
       newErrors.category_id = 'Category is required';
     }
 
@@ -145,20 +157,47 @@ export default function FeatureRequestForm({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
+      // Prepare submission data - only include category if shown
+      const submissionData: FeatureRequestFormData = {
+        title: formData.title,
+        description: formData.description,
+        tags: formData.tags,
+        is_public: formData.is_public,
+        ...(showCategory && formData.category_id
+          ? { category_id: formData.category_id }
+          : {}),
+        // Priority is no longer used - always default to 'medium' in the backend
+      };
+
       if (onSubmit) {
-        onSubmit(formData);
+        await onSubmit(submissionData);
+        // Reset form after successful submission
+        setFormData({
+          title: '',
+          description: '',
+          category_id: '',
+          priority: 'medium',
+          tags: [],
+          is_public: true,
+        });
+        setErrors({});
       } else {
         const response = await fetch('/api/feature-requests', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(submissionData),
         });
 
         if (response.ok) {
@@ -203,61 +242,49 @@ export default function FeatureRequestForm({
     }
   };
 
-  return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          {isEditing ? 'Edit Feature Request' : 'Submit Feature Request'}
-        </CardTitle>
-        <CardDescription>
-          {isEditing
-            ? 'Update your feature request details below.'
-            : 'Help us improve the platform by submitting your feature request. Please provide detailed information about what you would like to see implemented.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Title */}
-        <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={e =>
-              setFormData(prev => ({ ...prev, title: e.target.value }))
-            }
-            placeholder="Brief, descriptive title for your feature request"
-            className={errors.title ? 'border-red-500' : ''}
-          />
-          {errors.title && (
-            <p className="text-sm text-red-500">{errors.title}</p>
-          )}
-          <p className="text-sm text-gray-500">
-            {formData.title.length}/200 characters
-          </p>
-        </div>
+  const formContent = (
+    <div className="space-y-6">
+      {/* Title */}
+      <div className="space-y-2">
+        <Label htmlFor="title">Title *</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={e =>
+            setFormData(prev => ({ ...prev, title: e.target.value }))
+          }
+          placeholder="Brief, descriptive title for your feature request"
+          className={errors.title ? 'border-red-500' : ''}
+        />
+        {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
+        <p className="text-sm text-gray-500">
+          {formData.title.length}/200 characters
+        </p>
+      </div>
 
-        {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="description">Description *</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={e =>
-              setFormData(prev => ({ ...prev, description: e.target.value }))
-            }
-            placeholder="Provide a detailed description of your feature request. Include use cases, benefits, and any specific requirements."
-            rows={8}
-            className={errors.description ? 'border-red-500' : ''}
-          />
-          {errors.description && (
-            <p className="text-sm text-red-500">{errors.description}</p>
-          )}
-          <p className="text-sm text-gray-500">
-            {formData.description.length}/5000 characters
-          </p>
-        </div>
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description">Description *</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={e =>
+            setFormData(prev => ({ ...prev, description: e.target.value }))
+          }
+          placeholder="Provide a detailed description of your feature request. Include use cases, benefits, and any specific requirements."
+          rows={8}
+          className={errors.description ? 'border-red-500' : ''}
+        />
+        {errors.description && (
+          <p className="text-sm text-red-500">{errors.description}</p>
+        )}
+        <p className="text-sm text-gray-500">
+          {formData.description.length}/5000 characters
+        </p>
+      </div>
 
-        {/* Category */}
+      {/* Category */}
+      {showCategory && (
         <div className="space-y-2">
           <Label htmlFor="category">Category *</Label>
           <Select
@@ -289,8 +316,10 @@ export default function FeatureRequestForm({
             <p className="text-sm text-red-500">{errors.category_id}</p>
           )}
         </div>
+      )}
 
-        {/* Priority */}
+      {/* Priority */}
+      {showPriority && (
         <div className="space-y-2">
           <Label htmlFor="priority">Priority</Label>
           <Select
@@ -310,89 +339,109 @@ export default function FeatureRequestForm({
             </SelectContent>
           </Select>
         </div>
+      )}
 
-        {/* Tags */}
-        <div className="space-y-2">
-          <Label htmlFor="tags">Tags</Label>
-          <div className="flex gap-2">
-            <Input
-              value={tagInput}
-              onChange={e => setTagInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Add a tag and press Enter"
-            />
-            <Button type="button" onClick={addTag} size="sm">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          {formData.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map(tag => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="flex items-center gap-1"
+      {/* Tags */}
+      <div className="space-y-2">
+        <Label htmlFor="tags">Tags</Label>
+        <div className="flex gap-2">
+          <Input
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Add a tag and press Enter"
+          />
+          <Button type="button" onClick={addTag} size="sm">
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+        {formData.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {formData.tags.map(tag => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 hover:text-red-500"
                 >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 hover:text-red-500"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Public/Private */}
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="is_public"
-              checked={formData.is_public}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, is_public: e.target.checked }))
-              }
-              className="rounded"
-            />
-            <Label htmlFor="is_public">Make this request public</Label>
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
           </div>
-          <p className="text-sm text-gray-500">
-            Public requests can be viewed and voted on by other users
-          </p>
-        </div>
+        )}
+      </div>
 
-        {/* Actions */}
-        <div className="flex gap-4 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSave}
-            disabled={isSaving || isSubmitting}
-            className="flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : 'Save Draft'}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSaving || isSubmitting || isLoading}
-            className="flex items-center gap-2"
-          >
-            <Send className="w-4 h-4" />
-            {isSubmitting
-              ? 'Submitting...'
-              : isEditing
-                ? 'Update Request'
-                : 'Submit Request'}
-          </Button>
+      {/* Public/Private */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is_public"
+            checked={formData.is_public}
+            onChange={e =>
+              setFormData(prev => ({ ...prev, is_public: e.target.checked }))
+            }
+            className="rounded"
+          />
+          <Label htmlFor="is_public">Make this request public</Label>
         </div>
-      </CardContent>
-    </Card>
+        <p className="text-sm text-gray-500">
+          Public requests can be viewed and voted on by other users
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-4 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleSave}
+          disabled={isSaving || isSubmitting}
+          className="flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {isSaving ? 'Saving...' : 'Save Draft'}
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSaving || isSubmitting}
+          className="flex items-center gap-2"
+        >
+          <Send className="w-4 h-4" />
+          {isSubmitting
+            ? 'Submitting...'
+            : isEditing
+              ? 'Update Request'
+              : 'Submit Request'}
+        </Button>
+      </div>
+    </div>
   );
+
+  if (showCard) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>
+            {isEditing ? 'Edit Feature Request' : 'Submit Feature Request'}
+          </CardTitle>
+          <CardDescription>
+            {isEditing
+              ? 'Update your feature request details below.'
+              : 'Help us improve the platform by submitting your feature request. Please provide detailed information about what you would like to see implemented.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>{formContent}</CardContent>
+      </Card>
+    );
+  }
+
+  return <div className="w-full">{formContent}</div>;
 }

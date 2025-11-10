@@ -79,40 +79,57 @@ export async function POST(
 
     // If no user from cookies, try to get from x-user-id header (fallback)
     if (!user) {
-      const userIdFromHeader =
+      const userIdFromHeaderRaw =
         request.headers.get('x-user-id') ||
         request.headers.get('X-User-Id') ||
         request.headers.get('X-USER-ID');
 
+      // Handle case where header might have multiple values (comma-separated)
+      // Extract just the first value
+      const userIdFromHeader = userIdFromHeaderRaw
+        ? userIdFromHeaderRaw.split(',')[0].trim()
+        : null;
+
       console.log('Header check:', {
         hasHeader: !!userIdFromHeader,
-        headerValue: userIdFromHeader,
+        rawHeaderValue: userIdFromHeaderRaw,
+        extractedUserId: userIdFromHeader,
         allHeaders: Object.fromEntries(request.headers.entries()),
       });
 
       if (userIdFromHeader) {
-        // Verify the user exists - use admin client to bypass RLS
-        const adminSupabaseForAuth = createServerClient();
-        const { data: userData, error: userError } = await adminSupabaseForAuth
-          .from('users')
-          .select('id, email, role')
-          .eq('id', userIdFromHeader)
-          .single();
+        try {
+          // Verify the user exists - use admin client to bypass RLS
+          const adminSupabaseForAuth = createServerClient();
+          const { data: userData, error: userError } =
+            await adminSupabaseForAuth
+              .from('users')
+              .select('id, email, role')
+              .eq('id', userIdFromHeader)
+              .single();
 
-        console.log('Header user lookup:', {
-          hasUserData: !!userData,
-          userId: userData?.id,
-          userError: userError?.message,
-        });
+          console.log('Header user lookup:', {
+            hasUserData: !!userData,
+            userId: userData?.id,
+            userEmail: userData?.email,
+            userRole: userData?.role,
+            userError: userError?.message,
+            userErrorCode: userError?.code,
+          });
 
-        if (!userError && userData) {
-          // Create a minimal user object
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
-          console.log('User from header:', user.id);
+          if (!userError && userData) {
+            // Create a minimal user object
+            user = {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            } as any;
+            console.log('User from header:', user.id, user.role);
+          } else {
+            console.error('Failed to fetch user from header:', userError);
+          }
+        } catch (err) {
+          console.error('Error in header-based auth:', err);
         }
       }
     }
@@ -120,26 +137,35 @@ export async function POST(
     // Final fallback: try to get user_id from request body
     if (!user && body.user_id) {
       console.log('Trying to get user from request body:', body.user_id);
-      const adminSupabaseForAuth = createServerClient();
-      const { data: userData, error: userError } = await adminSupabaseForAuth
-        .from('users')
-        .select('id, email, role')
-        .eq('id', body.user_id)
-        .single();
+      try {
+        const adminSupabaseForAuth = createServerClient();
+        const { data: userData, error: userError } = await adminSupabaseForAuth
+          .from('users')
+          .select('id, email, role')
+          .eq('id', body.user_id)
+          .single();
 
-      console.log('Body user lookup:', {
-        hasUserData: !!userData,
-        userId: userData?.id,
-        userError: userError?.message,
-      });
+        console.log('Body user lookup:', {
+          hasUserData: !!userData,
+          userId: userData?.id,
+          userEmail: userData?.email,
+          userRole: userData?.role,
+          userError: userError?.message,
+          userErrorCode: userError?.code,
+        });
 
-      if (!userError && userData) {
-        user = {
-          id: userData.id,
-          email: userData.email || '',
-          role: userData.role,
-        } as any;
-        console.log('User from request body:', user.id);
+        if (!userError && userData) {
+          user = {
+            id: userData.id,
+            email: userData.email || '',
+            role: userData.role,
+          } as any;
+          console.log('User from request body:', user.id, user.role);
+        } else {
+          console.error('Failed to fetch user from body:', userError);
+        }
+      } catch (err) {
+        console.error('Error in body-based auth:', err);
       }
     }
 
@@ -150,12 +176,24 @@ export async function POST(
       console.error('No user found - returning 401');
       console.error('All authentication methods failed:', {
         hasSession: !!session,
+        sessionUserId: session?.user?.id,
         hasHeader: !!request.headers.get('x-user-id'),
+        headerValue: request.headers.get('x-user-id'),
         hasBodyUserId: !!body.user_id,
         bodyUserId: body.user_id,
+        allHeaders: Object.fromEntries(request.headers.entries()),
       });
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        {
+          success: false,
+          message: 'Unauthorized',
+          details: 'Authentication failed. Please ensure you are logged in.',
+          debug: {
+            hasSession: !!session,
+            hasHeader: !!request.headers.get('x-user-id'),
+            hasBodyUserId: !!body.user_id,
+          },
+        },
         { status: 401 }
       );
     }
@@ -403,9 +441,41 @@ export async function POST(
         .eq('id', inquiryId);
     }
 
+    // Fetch user profile for the response
+    let responderProfile = null;
+    if (messageData?.sender_id) {
+      try {
+        const { data: profileData } = await adminSupabase
+          .from('profiles')
+          .select('first_name, last_name, avatar_url')
+          .eq('user_id', messageData.sender_id)
+          .maybeSingle();
+
+        if (profileData) {
+          responderProfile = {
+            first_name: profileData.first_name || '',
+            last_name: profileData.last_name || '',
+            avatar_url: profileData.avatar_url || null,
+          };
+        }
+      } catch (profileError) {
+        console.error('Error fetching responder profile:', profileError);
+      }
+    }
+
+    // Return response with profile data attached
+    const responseWithProfile = {
+      ...messageData,
+      responder: {
+        id: user.id,
+        email: user.email || '',
+        profiles: responderProfile,
+      },
+    };
+
     return NextResponse.json({
       success: true,
-      response: messageData,
+      response: responseWithProfile,
       message: 'Response created successfully',
     });
   } catch (error) {

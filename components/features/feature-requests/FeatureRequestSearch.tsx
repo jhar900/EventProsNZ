@@ -89,7 +89,7 @@ export default function FeatureRequestSearch({
   const updateFilter = (key: keyof SearchFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value,
+      [key]: value === 'all' ? '' : value,
     }));
   };
 
@@ -117,7 +117,7 @@ export default function FeatureRequestSearch({
   ];
 
   const statusOptions = [
-    { value: '', label: 'All Statuses' },
+    { value: 'all', label: 'All Statuses' },
     { value: 'submitted', label: 'Submitted' },
     { value: 'under_review', label: 'Under Review' },
     { value: 'planned', label: 'Planned' },
@@ -156,7 +156,7 @@ export default function FeatureRequestSearch({
         {/* Quick Filters */}
         <div className="flex flex-wrap gap-2">
           <Select
-            value={filters.status}
+            value={filters.status || 'all'}
             onValueChange={value => updateFilter('status', value)}
           >
             <SelectTrigger className="w-[180px]">
@@ -172,14 +172,14 @@ export default function FeatureRequestSearch({
           </Select>
 
           <Select
-            value={filters.category_id}
+            value={filters.category_id || 'all'}
             onValueChange={value => updateFilter('category_id', value)}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category.id} value={category.id}>
                   <div className="flex items-center gap-2">

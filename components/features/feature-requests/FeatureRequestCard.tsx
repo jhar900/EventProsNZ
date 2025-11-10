@@ -57,9 +57,11 @@ interface FeatureRequestCardProps {
   };
   comments_count?: number;
   is_featured?: boolean;
+  is_public?: boolean;
   className?: string;
   showVoting?: boolean;
   onVote?: (featureRequestId: string, voteType: 'upvote' | 'downvote') => void;
+  onClick?: () => void;
 }
 
 export default function FeatureRequestCard({
@@ -77,9 +79,11 @@ export default function FeatureRequestCard({
   author,
   comments_count = 0,
   is_featured = false,
+  is_public = true,
   className = '',
   showVoting = true,
   onVote,
+  onClick,
 }: FeatureRequestCardProps) {
   const [isVoting, setIsVoting] = useState(false);
 
@@ -169,18 +173,26 @@ export default function FeatureRequestCard({
 
   return (
     <Card
-      className={`hover:shadow-lg transition-all duration-200 ${is_featured ? 'ring-2 ring-yellow-400' : ''} ${className}`}
+      className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${is_featured ? 'ring-2 ring-yellow-400' : ''} ${className}`}
+      onClick={onClick}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg line-clamp-2 mb-2">
-              <Link
-                href={`/feature-requests/${id}`}
-                className="hover:text-blue-600 transition-colors"
-              >
-                {title}
-              </Link>
+              {onClick ? (
+                <span className="hover:text-blue-600 transition-colors">
+                  {title}
+                </span>
+              ) : (
+                <Link
+                  href={`/feature-requests/${id}`}
+                  className="hover:text-blue-600 transition-colors"
+                  onClick={e => e.stopPropagation()}
+                >
+                  {title}
+                </Link>
+              )}
             </CardTitle>
 
             <CardDescription className="line-clamp-3 text-sm">
@@ -188,29 +200,37 @@ export default function FeatureRequestCard({
             </CardDescription>
           </div>
 
-          {is_featured && (
+          <div className="flex flex-col items-end gap-2 ml-2">
+            {is_featured && (
+              <Badge
+                variant="secondary"
+                className="bg-yellow-100 text-yellow-800 border-yellow-200"
+              >
+                Featured
+              </Badge>
+            )}
             <Badge
-              variant="secondary"
-              className="bg-yellow-100 text-yellow-800 border-yellow-200"
+              variant={is_public ? 'default' : 'secondary'}
+              className={
+                is_public
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-gray-100 text-gray-800'
+              }
             >
-              Featured
+              {is_public ? 'Public' : 'Private'}
             </Badge>
-          )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="pt-0">
-        {/* Status and Priority */}
-        <div className="flex items-center gap-2 mb-4">
+        {/* Status and Category */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge
             className={`flex items-center gap-1 ${getStatusColor(status)}`}
           >
             {getStatusIcon(status)}
             {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-          </Badge>
-
-          <Badge variant="outline" className={getPriorityColor(priority)}>
-            {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
           </Badge>
 
           {category && (
@@ -243,7 +263,10 @@ export default function FeatureRequestCard({
 
         {/* Voting Section */}
         {showVoting && (
-          <div className="flex items-center gap-4 mb-4">
+          <div
+            className="flex flex-wrap items-center gap-4 mb-4"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -267,7 +290,7 @@ export default function FeatureRequestCard({
               </Button>
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
                 {view_count} views
@@ -275,14 +298,14 @@ export default function FeatureRequestCard({
 
               <div className="flex items-center gap-1">
                 <MessageCircle className="w-4 h-4" />
-                {comments_count} comments
+                {comments_count} {comments_count === 1 ? 'comment' : 'comments'}
               </div>
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t">
           <div className="flex items-center gap-3">
             {author && (
               <div className="flex items-center gap-2">
@@ -300,7 +323,7 @@ export default function FeatureRequestCard({
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               {formatDate(created_at)}

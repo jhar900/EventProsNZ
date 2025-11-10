@@ -35,8 +35,6 @@ export async function GET(
   { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    console.log('GET /api/inquiries/[id] called');
-
     // Handle both Promise and direct params (Next.js 14+ uses Promise)
     let inquiryId: string;
     if (params instanceof Promise) {
@@ -45,8 +43,6 @@ export async function GET(
     } else {
       inquiryId = params.id;
     }
-
-    console.log('Resolved inquiryId:', inquiryId);
 
     const { supabase } = createClient(request);
 
@@ -63,7 +59,6 @@ export async function GET(
       // Fallback to getUser
       const {
         data: { user: getUserUser },
-        error: authError,
       } = await supabase.auth.getUser();
 
       if (getUserUser) {
@@ -73,34 +68,49 @@ export async function GET(
 
     // If no user from cookies, try to get from x-user-id header (fallback)
     if (!user) {
-      const userIdFromHeader =
+      const userIdFromHeaderRaw =
         request.headers.get('x-user-id') ||
         request.headers.get('X-User-Id') ||
         request.headers.get('X-USER-ID');
 
-      if (userIdFromHeader) {
-        // Verify the user exists - use admin client to bypass RLS
-        const adminSupabaseForAuth = createServerClient();
-        const { data: userData, error: userError } = await adminSupabaseForAuth
-          .from('users')
-          .select('id, email, role')
-          .eq('id', userIdFromHeader)
-          .single();
+      // Handle case where header might have multiple values (comma-separated)
+      // Extract just the first value
+      const userIdFromHeader = userIdFromHeaderRaw
+        ? userIdFromHeaderRaw.split(',')[0].trim()
+        : null;
 
-        if (!userError && userData) {
-          // Create a minimal user object
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
+      if (userIdFromHeader) {
+        try {
+          // Verify the user exists - use admin client to bypass RLS
+          const adminSupabaseForAuth = createServerClient();
+          const { data: userData, error: userError } =
+            await adminSupabaseForAuth
+              .from('users')
+              .select('id, email, role')
+              .eq('id', userIdFromHeader)
+              .single();
+
+          if (!userError && userData) {
+            // Create a minimal user object
+            user = {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            } as any;
+          }
+        } catch (err) {
+          // Silently fail - will return 401 below
         }
       }
     }
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        {
+          success: false,
+          message: 'Unauthorized',
+          details: 'Authentication failed. Please ensure you are logged in.',
+        },
         { status: 401 }
       );
     }
@@ -108,12 +118,14 @@ export async function GET(
     // Use admin client to bypass RLS since we need to read enquiries
     const adminSupabase = createServerClient();
 
-    // Get user role to determine access
-    const { data: userProfile, error: profileError } = await adminSupabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Fetch enquiry and user role in parallel
+    const [enquiryResult, userProfileResult] = await Promise.all([
+      adminSupabase.from('enquiries').select('*').eq('id', inquiryId).single(),
+      adminSupabase.from('users').select('role').eq('id', user.id).single(),
+    ]);
+
+    const { data: enquiry, error: enquiryError } = enquiryResult;
+    const { data: userProfile, error: profileError } = userProfileResult;
 
     if (profileError || !userProfile) {
       return NextResponse.json(
@@ -122,28 +134,12 @@ export async function GET(
       );
     }
 
-    // Fetch enquiry first, then check permissions
-    console.log('Fetching enquiry with id:', inquiryId);
-    const { data: enquiry, error: enquiryError } = await adminSupabase
-      .from('enquiries')
-      .select('*')
-      .eq('id', inquiryId)
-      .single();
-
     if (enquiryError || !enquiry) {
-      console.error('Enquiry fetch error:', enquiryError);
       return NextResponse.json(
         { success: false, message: 'Inquiry not found' },
         { status: 404 }
       );
     }
-
-    console.log('Found enquiry:', {
-      id: enquiry.id,
-      contractor_id: enquiry.contractor_id,
-      sender_id: enquiry.sender_id,
-      event_id: enquiry.event_id,
-    });
 
     // Check access permissions based on user role
     let hasAccess = false;
@@ -152,18 +148,16 @@ export async function GET(
       hasAccess = true;
     } else if (userProfile.role === 'contractor') {
       // For contractors, enquiries.contractor_id references business_profiles.id
-      const { data: businessProfile, error: bpError } = await adminSupabase
-        .from('business_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      if (enquiry.contractor_id) {
+        const { data: businessProfile } = await adminSupabase
+          .from('business_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
 
-      if (bpError) {
-        console.error('Error fetching business profile:', bpError);
-      }
-
-      if (businessProfile && enquiry.contractor_id === businessProfile.id) {
-        hasAccess = true;
+        if (businessProfile && enquiry.contractor_id === businessProfile.id) {
+          hasAccess = true;
+        }
       }
     } else if (userProfile.role === 'event_manager') {
       // Event managers can see enquiries they sent OR enquiries for events they manage
@@ -171,15 +165,11 @@ export async function GET(
         hasAccess = true;
       } else if (enquiry.event_id) {
         // Check if user manages this event
-        const { data: event, error: eventError } = await adminSupabase
+        const { data: event } = await adminSupabase
           .from('events')
           .select('user_id')
           .eq('id', enquiry.event_id)
           .single();
-
-        if (eventError) {
-          console.error('Error fetching event:', eventError);
-        }
 
         if (event && event.user_id === user.id) {
           hasAccess = true;
@@ -200,194 +190,54 @@ export async function GET(
       );
     }
 
-    // Transform enquiry to match expected inquiry format - same logic as list route
-    let businessProfile = null;
+    // Fetch business profile and event manager in parallel
+    const [businessProfileResult, eventManagerResult] = await Promise.all([
+      enquiry.contractor_id
+        ? adminSupabase
+            .from('business_profiles')
+            .select('id, user_id, company_name')
+            .eq('id', enquiry.contractor_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      enquiry.sender_id
+        ? adminSupabase
+            .from('users')
+            .select(
+              `
+              id,
+              email,
+              profiles (
+                first_name,
+                last_name,
+                avatar_url
+              )
+            `
+            )
+            .eq('id', enquiry.sender_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+
+    const businessProfile = businessProfileResult.data;
     let eventManager = null;
 
-    try {
-      // Fetch business profile for contractor_id
-      if (enquiry.contractor_id) {
-        const { data: bp, error: bpError } = await adminSupabase
-          .from('business_profiles')
-          .select('id, user_id, company_name')
-          .eq('id', enquiry.contractor_id)
-          .maybeSingle();
+    if (eventManagerResult.data) {
+      const profile = Array.isArray(eventManagerResult.data.profiles)
+        ? eventManagerResult.data.profiles[0]
+        : eventManagerResult.data.profiles;
 
-        if (bpError) {
-          console.error('Error fetching business profile:', bpError);
-        } else {
-          businessProfile = bp;
-        }
-      }
-    } catch (err) {
-      console.error('Exception fetching business profile:', err);
-    }
-
-    // Get sender from sender_id field (primary source - backfilled by migration)
-    // This works for all enquiries, including contractor-to-contractor enquiries
-    if (enquiry.sender_id) {
-      try {
-        // Try with profiles relationship first
-        const { data: senderData, error: senderError } = await adminSupabase
-          .from('users')
-          .select(
-            `
-            id,
-            email,
-            profiles (
-              first_name,
-              last_name,
-              avatar_url
-            )
-          `
-          )
-          .eq('id', enquiry.sender_id)
-          .maybeSingle();
-
-        if (senderError) {
-          console.error('Error fetching sender with profiles:', senderError);
-          // Fallback: fetch user and profile separately
-          const { data: userData } = await adminSupabase
-            .from('users')
-            .select('id, email')
-            .eq('id', enquiry.sender_id)
-            .maybeSingle();
-
-          if (userData) {
-            const { data: profileData } = await adminSupabase
-              .from('profiles')
-              .select('first_name, last_name, avatar_url')
-              .eq('user_id', enquiry.sender_id)
-              .maybeSingle();
-
-            eventManager = {
-              id: userData.id,
-              email: userData.email,
-              profiles:
-                profileData && (profileData.first_name || profileData.last_name)
-                  ? {
-                      first_name: profileData.first_name || '',
-                      last_name: profileData.last_name || '',
-                      avatar_url: profileData.avatar_url || null,
-                    }
-                  : null,
-            };
-          }
-        } else if (senderData) {
-          const profile = Array.isArray(senderData.profiles)
-            ? senderData.profiles[0]
-            : senderData.profiles;
-
-          eventManager = {
-            id: senderData.id,
-            email: senderData.email,
-            profiles:
-              profile && (profile.first_name || profile.last_name)
-                ? {
-                    first_name: profile.first_name || '',
-                    last_name: profile.last_name || '',
-                    avatar_url: profile.avatar_url || null,
-                  }
-                : null,
-          };
-        }
-      } catch (err) {
-        console.error('Exception fetching sender:', err);
-      }
-    }
-
-    // Fallback: Try to get sender from enquiry_messages (for very old enquiries without sender_id)
-    if (!eventManager) {
-      const { data: firstMessage } = await adminSupabase
-        .from('enquiry_messages')
-        .select('sender_id')
-        .eq('enquiry_id', enquiry.id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (firstMessage?.sender_id) {
-        const { data: senderData } = await adminSupabase
-          .from('users')
-          .select(
-            `
-            id,
-            email,
-            profiles (
-              first_name,
-              last_name,
-              avatar_url
-            )
-          `
-          )
-          .eq('id', firstMessage.sender_id)
-          .maybeSingle();
-
-        if (senderData) {
-          const profile = Array.isArray(senderData.profiles)
-            ? senderData.profiles[0]
-            : senderData.profiles;
-
-          eventManager = {
-            id: senderData.id,
-            email: senderData.email,
-            profiles:
-              profile && (profile.first_name || profile.last_name)
-                ? {
-                    first_name: profile.first_name || '',
-                    last_name: profile.last_name || '',
-                    avatar_url: profile.avatar_url || null,
-                  }
-                : null,
-          };
-        }
-      }
-    }
-
-    // Last resort: Try to get sender from event.user_id (events table uses user_id, not event_manager_id)
-    if (!eventManager && enquiry.event_id) {
-      const { data: event } = await adminSupabase
-        .from('events')
-        .select('id, user_id, title, event_type, event_date')
-        .eq('id', enquiry.event_id)
-        .maybeSingle();
-
-      if (event?.user_id) {
-        const { data: eventManagerData } = await adminSupabase
-          .from('users')
-          .select(
-            `
-            id,
-            email,
-            profiles (
-              first_name,
-              last_name,
-              avatar_url
-            )
-          `
-          )
-          .eq('id', event.user_id)
-          .maybeSingle();
-
-        if (eventManagerData) {
-          const profile = Array.isArray(eventManagerData.profiles)
-            ? eventManagerData.profiles[0]
-            : eventManagerData.profiles;
-
-          eventManager = {
-            id: eventManagerData.id,
-            email: eventManagerData.email,
-            profiles:
-              profile && (profile.first_name || profile.last_name)
-                ? {
-                    first_name: profile.first_name || '',
-                    last_name: profile.last_name || '',
-                    avatar_url: profile.avatar_url || null,
-                  }
-                : null,
-          };
-        }
-      }
+      eventManager = {
+        id: eventManagerResult.data.id,
+        email: eventManagerResult.data.email,
+        profiles:
+          profile && (profile.first_name || profile.last_name)
+            ? {
+                first_name: profile.first_name || '',
+                last_name: profile.last_name || '',
+                avatar_url: profile.avatar_url || null,
+              }
+            : null,
+      };
     }
 
     // If still no sender found, create a placeholder
@@ -399,25 +249,14 @@ export async function GET(
       };
     }
 
-    // Get enquiry messages (responses) - simplified query
-    let messages: any[] = [];
-    try {
-      const { data: messagesData, error: messagesError } = await adminSupabase
-        .from('enquiry_messages')
-        .select('*')
-        .eq('enquiry_id', inquiryId)
-        .order('created_at', { ascending: true });
+    // Get enquiry messages (responses) and sender IDs in one query
+    const { data: messagesData } = await adminSupabase
+      .from('enquiry_messages')
+      .select('*')
+      .eq('enquiry_id', inquiryId)
+      .order('created_at', { ascending: true });
 
-      if (messagesError) {
-        console.error('Messages fetch error:', messagesError);
-        messages = [];
-      } else {
-        messages = messagesData || [];
-      }
-    } catch (err) {
-      console.error('Exception fetching messages:', err);
-      messages = [];
-    }
+    const messages = messagesData || [];
 
     // Transform enquiry to match expected inquiry format - same as list route
     const transformedInquiry = {
@@ -433,118 +272,73 @@ export async function GET(
       priority: 'medium',
     };
 
+    // Get unique sender IDs from messages
+    const senderIds = [
+      ...new Set(messages.map((msg: any) => msg.sender_id).filter(Boolean)),
+    ];
+
+    // Fetch all responders in parallel
+    const responderPromises = senderIds.map((senderId: string) =>
+      adminSupabase
+        .from('users')
+        .select(
+          `
+          id,
+          email,
+          profiles (
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `
+        )
+        .eq('id', senderId)
+        .maybeSingle()
+    );
+
+    const responderResults = await Promise.all(responderPromises);
+    const responderMap = new Map();
+
+    responderResults.forEach((result, index) => {
+      if (result.data) {
+        const profile = Array.isArray(result.data.profiles)
+          ? result.data.profiles[0]
+          : result.data.profiles;
+
+        responderMap.set(senderIds[index], {
+          id: result.data.id,
+          email: result.data.email,
+          profiles:
+            profile && (profile.first_name || profile.last_name)
+              ? {
+                  first_name: profile.first_name || '',
+                  last_name: profile.last_name || '',
+                  avatar_url: profile.avatar_url || null,
+                }
+              : null,
+        });
+      }
+    });
+
     // Transform messages to match inquiry_responses format
-    // Note: The original message is stored in both enquiries.message AND as the first message in enquiry_messages
-    // We'll show all messages from enquiry_messages in chronological order
-    const transformedResponses = await Promise.all(
-      (messages || []).map(async (msg: any) => {
-        let responder = null;
-
-        if (msg.sender_id) {
-          try {
-            const { data: senderData, error: senderError } = await adminSupabase
-              .from('users')
-              .select(
-                `
-                id,
-                email,
-                profiles (
-                  first_name,
-                  last_name,
-                  avatar_url
-                )
-              `
-              )
-              .eq('id', msg.sender_id)
-              .maybeSingle();
-
-            if (senderError) {
-              // Fallback: fetch separately
-              const { data: userData } = await adminSupabase
-                .from('users')
-                .select('id, email')
-                .eq('id', msg.sender_id)
-                .maybeSingle();
-
-              if (userData) {
-                const { data: profileData } = await adminSupabase
-                  .from('profiles')
-                  .select('first_name, last_name, avatar_url')
-                  .eq('user_id', msg.sender_id)
-                  .maybeSingle();
-
-                responder = {
-                  id: userData.id,
-                  email: userData.email,
-                  profiles:
-                    profileData &&
-                    (profileData.first_name || profileData.last_name)
-                      ? {
-                          first_name: profileData.first_name || '',
-                          last_name: profileData.last_name || '',
-                          avatar_url: profileData.avatar_url || null,
-                        }
-                      : null,
-                };
-              }
-            } else if (senderData) {
-              const profile = Array.isArray(senderData.profiles)
-                ? senderData.profiles[0]
-                : senderData.profiles;
-
-              responder = {
-                id: senderData.id,
-                email: senderData.email,
-                profiles:
-                  profile && (profile.first_name || profile.last_name)
-                    ? {
-                        first_name: profile.first_name || '',
-                        last_name: profile.last_name || '',
-                        avatar_url: profile.avatar_url || null,
-                      }
-                    : null,
-              };
-            }
-          } catch (err) {
-            console.error('Error fetching message responder:', err);
-          }
-        }
-
-        return {
-          id: msg.id,
-          inquiry_id: msg.enquiry_id,
-          responder_id: msg.sender_id,
-          response_type: (msg.response_type || 'reply') as any, // Use saved response_type or default to 'reply'
-          message: msg.message,
-          is_template: false,
-          created_at: msg.created_at,
-          responder,
-        };
-      })
-    );
-
-    // Ensure all data is serializable - remove any circular references or non-serializable data
-    const serializableInquiry = JSON.parse(JSON.stringify(transformedInquiry));
-    const serializableResponses = JSON.parse(
-      JSON.stringify(transformedResponses)
-    );
+    const transformedResponses = messages.map((msg: any) => ({
+      id: msg.id,
+      inquiry_id: msg.enquiry_id,
+      responder_id: msg.sender_id,
+      response_type: (msg.response_type || 'reply') as any,
+      message: msg.message,
+      is_template: false,
+      created_at: msg.created_at,
+      responder: responderMap.get(msg.sender_id) || null,
+    }));
 
     const response: InquiryDetailResponse = {
-      inquiry: serializableInquiry as any,
-      responses: serializableResponses as any,
+      inquiry: transformedInquiry as any,
+      responses: transformedResponses as any,
       success: true,
     };
 
-    try {
-      return NextResponse.json(response);
-    } catch (jsonError) {
-      console.error('JSON serialization error:', jsonError);
-      console.error('Trying to serialize inquiry:', {
-        type: typeof transformedInquiry,
-        keys: Object.keys(transformedInquiry),
-      });
-      throw jsonError;
-    }
+    return NextResponse.json(response);
   } catch (error) {
     console.error('=== INQUIRY FETCH ERROR ===');
     console.error('Error type:', typeof error);

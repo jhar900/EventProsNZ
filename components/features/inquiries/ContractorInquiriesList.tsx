@@ -79,9 +79,18 @@ export default function ContractorInquiriesList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, statusFilter, dateFrom, dateTo]);
 
-  const fetchInquiries = async () => {
+  const fetchInquiries = async (preserveSelectedInquiry = false) => {
     try {
-      setLoading(true);
+      // Preserve the selected inquiry ID if modal is open
+      const selectedInquiryId =
+        preserveSelectedInquiry && selectedInquiry?.id
+          ? selectedInquiry.id
+          : null;
+
+      // Only show loading if modal is not open (to avoid closing modal)
+      if (!preserveSelectedInquiry) {
+        setLoading(true);
+      }
       setError(null);
 
       const params = new URLSearchParams({
@@ -132,7 +141,19 @@ export default function ContractorInquiriesList({
         throw new Error(fullError);
       }
 
-      setInquiries(data.inquiries || []);
+      const updatedInquiries = data.inquiries || [];
+      setInquiries(updatedInquiries);
+
+      // If we're preserving the selected inquiry, find it in the updated list
+      if (preserveSelectedInquiry && selectedInquiryId) {
+        const updatedInquiry = updatedInquiries.find(
+          (inq: InquiryWithRelations) => inq.id === selectedInquiryId
+        );
+        if (updatedInquiry) {
+          // Update the selected inquiry with fresh data, but don't close the modal
+          setSelectedInquiry(updatedInquiry);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load inquiries');
       setInquiries([]);
@@ -509,14 +530,6 @@ export default function ContractorInquiriesList({
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
-                  <Button
-                    size="sm"
-                    className="bg-orange-600 hover:bg-orange-700"
-                    onClick={() => handleRespond(inquiry)}
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Respond
-                  </Button>
                 </div>
               </Card>
             );
@@ -532,13 +545,12 @@ export default function ContractorInquiriesList({
           setIsDetailDialogOpen(false);
           setSelectedInquiry(null);
         }}
-        onRespond={inquiryId => {
-          const inquiry = inquiries.find(i => i.id === inquiryId);
-          if (inquiry) {
-            handleRespond(inquiry);
-          }
-        }}
         onResponseSent={responseSentTrigger}
+        onResponseSubmitted={() => {
+          // Refresh the inquiries list when a response is submitted
+          // Pass true to preserve the selected inquiry so modal stays open
+          fetchInquiries(true);
+        }}
       />
 
       <QuickResponseDialog

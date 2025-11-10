@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Lightbulb,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -47,6 +48,11 @@ export default function DashboardLayout({
           { href: '/admin/users', label: 'Users', icon: Users },
           { href: '/admin/events', label: 'Events', icon: Calendar },
           { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+          {
+            href: '/feature-requests',
+            label: 'Feature Requests',
+            icon: Lightbulb,
+          },
           { href: '/admin/settings', label: 'Settings', icon: Settings },
         ];
       case 'event_manager':
@@ -66,6 +72,11 @@ export default function DashboardLayout({
             label: 'Budget Analytics',
             icon: BarChart3,
           },
+          {
+            href: '/feature-requests',
+            label: 'Feature Requests',
+            icon: Lightbulb,
+          },
           { href: '/profile', label: 'Profile', icon: Settings },
         ];
       case 'contractor':
@@ -80,6 +91,11 @@ export default function DashboardLayout({
             icon: FileText,
           },
           { href: '/contractors/map', label: 'Map View', icon: Search },
+          {
+            href: '/feature-requests',
+            label: 'Feature Requests',
+            icon: Lightbulb,
+          },
         ];
       default:
         return baseItems;

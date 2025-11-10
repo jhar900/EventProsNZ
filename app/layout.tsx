@@ -4,6 +4,7 @@ import './globals.css';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { AuthProvider } from '@/components/features/auth/AuthProvider';
 import { ReactQueryProvider } from '@/lib/react-query';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -57,6 +58,7 @@ export default function RootLayout({
           <AuthProvider>
             <GoogleAnalytics />
             {children}
+            <Toaster position="top-right" richColors />
           </AuthProvider>
         </ReactQueryProvider>
       </body>
