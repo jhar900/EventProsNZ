@@ -15,6 +15,17 @@ const nextConfig = {
       };
     }
 
+    // Ignore optional email provider packages during webpack build
+    // They're loaded dynamically at runtime only when needed
+    // This prevents build errors when packages aren't installed
+    if (isServer) {
+      config.plugins.push(
+        new (require('webpack').IgnorePlugin)({
+          resourceRegExp: /^@getbrevo\/brevo$|^nodemailer$/,
+        })
+      );
+    }
+
     // Handle missing CSS file issue by creating a virtual module
     config.plugins.push(
       new (require('webpack').DefinePlugin)({

@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 
+// Helper function to escape HTML entities
+function escapeHtml(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // Validation schemas
 const createFeatureRequestSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
@@ -616,6 +627,158 @@ export async function POST(request: NextRequest) {
       changed_by: user.id,
       comments: 'Feature request submitted',
     });
+
+    // Send email notification to admin
+    try {
+      // Fetch user profile and business profile for email
+      const { createClient: createServerClient } = await import(
+        '@/lib/supabase/server'
+      );
+      const serverSupabase = createServerClient();
+
+      // Fetch user profile
+      const { data: profile } = await serverSupabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user.id)
+        .single();
+
+      // Fetch business profile if exists
+      const { data: businessProfile } = await serverSupabase
+        .from('business_profiles')
+        .select('company_name')
+        .eq('user_id', user.id)
+        .single();
+
+      // Format date in NZ timezone
+      const nzDate = new Date(featureRequest.created_at).toLocaleString(
+        'en-NZ',
+        {
+          timeZone: 'Pacific/Auckland',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }
+      );
+
+      // Prepare email content
+      const requesterName = profile
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
+          user.email
+        : user.email;
+      const businessName = businessProfile?.company_name || 'N/A';
+
+      // Escape user-provided content for HTML
+      const escapedRequesterName = escapeHtml(requesterName);
+      const escapedBusinessName = escapeHtml(businessName);
+      const escapedTitle = escapeHtml(featureRequest.title);
+      const escapedDescription = escapeHtml(featureRequest.description);
+
+      const emailSubject = `New Feature Request: ${featureRequest.title}`;
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #4F46E5; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+            .content { background-color: #f9fafb; padding: 20px; border-radius: 0 0 5px 5px; }
+            .field { margin-bottom: 15px; }
+            .label { font-weight: bold; color: #4F46E5; }
+            .value { margin-top: 5px; padding: 10px; background-color: white; border-radius: 4px; }
+            .description { white-space: pre-wrap; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>New Feature Request Submitted</h2>
+            </div>
+            <div class="content">
+              <div class="field">
+                <div class="label">Requested By:</div>
+                <div class="value">${escapedRequesterName}</div>
+              </div>
+              <div class="field">
+                <div class="label">Business Name:</div>
+                <div class="value">${escapedBusinessName}</div>
+              </div>
+              <div class="field">
+                <div class="label">Submitted At (NZ Time):</div>
+                <div class="value">${escapeHtml(nzDate)}</div>
+              </div>
+              <div class="field">
+                <div class="label">Title:</div>
+                <div class="value">${escapedTitle}</div>
+              </div>
+              <div class="field">
+                <div class="label">Request Details:</div>
+                <div class="value description">${escapedDescription}</div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const emailText = `
+New Feature Request Submitted
+
+Requested By: ${requesterName}
+Business Name: ${businessName}
+Submitted At (NZ Time): ${nzDate}
+
+Title: ${featureRequest.title}
+
+Request Details:
+${featureRequest.description}
+      `.trim();
+
+      // Send email notification (supports multiple free providers)
+      try {
+        const { SimpleEmailService } = await import(
+          '@/lib/email/simple-email-service'
+        );
+
+        const result = await SimpleEmailService.sendEmail({
+          to: 'jasonhartnz@gmail.com',
+          subject: emailSubject,
+          html: emailHtml,
+          text: emailText,
+          // Use Resend's test domain for development, or your verified domain for production
+          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+          fromName: 'EventProsNZ',
+        });
+
+        if (result.success) {
+          console.log('Feature request notification email sent successfully', {
+            messageId: result.messageId,
+          });
+        } else {
+          console.error(
+            'Failed to send feature request notification email:',
+            result.error
+          );
+        }
+      } catch (emailError: any) {
+        // Log error but don't fail the request
+        console.error(
+          'Failed to send feature request notification email:',
+          emailError?.message || emailError
+        );
+      }
+    } catch (emailError) {
+      // Log error but don't fail the request
+      console.error(
+        'Failed to prepare feature request notification email:',
+        emailError
+      );
+    }
 
     return NextResponse.json(featureRequest, { status: 201 });
   } catch (error) {
