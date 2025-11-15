@@ -19,6 +19,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -35,16 +36,19 @@ import {
   Tag,
   User as UserIcon,
   Send,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import FeatureRequestSearch from '@/components/features/feature-requests/FeatureRequestSearch';
 import FeatureRequestCard from '@/components/features/feature-requests/FeatureRequestCard';
 import FeatureRequestForm from '@/components/features/feature-requests/FeatureRequestForm';
+import FeatureRequestBoard from '@/components/features/feature-requests/FeatureRequestBoard';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface FeatureRequest {
   id: string;
+  user_id?: string;
   title: string;
   description: string;
   status:
@@ -105,21 +109,28 @@ export default function FeatureRequestsPage() {
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     search: '',
     status: '',
     category_id: '',
     sort: 'newest',
   });
+  const [viewMode, setViewMode] = useState<'grid' | 'board'>('grid');
 
   // Load feature requests
   const loadFeatureRequests = useCallback(
-    async (page = 1, searchFilters = filters) => {
+    async (page = 1, searchFilters = filters, currentViewMode = viewMode) => {
       setIsLoading(true);
       try {
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: '12',
+          // Load more items for board view, or use pagination for grid view
+          limit:
+            user?.role === 'admin' && currentViewMode === 'board'
+              ? '100'
+              : '12',
           ...searchFilters,
         });
 
@@ -157,13 +168,13 @@ export default function FeatureRequestsPage() {
         setIsLoading(false);
       }
     },
-    [filters]
+    [filters, user?.role, viewMode]
   );
 
-  // Load feature requests on mount and when filters change
+  // Load feature requests on mount and when filters or view mode change
   useEffect(() => {
-    loadFeatureRequests(1, filters);
-  }, [filters, loadFeatureRequests]);
+    loadFeatureRequests(1, filters, viewMode);
+  }, [filters, loadFeatureRequests, viewMode]);
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters(newFilters);
@@ -285,6 +296,54 @@ export default function FeatureRequestsPage() {
     }
   };
 
+  const isOwner =
+    user && selectedRequest && user.id === selectedRequest.user_id;
+
+  const handleDelete = async () => {
+    if (!selectedRequest) return;
+
+    setIsDeleting(true);
+    try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (user?.id) {
+        headers['X-User-Id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/feature-requests/${selectedRequest.id}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        toast.success('Feature request deleted successfully');
+        // Remove from list
+        setFeatureRequests(prevRequests =>
+          prevRequests.filter(req => req.id !== selectedRequest.id)
+        );
+        // Close modals
+        setIsDetailModalOpen(false);
+        setShowDeleteDialog(false);
+        setSelectedRequest(null);
+        // Update total count
+        setTotalCount(prev => Math.max(0, prev - 1));
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to delete feature request');
+      }
+    } catch (error) {
+      console.error('Error deleting feature request:', error);
+      toast.error('Failed to delete feature request');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleVote = async (
     featureRequestId: string,
     voteType: 'upvote' | 'downvote'
@@ -297,6 +356,7 @@ export default function FeatureRequestsPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ vote_type: voteType }),
         }
       );
@@ -311,6 +371,39 @@ export default function FeatureRequestsPage() {
     } catch (error) {
       console.error('Error voting:', error);
       toast.error('Failed to vote');
+    }
+  };
+
+  const handleStatusUpdate = async (
+    requestId: string,
+    newStatus: string
+  ): Promise<void> => {
+    try {
+      const response = await fetch(
+        `/api/admin/feature-requests/${requestId}/status`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ error: 'Failed to update status' }));
+        throw new Error(error.error || 'Failed to update status');
+      }
+
+      // Don't reload immediately - let the board component handle the state update
+      // This prevents re-renders during drag operations
+      // The board will update its local state, and we can reload on next page load
+    } catch (error) {
+      console.error('Error updating status:', error);
+      throw error;
     }
   };
 
@@ -550,10 +643,32 @@ export default function FeatureRequestsPage() {
 
         {/* Search and Filters */}
         <div className="mb-6">
-          <FeatureRequestSearch
-            onFiltersChange={handleFiltersChange}
-            initialFilters={filters}
-          />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <FeatureRequestSearch
+                onFiltersChange={handleFiltersChange}
+                initialFilters={filters}
+              />
+            </div>
+            {user?.role === 'admin' && (
+              <div className="flex items-center gap-2 ml-4">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  Grid View
+                </Button>
+                <Button
+                  variant={viewMode === 'board' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('board')}
+                >
+                  Board View
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Results */}
@@ -580,58 +695,76 @@ export default function FeatureRequestsPage() {
           ) : featureRequests.length > 0 ? (
             <>
               {/* Results Header */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
                   Showing {featureRequests.length} of {totalCount} feature
                   requests
                 </p>
 
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    Page {currentPage} of {totalPages}
-                  </Badge>
+                {viewMode === 'grid' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      Page {currentPage} of {totalPages}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Feature Requests View */}
+              {user?.role === 'admin' && viewMode === 'board' ? (
+                <FeatureRequestBoard
+                  featureRequests={featureRequests}
+                  onStatusUpdate={handleStatusUpdate}
+                  onVote={handleVote}
+                  onClick={async request => {
+                    setSelectedRequest(request);
+                    setIsDetailModalOpen(true);
+                    // Load comments when modal opens
+                    if (request.id) {
+                      await loadComments(request.id);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featureRequests.map(request => (
+                    <FeatureRequestCard
+                      key={request.id}
+                      id={request.id}
+                      title={request.title}
+                      description={request.description}
+                      status={request.status}
+                      priority={request.priority}
+                      vote_count={request.vote_count}
+                      view_count={request.view_count}
+                      created_at={request.created_at}
+                      updated_at={request.updated_at}
+                      category={request.feature_request_categories}
+                      tags={request.feature_request_tag_assignments?.map(
+                        assignment => ({
+                          name: assignment.feature_request_tags.name,
+                        })
+                      )}
+                      author={request.profiles}
+                      is_featured={request.is_featured}
+                      is_public={request.is_public}
+                      comments_count={request.comments_count || 0}
+                      onVote={handleVote}
+                      onClick={async () => {
+                        setSelectedRequest(request);
+                        setIsDetailModalOpen(true);
+                        // Load comments when modal opens
+                        if (request.id) {
+                          await loadComments(request.id);
+                        }
+                      }}
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
 
-              {/* Feature Requests Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featureRequests.map(request => (
-                  <FeatureRequestCard
-                    key={request.id}
-                    id={request.id}
-                    title={request.title}
-                    description={request.description}
-                    status={request.status}
-                    priority={request.priority}
-                    vote_count={request.vote_count}
-                    view_count={request.view_count}
-                    created_at={request.created_at}
-                    updated_at={request.updated_at}
-                    category={request.feature_request_categories}
-                    tags={request.feature_request_tag_assignments?.map(
-                      assignment => ({
-                        name: assignment.feature_request_tags.name,
-                      })
-                    )}
-                    author={request.profiles}
-                    is_featured={request.is_featured}
-                    is_public={request.is_public}
-                    comments_count={request.comments_count || 0}
-                    onVote={handleVote}
-                    onClick={async () => {
-                      setSelectedRequest(request);
-                      setIsDetailModalOpen(true);
-                      // Load comments when modal opens
-                      if (request.id) {
-                        await loadComments(request.id);
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
+              {/* Pagination - Only show in grid view */}
+              {viewMode === 'grid' && totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     variant="outline"
@@ -749,26 +882,39 @@ export default function FeatureRequestsPage() {
                       </DialogDescription>
                     </div>
                     <div className="flex flex-col items-end gap-2 ml-4">
-                      {selectedRequest.is_featured && (
+                      <div className="flex items-center gap-2">
+                        {selectedRequest.is_featured && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                          >
+                            Featured
+                          </Badge>
+                        )}
                         <Badge
-                          variant="secondary"
-                          className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                          variant={
+                            selectedRequest.is_public ? 'default' : 'secondary'
+                          }
+                          className={
+                            selectedRequest.is_public
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }
                         >
-                          Featured
+                          {selectedRequest.is_public ? 'Public' : 'Private'}
                         </Badge>
-                      )}
-                      <Badge
-                        variant={
-                          selectedRequest.is_public ? 'default' : 'secondary'
-                        }
-                        className={
-                          selectedRequest.is_public
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }
-                      >
-                        {selectedRequest.is_public ? 'Public' : 'Private'}
-                      </Badge>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => setShowDeleteDialog(true)}
+                            title="Delete request"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </DialogHeader>
@@ -982,6 +1128,36 @@ export default function FeatureRequestsPage() {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Feature Request</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this feature request? This will
+                permanently delete the request and all associated comments. This
+                action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Request'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

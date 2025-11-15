@@ -15,11 +15,25 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Handle Supabase Auth for all other routes
+  // Skip auth for static assets and API routes (they handle their own auth)
+  const pathname = request.nextUrl.pathname;
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon') ||
+    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|woff|woff2|ttf|eot)$/i)
+  ) {
+    return NextResponse.next();
+  }
+
+  // Handle Supabase Auth for other routes
   const { supabase, response } = createClient(request);
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser();
+  // Don't await - let it happen in background to avoid blocking navigation
+  supabase.auth.getUser().catch(() => {
+    // Silently fail - session refresh is not critical for navigation
+  });
 
   return response;
 }

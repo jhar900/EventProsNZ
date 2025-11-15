@@ -173,7 +173,7 @@ export default function FeatureRequestCard({
 
   return (
     <Card
-      className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${is_featured ? 'ring-2 ring-yellow-400' : ''} ${className}`}
+      className={`hover:shadow-lg transition-all duration-200 ${onClick ? 'cursor-pointer' : ''} ${is_featured ? 'ring-2 ring-yellow-400' : ''} ${className}`}
       onClick={onClick}
     >
       <CardHeader className="pb-3">

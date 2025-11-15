@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['tyzyldvtvzxbmuomwftj.supabase.co'],
+    domains: [
+      'tyzyldvtvzxbmuomwftj.supabase.co',
+      'lh3.googleusercontent.com', // Google profile images
+    ],
   },
   experimental: {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],

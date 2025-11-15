@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 
 interface ProfileCompletionStatus {
   isComplete: boolean;
@@ -15,16 +16,29 @@ interface ProfileCompletionStatus {
 }
 
 export function useProfileCompletion() {
+  const { user, isLoading: authLoading } = useAuth();
   const [status, setStatus] = useState<ProfileCompletionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCompletionStatus = async () => {
+    // Don't fetch if user is not authenticated
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
       const response = await fetch('/api/profile/completion');
+
+      // Handle 401 (Unauthorized) gracefully - user just isn't logged in yet
+      if (response.status === 401) {
+        setIsLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch profile completion status');
@@ -33,7 +47,10 @@ export function useProfileCompletion() {
       const data = await response.json();
       setStatus(data.status);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Only set error for non-401 errors
+      if (err instanceof Error && !err.message.includes('401')) {
+        setError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -59,8 +76,12 @@ export function useProfileCompletion() {
   };
 
   useEffect(() => {
-    fetchCompletionStatus();
-  }, []);
+    // Only fetch when auth is loaded and user exists
+    if (!authLoading) {
+      fetchCompletionStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
   return {
     status,

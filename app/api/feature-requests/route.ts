@@ -123,76 +123,115 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(params.limit || '20'), 100);
     const offset = (page - 1) * limit;
 
-    // Show public requests, or user's own requests if authenticated
-    // We'll fetch both separately and combine to avoid RLS conflicts with OR queries
-    let publicQuery = supabase
-      .from('feature_requests')
-      .select(
-        `
-        *,
-        feature_request_categories(name, color),
-        feature_request_tag_assignments(
-          feature_request_tags(name)
-        )
-      `
-      )
-      .eq('is_public', true);
-
-    let userOwnQuery: any = null;
+    // Check if user is admin
+    let isAdmin = false;
     if (user) {
-      console.log(
-        'User authenticated, will fetch public requests AND user own requests. User ID:',
-        user.id
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      isAdmin = userData?.role === 'admin';
+      console.log('User role check:', {
+        userId: user.id,
+        role: userData?.role,
+        isAdmin,
+      });
+    }
+
+    // If admin, fetch ALL requests (public and private)
+    // Otherwise, show public requests and user's own requests
+    let allRequestsQuery: any = null;
+    let publicQuery: any = null;
+    let userOwnQuery: any = null;
+
+    if (isAdmin) {
+      // Admin can see all requests - use admin client to bypass RLS
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      allRequestsQuery = supabaseAdmin.from('feature_requests').select(
+        `
+          *,
+          feature_request_categories(name, color),
+          feature_request_tag_assignments(
+            feature_request_tags(name)
+          )
+        `
       );
-
-      // Check if user was authenticated via header (fallback method)
-      // If so, we need to use server client to bypass RLS since auth context isn't set
-      const userIdFromHeader =
-        request.headers.get('x-user-id') ||
-        request.headers.get('X-User-Id') ||
-        request.headers.get('X-USER-ID');
-
-      if (userIdFromHeader === user.id) {
-        // User authenticated via header, use server client to bypass RLS
-        const { createClient: createServerClient } = await import(
-          '@/lib/supabase/server'
-        );
-        const serverSupabase = createServerClient();
-        userOwnQuery = serverSupabase
-          .from('feature_requests')
-          .select(
-            `
-            *,
-            feature_request_categories(name, color),
-            feature_request_tag_assignments(
-              feature_request_tags(name)
-            )
-          `
-          )
-          .eq('user_id', user.id);
-        console.log(
-          'Using server client for user own requests (header auth - bypasses RLS)'
-        );
-      } else {
-        // User authenticated via cookies, use middleware client (RLS will work)
-        userOwnQuery = supabase
-          .from('feature_requests')
-          .select(
-            `
-            *,
-            feature_request_categories(name, color),
-            feature_request_tag_assignments(
-              feature_request_tags(name)
-            )
-          `
-          )
-          .eq('user_id', user.id);
-        console.log(
-          'Using middleware client for user own requests (cookie auth - uses RLS)'
-        );
-      }
+      console.log(
+        'Admin user detected - fetching ALL requests (public and private)'
+      );
     } else {
-      console.log('No user authenticated, showing only public requests');
+      // Non-admin: show public requests, or user's own requests if authenticated
+      // We'll fetch both separately and combine to avoid RLS conflicts with OR queries
+      publicQuery = supabase
+        .from('feature_requests')
+        .select(
+          `
+          *,
+          feature_request_categories(name, color),
+          feature_request_tag_assignments(
+            feature_request_tags(name)
+          )
+        `
+        )
+        .eq('is_public', true);
+
+      if (user) {
+        console.log(
+          'User authenticated, will fetch public requests AND user own requests. User ID:',
+          user.id
+        );
+
+        // Check if user was authenticated via header (fallback method)
+        // If so, we need to use server client to bypass RLS since auth context isn't set
+        const userIdFromHeader =
+          request.headers.get('x-user-id') ||
+          request.headers.get('X-User-Id') ||
+          request.headers.get('X-USER-ID');
+
+        if (userIdFromHeader === user.id) {
+          // User authenticated via header, use server client to bypass RLS
+          const { createClient: createServerClient } = await import(
+            '@/lib/supabase/server'
+          );
+          const serverSupabase = createServerClient();
+          userOwnQuery = serverSupabase
+            .from('feature_requests')
+            .select(
+              `
+              *,
+              feature_request_categories(name, color),
+              feature_request_tag_assignments(
+                feature_request_tags(name)
+              )
+            `
+            )
+            .eq('user_id', user.id);
+          console.log(
+            'Using server client for user own requests (header auth - bypasses RLS)'
+          );
+        } else {
+          // User authenticated via cookies, use middleware client (RLS will work)
+          userOwnQuery = supabase
+            .from('feature_requests')
+            .select(
+              `
+              *,
+              feature_request_categories(name, color),
+              feature_request_tag_assignments(
+                feature_request_tags(name)
+              )
+            `
+            )
+            .eq('user_id', user.id);
+          console.log(
+            'Using middleware client for user own requests (cookie auth - uses RLS)'
+          );
+        }
+      } else {
+        console.log('No user authenticated, showing only public requests');
+      }
     }
 
     // Apply filters to queries
@@ -228,50 +267,81 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Fetch public requests
-    publicQuery = applyFilters(publicQuery);
-    publicQuery = applySorting(publicQuery);
-    const { data: publicRequests, error: publicError } = await publicQuery;
-
-    console.log('Public requests fetched:', {
-      count: publicRequests?.length || 0,
-      error: publicError?.message,
-    });
-
-    // Fetch user's own requests if authenticated
+    // Fetch requests based on user role
+    let featureRequests: any[] = [];
+    let publicRequests: any[] = [];
     let userOwnRequests: any[] = [];
-    if (userOwnQuery) {
-      userOwnQuery = applyFilters(userOwnQuery);
-      userOwnQuery = applySorting(userOwnQuery);
-      const { data: ownRequests, error: ownError } = await userOwnQuery;
+    let error: any = null;
 
-      console.log('User own requests fetched:', {
-        count: ownRequests?.length || 0,
-        error: ownError?.message,
+    if (allRequestsQuery) {
+      // Admin: fetch all requests
+      allRequestsQuery = applyFilters(allRequestsQuery);
+      allRequestsQuery = applySorting(allRequestsQuery);
+      const { data: allRequests, error: allError } = await allRequestsQuery;
+
+      console.log('All requests fetched (admin):', {
+        count: allRequests?.length || 0,
+        error: allError?.message,
+        publicCount: allRequests?.filter((fr: any) => fr.is_public).length || 0,
         privateCount:
-          ownRequests?.filter((fr: any) => !fr.is_public).length || 0,
+          allRequests?.filter((fr: any) => !fr.is_public).length || 0,
       });
 
-      if (!ownError && ownRequests) {
-        userOwnRequests = ownRequests;
+      if (!allError && allRequests) {
+        featureRequests = allRequests;
+      } else {
+        error = allError;
       }
-    }
+    } else {
+      // Non-admin: fetch public requests
+      publicQuery = applyFilters(publicQuery);
+      publicQuery = applySorting(publicQuery);
+      const { data: publicReqs, error: publicError } = await publicQuery;
 
-    // Combine and deduplicate (user's own requests might also be public)
-    const allRequestsMap = new Map();
-    if (publicRequests) {
-      publicRequests.forEach((fr: any) => {
-        allRequestsMap.set(fr.id, fr);
+      console.log('Public requests fetched:', {
+        count: publicReqs?.length || 0,
+        error: publicError?.message,
       });
-    }
-    if (userOwnRequests) {
-      userOwnRequests.forEach((fr: any) => {
-        allRequestsMap.set(fr.id, fr);
-      });
-    }
 
-    // Convert back to array and apply sorting
-    let featureRequests = Array.from(allRequestsMap.values());
+      if (publicReqs) {
+        publicRequests = publicReqs;
+      }
+      error = publicError;
+
+      // Fetch user's own requests if authenticated
+      if (userOwnQuery) {
+        userOwnQuery = applyFilters(userOwnQuery);
+        userOwnQuery = applySorting(userOwnQuery);
+        const { data: ownRequests, error: ownError } = await userOwnQuery;
+
+        console.log('User own requests fetched:', {
+          count: ownRequests?.length || 0,
+          error: ownError?.message,
+          privateCount:
+            ownRequests?.filter((fr: any) => !fr.is_public).length || 0,
+        });
+
+        if (!ownError && ownRequests) {
+          userOwnRequests = ownRequests;
+        }
+      }
+
+      // Combine and deduplicate (user's own requests might also be public)
+      const allRequestsMap = new Map();
+      if (publicRequests) {
+        publicRequests.forEach((fr: any) => {
+          allRequestsMap.set(fr.id, fr);
+        });
+      }
+      if (userOwnRequests) {
+        userOwnRequests.forEach((fr: any) => {
+          allRequestsMap.set(fr.id, fr);
+        });
+      }
+
+      // Convert back to array
+      featureRequests = Array.from(allRequestsMap.values());
+    }
 
     // Re-apply sorting to combined results
     switch (params.sort) {
@@ -302,7 +372,6 @@ export async function GET(request: NextRequest) {
     const total = featureRequests.length;
     featureRequests = featureRequests.slice(offset, offset + limit);
 
-    const error = publicError;
     const count = total;
 
     if (error) {
@@ -318,6 +387,7 @@ export async function GET(request: NextRequest) {
       count: featureRequests?.length || 0,
       total: count,
       user: user?.id || 'anonymous',
+      isAdmin,
       publicCount:
         featureRequests?.filter((fr: any) => fr.is_public).length || 0,
       privateCount:

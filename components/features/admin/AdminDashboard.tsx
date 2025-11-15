@@ -50,20 +50,33 @@ export default function AdminDashboard() {
 
       if (analyticsResponse.ok) {
         const analyticsData = await analyticsResponse.json();
-        setMetrics({
-          totalUsers: analyticsData.metrics.totalUsers,
-          newUsers: analyticsData.metrics.newUsers,
-          totalContractors: analyticsData.metrics.totalContractors,
-          verifiedContractors: analyticsData.metrics.verifiedContractors,
-          totalEventManagers: analyticsData.metrics.totalEventManagers,
-          verificationRate: analyticsData.metrics.verificationRate,
+        console.log('Analytics data received:', analyticsData);
+        console.log('Metrics:', analyticsData.metrics);
+
+        const metricsData = {
+          totalUsers: analyticsData.metrics?.totalUsers ?? 0,
+          newUsers: analyticsData.metrics?.newUsers ?? 0,
+          totalContractors: analyticsData.metrics?.totalContractors ?? 0,
+          verifiedContractors: analyticsData.metrics?.verifiedContractors ?? 0,
+          totalEventManagers: analyticsData.metrics?.totalEventManagers ?? 0,
+          verificationRate: analyticsData.metrics?.verificationRate ?? 0,
           pendingVerifications:
-            analyticsData.metrics.pendingVerifications ||
-            analyticsData.metrics.totalContractors -
-              analyticsData.metrics.verifiedContractors,
+            analyticsData.metrics?.pendingVerifications ??
+            (analyticsData.metrics?.totalContractors ?? 0) -
+              (analyticsData.metrics?.verifiedContractors ?? 0),
           activeAlerts: 0, // Will be updated from health response
-          systemHealth: 'healthy', // Will be updated from health response
-        });
+          systemHealth: 'healthy' as const, // Will be updated from health response
+        };
+
+        console.log('Setting metrics:', metricsData);
+        setMetrics(metricsData);
+      } else {
+        const errorData = await analyticsResponse.json().catch(() => ({}));
+        console.error(
+          'Analytics API error:',
+          analyticsResponse.status,
+          errorData
+        );
       }
 
       if (healthResponse.ok) {
@@ -84,7 +97,7 @@ export default function AdminDashboard() {
 
       setLastUpdated(new Date());
     } catch (error) {
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -131,14 +144,15 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64" role="status">
-        <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading dashboard...</span>
-      </div>
-    );
-  }
+  // Show content immediately, load data in background
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64" role="status">
+  //       <RefreshCw className="h-8 w-8 animate-spin" />
+  //       <span className="ml-2">Loading dashboard...</span>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-6">
@@ -202,6 +216,22 @@ export default function AdminDashboard() {
       )}
 
       {/* Key Metrics */}
+      {isLoading && !metrics && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2" />
+                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
       {metrics && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>

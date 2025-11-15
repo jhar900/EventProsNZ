@@ -19,21 +19,6 @@ interface ContractorFiltersProps {
   className?: string;
 }
 
-const SERVICE_TYPES = [
-  'catering',
-  'photography',
-  'videography',
-  'music',
-  'decorations',
-  'venue',
-  'planning',
-  'security',
-  'transportation',
-  'flowers',
-  'lighting',
-  'other',
-];
-
 const LOCATIONS = [
   'Auckland',
   'Wellington',
@@ -59,6 +44,29 @@ export function ContractorFilters({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [localFilters, setLocalFilters] =
     useState<ContractorFiltersType>(filters);
+  const [serviceTypes, setServiceTypes] = useState<string[]>([]);
+  const [loadingServiceTypes, setLoadingServiceTypes] = useState(true);
+
+  // Fetch service categories from API
+  useEffect(() => {
+    const fetchServiceTypes = async () => {
+      try {
+        const response = await fetch('/api/contractors/filters');
+        if (response.ok) {
+          const data = await response.json();
+          setServiceTypes(data.service_types || []);
+        }
+      } catch (error) {
+        console.error('Error fetching service types:', error);
+        // Fallback to empty array if API fails
+        setServiceTypes([]);
+      } finally {
+        setLoadingServiceTypes(false);
+      }
+    };
+
+    fetchServiceTypes();
+  }, []);
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -177,24 +185,34 @@ export function ContractorFilters({
               Service Type
             </label>
             <div className="flex flex-wrap gap-2">
-              {SERVICE_TYPES.map(type => (
-                <Button
-                  key={type}
-                  variant={
-                    localFilters.serviceType === type ? 'default' : 'outline'
-                  }
-                  size="sm"
-                  onClick={() =>
-                    handleFilterChange(
-                      'serviceType',
-                      localFilters.serviceType === type ? undefined : type
-                    )
-                  }
-                  className="text-xs"
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </Button>
-              ))}
+              {loadingServiceTypes ? (
+                <div className="text-sm text-gray-500">
+                  Loading categories...
+                </div>
+              ) : serviceTypes.length === 0 ? (
+                <div className="text-sm text-gray-500">
+                  No service categories available
+                </div>
+              ) : (
+                serviceTypes.map(type => (
+                  <Button
+                    key={type}
+                    variant={
+                      localFilters.serviceType === type ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onClick={() =>
+                      handleFilterChange(
+                        'serviceType',
+                        localFilters.serviceType === type ? undefined : type
+                      )
+                    }
+                    className="text-xs"
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Button>
+                ))
+              )}
             </div>
           </div>
 

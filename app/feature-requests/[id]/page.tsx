@@ -31,14 +31,25 @@ import {
   PlayCircle,
   FileText,
   Send,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import FeatureRequestVoting from '@/components/features/feature-requests/FeatureRequestVoting';
 import FeatureRequestStatus from '@/components/features/feature-requests/FeatureRequestStatus';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface FeatureRequest {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   status:
@@ -84,6 +95,7 @@ interface FeatureRequest {
 export default function FeatureRequestPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [featureRequest, setFeatureRequest] = useState<FeatureRequest | null>(
     null
   );
@@ -91,6 +103,8 @@ export default function FeatureRequestPage() {
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load feature request data
   useEffect(() => {
@@ -228,6 +242,37 @@ export default function FeatureRequestPage() {
     });
   };
 
+  const isOwner = user && featureRequest && user.id === featureRequest.user_id;
+
+  const handleDelete = async () => {
+    if (!featureRequest) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/feature-requests/${featureRequest.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        toast.success('Feature request deleted successfully');
+        router.push('/feature-requests');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to delete feature request');
+      }
+    } catch (error) {
+      console.error('Error deleting feature request:', error);
+      toast.error('Failed to delete feature request');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -269,7 +314,7 @@ export default function FeatureRequestPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <Link href="/feature-requests">
             <Button
               variant="outline"
@@ -280,6 +325,17 @@ export default function FeatureRequestPage() {
               Back to Requests
             </Button>
           </Link>
+          {isOwner && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Request
+            </Button>
+          )}
         </div>
 
         <div className="flex items-start justify-between">
@@ -536,6 +592,36 @@ export default function FeatureRequestPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Feature Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this feature request? This will
+              permanently delete the request and all associated comments. This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

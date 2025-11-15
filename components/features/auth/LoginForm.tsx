@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -209,45 +210,31 @@ function GoogleSignInButton({
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
 }) {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      // In a real implementation, you would integrate with Google OAuth
-      // For now, we'll simulate the process
-      const response = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id_token: 'mock_google_token', // This would be a real Google ID token
-          role: 'event_manager',
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Google sign-in failed');
+  const { signInWithGoogle, isLoading, isGoogleLoaded } = useGoogleAuth({
+    onSuccess: async () => {
+      // The hook handles the API call and stores user data
+      // Fetch the user data from localStorage
+      const storedUserData = localStorage.getItem('user_data');
+      if (storedUserData) {
+        try {
+          const userData = JSON.parse(storedUserData);
+          onSuccess?.(userData);
+        } catch (err) {
+          onError?.('Failed to parse user data');
+        }
+      } else {
+        onError?.('User data not found after sign-in');
       }
-
-      onSuccess?.(result.user);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Google sign-in failed';
-      onError?.(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    ...(onError && { onError }),
+    role: 'event_manager',
+  });
 
   return (
     <button
       type="button"
-      onClick={handleGoogleSignIn}
-      disabled={isLoading}
+      onClick={signInWithGoogle}
+      disabled={isLoading || !isGoogleLoaded}
       className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out"
     >
       <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">

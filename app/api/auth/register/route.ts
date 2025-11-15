@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { sendWelcomeEmail } from '@/lib/email/welcome-email';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -114,7 +115,19 @@ export async function POST(request: NextRequest) {
       });
 
     if (sessionError) {
-      }
+    }
+
+    // Send welcome email (non-blocking - don't fail registration if email fails)
+    sendWelcomeEmail({
+      userId: authData.user.id,
+      email,
+      firstName: first_name,
+      lastName: last_name,
+      role,
+    }).catch(error => {
+      // Log error but don't throw - registration should succeed even if email fails
+      console.error('Failed to send welcome email during registration:', error);
+    });
 
     return NextResponse.json({
       message: 'User registered successfully',

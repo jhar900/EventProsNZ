@@ -5,28 +5,49 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();
 
-    // Get all unique service categories
+    // Get all active service categories from the service_categories table
     const { data: serviceCategories, error: serviceError } = await supabase
-      .from('business_profiles')
-      .select('service_categories')
-      .not('service_categories', 'is', null);
+      .from('service_categories')
+      .select('name, id')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+
+    let serviceTypes: string[] = [];
 
     if (serviceError) {
-      return NextResponse.json(
-        { error: 'Failed to fetch service categories' },
-        { status: 500 }
+      // Fallback to old method if table doesn't exist yet
+      console.warn(
+        'service_categories table not found, using fallback method:',
+        serviceError
       );
-    }
 
-    // Flatten and deduplicate service categories
-    const allServiceTypes = new Set<string>();
-    serviceCategories?.forEach(profile => {
-      if (profile.service_categories) {
-        profile.service_categories.forEach((category: string) => {
-          allServiceTypes.add(category);
-        });
+      const { data: businessProfiles, error: fallbackError } = await supabase
+        .from('business_profiles')
+        .select('service_categories')
+        .not('service_categories', 'is', null);
+
+      if (fallbackError) {
+        return NextResponse.json(
+          { error: 'Failed to fetch service categories' },
+          { status: 500 }
+        );
       }
-    });
+
+      // Flatten and deduplicate service categories from business profiles
+      const allServiceTypes = new Set<string>();
+      businessProfiles?.forEach(profile => {
+        if (profile.service_categories) {
+          profile.service_categories.forEach((category: string) => {
+            allServiceTypes.add(category);
+          });
+        }
+      });
+
+      serviceTypes = Array.from(allServiceTypes).sort();
+    } else {
+      // Use categories from service_categories table
+      serviceTypes = serviceCategories?.map(cat => cat.name) || [];
+    }
 
     // Get all unique regions from service areas
     const { data: regions, error: regionsError } = await supabase
@@ -71,8 +92,8 @@ export async function GET(request: NextRequest) {
         ?.flatMap(service => [service.price_range_min, service.price_range_max])
         .filter(price => price !== null) || [];
 
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 10000;
 
     // Create price range buckets
     const priceRanges_buckets = [
@@ -106,7 +127,7 @@ export async function GET(request: NextRequest) {
     ];
 
     return NextResponse.json({
-      service_types: Array.from(allServiceTypes).sort(),
+      service_types: serviceTypes,
       regions: Array.from(allRegions).sort(),
       price_ranges: priceRanges_buckets,
       rating_ranges: ratingRanges,
@@ -114,6 +135,7 @@ export async function GET(request: NextRequest) {
       max_price: maxPrice,
     });
   } catch (error) {
+    console.error('Error in GET /api/contractors/filters:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

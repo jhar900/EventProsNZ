@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 
 const voteSchema = z.object({
@@ -8,16 +8,87 @@ const voteSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Handle params being a Promise (Next.js 15)
+    const resolvedParams = await Promise.resolve(params);
+    const featureRequestId = resolvedParams.id;
 
-    if (authError || !user) {
+    // Log incoming cookies for debugging
+    const cookieHeader = request.headers.get('cookie');
+    const cookies = request.cookies.getAll();
+    console.log('Vote route - Incoming cookies:', {
+      cookieHeader: cookieHeader ? 'present' : 'missing',
+      cookieHeaderPreview: cookieHeader
+        ? cookieHeader.substring(0, 100) + '...'
+        : null,
+      cookieCount: cookies.length,
+      cookieNames: cookies.map(c => c.name),
+      cookieDetails: cookies.map(c => ({
+        name: c.name,
+        hasValue: !!c.value,
+        valueLength: c.value?.length || 0,
+      })),
+      featureRequestId,
+    });
+
+    const { supabase } = createClient(request);
+
+    // Try to get user from session first (better cookie handling)
+    let user: any;
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    console.log('Vote route - Session check:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      sessionError: sessionError?.message,
+    });
+
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+    }
+
+    if (session?.user) {
+      user = session.user;
+      console.log('Vote route - User authenticated from session:', user.id);
+    } else {
+      // Fallback to getUser
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      console.log('Vote route - getUser check:', {
+        hasUser: !!getUserUser,
+        userId: getUserUser?.id,
+        authError: authError?.message,
+      });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+      }
+
+      if (getUserUser) {
+        user = getUserUser;
+        console.log('Vote route - User authenticated from getUser:', user.id);
+      } else {
+        console.error(
+          'Vote route - No user found. Session:',
+          session,
+          'Auth error:',
+          authError
+        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    if (!user) {
+      console.error('User is null after authentication check');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,7 +99,7 @@ export async function POST(
     const { data: featureRequest, error: fetchError } = await supabase
       .from('feature_requests')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', featureRequestId)
       .single();
 
     if (fetchError) {
@@ -50,7 +121,7 @@ export async function POST(
     const { data: existingVote, error: voteCheckError } = await supabase
       .from('feature_request_votes')
       .select('id, vote_type')
-      .eq('feature_request_id', params.id)
+      .eq('feature_request_id', featureRequestId)
       .eq('user_id', user.id)
       .single();
 
@@ -109,7 +180,7 @@ export async function POST(
       const { error: insertError } = await supabase
         .from('feature_request_votes')
         .insert({
-          feature_request_id: params.id,
+          feature_request_id: featureRequestId,
           user_id: user.id,
           vote_type,
         });
@@ -136,8 +207,15 @@ export async function POST(
       );
     }
     console.error('Error in POST /api/feature-requests/[id]/vote:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -145,16 +223,39 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Handle params being a Promise (Next.js 15)
+    const resolvedParams = await Promise.resolve(params);
+    const featureRequestId = resolvedParams.id;
 
-    if (authError || !user) {
+    const { supabase } = createClient(request);
+
+    // Try to get user from session first (better cookie handling)
+    let user: any;
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      user = session.user;
+    } else {
+      // Fallback to getUser
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (getUserUser) {
+        user = getUserUser;
+      } else {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -169,7 +270,7 @@ export async function GET(
         profiles(first_name, last_name, avatar_url)
       `
       )
-      .eq('feature_request_id', params.id)
+      .eq('feature_request_id', featureRequestId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -184,7 +285,7 @@ export async function GET(
     const { data: userVote } = await supabase
       .from('feature_request_votes')
       .select('vote_type')
-      .eq('feature_request_id', params.id)
+      .eq('feature_request_id', featureRequestId)
       .eq('user_id', user.id)
       .single();
 

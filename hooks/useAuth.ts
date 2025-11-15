@@ -31,27 +31,22 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Emergency fallback: force loading to false after 1 second
+  // Emergency fallback: force loading to false after 500ms for faster perceived performance
   React.useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
-      console.log('Emergency timeout triggered - setting loading to false');
       setIsLoading(false);
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(emergencyTimeout);
   }, []);
 
   const refreshUser = async () => {
     try {
-      console.log('refreshUser called');
       // Check if Supabase is properly configured
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        console.log('No Supabase URL configured');
         setUser(null);
         return;
       }
-
-      console.log('Supabase URL configured, getting session...');
 
       const {
         data: { session },
@@ -63,35 +58,25 @@ export function useAuth() {
         if (storedUserData) {
           const userData = JSON.parse(storedUserData);
 
-          // Try to get updated profile data using the stored user ID
+          // Try to get updated profile data using the stored user ID (in parallel)
           if (userData.id) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select(
-                'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
-              )
-              .eq('user_id', userData.id)
-              .single();
-
-            // Get business profile data using admin client to bypass RLS
-            let businessProfileData = null;
-            try {
-              const { data: businessData } = await supabase
+            const [profileResult, businessProfileResult] = await Promise.all([
+              supabase
+                .from('profiles')
+                .select(
+                  'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
+                )
+                .eq('user_id', userData.id)
+                .single(),
+              supabase
                 .from('business_profiles')
                 .select('*')
                 .eq('user_id', userData.id)
-                .single();
-              businessProfileData = businessData;
-              console.log(
-                'Business profile loaded in localStorage fallback:',
-                businessProfileData
-              );
-            } catch (error) {
-              // Business profile might not exist yet, that's okay
-              console.log(
-                'No business profile found for user in localStorage fallback'
-              );
-            }
+                .maybeSingle(),
+            ]);
+
+            const profileData = profileResult.data;
+            const businessProfileData = businessProfileResult.data;
 
             if (profileData) {
               const updatedUser = {
@@ -99,10 +84,6 @@ export function useAuth() {
                 profile: profileData,
                 business_profile: businessProfileData,
               };
-              console.log(
-                'Setting user with business profile in localStorage fallback:',
-                updatedUser
-              );
               setUser(updatedUser);
               return;
             } else if (businessProfileData) {
@@ -111,10 +92,6 @@ export function useAuth() {
                 ...userData,
                 business_profile: businessProfileData,
               };
-              console.log(
-                'Setting user with only business profile in localStorage fallback:',
-                updatedUser
-              );
               setUser(updatedUser);
               return;
             }
@@ -128,29 +105,24 @@ export function useAuth() {
         }
       }
 
-      // Get updated profile data
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select(
-          'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
-        )
-        .eq('user_id', session.user.id)
-        .single();
-
-      // Get business profile data using admin client to bypass RLS
-      let businessProfileData = null;
-      try {
-        const { data: businessData } = await supabase
+      // Get updated profile data and business profile in parallel
+      const [profileResult, businessProfileResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select(
+            'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
+          )
+          .eq('user_id', session.user.id)
+          .single(),
+        supabase
           .from('business_profiles')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
-        businessProfileData = businessData;
-        console.log('Business profile loaded in useAuth:', businessProfileData);
-      } catch (error) {
-        // Business profile might not exist yet, that's okay
-        console.log('No business profile found for user');
-      }
+          .maybeSingle(),
+      ]);
+
+      const profileData = profileResult.data;
+      const businessProfileData = businessProfileResult.data;
 
       if (profileData) {
         // Always try to get current user data first
@@ -163,10 +135,6 @@ export function useAuth() {
             profile: profileData,
             business_profile: businessProfileData,
           };
-          console.log(
-            'Setting user with business profile in useAuth:',
-            updatedUser
-          );
           setUser(updatedUser);
         } else {
           // Fallback: create a basic user object with the profile data
@@ -179,10 +147,6 @@ export function useAuth() {
             profile: profileData,
             business_profile: businessProfileData,
           };
-          console.log(
-            'Setting fallback user with business profile in useAuth:',
-            fallbackUser
-          );
           setUser(fallbackUser);
         }
       } else if (businessProfileData) {
@@ -195,10 +159,6 @@ export function useAuth() {
             ...currentUser,
             business_profile: businessProfileData,
           };
-          console.log(
-            'Setting user with only business profile in useAuth:',
-            updatedUser
-          );
           setUser(updatedUser);
         } else {
           // Fallback: create a basic user object with the business profile data
@@ -299,18 +259,16 @@ export function useAuth() {
 
   useEffect(() => {
     // Add a fallback timeout to ensure loading state is always set to false
+    // Reduced to 1 second for faster perceived performance
     const fallbackTimeout = setTimeout(() => {
-      console.log('Fallback timeout triggered - forcing loading to false');
       setIsLoading(false);
-    }, 2000);
+    }, 1000);
 
     // Check for existing session on mount and refresh user data
     const checkSession = async () => {
       try {
-        console.log('checkSession called');
         // Check if we're in the browser (localStorage is available)
         if (typeof window === 'undefined') {
-          console.log('Not in browser environment');
           setUser(null);
           setIsLoading(false);
           clearTimeout(fallbackTimeout);
@@ -320,7 +278,6 @@ export function useAuth() {
         // Check for bypass flag first
         const bypassAuthLoading = localStorage.getItem('bypass_auth_loading');
         if (bypassAuthLoading === 'true') {
-          console.log('Bypass flag detected - skipping auth check');
           setUser(null);
           setIsLoading(false);
           clearTimeout(fallbackTimeout);
@@ -337,8 +294,12 @@ export function useAuth() {
           setIsLoading(false);
           clearTimeout(fallbackTimeout);
 
-          // Refresh user data from database to get latest profile info
-          await refreshUser();
+          // Refresh user data from database in background (non-blocking)
+          // Don't await - let it happen in the background
+          refreshUser().catch(err => {
+            console.error('Background user refresh failed:', err);
+            // Don't update state on error - keep using cached data
+          });
           return;
         }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
@@ -32,8 +33,11 @@ export async function GET(
 
     const { userId } = params;
 
+    // Use admin client to bypass RLS for fetching user details
+    const adminSupabase = supabaseAdmin;
+
     // Get user details with profile and business profile
-    const { data: userDetails, error: userDetailsError } = await supabase
+    const { data: userDetails, error: userDetailsError } = await adminSupabase
       .from('users')
       .select(
         `
@@ -49,16 +53,19 @@ export async function GET(
           last_name,
           phone,
           address,
-          profile_photo_url,
+          avatar_url,
           bio,
-          preferences
+          location,
+          timezone
         ),
         business_profiles (
           company_name,
           subscription_tier,
-          services,
           website,
-          description
+          description,
+          location,
+          service_categories,
+          is_verified
         )
       `
       )

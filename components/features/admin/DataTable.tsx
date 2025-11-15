@@ -324,11 +324,27 @@ export const DateCell = ({ date }: { date: string | Date }) => {
   return <span className="text-sm">{formatDate(date)}</span>;
 };
 
-export const EmailCell = ({ email }: { email: string }) => {
+export const EmailCell = ({
+  email,
+  userId,
+  onClick,
+}: {
+  email: string;
+  userId?: string;
+  onClick?: (userId: string, email: string) => void;
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (userId && onClick) {
+      e.preventDefault();
+      onClick(userId, email);
+    }
+  };
+
   return (
     <a
-      href={`mailto:${email}`}
-      className="text-blue-600 hover:text-blue-800 underline"
+      href={userId && onClick ? '#' : `mailto:${email}`}
+      onClick={handleClick}
+      className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
     >
       {email}
     </a>

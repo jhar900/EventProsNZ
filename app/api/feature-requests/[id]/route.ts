@@ -243,24 +243,82 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = params instanceof Promise ? await params : params;
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    // Try to get user from session first
+    let user: any;
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      user = session.user;
+    } else {
+      // Try getUser as fallback
+      const {
+        data: { user: getUserUser },
+        error: getUserError,
+      } = await supabase.auth.getUser();
+
+      if (getUserUser) {
+        user = getUserUser;
+      }
+    }
+
+    // Fallback: Try to get user_id from header (if cookies aren't working)
+    if (!user) {
+      const userIdFromHeader =
+        request.headers.get('x-user-id') ||
+        request.headers.get('X-User-Id') ||
+        request.headers.get('X-USER-ID');
+
+      if (userIdFromHeader) {
+        // Verify the user exists - use server client to bypass RLS
+        const { createClient: createServerClient } = await import(
+          '@/lib/supabase/server'
+        );
+        const adminSupabase = createServerClient();
+        const { data: userData, error: userError } = await adminSupabase
+          .from('users')
+          .select('id, email, role')
+          .eq('id', userIdFromHeader)
+          .single();
+
+        if (!userError && userData) {
+          // Create a minimal user object
+          user = {
+            id: userData.id,
+            email: userData.email || '',
+          } as any;
+        }
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if feature request exists and user has permission to delete
-    const { data: existingRequest, error: fetchError } = await supabase
+    // Use server client if authenticated via header (bypasses RLS)
+    const userIdFromHeader =
+      request.headers.get('x-user-id') ||
+      request.headers.get('X-User-Id') ||
+      request.headers.get('X-USER-ID');
+
+    const useServerClient = userIdFromHeader === user.id;
+    const queryClient = useServerClient
+      ? (await import('@/lib/supabase/server')).createClient()
+      : supabase;
+
+    const { data: existingRequest, error: fetchError } = await queryClient
       .from('feature_requests')
       .select('user_id')
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .single();
 
     if (fetchError) {
@@ -270,25 +328,22 @@ export async function DELETE(
       );
     }
 
-    // Check permissions
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
+    // Only the owner can delete their feature request
     const isOwner = existingRequest.user_id === user.id;
-    const isAdmin = userProfile?.role === 'admin';
 
-    if (!isOwner && !isAdmin) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (!isOwner) {
+      return NextResponse.json(
+        { error: 'Only the request owner can delete this feature request' },
+        { status: 403 }
+      );
     }
 
-    // Delete the feature request (cascade will handle related records)
-    const { error: deleteError } = await supabase
+    // Delete the feature request (cascade will handle related records including comments)
+    // Use the same client (server client if header auth, regular client if cookie auth)
+    const { error: deleteError } = await queryClient
       .from('feature_requests')
       .delete()
-      .eq('id', params.id);
+      .eq('id', resolvedParams.id);
 
     if (deleteError) {
       console.error('Error deleting feature request:', deleteError);

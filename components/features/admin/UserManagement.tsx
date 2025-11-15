@@ -44,6 +44,7 @@ import {
   Edit,
 } from 'lucide-react';
 import DataTable, { StatusBadge, DateCell, EmailCell } from './DataTable';
+import { UserProfileModal } from './UserProfileModal';
 
 interface User {
   id: string;
@@ -87,6 +88,11 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     status: 'all',
     search: '',
   });
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(
+    null
+  );
 
   const loadUsers = async () => {
     try {
@@ -161,11 +167,19 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     setIsUpdateDialogOpen(true);
   };
 
+  const handleEmailClick = (userId: string, email: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserEmail(email);
+    setProfileModalOpen(true);
+  };
+
   const columns = [
     {
       key: 'email',
       label: 'Email',
-      render: (value: string) => <EmailCell email={value} />,
+      render: (value: string, row: User) => (
+        <EmailCell email={value} userId={row.id} onClick={handleEmailClick} />
+      ),
     },
     {
       key: 'profiles.first_name',
@@ -415,6 +429,18 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
+        isOpen={profileModalOpen}
+        onClose={() => {
+          setProfileModalOpen(false);
+          setSelectedUserId(null);
+          setSelectedUserEmail(null);
+        }}
+      />
     </div>
   );
 }

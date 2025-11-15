@@ -31,6 +31,7 @@ import { QuickResponseDialog } from './QuickResponseDialog';
 
 interface ContractorInquiriesListProps {
   className?: string;
+  compact?: boolean;
 }
 
 export interface InquiryWithRelations extends Inquiry {
@@ -54,6 +55,7 @@ export interface InquiryWithRelations extends Inquiry {
 
 export default function ContractorInquiriesList({
   className = '',
+  compact = false,
 }: ContractorInquiriesListProps) {
   const { user } = useAuth();
   const [inquiries, setInquiries] = useState<InquiryWithRelations[]>([]);
@@ -441,7 +443,7 @@ export default function ContractorInquiriesList({
           </p>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className={compact ? 'space-y-2' : 'space-y-4'}>
           {filteredAndSortedInquiries.map(inquiry => {
             const eventManager = inquiry.event_manager as any;
             const profile = eventManager?.profiles;
@@ -461,20 +463,34 @@ export default function ContractorInquiriesList({
             return (
               <Card
                 key={inquiry.id}
-                className="p-6 hover:shadow-md transition-shadow"
+                className={
+                  compact
+                    ? 'p-3 hover:shadow-md transition-shadow'
+                    : 'p-6 hover:shadow-md transition-shadow'
+                }
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-start space-x-4 mb-4">
-                      <Avatar className="h-12 w-12">
+                    <div
+                      className={`flex items-start space-x-3 ${compact ? 'mb-2' : 'mb-4'}`}
+                    >
+                      <Avatar className={compact ? 'h-8 w-8' : 'h-12 w-12'}>
                         <AvatarImage src={profile?.avatar_url} />
                         <AvatarFallback>
                           {managerName.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                        <div
+                          className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'}`}
+                        >
+                          <h3
+                            className={
+                              compact
+                                ? 'text-base font-semibold text-gray-900'
+                                : 'text-lg font-semibold text-gray-900'
+                            }
+                          >
                             {inquiry.subject}
                           </h3>
                           <div className="flex items-center space-x-2">
@@ -483,28 +499,34 @@ export default function ContractorInquiriesList({
                             </Badge>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                        <div
+                          className={`flex items-center space-x-4 text-xs text-gray-600 ${compact ? 'mb-1' : 'mb-3'}`}
+                        >
                           <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
+                            <User className="h-3 w-3 mr-1" />
                             <span>{managerName}</span>
                           </div>
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1" />
                             <span>{formatDate(inquiry.created_at)}</span>
                           </div>
                           {inquiry.event && (
                             <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
+                              <MapPin className="h-3 w-3 mr-1" />
                               <span>{inquiry.event.title}</span>
                             </div>
                           )}
                         </div>
-                        <p className="text-gray-700 mb-4 line-clamp-3">
+                        <p
+                          className={`text-gray-700 ${compact ? 'mb-2 line-clamp-2 text-sm' : 'mb-4 line-clamp-3'}`}
+                        >
                           {inquiry.message}
                         </p>
                         {inquiry.event && inquiry.event.event_date && (
-                          <div className="flex items-center text-sm text-gray-600 mb-2">
-                            <Clock className="h-4 w-4 mr-1" />
+                          <div
+                            className={`flex items-center text-xs text-gray-600 ${compact ? 'mb-1' : 'mb-2'}`}
+                          >
+                            <Clock className="h-3 w-3 mr-1" />
                             <span>
                               Event Date:{' '}
                               {new Date(
@@ -521,13 +543,18 @@ export default function ContractorInquiriesList({
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-gray-200">
+                <div
+                  className={`flex items-center justify-end space-x-2 ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} border-t border-gray-200`}
+                >
                   <Button
                     variant="outline"
-                    size="sm"
+                    size={compact ? 'sm' : 'sm'}
                     onClick={() => handleViewDetails(inquiry)}
+                    className={compact ? 'h-7 text-xs px-2' : ''}
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye
+                      className={compact ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}
+                    />
                     View Details
                   </Button>
                 </div>
