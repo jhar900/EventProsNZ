@@ -133,11 +133,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Try update with business_address first
-      const { data: updatedProfiles, error: updateError } = await supabase
+      const updateResult = await supabase
         .from('business_profiles')
         .update(updateData)
         .eq('user_id', userId)
         .select();
+      const { data: updatedProfiles } = updateResult;
+      let updateError = updateResult.error;
 
       console.log('Step2 API - Update result:', {
         success: !updateError,
@@ -294,10 +296,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Try insert with business_address first
-      const { data: insertedProfiles, error: createError } = await supabase
+      const insertResult = await supabase
         .from('business_profiles')
         .insert(insertData)
         .select();
+      const { data: insertedProfiles } = insertResult;
+      let createError = insertResult.error;
 
       console.log('Step2 API - Insert result:', {
         success: !createError,
