@@ -55,27 +55,6 @@ interface BusinessProfileFormProps {
   onError?: (error: string) => void;
 }
 
-const SERVICE_CATEGORIES = [
-  'Catering',
-  'Photography',
-  'Videography',
-  'Music & Entertainment',
-  'Venues',
-  'Decoration & Styling',
-  'Event Planning',
-  'Security',
-  'Transportation',
-  'Audio/Visual',
-  'Floral Design',
-  'Lighting',
-  'Photobooth',
-  'DJ Services',
-  'Wedding Services',
-  'Corporate Events',
-  'Party Planning',
-  'Other',
-];
-
 export default function BusinessProfileForm({
   onSuccess,
   onError,
@@ -85,6 +64,8 @@ export default function BusinessProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [serviceCategories, setServiceCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const methods = useForm<BusinessProfileFormData>({
     resolver: zodResolver(businessProfileSchema),
@@ -99,6 +80,31 @@ export default function BusinessProfileForm({
   } = methods;
 
   const selectedCategories = watch('service_categories') || [];
+
+  // Load service categories from API
+  useEffect(() => {
+    const loadServiceCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await fetch('/api/service-categories');
+        if (response.ok) {
+          const data = await response.json();
+          setServiceCategories(data.categories || []);
+        } else {
+          console.error('Failed to load service categories');
+          // Fallback to empty array if API fails
+          setServiceCategories([]);
+        }
+      } catch (error) {
+        console.error('Error loading service categories:', error);
+        setServiceCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadServiceCategories();
+  }, []);
 
   // Load existing business profile data
   useEffect(() => {
@@ -328,23 +334,31 @@ export default function BusinessProfileForm({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Service Categories
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {SERVICE_CATEGORIES.map(category => (
-                    <label key={category} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(category)}
-                        onChange={e =>
-                          handleCategoryChange(category, e.target.checked)
-                        }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {category}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                {loadingCategories ? (
+                  <p className="text-sm text-gray-500">Loading categories...</p>
+                ) : serviceCategories.length === 0 ? (
+                  <p className="text-sm text-amber-600">
+                    No service categories available. Please contact support.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {serviceCategories.map(category => (
+                      <label key={category} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={e =>
+                            handleCategoryChange(category, e.target.checked)
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          {category}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
                 {errors.service_categories && (
                   <p className="mt-1 text-sm text-red-600">
                     {errors.service_categories.message}

@@ -30,6 +30,7 @@ export const personalInfoSchema = z.object({
 // Business information validation
 export const businessInfoSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
+  position: z.string().min(1, 'Your position/role is required'),
   business_address: addressSchema,
   nzbn: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters'),

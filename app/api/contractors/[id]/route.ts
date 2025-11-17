@@ -28,15 +28,20 @@ export async function GET(
           bio
         ),
         business_profiles(
+          id,
           company_name,
           description,
           location,
+          business_address,
           service_categories,
+          service_areas,
+          nzbn,
           average_rating,
           review_count,
           is_verified,
           subscription_tier,
           logo_url,
+          website,
           facebook_url,
           instagram_url,
           linkedin_url,
@@ -65,6 +70,43 @@ export async function GET(
       ? contractorData.business_profiles[0]
       : contractorData.business_profiles;
 
+    // Fetch services for this contractor
+    let services: any[] = [];
+    if (businessProfile?.id) {
+      const { data: servicesData } = await supabase
+        .from('services')
+        .select(
+          `
+          id,
+          name,
+          service_name,
+          category,
+          description,
+          price_range_min,
+          price_range_max,
+          availability,
+          created_at,
+          updated_at
+        `
+        )
+        .eq('business_profile_id', businessProfile.id)
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (servicesData) {
+        services = servicesData.map((s: any) => ({
+          id: s.id,
+          serviceType: s.service_name || s.name || s.category || '',
+          description: s.description || null,
+          priceRangeMin: s.price_range_min || null,
+          priceRangeMax: s.price_range_max || null,
+          availability: s.availability || null,
+          createdAt: s.created_at || new Date().toISOString(),
+          updatedAt: s.updated_at || null,
+        }));
+      }
+    }
+
     const contractor = {
       id: contractorData.id,
       email: contractorData.email,
@@ -82,8 +124,11 @@ export async function GET(
       reviewCount: businessProfile?.review_count || 0,
       isVerified: businessProfile?.is_verified || false,
       subscriptionTier: businessProfile?.subscription_tier || 'essential',
-      businessAddress: null,
-      serviceAreas: [],
+      businessAddress:
+        businessProfile?.business_address || businessProfile?.location || null,
+      nzbn: businessProfile?.nzbn || null,
+      serviceAreas: businessProfile?.service_areas || [],
+      website: businessProfile?.website || null,
       socialLinks: null,
       facebookUrl: businessProfile?.facebook_url || null,
       instagramUrl: businessProfile?.instagram_url || null,
@@ -92,11 +137,11 @@ export async function GET(
       youtubeUrl: businessProfile?.youtube_url || null,
       tiktokUrl: businessProfile?.tiktok_url || null,
       verificationDate: null,
-      services: [],
+      services: services,
       portfolio: [],
       testimonials: [],
       createdAt: contractorData.created_at,
-      isPremium: false,
+      isPremium: businessProfile?.subscription_tier !== 'essential',
       isFeatured: false,
     };
 

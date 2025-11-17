@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +61,7 @@ export function ApplicationTemplates({
   onTemplateDelete,
   className = '',
 }: ApplicationTemplatesProps) {
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<ApplicationTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +84,7 @@ export function ApplicationTemplates({
   // Load templates on mount and when filters change
   useEffect(() => {
     loadTemplates();
-  }, [serviceCategoryFilter, showPublicOnly]);
+  }, [serviceCategoryFilter, showPublicOnly, user?.id]);
 
   const loadTemplates = async () => {
     try {
@@ -102,7 +104,19 @@ export function ApplicationTemplates({
         params.append('is_public', 'true');
       }
 
-      const response = await fetch(`/api/applications/templates?${params}`);
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(`/api/applications/templates?${params}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         // Don't throw error, just show empty state
@@ -137,7 +151,7 @@ export function ApplicationTemplates({
   };
 
   const handleServiceCategoryFilter = (category: string) => {
-    setServiceCategoryFilter(category);
+    setServiceCategoryFilter(category === 'all' ? '' : category);
   };
 
   const handleCreateTemplate = async () => {
@@ -145,11 +159,18 @@ export function ApplicationTemplates({
       if (onTemplateCreate) {
         onTemplateCreate(formData);
       } else {
+        if (!user?.id) {
+          setError('You must be logged in to create templates');
+          return;
+        }
+
         const response = await fetch('/api/applications/templates', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-user-id': user.id,
           },
+          credentials: 'include',
           body: JSON.stringify(formData),
         });
 
@@ -177,13 +198,20 @@ export function ApplicationTemplates({
       if (onTemplateUpdate) {
         onTemplateUpdate({ ...editingTemplate, ...formData });
       } else {
+        if (!user?.id) {
+          setError('You must be logged in to update templates');
+          return;
+        }
+
         const response = await fetch(
           `/api/applications/templates/${editingTemplate.id}`,
           {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
+              'x-user-id': user.id,
             },
+            credentials: 'include',
             body: JSON.stringify(formData),
           }
         );
@@ -313,14 +341,14 @@ export function ApplicationTemplates({
           <div className="space-y-2">
             <Label>Service Category</Label>
             <Select
-              value={serviceCategoryFilter}
+              value={serviceCategoryFilter || undefined}
               onValueChange={handleServiceCategoryFilter}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {Object.entries(JOB_SERVICE_CATEGORIES).map(([key, value]) => (
                   <SelectItem key={key} value={value}>
                     {value.replace('_', ' ').toUpperCase()}

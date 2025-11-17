@@ -67,15 +67,27 @@ export function JobList({
         limit: 12,
       };
 
-      const response = await fetch('/api/jobs', {
+      // Build query string from search params
+      const queryParams = new URLSearchParams();
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const response = await fetch(`/api/jobs?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to load jobs');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || 'Failed to load jobs'
+        );
       }
 
       const data = await response.json();

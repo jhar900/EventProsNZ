@@ -210,24 +210,9 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      let query = this.supabase.from('jobs').select(
-        `
-          *,
-          posted_by_user:users!jobs_posted_by_user_id_fkey(
-            id,
-            first_name,
-            last_name,
-            email
-          ),
-          event:events!jobs_event_id_fkey(
-            id,
-            title,
-            event_type,
-            event_date
-          )
-        `,
-        { count: 'exact' }
-      );
+      // Fetch jobs without joins to avoid relationship issues
+      // We'll enrich the data with user/event info separately if needed
+      let query = this.supabase.from('jobs').select('*', { count: 'exact' });
 
       // Apply filters
       if (job_type) {
@@ -308,24 +293,9 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      let query = this.supabase.from('jobs').select(
-        `
-          *,
-          posted_by_user:users!jobs_posted_by_user_id_fkey(
-            id,
-            first_name,
-            last_name,
-            email
-          ),
-          event:events!jobs_event_id_fkey(
-            id,
-            title,
-            event_type,
-            event_date
-          )
-        `,
-        { count: 'exact' }
-      );
+      // Fetch jobs without joins to avoid relationship issues
+      // We'll enrich the data with user/event info separately if needed
+      let query = this.supabase.from('jobs').select('*', { count: 'exact' });
 
       // Apply text search
       if (q) {
@@ -473,26 +443,11 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      let query = this.supabase.from('job_applications').select(
-        `
-          *,
-          contractor:users!job_applications_contractor_id_fkey(
-            id,
-            first_name,
-            last_name,
-            company_name,
-            profile_photo_url,
-            average_rating,
-            review_count
-          ),
-          job:jobs!job_applications_job_id_fkey(
-            id,
-            title,
-            status
-          )
-        `,
-        { count: 'exact' }
-      );
+      // Fetch applications without joins to avoid relationship issues
+      // We'll enrich the data with job/contractor info separately if needed
+      let query = this.supabase
+        .from('job_applications')
+        .select('*', { count: 'exact' });
 
       // Apply filters
       if (job_id) {

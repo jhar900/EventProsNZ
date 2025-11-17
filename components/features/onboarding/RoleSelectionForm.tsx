@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface RoleSelectionFormProps {
   data: 'personal' | 'business' | null;
@@ -16,6 +16,11 @@ export function RoleSelectionForm({
   const [selectedRole, setSelectedRole] = useState<
     'personal' | 'business' | null
   >(data);
+
+  // Update selected role when data prop changes (e.g., when navigating back)
+  useEffect(() => {
+    setSelectedRole(data);
+  }, [data]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +45,7 @@ export function RoleSelectionForm({
           <div
             className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
               selectedRole === 'personal'
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-orange-500 bg-orange-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => setSelectedRole('personal')}
@@ -52,7 +57,7 @@ export function RoleSelectionForm({
                 value="personal"
                 checked={selectedRole === 'personal'}
                 onChange={() => setSelectedRole('personal')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
               />
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-900">
@@ -76,7 +81,7 @@ export function RoleSelectionForm({
           <div
             className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
               selectedRole === 'business'
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-orange-500 bg-orange-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => setSelectedRole('business')}
@@ -88,7 +93,7 @@ export function RoleSelectionForm({
                 value="business"
                 checked={selectedRole === 'business'}
                 onChange={() => setSelectedRole('business')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
               />
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-900">
@@ -114,7 +119,7 @@ export function RoleSelectionForm({
           <button
             type="submit"
             disabled={!selectedRole || isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Saving...' : 'Continue'}
           </button>

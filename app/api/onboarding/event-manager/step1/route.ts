@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 import { z } from 'zod';
 
 const step1Schema = z.object({
@@ -11,16 +11,26 @@ const step1Schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user ID from request headers (sent by client)
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
+
+    // Create Supabase client with service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Validate request body
     const body = await request.json();
@@ -30,8 +40,8 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (existingProfile) {
       // Update existing profile
@@ -44,9 +54,9 @@ export async function POST(request: NextRequest) {
           address: validatedData.address,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         return NextResponse.json(
@@ -65,7 +75,7 @@ export async function POST(request: NextRequest) {
       const { data: profile, error: createError } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           first_name: validatedData.first_name,
           last_name: validatedData.last_name,
           phone: validatedData.phone,

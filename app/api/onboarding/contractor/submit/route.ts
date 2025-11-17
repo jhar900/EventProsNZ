@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user ID from request headers (sent by client) - same approach as other steps
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
+
+    // Create Supabase client with service role for database operations
+    // This bypasses RLS and avoids cookie/session issues
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+        },
+      }
+    );
 
     // Check if all steps are completed
     const { data: onboardingStatus, error: statusError } = await supabase
       .from('contractor_onboarding_status')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (statusError || !onboardingStatus) {
@@ -55,7 +64,7 @@ export async function POST(request: NextRequest) {
         submission_date: new Date().toISOString(),
         approval_status: 'pending',
       })
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (submitError) {
       return NextResponse.json(

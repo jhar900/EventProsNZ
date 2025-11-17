@@ -22,6 +22,7 @@ export function AddressAutocomplete({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const { isLoaded, mapboxgl } = useMapbox();
 
   useEffect(() => {
@@ -30,7 +31,9 @@ export function AddressAutocomplete({
     const handleClickOutside = (event: MouseEvent) => {
       if (
         inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
+        !inputRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
       }
@@ -86,6 +89,10 @@ export function AddressAutocomplete({
     onChange(suggestion.place_name);
     setShowSuggestions(false);
     setSuggestions([]);
+    // Focus back on input after selection
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleInputFocus = () => {
@@ -115,11 +122,18 @@ export function AddressAutocomplete({
       )}
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div
+          ref={suggestionsRef}
+          className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+        >
           {suggestions.map((suggestion, index) => (
             <div
               key={index}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+              onMouseDown={e => {
+                // Prevent input from losing focus
+                e.preventDefault();
+              }}
               onClick={() => handleSuggestionClick(suggestion)}
             >
               <div className="text-sm font-medium text-gray-900">

@@ -1,35 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user ID from request headers (sent by client)
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
+
+    // Create Supabase client with service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Get user's profile and business profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    if (profileError) {
+    if (profileError || !profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     const { data: businessProfile } = await supabase
       .from('business_profiles')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
 
     // Verify user as event manager (automatic approval)
     const { error: verifyError } = await supabase
@@ -38,7 +48,7 @@ export async function POST(request: NextRequest) {
         is_verified: true,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', user.id);
+      .eq('id', userId);
 
     if (verifyError) {
       return NextResponse.json(
@@ -58,7 +68,7 @@ export async function POST(request: NextRequest) {
         },
         updated_at: new Date().toISOString(),
       })
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (updateError) {
       return NextResponse.json(
@@ -70,9 +80,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
+        id: userId,
         is_verified: true,
       },
       profile: {

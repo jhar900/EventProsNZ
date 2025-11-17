@@ -189,3 +189,4 @@ For EventProsNZ, I recommend **Resend** because:
 - Good deliverability
 
 Once you monetize and need more volume, you can easily switch to SendGrid or another paid service.
+

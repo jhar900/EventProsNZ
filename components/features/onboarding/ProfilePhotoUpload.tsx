@@ -1,22 +1,35 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProfilePhotoUploadProps {
   data: string | null;
   onComplete: (photoUrl: string | null) => void;
+  onPhotoChange?: (photoUrl: string | null) => void;
   isLoading: boolean;
 }
 
 export function ProfilePhotoUpload({
   data,
   onComplete,
+  onPhotoChange,
   isLoading,
 }: ProfilePhotoUploadProps) {
+  const { user } = useAuth();
   const [photoUrl, setPhotoUrl] = useState<string | null>(data);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const userIdRef = useRef<string | null>(null);
+
+  // Store user ID in ref to ensure it's always available
+  useEffect(() => {
+    if (user?.id) {
+      userIdRef.current = user.id;
+      console.log('ProfilePhotoUpload: User ID stored in ref:', user.id);
+    }
+  }, [user?.id]);
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -41,24 +54,58 @@ export function ProfilePhotoUpload({
     setError(null);
     setUploading(true);
 
+    // Get user ID - check both user from hook and ref to ensure it's available
+    const userId = user?.id || userIdRef.current;
+    if (!userId) {
+      console.error(
+        'User ID not available for upload. User from hook:',
+        user?.id,
+        'User from ref:',
+        userIdRef.current
+      );
+      setError('You must be logged in to upload a photo');
+      setUploading(false);
+      return;
+    }
+
+    console.log('Uploading photo with user ID:', userId);
+
     try {
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await fetch('/api/upload/profile-photo', {
         method: 'POST',
+        headers: {
+          'x-user-id': userId,
+        },
+        credentials: 'include',
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        console.error('Upload failed:', errorData);
+        throw new Error(
+          errorData.error || errorData.details || 'Upload failed'
+        );
       }
 
       const result = await response.json();
+      console.log('Upload successful:', result);
       setPhotoUrl(result.url);
-      onComplete(result.url);
+
+      // Call onPhotoChange if provided (to update parent state without advancing step)
+      if (onPhotoChange) {
+        onPhotoChange(result.url);
+      }
+
+      // Reset the file input so the same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err) {
+      console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
@@ -68,12 +115,23 @@ export function ProfilePhotoUpload({
   const handleRemovePhoto = async () => {
     if (!photoUrl) return;
 
+    // Get user ID from hook or ref
+    const userId = user?.id || userIdRef.current;
+    if (!userId) {
+      setError('You must be logged in to remove a photo');
+      return;
+    }
+
     setUploading(true);
     setError(null);
 
     try {
       const response = await fetch('/api/upload/profile-photo', {
         method: 'DELETE',
+        headers: {
+          'x-user-id': userId,
+        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -82,7 +140,11 @@ export function ProfilePhotoUpload({
       }
 
       setPhotoUrl(null);
-      onComplete(null);
+
+      // Call onPhotoChange if provided (to update parent state without advancing step)
+      if (onPhotoChange) {
+        onPhotoChange(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed');
     } finally {
@@ -90,7 +152,11 @@ export function ProfilePhotoUpload({
     }
   };
 
-  const handleSkip = () => {
+  const handleContinue = () => {
+    if (!photoUrl) {
+      setError('Please upload a profile photo before continuing');
+      return;
+    }
     onComplete(photoUrl);
   };
 
@@ -99,7 +165,7 @@ export function ProfilePhotoUpload({
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Photo</h2>
         <p className="text-gray-600">
-          Add a profile photo to help contractors recognize you (optional)
+          Add a profile photo to help contractors recognize you (required)
         </p>
       </div>
 
@@ -168,7 +234,7 @@ export function ProfilePhotoUpload({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading
               ? 'Uploading...'
@@ -178,11 +244,11 @@ export function ProfilePhotoUpload({
           </button>
 
           <button
-            onClick={handleSkip}
-            disabled={uploading}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleContinue}
+            disabled={uploading || !photoUrl}
+            className="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {photoUrl ? 'Continue' : 'Skip for now'}
+            Continue
           </button>
         </div>
 

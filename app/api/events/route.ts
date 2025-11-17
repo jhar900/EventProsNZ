@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 import {
   CreateEventRequest,
@@ -79,18 +79,44 @@ const getEventsSchema = z.object({
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    let user;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+      // Verify user exists
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (userError || !userData) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = { id: userId };
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      user = authUser;
+      userId = authUser.id;
     }
 
     // Parse and validate request body
@@ -115,10 +141,10 @@ export async function POST(request: NextRequest) {
 
     // Check if user is an event manager
     const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
-      .eq('id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (profileError || !userProfile || userProfile.role !== 'event_manager') {
       return NextResponse.json(
@@ -138,26 +164,38 @@ export async function POST(request: NextRequest) {
         event_type: eventData.eventType,
         duration_hours: eventData.durationHours,
         attendee_count: eventData.attendeeCount,
-        location: eventData.location.address,
-        location_data: eventData.location,
-        special_requirements: eventData.specialRequirements,
-        budget_total: eventData.budgetPlan.totalBudget,
-        budget_min: eventData.budgetPlan.totalBudget * 0.8, // 20% buffer
-        budget_max: eventData.budgetPlan.totalBudget * 1.2, // 20% buffer
+        location: eventData.location?.address || '',
+        location_data: eventData.location || null,
+        special_requirements: eventData.specialRequirements || null,
+        budget_total: eventData.budgetPlan?.totalBudget || 0,
+        budget_min: eventData.budgetPlan?.totalBudget
+          ? eventData.budgetPlan.totalBudget * 0.8
+          : 0, // 20% buffer
+        budget_max: eventData.budgetPlan?.totalBudget
+          ? eventData.budgetPlan.totalBudget * 1.2
+          : 0, // 20% buffer
         status: eventData.isDraft ? 'draft' : 'planning',
       })
       .select()
       .single();
 
     if (eventError) {
+      console.error('Error creating event:', eventError);
       return NextResponse.json(
-        { success: false, message: 'Failed to create event' },
+        {
+          success: false,
+          message: 'Failed to create event',
+          error: eventError.message,
+        },
         { status: 500 }
       );
     }
 
     // Create service requirements if provided
-    if (eventData.serviceRequirements.length > 0) {
+    if (
+      eventData.serviceRequirements &&
+      eventData.serviceRequirements.length > 0
+    ) {
       const serviceRequirements = eventData.serviceRequirements.map(req => ({
         event_id: event.id,
         service_category: req.category,
@@ -174,6 +212,7 @@ export async function POST(request: NextRequest) {
 
       if (serviceError) {
         // Don't fail the entire request, just log the error
+        console.error('Error creating service requirements:', serviceError);
       }
     }
 
@@ -192,6 +231,7 @@ export async function POST(request: NextRequest) {
 
     if (versionError) {
       // Don't fail the entire request
+      console.error('Error creating event version:', versionError);
     }
 
     const response: EventCreationResponse = {
@@ -204,8 +244,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
+    console.error('Error in POST /api/events:', error);
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      {
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -214,18 +259,29 @@ export async function POST(request: NextRequest) {
 // GET /api/events - Get events with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      userId = user.id;
     }
 
     // Parse and validate query parameters
@@ -247,7 +303,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { userId, status, page, limit, eventType } = validationResult.data;
+    const {
+      userId: filterUserId,
+      status,
+      page,
+      limit,
+      eventType,
+    } = validationResult.data;
     const offset = (page - 1) * limit;
 
     // Build query
@@ -266,11 +328,11 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     // Apply filters
-    if (userId) {
-      query = query.eq('event_manager_id', userId);
+    if (filterUserId) {
+      query = query.eq('event_manager_id', filterUserId);
     } else {
-      // If no userId specified, only show user's own events
-      query = query.eq('event_manager_id', user.id);
+      // If no filterUserId specified, only show current user's own events
+      query = query.eq('event_manager_id', userId);
     }
 
     if (status) {

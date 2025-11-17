@@ -11,8 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, DollarSign } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const serviceSchema = z.object({
+  service_name: z.string().min(1, 'Service name is required'),
   service_type: z.string().min(1, 'Service type is required'),
   description: z.string().optional(),
   price_range_min: z.number().min(0).optional(),
@@ -26,6 +28,7 @@ type ServiceForm = z.infer<typeof serviceSchema>;
 interface Service {
   id: string;
   user_id: string;
+  service_name: string;
   service_type: string;
   description?: string;
   price_range_min?: number;
@@ -44,35 +47,150 @@ const SERVICE_TYPES = [
   'Photography',
   'Videography',
   'Catering',
-  'Music & Entertainment',
-  'Flowers & Decor',
-  'Venue Management',
+  'Music/DJ',
+  'Floral Design',
   'Event Planning',
-  'Transportation',
+  'Venue Management',
   'Security',
-  'Lighting & Sound',
-  'Photobooth',
+  'Transportation',
+  'Decorations',
+  'Lighting',
+  'Sound Equipment',
   'Other',
 ];
 
+// Map service categories from Business Information to service types
+// Keys must match exactly with SERVICE_CATEGORIES from BusinessInfoForm
+const CATEGORY_TO_SERVICE_TYPE_MAP: Record<string, string[]> = {
+  Catering: ['Catering'],
+  Photography: ['Photography'],
+  Videography: ['Videography'],
+  'Music & Entertainment': ['Music/DJ'],
+  Venues: ['Venue Management'],
+  'Decoration & Styling': ['Decorations'],
+  'Event Planning': ['Event Planning'],
+  Security: ['Security'],
+  Transportation: ['Transportation'],
+  'Audio/Visual': ['Sound Equipment'],
+  'Floral Design': ['Floral Design'],
+  Lighting: ['Lighting'],
+  Photobooth: ['Photography'], // Could be photography or other
+  'DJ Services': ['Music/DJ'],
+  'Wedding Services': [
+    'Event Planning',
+    'Photography',
+    'Videography',
+    'Floral Design',
+    'Music/DJ',
+  ],
+  'Corporate Events': [
+    'Event Planning',
+    'Venue Management',
+    'Catering',
+    'Security',
+  ],
+  'Party Planning': ['Event Planning', 'Decorations', 'Lighting', 'Music/DJ'],
+  Other: ['Other'],
+};
+
 export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
+  const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableServiceTypes, setAvailableServiceTypes] = useState<string[]>(
+    []
+  );
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
-    fetchServices();
-  }, []);
+    if (user?.id) {
+      fetchServices();
+    }
+  }, [user?.id]);
+
+  // Load business profile to get selected service categories
+  useEffect(() => {
+    const loadServiceCategories = async () => {
+      if (!user?.id) {
+        setLoadingCategories(false);
+        setAvailableServiceTypes(SERVICE_TYPES);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/user/business-profile', {
+          method: 'GET',
+          headers: {
+            'x-user-id': user.id,
+          },
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const businessProfile =
+            result.businessProfile || result.business_profile;
+
+          if (
+            businessProfile?.service_categories &&
+            Array.isArray(businessProfile.service_categories) &&
+            businessProfile.service_categories.length > 0
+          ) {
+            // Get unique service types based on selected categories
+            const selectedCategories = businessProfile.service_categories;
+            const allowedServiceTypesSet = new Set<string>();
+
+            selectedCategories.forEach((category: string) => {
+              const trimmedCategory = category.trim();
+              const mappedTypes =
+                CATEGORY_TO_SERVICE_TYPE_MAP[trimmedCategory] || [];
+              mappedTypes.forEach(type => allowedServiceTypesSet.add(type));
+            });
+
+            // Filter SERVICE_TYPES to only include allowed types
+            const filteredTypes =
+              allowedServiceTypesSet.size > 0
+                ? SERVICE_TYPES.filter(type => allowedServiceTypesSet.has(type))
+                : SERVICE_TYPES;
+
+            setAvailableServiceTypes(filteredTypes);
+          } else {
+            // If no categories selected, show all service types
+            setAvailableServiceTypes(SERVICE_TYPES);
+          }
+        } else {
+          // If business profile not found, show all service types
+          setAvailableServiceTypes(SERVICE_TYPES);
+        }
+      } catch (error) {
+        console.error('Error loading service categories:', error);
+        // On error, show all service types
+        setAvailableServiceTypes(SERVICE_TYPES);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadServiceCategories();
+  }, [user?.id]);
 
   const fetchServices = async () => {
+    if (!user?.id) return;
+
     try {
       setIsFetching(true);
       setError(null);
 
-      const response = await fetch('/api/profile/me/services');
+      const response = await fetch('/api/profile/me/services', {
+        headers: {
+          'x-user-id': user.id,
+        },
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setServices(data.services || []);
@@ -101,6 +219,7 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   } = useForm<ServiceForm>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
+      service_name: '',
       service_type: '',
       description: '',
       price_range_min: undefined,
@@ -111,13 +230,15 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   });
 
   const onSubmit = async (data: ServiceForm) => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      const url = editingService
-        ? '/api/profile/me/services'
-        : '/api/profile/me/services';
-
+      const url = '/api/profile/me/services';
       const method = editingService ? 'PUT' : 'POST';
       const body = editingService ? { ...data, id: editingService.id } : data;
 
@@ -125,7 +246,9 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
 
@@ -157,16 +280,32 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
 
   const handleEdit = (service: Service) => {
     setEditingService(service);
-    setValue('service_type', service.service_type);
-    setValue('description', service.description || '');
-    setValue('price_range_min', service.price_range_min);
-    setValue('price_range_max', service.price_range_max);
-    setValue('availability', service.availability || '');
-    setValue('is_visible', service.is_visible);
+    // Reset form first, then set values
+    reset({
+      service_name: service.service_name || '',
+      service_type: service.service_type || '',
+      description: service.description || '',
+      price_range_min: service.price_range_min,
+      price_range_max: service.price_range_max,
+      availability: service.availability || '',
+      is_visible: service.is_visible !== false,
+    });
     setIsFormOpen(true);
+    // Scroll to form after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const formElement = document.getElementById('service-form');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleDelete = async (serviceId: string) => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this service?')) return;
 
     try {
@@ -174,6 +313,10 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
 
       const response = await fetch(`/api/profile/me/services/${serviceId}`, {
         method: 'DELETE',
+        headers: {
+          'x-user-id': user.id,
+        },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -197,7 +340,15 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   };
 
   const handleCancel = () => {
-    reset();
+    reset({
+      service_name: '',
+      service_type: '',
+      description: '',
+      price_range_min: undefined,
+      price_range_max: undefined,
+      availability: '',
+      is_visible: true,
+    });
     setEditingService(null);
     setIsFormOpen(false);
   };
@@ -230,7 +381,19 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
           <div className="flex justify-between items-center">
             <CardTitle>Services</CardTitle>
             <Button
-              onClick={() => setIsFormOpen(true)}
+              onClick={() => {
+                setEditingService(null);
+                reset({
+                  service_name: '',
+                  service_type: '',
+                  description: '',
+                  price_range_min: undefined,
+                  price_range_max: undefined,
+                  availability: '',
+                  is_visible: true,
+                });
+                setIsFormOpen(true);
+              }}
               className="bg-orange-500 hover:bg-orange-600"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -257,8 +420,13 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">
-                          {service.service_type}
+                          {service.service_name || service.service_type}
                         </h3>
+                        {service.service_type && (
+                          <Badge variant="outline" className="text-xs">
+                            {service.service_type}
+                          </Badge>
+                        )}
                         {!service.is_visible && (
                           <Badge variant="secondary">Hidden</Badge>
                         )}
@@ -310,33 +478,92 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
 
       {/* Service Form */}
       {isFormOpen && (
-        <Card>
+        <Card id="service-form" className="mt-6">
           <CardHeader>
-            <CardTitle>
-              {editingService ? 'Edit Service' : 'Add New Service'}
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>
+                {editingService ? 'Edit Service' : 'Add New Service'}
+              </CardTitle>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsFormOpen(false);
+                  setEditingService(null);
+                  reset({
+                    service_name: '',
+                    service_type: '',
+                    description: '',
+                    price_range_min: undefined,
+                    price_range_max: undefined,
+                    availability: '',
+                    is_visible: true,
+                  });
+                }}
+              >
+                ×
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label htmlFor="service_type">Service Type *</Label>
-                <select
-                  id="service_type"
-                  {...register('service_type')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="">Select service type</option>
-                  {SERVICE_TYPES.map(type => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                {errors.service_type && (
+                <Label htmlFor="service_name">Service Name *</Label>
+                <Input
+                  id="service_name"
+                  {...register('service_name')}
+                  placeholder="e.g., Wedding Photography Package"
+                  className="w-full"
+                />
+                {errors.service_name && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.service_type.message}
+                    {errors.service_name.message}
                   </p>
                 )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="service_type">Service Type *</Label>
+                  <select
+                    id="service_type"
+                    {...register('service_type')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled={loadingCategories}
+                  >
+                    <option value="">
+                      {loadingCategories
+                        ? 'Loading...'
+                        : 'Select a service type'}
+                    </option>
+                    {availableServiceTypes.map(type => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  {availableServiceTypes.length === 0 && !loadingCategories && (
+                    <p className="mt-1 text-sm text-amber-600">
+                      Please select service categories in the Business Profile
+                      section first.
+                    </p>
+                  )}
+                  {errors.service_type && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.service_type.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="availability">Availability</Label>
+                  <Input
+                    id="availability"
+                    {...register('availability')}
+                    placeholder="e.g., Weekends only, 24/7, etc."
+                  />
+                </div>
               </div>
 
               <div>
@@ -344,14 +571,14 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
                 <Textarea
                   id="description"
                   {...register('description')}
-                  placeholder="Describe your service..."
+                  placeholder="Describe this service in detail"
                   rows={3}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price_range_min">Minimum Price ($)</Label>
+                  <Label htmlFor="price_range_min">Minimum Price (NZD)</Label>
                   <Input
                     id="price_range_min"
                     type="number"
@@ -362,7 +589,7 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="price_range_max">Maximum Price ($)</Label>
+                  <Label htmlFor="price_range_max">Maximum Price (NZD)</Label>
                   <Input
                     id="price_range_max"
                     type="number"
@@ -372,15 +599,6 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
                     placeholder="0.00"
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="availability">Availability</Label>
-                <Input
-                  id="availability"
-                  {...register('availability')}
-                  placeholder="e.g., Weekends only, Available 24/7"
-                />
               </div>
 
               <div className="flex items-center space-x-2">

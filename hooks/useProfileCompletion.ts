@@ -23,7 +23,7 @@ export function useProfileCompletion() {
 
   const fetchCompletionStatus = async () => {
     // Don't fetch if user is not authenticated
-    if (!user) {
+    if (!user?.id) {
       setIsLoading(false);
       return;
     }
@@ -32,7 +32,12 @@ export function useProfileCompletion() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/profile/completion');
+      const response = await fetch('/api/profile/completion', {
+        headers: {
+          'x-user-id': user.id, // Send user ID in header
+        },
+        credentials: 'include', // Include cookies
+      });
 
       // Handle 401 (Unauthorized) gracefully - user just isn't logged in yet
       if (response.status === 401) {

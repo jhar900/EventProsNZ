@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ export function ApplicationHistory({
   onApplicationSelect,
   className = '',
 }: ApplicationHistoryProps) {
+  const { user } = useAuth();
   const [applications, setApplications] = useState<JobApplicationWithDetails[]>(
     []
   );
@@ -50,8 +52,10 @@ export function ApplicationHistory({
 
   // Load applications on mount and when filters change
   useEffect(() => {
-    loadApplications();
-  }, [contractorId, searchQuery, statusFilter, currentPage]);
+    if (user?.id) {
+      loadApplications();
+    }
+  }, [contractorId, searchQuery, statusFilter, currentPage, user?.id]);
 
   const loadApplications = async () => {
     try {
@@ -67,8 +71,21 @@ export function ApplicationHistory({
         params.append('status', statusFilter);
       }
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch(
-        `/api/contractors/${contractorId}/applications?${params}`
+        `/api/contractors/${contractorId}/applications?${params}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
       );
 
       if (!response.ok) {
@@ -113,7 +130,7 @@ export function ApplicationHistory({
   };
 
   const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
+    setStatusFilter(status === 'all' ? '' : status);
     setCurrentPage(1);
   };
 
@@ -195,12 +212,15 @@ export function ApplicationHistory({
           {/* Status Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Status</label>
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
+            <Select
+              value={statusFilter || undefined}
+              onValueChange={handleStatusFilter}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="reviewed">Reviewed</SelectItem>
                 <SelectItem value="accepted">Accepted</SelectItem>

@@ -25,6 +25,12 @@ function OnboardingGuard({
   const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before rendering (prevents hydration mismatch)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // List of paths that should be excluded from onboarding check
   const excludedPaths = [
@@ -105,7 +111,21 @@ function OnboardingGuard({
     router,
   ]);
 
-  // Show loading state while checking
+  // Show loading state while checking (only after mount to prevent hydration mismatch)
+  if (!mounted) {
+    // Return consistent loading state for SSR
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600">Loading...</span>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   if (isChecking && !isExcludedPath && requireOnboarding) {
     return (
       <AuthGuard>

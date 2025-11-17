@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { PersonalInfoForm } from './PersonalInfoForm';
 import { BusinessInfoForm } from './BusinessInfoForm';
 import { ServicesPricingForm } from './ServicesPricingForm';
-import { PortfolioUploadForm } from './PortfolioUploadForm';
+import { PublicityForm } from './PublicityForm';
 import { ProgressIndicator } from './ProgressIndicator';
-import { ProfileCompletionTracker } from './ProfileCompletionTracker';
+import { SubmittedOnboardingView } from './SubmittedOnboardingView';
 import { useContractorOnboarding } from '@/hooks/useContractorOnboarding';
 import { Button } from '@/components/ui/button';
 
@@ -31,7 +31,7 @@ const STEPS = [
     title: 'Services & Pricing',
     description: 'What you offer and pricing',
   },
-  { id: 4, title: 'Portfolio', description: 'Showcase your work' },
+  { id: 4, title: 'Publicity', description: 'Profile and marketing consent' },
 ];
 
 export function ContractorOnboardingWizard({
@@ -43,19 +43,31 @@ export function ContractorOnboardingWizard({
   const { progress, status, loadStatus, submitForApproval } =
     useContractorOnboarding();
 
-  // Load onboarding status on mount
-  useEffect(() => {
-    loadStatus();
-  }, [loadStatus]);
+  // Note: loadStatus is already called in the hook's useEffect on mount
+  // We only call it manually when a step is completed
 
-  const handleStepComplete = (step: number) => {
-    // The hook will handle updating the status
-    loadStatus();
+  // If onboarding is already submitted, redirect to dashboard
+  // Users should have access to dashboard functions even if unverified
+  useEffect(() => {
+    if (status && status.is_submitted) {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
+
+  const handleStepComplete = async (step: number) => {
+    // Reload status after step completion with a small delay to ensure API has updated
+    setTimeout(() => {
+      loadStatus();
+    }, 500);
   };
 
   const handleNext = () => {
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
+      // Refresh status when moving to next step to ensure progress is updated
+      setTimeout(() => {
+        loadStatus();
+      }, 300);
     }
   };
 
@@ -70,7 +82,8 @@ export function ContractorOnboardingWizard({
     try {
       const success = await submitForApproval();
       if (success) {
-        router.push('/onboarding/contractor/submitted');
+        // Redirect to dashboard after successful submission
+        router.push('/dashboard');
       } else {
         // Handle error - show toast or error message
       }
@@ -114,7 +127,7 @@ export function ContractorOnboardingWizard({
         );
       case 4:
         return (
-          <PortfolioUploadForm
+          <PublicityForm
             onComplete={() => handleStepComplete(4)}
             onPrevious={handlePrevious}
             onSubmit={handleSubmit}
@@ -133,7 +146,8 @@ export function ContractorOnboardingWizard({
           Contractor Onboarding
         </h1>
         <p className="text-gray-600">
-          Complete your profile to start connecting with event managers
+          Complete your details to get listed on Event Pros NZ and start
+          connecting with event managers!
         </p>
       </div>
 
@@ -141,11 +155,8 @@ export function ContractorOnboardingWizard({
         steps={STEPS}
         currentStep={currentStep}
         completedSteps={progress.completedSteps}
+        status={status}
       />
-
-      <div className="mt-6">
-        <ProfileCompletionTracker />
-      </div>
 
       <div className="mt-8">{renderStep()}</div>
     </div>

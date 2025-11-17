@@ -60,11 +60,17 @@ export default function AboutPage({ className }: AboutPageProps) {
           <div className="max-w-7xl mx-auto">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                About Event Pros NZ
+                About <span className="text-orange-600">Event Pros NZ</span>
               </h1>
               <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                New Zealand&apos;s premier platform connecting event managers
-                with trusted contractors
+                New Zealand&apos;s{' '}
+                <span className="text-orange-600 font-semibold">
+                  premier platform
+                </span>{' '}
+                connecting event managers with{' '}
+                <span className="text-orange-600 font-semibold">
+                  trusted contractors
+                </span>
               </p>
               <div className="flex flex-wrap justify-center gap-4 mb-12">
                 <Badge variant="secondary" className="px-4 py-2 text-sm">

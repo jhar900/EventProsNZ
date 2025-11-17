@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useEventCreationStore } from '@/stores/event-creation';
+import { useAuth } from '@/hooks/useAuth';
 import { ProgressBar } from './ProgressBar';
 import { EventBasicsStep } from './EventBasicsStep';
 import { ServiceRequirementsStep } from './ServiceRequirementsStep';
@@ -32,6 +33,7 @@ export function EventCreationWizard({
   onCancel,
 }: EventCreationWizardProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const {
     currentStep,
     eventData,
@@ -55,19 +57,22 @@ export function EventCreationWizard({
 
   // Load drafts on mount
   useEffect(() => {
-    loadDrafts();
-  }, [loadDrafts]);
+    if (user?.id) {
+      loadDrafts(user.id);
+    }
+  }, [loadDrafts, user?.id]);
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
+    if (!user?.id) return;
     const interval = setInterval(() => {
       if (eventData.title || eventData.eventType) {
-        saveDraft();
+        saveDraft(user.id);
       }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [eventData, saveDraft]);
+  }, [eventData, saveDraft, user?.id]);
 
   // Auto-save when data changes (debounced)
   useEffect(() => {
@@ -76,8 +81,8 @@ export function EventCreationWizard({
     }
 
     const timeout = setTimeout(() => {
-      if (eventData.title || eventData.eventType) {
-        saveDraft();
+      if ((eventData.title || eventData.eventType) && user?.id) {
+        saveDraft(user.id);
       }
     }, 2000);
 
@@ -97,13 +102,12 @@ export function EventCreationWizard({
       } else {
         // Final step - submit event
         try {
-          const result = await submitEvent();
+          const result = await submitEvent(user?.id);
           if (result?.event?.id) {
             onComplete?.(result.event.id);
             router.push(`/events/${result.event.id}`);
           }
-        } catch (error) {
-          }
+        } catch (error) {}
       }
     }
   };
@@ -114,10 +118,10 @@ export function EventCreationWizard({
   };
 
   const handleSaveDraft = async () => {
+    if (!user?.id) return;
     try {
-      await saveDraft();
-    } catch (error) {
-      }
+      await saveDraft(user.id);
+    } catch (error) {}
   };
 
   const handleTemplateSelect = () => {

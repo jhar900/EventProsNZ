@@ -175,46 +175,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* System Health Status */}
-      {metrics && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Shield className="h-5 w-5" />
-              <span>System Health</span>
-              {getHealthBadge(metrics.systemHealth)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  Database response time and system status
-                </p>
-                <p
-                  className={`text-sm font-medium ${getHealthColor(metrics.systemHealth)}`}
-                >
-                  Status:{' '}
-                  {metrics.systemHealth.charAt(0).toUpperCase() +
-                    metrics.systemHealth.slice(1)}
-                </p>
-              </div>
-              {metrics.activeAlerts > 0 && (
-                <div className="text-right">
-                  <p className="text-sm font-medium text-red-600">
-                    {metrics.activeAlerts} Active Alert
-                    {metrics.activeAlerts !== 1 ? 's' : ''}
-                  </p>
-                  <Button variant="outline" size="sm" className="mt-2">
-                    View Alerts
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Key Metrics */}
       {isLoading && !metrics && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -378,6 +338,46 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* System Health Status */}
+      {metrics && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Shield className="h-5 w-5" />
+              <span>System Health</span>
+              {getHealthBadge(metrics.systemHealth)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Database response time and system status
+                </p>
+                <p
+                  className={`text-sm font-medium ${getHealthColor(metrics.systemHealth)}`}
+                >
+                  Status:{' '}
+                  {metrics.systemHealth.charAt(0).toUpperCase() +
+                    metrics.systemHealth.slice(1)}
+                </p>
+              </div>
+              {metrics.activeAlerts > 0 && (
+                <div className="text-right">
+                  <p className="text-sm font-medium text-red-600">
+                    {metrics.activeAlerts} Active Alert
+                    {metrics.activeAlerts !== 1 ? 's' : ''}
+                  </p>
+                  <Button variant="outline" size="sm" className="mt-2">
+                    View Alerts
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

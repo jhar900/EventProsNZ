@@ -1,12 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Upload, Building2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import { ServiceAreaMapping } from './ServiceAreaMapping';
+import { useAuth } from '@/hooks/useAuth';
+
+const NZ_REGIONS = [
+  'Auckland',
+  'Wellington',
+  'Christchurch',
+  'Hamilton',
+  'Tauranga',
+  'Napier',
+  'Dunedin',
+  'Palmerston North',
+  'Nelson',
+  'Rotorua',
+  'Invercargill',
+  'Whangarei',
+  'New Plymouth',
+  'Whanganui',
+  'Gisborne',
+  'Timaru',
+  'Pukekohe',
+  'Masterton',
+  'Levin',
+  'Ashburton',
+];
 
 const businessInfoSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
@@ -16,6 +41,10 @@ const businessInfoSchema = z.object({
   service_areas: z
     .array(z.string())
     .min(1, 'At least one service area is required'),
+  service_categories: z
+    .array(z.string())
+    .min(1, 'At least one service category is required'),
+  logo_url: z.string().optional(),
   social_links: z
     .object({
       website: z.string().url().optional().or(z.literal('')),
@@ -40,11 +69,20 @@ export function BusinessInfoForm({
   onNext,
   onPrevious,
 }: BusinessInfoFormProps) {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedServiceAreas, setSelectedServiceAreas] = useState<string[]>(
     []
   );
+  const [selectedServiceCategories, setSelectedServiceCategories] = useState<
+    string[]
+  >([]);
+  const [serviceCategories, setServiceCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [coverageType, setCoverageType] = useState<'regions' | 'nationwide'>(
     'regions'
   );
@@ -55,9 +93,12 @@ export function BusinessInfoForm({
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
+      service_areas: [],
+      service_categories: [],
       social_links: {
         website: '',
         facebook: '',
@@ -69,36 +110,473 @@ export function BusinessInfoForm({
   });
 
   const socialLinks = watch('social_links');
+  const logoUrl = watch('logo_url');
+
+  // Load service categories from API
+  useEffect(() => {
+    const loadServiceCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await fetch('/api/service-categories');
+        if (response.ok) {
+          const data = await response.json();
+          setServiceCategories(data.categories || []);
+        } else {
+          console.error('Failed to load service categories');
+          setServiceCategories([]);
+        }
+      } catch (error) {
+        console.error('Error loading service categories:', error);
+        setServiceCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadServiceCategories();
+  }, []);
+
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setUploadError('File size must be less than 5MB');
+      return;
+    }
+
+    setUploadError(null);
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      if (!user?.id) {
+        setUploadError('User not authenticated');
+        return;
+      }
+
+      const response = await fetch('/api/user/business-logo', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          'x-user-id': user.id,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to upload logo');
+      }
+
+      // Set the logo URL from the response
+      if (result.logo_url) {
+        setValue('logo_url', result.logo_url);
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Load existing business profile data when component mounts
+  useEffect(() => {
+    const loadBusinessProfileData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const response = await fetch('/api/user/business-profile', {
+          method: 'GET',
+          headers: {
+            'x-user-id': user.id,
+          },
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const businessProfile = result.businessProfile;
+
+          if (businessProfile) {
+            // Get service areas (handle both array and single value)
+            const rawServiceAreas = businessProfile.service_areas || [];
+            const serviceAreas = Array.isArray(rawServiceAreas)
+              ? rawServiceAreas
+              : [];
+
+            console.log(
+              'Loading business profile - raw service areas:',
+              rawServiceAreas
+            );
+            console.log('Processing service areas:', serviceAreas);
+
+            // Determine coverage type based on whether "Nationwide" is in the array
+            const hasNationwide = serviceAreas.includes('Nationwide');
+            const initialCoverageType = hasNationwide
+              ? 'nationwide'
+              : 'regions';
+
+            console.log('Coverage type:', initialCoverageType);
+            setCoverageType(initialCoverageType);
+
+            // Set selected service areas based on coverage type
+            let finalServiceAreas: string[];
+            if (initialCoverageType === 'nationwide') {
+              // For nationwide, set to ['Nationwide']
+              finalServiceAreas = ['Nationwide'];
+            } else {
+              // For regions, filter out "Nationwide" and only keep actual region names
+              finalServiceAreas = serviceAreas.filter(
+                area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+              );
+            }
+
+            console.log('Final service areas to set:', finalServiceAreas);
+            setSelectedServiceAreas(finalServiceAreas);
+            setValue('service_areas', finalServiceAreas, {
+              shouldDirty: false,
+            });
+
+            // Get service categories (handle both array and single value)
+            const profileCategories = businessProfile.service_categories || [];
+            const validCategories = Array.isArray(profileCategories)
+              ? profileCategories.filter(cat => serviceCategories.includes(cat))
+              : [];
+            setSelectedServiceCategories(validCategories);
+            setValue('service_categories', validCategories, {
+              shouldDirty: false,
+            });
+
+            // Get social links - handle different possible formats
+            let socialLinksData = {
+              website: '',
+              facebook: '',
+              instagram: '',
+              linkedin: '',
+              twitter: '',
+            };
+
+            if (businessProfile.social_links) {
+              // If social_links is an object, use it directly
+              if (typeof businessProfile.social_links === 'object') {
+                socialLinksData = {
+                  website: businessProfile.social_links.website || '',
+                  facebook: businessProfile.social_links.facebook || '',
+                  instagram: businessProfile.social_links.instagram || '',
+                  linkedin: businessProfile.social_links.linkedin || '',
+                  twitter: businessProfile.social_links.twitter || '',
+                };
+              }
+            } else {
+              // Try individual fields (legacy format)
+              socialLinksData = {
+                website: businessProfile.website || '',
+                facebook: businessProfile.facebook_url || '',
+                instagram: businessProfile.instagram_url || '',
+                linkedin: businessProfile.linkedin_url || '',
+                twitter: businessProfile.twitter_url || '',
+              };
+            }
+
+            // Populate form with existing data
+            // Use the same finalServiceAreas we calculated above
+            reset({
+              company_name: businessProfile.company_name || '',
+              business_address:
+                businessProfile.business_address ||
+                businessProfile.location ||
+                '',
+              nzbn: businessProfile.nzbn || '',
+              description: businessProfile.description || '',
+              service_areas: finalServiceAreas,
+              service_categories: validCategories,
+              logo_url: businessProfile.logo_url || '',
+              social_links: socialLinksData,
+            });
+
+            // Ensure state is synced after reset (in case reset clears it)
+            setTimeout(() => {
+              console.log(
+                'Syncing state after reset - finalServiceAreas:',
+                finalServiceAreas
+              );
+              setSelectedServiceAreas(finalServiceAreas);
+              setValue('service_areas', finalServiceAreas, {
+                shouldDirty: false,
+              });
+            }, 0);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load business profile data:', error);
+      }
+    };
+
+    loadBusinessProfileData();
+  }, [user?.id, reset, setValue]);
+
+  // Sync form's service_areas with selectedServiceAreas state
+  // This ensures checkboxes reflect the form state
+  const formServiceAreas = watch('service_areas');
+  useEffect(() => {
+    // Skip sync if we're in nationwide mode - let handleCoverageTypeChange manage it
+    if (coverageType === 'nationwide') {
+      // In nationwide mode, ensure state only contains "Nationwide"
+      setSelectedServiceAreas(prev => {
+        const hasNationwide = prev.includes('Nationwide');
+        const hasRegions = prev.some(area => NZ_REGIONS.includes(area));
+        
+        // If we have regions but no "Nationwide", or if we have both, clean it up
+        if (hasRegions || (hasNationwide && prev.length > 1)) {
+          return ['Nationwide'];
+        }
+        
+        // If we only have "Nationwide", keep it
+        if (hasNationwide && prev.length === 1) {
+          return prev;
+        }
+        
+        // Otherwise, set to ["Nationwide"]
+        return ['Nationwide'];
+      });
+      return;
+    }
+    
+    if (
+      formServiceAreas &&
+      Array.isArray(formServiceAreas) &&
+      formServiceAreas.length > 0
+    ) {
+      // If "Nationwide" is in the form, filter out all individual regions
+      let areasToSync = formServiceAreas;
+      if (formServiceAreas.includes('Nationwide')) {
+        areasToSync = formServiceAreas.filter(
+          area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+        );
+      }
+
+      // Only update if different to avoid infinite loops
+      const formAreasString = JSON.stringify([...areasToSync].sort());
+      const stateAreasString = JSON.stringify([...selectedServiceAreas].sort());
+      if (formAreasString !== stateAreasString) {
+        console.log('Syncing selectedServiceAreas from form:', areasToSync);
+        setSelectedServiceAreas(areasToSync);
+      }
+    } else if (
+      formServiceAreas &&
+      Array.isArray(formServiceAreas) &&
+      formServiceAreas.length === 0 &&
+      selectedServiceAreas.length > 0 &&
+      coverageType === 'regions'
+    ) {
+      // If form has empty array but state has values, sync to empty (only in regions mode)
+      console.log('Syncing selectedServiceAreas to empty array');
+      setSelectedServiceAreas([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formServiceAreas, coverageType, selectedServiceAreas]);
+
+  const handleAreaToggle = (area: string) => {
+    // If "Nationwide" is currently selected, switch to regions mode and clear it
+    if (selectedServiceAreas.includes('Nationwide')) {
+      setCoverageType('regions');
+      const newAreas = [area]; // Start with just the selected region
+      setSelectedServiceAreas(newAreas);
+      setValue('service_areas', newAreas, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      return;
+    }
+
+    // Normal toggle behavior for individual regions
+    const newAreas = selectedServiceAreas.includes(area)
+      ? selectedServiceAreas.filter(a => a !== area)
+      : [...selectedServiceAreas, area];
+
+    setSelectedServiceAreas(newAreas);
+    setValue('service_areas', newAreas, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const handleCategoryToggle = (category: string) => {
+    const newCategories = selectedServiceCategories.includes(category)
+      ? selectedServiceCategories.filter(c => c !== category)
+      : [...selectedServiceCategories, category];
+
+    setSelectedServiceCategories(newCategories);
+    setValue('service_categories', newCategories, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const handleCoverageTypeChange = (type: 'regions' | 'nationwide') => {
+    if (type === 'nationwide') {
+      // When selecting nationwide, explicitly clear ALL individual regions and set only "Nationwide"
+      // First, filter out ALL regions from current selection to ensure clean state
+      const currentAreas = selectedServiceAreas.filter(area => !NZ_REGIONS.includes(area));
+      const nationwideAreas = ['Nationwide'];
+
+      // Update coverage type first
+      setCoverageType('nationwide');
+
+      // Immediately update state - this will trigger re-render
+      setSelectedServiceAreas(nationwideAreas);
+
+      // Update form value immediately - ensure we're setting exactly ['Nationwide']
+      setValue('service_areas', nationwideAreas, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      // Force a second update to ensure form state is clean
+      setTimeout(() => {
+        const currentFormAreas = watch('service_areas');
+        if (Array.isArray(currentFormAreas) && currentFormAreas.some(area => NZ_REGIONS.includes(area))) {
+          setValue('service_areas', ['Nationwide'], {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setSelectedServiceAreas(['Nationwide']);
+        }
+      }, 0);
+    } else {
+      // When switching to regions, clear "Nationwide" if it exists
+      const regionsOnly = selectedServiceAreas.filter(
+        area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+      );
+      setCoverageType('regions');
+      setSelectedServiceAreas(regionsOnly);
+      setValue('service_areas', regionsOnly, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  };
+
+  const selectAllRegions = () => {
+    setSelectedServiceAreas(NZ_REGIONS);
+    setValue('service_areas', NZ_REGIONS, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const clearAllRegions = () => {
+    setSelectedServiceAreas([]);
+    setValue('service_areas', [], { shouldValidate: true, shouldDirty: true });
+  };
 
   const onSubmit = async (data: BusinessInfoFormData) => {
+    console.log('onSubmit called with data:', data);
+    console.log('Form errors:', errors);
+    console.log('Selected service areas:', selectedServiceAreas);
+    console.log('Selected service categories:', selectedServiceCategories);
+
     setIsSubmitting(true);
     setError(null);
 
-    // Update data with selected service areas
-    const formData = {
+    // Check if user is authenticated before submitting
+    if (!user) {
+      setError('You must be logged in to submit this form');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate service areas and categories are selected
+    if (selectedServiceAreas.length === 0) {
+      setError('Please select at least one service area');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (selectedServiceCategories.length === 0) {
+      setError('Please select at least one service category');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Clean up data - remove empty logo_url
+    const cleanedData = {
       ...data,
-      service_areas: selectedServiceAreas,
+      logo_url:
+        data.logo_url && data.logo_url.trim() !== ''
+          ? data.logo_url
+          : undefined,
     };
+
+    // Update data with selected service areas and categories
+    const formData = {
+      ...cleanedData,
+      service_areas: selectedServiceAreas,
+      service_categories: selectedServiceCategories,
+    };
+
+    console.log('Submitting business info form:', formData);
 
     try {
       const response = await fetch('/api/onboarding/contractor/step2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id, // Send user ID in header - same as profile settings
         },
+        credentials: 'include', // Include cookies in the request
         body: JSON.stringify(formData),
       });
 
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        setError('Invalid response from server');
+        return;
+      }
+
+      console.log('API response:', {
+        status: response.status,
+        ok: response.ok,
+        data: responseData,
+      });
+
       if (response.ok) {
+        console.log(
+          'Form submission successful, calling onComplete and onNext'
+        );
         onComplete();
         onNext();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to save business information');
+        const errorMessage = responseData.details
+          ? `${responseData.error}: ${responseData.details}`
+          : responseData.error || 'Failed to save business information';
+        setError(errorMessage);
+        console.error('Business info submission error:', {
+          status: response.status,
+          error: responseData,
+        });
       }
     } catch (error) {
+      console.error('Business info submission exception:', error);
       setError('An unexpected error occurred');
-      } finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -120,7 +598,24 @@ export function BusinessInfoForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {uploadError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600 text-sm">{uploadError}</p>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit(onSubmit, errors => {
+          console.error('Form validation errors:', errors);
+          console.log('Form validation failed - onSubmit not called');
+          // Show first validation error
+          const firstError = Object.values(errors)[0];
+          if (firstError) {
+            setError(firstError.message || 'Please fix the form errors');
+          }
+        })}
+        className="space-y-6"
+      >
         <div>
           <label
             htmlFor="company_name"
@@ -140,6 +635,49 @@ export function BusinessInfoForm({
               {errors.company_name.message}
             </p>
           )}
+        </div>
+
+        {/* Company Logo Upload */}
+        <div>
+          <label
+            htmlFor="logo-upload"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Company Logo
+          </label>
+          <div className="flex items-center space-x-4 pb-6 border-b border-gray-200">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={logoUrl} />
+              <AvatarFallback>
+                <Building2 className="h-8 w-8" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <label htmlFor="logo-upload" className="cursor-pointer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {isUploading ? 'Uploading...' : 'Upload Logo'}
+                </Button>
+              </label>
+              <input
+                ref={fileInputRef}
+                id="logo-upload"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleLogoUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                JPG, PNG or WebP. Max size 5MB.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -202,16 +740,204 @@ export function BusinessInfoForm({
           )}
         </div>
 
-        <ServiceAreaMapping
-          serviceAreas={selectedServiceAreas}
-          onChange={setSelectedServiceAreas}
-          coverageType={coverageType}
-          onCoverageTypeChange={setCoverageType}
-        />
+        {/* Service Coverage Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Service Coverage *
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="coverageType"
+                value="nationwide"
+                checked={coverageType === 'nationwide'}
+                onChange={() => handleCoverageTypeChange('nationwide')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Nationwide coverage
+              </span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="coverageType"
+                value="regions"
+                checked={coverageType === 'regions'}
+                onChange={() => handleCoverageTypeChange('regions')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Specific regions in New Zealand
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Region Selection */}
+        {coverageType === 'regions' && (
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Select Service Areas *
+              </label>
+              <div className="space-x-2">
+                <button
+                  type="button"
+                  onClick={selectAllRegions}
+                  className="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAllRegions}
+                  className="text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3">
+              {NZ_REGIONS.map(region => (
+                <label key={region} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedServiceAreas.includes(region)}
+                    onChange={() => handleAreaToggle(region)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">{region}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Areas Summary */}
+        {selectedServiceAreas.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selected Areas ({selectedServiceAreas.length})
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {selectedServiceAreas
+                .filter(area => {
+                  // If "Nationwide" is selected, only show "Nationwide" and filter out all regions
+                  if (selectedServiceAreas.includes('Nationwide')) {
+                    return area === 'Nationwide';
+                  }
+                  // Otherwise, show all selected areas (but filter out "Nationwide" if it somehow exists)
+                  return area !== 'Nationwide';
+                })
+                .map(area => (
+                <span
+                  key={area}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {area}
+                  <button
+                    type="button"
+                    onClick={() => handleAreaToggle(area)}
+                    className="ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-500"
+                  >
+                    <span className="sr-only">Remove</span>
+                    <svg
+                      className="h-2 w-2"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 8 8"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeWidth="1.5"
+                        d="m1 1 6 6m0-6-6 6"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {errors.service_areas && (
           <p className="mt-1 text-sm text-red-600">
             {errors.service_areas.message}
           </p>
+        )}
+
+        {/* Service Categories Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Service Categories *
+          </label>
+          {loadingCategories ? (
+            <p className="text-sm text-gray-500">Loading categories...</p>
+          ) : serviceCategories.length === 0 ? (
+            <p className="text-sm text-amber-600">
+              No service categories available. Please contact support.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3">
+              {serviceCategories.map(category => (
+                <label key={category} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedServiceCategories.includes(category)}
+                    onChange={() => handleCategoryToggle(category)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">{category}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {errors.service_categories && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.service_categories.message}
+            </p>
+          )}
+        </div>
+
+        {/* Selected Categories Summary */}
+        {selectedServiceCategories.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selected Categories ({selectedServiceCategories.length})
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {selectedServiceCategories.map(category => (
+                <span
+                  key={category}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                >
+                  {category}
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryToggle(category)}
+                    className="ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-green-400 hover:bg-green-200 hover:text-green-500"
+                  >
+                    <span className="sr-only">Remove</span>
+                    <svg
+                      className="h-2 w-2"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 8 8"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeWidth="1.5"
+                        d="m1 1 6 6m0-6-6 6"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
         )}
 
         <div>

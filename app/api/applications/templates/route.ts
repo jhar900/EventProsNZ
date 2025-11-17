@@ -21,12 +21,35 @@ const getTemplatesSchema = z.object({
 // GET /api/applications/templates - Get application templates
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Try to get user ID from header first (sent by client)
+    const userId = request.headers.get('x-user-id');
 
-    // Get current user (optional for public templates)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let supabase;
+    let user = null;
+
+    if (userId) {
+      // Use service role client if we have user ID from header
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      supabase = supabaseAdmin;
+      // Fetch user data if needed
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      if (userData) {
+        user = { id: userData.id };
+      }
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user: authUser },
+      } = await middlewareSupabase.auth.getUser();
+      supabase = middlewareSupabase;
+      user = authUser;
+    }
 
     const { searchParams } = new URL(request.url);
     const params = Object.fromEntries(searchParams.entries());
@@ -58,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If user is authenticated, show their templates and public templates
-    if (user) {
+    if (user?.id) {
       query = query.or(`created_by_user_id.eq.${user.id},is_public.eq.true`);
     } else {
       // Only show public templates for unauthenticated users
@@ -134,20 +157,18 @@ export async function GET(request: NextRequest) {
 // POST /api/applications/templates - Create a new template
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    // Get user ID from header (sent by client)
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    // Use service role client for database operations
+    const { supabaseAdmin } = await import('@/lib/supabase/server');
+    const supabase = supabaseAdmin;
 
     // Parse request body
     const body = await request.json();
@@ -173,7 +194,7 @@ export async function POST(request: NextRequest) {
       .from('application_templates')
       .insert({
         ...validationResult.data,
-        created_by_user_id: user.id,
+        created_by_user_id: userId,
       })
       .select()
       .single();

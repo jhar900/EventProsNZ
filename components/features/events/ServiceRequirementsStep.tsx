@@ -37,6 +37,27 @@ import {
 } from 'lucide-react';
 import { ServiceRequirement, PRIORITY_LEVELS } from '@/types/events';
 
+// Helper function to format service type: remove underscores and capitalize words
+const formatServiceType = (type: string): string => {
+  // Map of words that should remain in all caps (acronyms)
+  const acronyms: Record<string, string> = {
+    dj: 'DJ',
+  };
+
+  return type
+    .split('_')
+    .map(word => {
+      const lowerWord = word.toLowerCase();
+      // Check if word is an acronym
+      if (acronyms[lowerWord]) {
+        return acronyms[lowerWord];
+      }
+      // Otherwise capitalize first letter
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+};
+
 export function ServiceRequirementsStep() {
   const serviceRequirements = useServiceRequirements();
   const {
@@ -177,7 +198,9 @@ export function ServiceRequirementsStep() {
                     </div>
 
                     <div>
-                      <h5 className="font-medium">{requirement.type}</h5>
+                      <h5 className="font-medium">
+                        {formatServiceType(requirement.type)}
+                      </h5>
                       {requirement.description && (
                         <p className="text-sm text-muted-foreground">
                           {requirement.description}
@@ -373,7 +396,7 @@ export function ServiceRequirementsStep() {
                 onClick={() => {
                   setNewRequirement({
                     category: suggestion.category,
-                    type: suggestion.type,
+                    type: formatServiceType(suggestion.type),
                     description: suggestion.description,
                     priority: 'medium',
                     estimatedBudget: undefined,
@@ -383,7 +406,9 @@ export function ServiceRequirementsStep() {
                 }}
               >
                 <div className="text-left">
-                  <div className="font-medium text-sm">{suggestion.type}</div>
+                  <div className="font-medium text-sm">
+                    {formatServiceType(suggestion.type)}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {suggestion.description}
                   </div>

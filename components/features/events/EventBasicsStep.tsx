@@ -17,6 +17,22 @@ import {
 } from '@/components/ui/card';
 import { EVENT_TYPES } from '@/types/events';
 
+// Event type labels matching EventTypeSelector
+const eventTypeLabels: Record<string, string> = {
+  [EVENT_TYPES.WEDDING]: 'Wedding',
+  [EVENT_TYPES.CORPORATE]: 'Corporate Event',
+  [EVENT_TYPES.PARTY]: 'Party',
+  [EVENT_TYPES.CONFERENCE]: 'Conference',
+  [EVENT_TYPES.SEMINAR]: 'Seminar',
+  [EVENT_TYPES.WORKSHOP]: 'Workshop',
+  [EVENT_TYPES.EXHIBITION]: 'Exhibition',
+  [EVENT_TYPES.CONCERT]: 'Concert',
+  [EVENT_TYPES.FESTIVAL]: 'Festival',
+  [EVENT_TYPES.SPORTS]: 'Sports Event',
+  [EVENT_TYPES.CHARITY]: 'Charity Event',
+  [EVENT_TYPES.OTHER]: 'Other',
+};
+
 export function EventBasicsStep() {
   const eventData = useEventData();
   const { updateEventData } = useEventCreationStore();
@@ -151,8 +167,10 @@ export function EventBasicsStep() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">
-              Tips for{' '}
-              {EVENT_TYPES[eventData.eventType as keyof typeof EVENT_TYPES]}
+              Tips for your{' '}
+              {eventTypeLabels[eventData.eventType] ||
+                eventData.eventType.charAt(0).toUpperCase() +
+                  eventData.eventType.slice(1)}
             </CardTitle>
           </CardHeader>
           <CardContent>

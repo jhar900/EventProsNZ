@@ -40,9 +40,9 @@ interface EventCreationState {
   ) => void;
   updateBudgetPlan: (plan: BudgetPlan) => void;
   loadTemplates: (eventType?: string) => Promise<void>;
-  loadDrafts: () => Promise<void>;
-  saveDraft: () => Promise<void>;
-  submitEvent: () => Promise<void>;
+  loadDrafts: (userId?: string) => Promise<void>;
+  saveDraft: (userId?: string) => Promise<void>;
+  submitEvent: (userId?: string) => Promise<void>;
   validateStep: (step: number) => boolean;
   clearValidationErrors: () => void;
   resetWizard: () => void;
@@ -166,17 +166,24 @@ export const useEventCreationStore = create<EventCreationState>()(
           if (data.success) {
             set({ templates: data.templates });
           } else {
-            }
+          }
         } catch (error) {
-          } finally {
+        } finally {
           set({ isLoading: false });
         }
       },
 
-      loadDrafts: async () => {
+      loadDrafts: async (userId?: string) => {
         set({ isLoading: true });
         try {
-          const response = await fetch('/api/events/drafts');
+          const headers: HeadersInit = {};
+          if (userId) {
+            headers['x-user-id'] = userId;
+          }
+          const response = await fetch('/api/events/drafts', {
+            headers,
+            credentials: 'include',
+          });
           const data = await response.json();
 
           if (data.success && data.draft) {
@@ -187,21 +194,26 @@ export const useEventCreationStore = create<EventCreationState>()(
             });
           }
         } catch (error) {
-          } finally {
+        } finally {
           set({ isLoading: false });
         }
       },
 
-      saveDraft: async () => {
+      saveDraft: async (userId?: string) => {
         const { eventData, currentStep } = get();
         set({ isLoading: true });
 
         try {
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+          if (userId) {
+            headers['x-user-id'] = userId;
+          }
           const response = await fetch('/api/events/drafts', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
+            credentials: 'include',
             body: JSON.stringify({
               eventData,
               stepNumber: currentStep,
@@ -211,23 +223,31 @@ export const useEventCreationStore = create<EventCreationState>()(
           const data = await response.json();
 
           if (!data.success) {
-            }
+          }
         } catch (error) {
-          } finally {
+        } finally {
           set({ isLoading: false });
         }
       },
 
-      submitEvent: async () => {
+      submitEvent: async (userId?: string) => {
         const { eventData, serviceRequirements, budgetPlan } = get();
         set({ isLoading: true });
 
         try {
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+
+          // Add x-user-id header if provided
+          if (userId) {
+            headers['x-user-id'] = userId;
+          }
+
           const response = await fetch('/api/events', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
+            credentials: 'include',
             body: JSON.stringify({
               ...eventData,
               serviceRequirements,

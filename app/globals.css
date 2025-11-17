@@ -61,3 +61,51 @@ body {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
 }
+
+/* Shadcn Calendar (react-day-picker) styling - minimal fix for alignment */
+/* Fix the inline-flex on td elements that causes dates to stack */
+.rdp-week td,
+td[role='gridcell'] {
+  display: table-cell !important;
+  width: calc(100% / 7) !important;
+}
+
+.rdp-weekdays th,
+th[class*='rdp-weekday'] {
+  width: calc(100% / 7) !important;
+}
+
+/* Position navigation arrows on the same row as month/year */
+.rdp-caption {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  position: relative !important;
+  padding: 0 !important;
+}
+
+.rdp-caption_label {
+  margin: 0 !important;
+  order: 1 !important;
+}
+
+.rdp-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  position: static !important;
+  margin-left: auto !important;
+  order: 2 !important;
+}
+
+.rdp-nav_button_previous,
+.rdp-nav_button_next,
+button[class*='rdp-nav_button'] {
+  position: static !important;
+  margin: 0 !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+}

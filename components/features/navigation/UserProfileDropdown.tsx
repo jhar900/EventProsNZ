@@ -121,12 +121,26 @@ export default function UserProfileDropdown({
 
   // Get user avatar or default
   const getUserAvatar = () => {
+    // Check for profile picture - user.profile.avatar_url (singular, not plural)
+    if (user?.profile?.avatar_url) {
+      return user.profile.avatar_url;
+    }
+    // Fallback: check if profiles array exists (for backwards compatibility)
     if (user?.profiles?.[0]?.avatar_url) {
       return user.profiles[0].avatar_url;
     }
-    // Default avatar - you can replace this with a default image
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email || 'User')}&background=ea580c&color=fff&size=32`;
+    // Return null if no profile picture - will show initials instead
+    return null;
   };
+
+  const avatarUrl = getUserAvatar();
+  const userName = user?.profile?.first_name || user?.email || 'User';
+  const initials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
@@ -137,17 +151,31 @@ export default function UserProfileDropdown({
         aria-label="User menu"
       >
         {/* Profile Picture */}
-        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-          <img
-            src={getUserAvatar()}
-            alt="User avatar"
-            className="w-full h-full object-cover"
-            onError={e => {
-              // Fallback to default avatar if image fails to load
-              const target = e.target as HTMLImageElement;
-              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email || 'User')}&background=ea580c&color=fff&size=32`;
-            }}
-          />
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border border-gray-300">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="User avatar"
+              className="w-full h-full object-cover"
+              onError={e => {
+                // Fallback to initials if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent && !parent.querySelector('.avatar-initials')) {
+                  const initialsSpan = document.createElement('span');
+                  initialsSpan.className =
+                    'avatar-initials text-xs font-semibold text-gray-600';
+                  initialsSpan.textContent = initials;
+                  parent.appendChild(initialsSpan);
+                }
+              }}
+            />
+          ) : (
+            <span className="text-xs font-semibold text-gray-600">
+              {initials}
+            </span>
+          )}
         </div>
 
         {/* Hamburger Menu Icon */}

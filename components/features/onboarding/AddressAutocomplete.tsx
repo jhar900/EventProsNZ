@@ -137,14 +137,14 @@ export function AddressAutocomplete({
         onBlur={handleBlur}
         onFocus={handleFocus}
         placeholder={placeholder}
-        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
           error ? 'border-red-300' : 'border-gray-300'
         }`}
       />
 
       {isLoading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
         </div>
       )}
 

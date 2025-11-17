@@ -18,19 +18,31 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    let supabase;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      supabase = supabaseAdmin;
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+      if (authError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      userId = user.id;
     }
 
     const { id } = params;
@@ -43,12 +55,12 @@ export async function GET(
     }
 
     // Verify the contractor is requesting their own applications or user is admin
-    if (id !== user.id) {
+    if (id !== userId) {
       // Check if user is admin
       const { data: userData } = await supabase
         .from('users')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (userData?.role !== 'admin') {

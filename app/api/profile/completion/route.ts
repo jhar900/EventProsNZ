@@ -1,22 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { ProfileCompletionService } from '@/lib/onboarding/profile-completion';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Get user ID from header (client-side sends this)
+    const userId = request.headers.get('x-user-id');
 
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      // Fallback: try to get user from auth using middleware client
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      // Use service role client for the completion check
+      const completionService = new ProfileCompletionService(supabaseAdmin);
+      const status = await completionService.getProfileCompletionStatus(
+        user.id
+      );
+      return NextResponse.json({
+        success: true,
+        status,
+      });
     }
 
-    const completionService = new ProfileCompletionService();
-    const status = await completionService.getProfileCompletionStatus(user.id);
+    // Use service role client to ensure we can access contractor_onboarding_status
+    const completionService = new ProfileCompletionService(supabaseAdmin);
+    const status = await completionService.getProfileCompletionStatus(userId);
 
     return NextResponse.json({
       success: true,

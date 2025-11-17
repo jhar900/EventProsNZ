@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { EventCreationWizard } from '@/components/features/events/EventCreationWizard';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export const metadata: Metadata = {
   title: 'Create Event | EventProsNZ',
@@ -15,8 +16,10 @@ export const metadata: Metadata = {
 
 export default function CreateEventPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <EventCreationWizard />
-    </div>
+    <DashboardLayout>
+      <div className="min-h-screen bg-background">
+        <EventCreationWizard />
+      </div>
+    </DashboardLayout>
   );
 }

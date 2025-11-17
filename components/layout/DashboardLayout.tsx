@@ -25,6 +25,7 @@ import {
 interface DashboardLayoutProps {
   children: React.ReactNode;
   className?: string;
+  disableNavigation?: boolean;
 }
 
 interface SidebarItem {
@@ -37,6 +38,7 @@ interface SidebarItem {
 export default function DashboardLayout({
   children,
   className = '',
+  disableNavigation = false,
 }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -143,12 +145,6 @@ export default function DashboardLayout({
           { href: '/jobs', label: 'Browse Jobs', icon: Search },
           { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
           {
-            href: '/contractors/favorites',
-            label: 'My Favorites',
-            icon: FileText,
-          },
-          { href: '/contractors/map', label: 'Map View', icon: Search },
-          {
             href: '/feature-requests',
             label: 'Feature Requests',
             icon: Lightbulb,
@@ -189,22 +185,38 @@ export default function DashboardLayout({
           }`}
         >
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-            <Link
-              href="/"
-              className="flex items-center hover:opacity-80 transition-opacity duration-200"
-            >
-              <div className="h-8 w-8 flex items-center justify-center">
-                <img
-                  src="/logo.png"
-                  alt="Event Pros NZ"
-                  className="max-w-full max-h-full object-contain"
-                  style={{ width: 'auto', height: 'auto' }}
-                />
+            {disableNavigation ? (
+              <div className="flex items-center">
+                <div className="h-8 w-8 flex items-center justify-center">
+                  <img
+                    src="/logo.png"
+                    alt="Event Pros NZ"
+                    className="max-w-full max-h-full object-contain"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+                </div>
+                <span className="ml-2 text-xl font-bold text-gray-900">
+                  Event Pros NZ
+                </span>
               </div>
-              <span className="ml-2 text-xl font-bold text-gray-900">
-                Event Pros NZ
-              </span>
-            </Link>
+            ) : (
+              <Link
+                href="/"
+                className="flex items-center hover:opacity-80 transition-opacity duration-200"
+              >
+                <div className="h-8 w-8 flex items-center justify-center">
+                  <img
+                    src="/logo.png"
+                    alt="Event Pros NZ"
+                    className="max-w-full max-h-full object-contain"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+                </div>
+                <span className="ml-2 text-xl font-bold text-gray-900">
+                  Event Pros NZ
+                </span>
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -233,6 +245,27 @@ export default function DashboardLayout({
                         pathname.startsWith(otherItem.href + '/') &&
                         otherItem.href.startsWith(item.href + '/')
                     ));
+
+                if (disableNavigation) {
+                  return (
+                    <li key={item.href}>
+                      <div className="flex items-center justify-between px-3 py-2 rounded-md text-gray-400 cursor-not-allowed">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="h-5 min-w-5 flex items-center justify-center rounded-full px-1.5 text-xs font-semibold flex-shrink-0 bg-gray-300 text-gray-500"
+                          >
+                            {item.badge > 99 ? '99+' : item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                    </li>
+                  );
+                }
 
                 return (
                   <li key={item.href}>
@@ -314,22 +347,38 @@ export default function DashboardLayout({
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <Link
-                href="/"
-                className="flex items-center hover:opacity-80 transition-opacity duration-200"
-              >
-                <div className="h-8 w-8 flex items-center justify-center">
-                  <img
-                    src="/logo.png"
-                    alt="Event Pros NZ"
-                    className="max-w-full max-h-full object-contain"
-                    style={{ width: 'auto', height: 'auto' }}
-                  />
+              {disableNavigation ? (
+                <div className="flex items-center">
+                  <div className="h-8 w-8 flex items-center justify-center">
+                    <img
+                      src="/logo.png"
+                      alt="Event Pros NZ"
+                      className="max-w-full max-h-full object-contain"
+                      style={{ width: 'auto', height: 'auto' }}
+                    />
+                  </div>
+                  <span className="ml-2 text-lg font-bold text-gray-900">
+                    Event Pros NZ
+                  </span>
                 </div>
-                <span className="ml-2 text-lg font-bold text-gray-900">
-                  Event Pros NZ
-                </span>
-              </Link>
+              ) : (
+                <Link
+                  href="/"
+                  className="flex items-center hover:opacity-80 transition-opacity duration-200"
+                >
+                  <div className="h-8 w-8 flex items-center justify-center">
+                    <img
+                      src="/logo.png"
+                      alt="Event Pros NZ"
+                      className="max-w-full max-h-full object-contain"
+                      style={{ width: 'auto', height: 'auto' }}
+                    />
+                  </div>
+                  <span className="ml-2 text-lg font-bold text-gray-900">
+                    Event Pros NZ
+                  </span>
+                </Link>
+              )}
               <div className="w-8" /> {/* Spacer for centering */}
             </div>
           </div>

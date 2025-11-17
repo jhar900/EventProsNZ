@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,10 +32,17 @@ export function PersonalInfoForm({
     handleSubmit,
     formState: { errors },
     setValue,
+    reset,
   } = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: data,
   });
+
+  // Update form when data prop changes (e.g., when navigating back)
+  useEffect(() => {
+    reset(data);
+    setAddress(data.address);
+  }, [data, reset]);
 
   const onSubmit = (formData: PersonalInfoFormData) => {
     onComplete({ ...formData, address });
@@ -52,7 +59,7 @@ export function PersonalInfoForm({
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Personal Information
         </h2>
-        <p className="text-gray-600">Let's start with your basic information</p>
+        <p className="text-gray-600">Let&apos;s start with your basic information</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -68,7 +75,7 @@ export function PersonalInfoForm({
               {...register('first_name')}
               type="text"
               id="first_name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder="Enter your first name"
             />
             {errors.first_name && (
@@ -89,7 +96,7 @@ export function PersonalInfoForm({
               {...register('last_name')}
               type="text"
               id="last_name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder="Enter your last name"
             />
             {errors.last_name && (
@@ -111,7 +118,7 @@ export function PersonalInfoForm({
             {...register('phone')}
             type="tel"
             id="phone"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             placeholder="Enter your phone number"
           />
           {errors.phone && (
@@ -138,7 +145,7 @@ export function PersonalInfoForm({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Saving...' : 'Continue'}
           </button>

@@ -35,7 +35,12 @@ export interface ProfileCompletionRequirements {
 }
 
 export class ProfileCompletionService {
-  private supabase = createClient();
+  private supabase;
+
+  constructor(supabaseClient?: any) {
+    // Allow passing in a Supabase client, otherwise use default
+    this.supabase = supabaseClient || createClient();
+  }
 
   async getProfileCompletionStatus(
     userId: string
@@ -68,6 +73,52 @@ export class ProfileCompletionService {
 
       if (userError) {
         throw new Error('Failed to fetch user data');
+      }
+
+      // For contractors, check if onboarding is submitted
+      // If submitted, mark as complete regardless of field completion
+      if (user.role === 'contractor') {
+        const { data: onboardingStatus } = await this.supabase
+          .from('contractor_onboarding_status')
+          .select('is_submitted')
+          .eq('user_id', userId)
+          .single();
+
+        if (onboardingStatus?.is_submitted) {
+          // Onboarding is submitted, mark as complete
+          return {
+            isComplete: true,
+            completionPercentage: 100,
+            missingFields: [],
+            requirements: {
+              personalInfo: true,
+              contactInfo: true,
+              businessInfo: true,
+              profilePhoto: true,
+            },
+          };
+        }
+      }
+
+      // For event managers, check if onboarding is completed
+      // If completed, mark as complete regardless of field completion
+      if (user.role === 'event_manager') {
+        const onboardingCompleted = (profile?.preferences as any)
+          ?.onboarding_completed;
+        if (onboardingCompleted) {
+          // Onboarding is completed, mark as complete
+          return {
+            isComplete: true,
+            completionPercentage: 100,
+            missingFields: [],
+            requirements: {
+              personalInfo: true,
+              contactInfo: true,
+              businessInfo: true,
+              profilePhoto: true,
+            },
+          };
+        }
       }
 
       // Check requirements based on user role

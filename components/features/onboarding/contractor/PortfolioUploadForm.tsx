@@ -5,6 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -35,6 +36,7 @@ export function PortfolioUploadForm({
   onSubmit,
   isSubmitting,
 }: PortfolioUploadFormProps) {
+  const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [uploadingFiles, setUploadingFiles] = useState<{
     [key: number]: boolean;
@@ -118,7 +120,7 @@ export function PortfolioUploadForm({
       reader.readAsDataURL(file);
     } catch (error) {
       setError('Failed to upload file');
-      } finally {
+    } finally {
       setUploadingFiles(prev => ({ ...prev, [index]: false }));
     }
   };
@@ -145,11 +147,17 @@ export function PortfolioUploadForm({
       }
     } catch (error) {
       setError('Failed to validate video URL');
-      }
+    }
   };
 
   const onFormSubmit = async (data: PortfolioUploadFormData) => {
     setError(null);
+
+    // Check if user is authenticated before submitting
+    if (!user) {
+      setError('You must be logged in to submit this form');
+      return;
+    }
 
     // Validate YouTube URLs
     for (const item of data.portfolio_items) {
@@ -168,7 +176,9 @@ export function PortfolioUploadForm({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id, // Send user ID in header - same as other steps
         },
+        credentials: 'include', // Include cookies in the request
         body: JSON.stringify(data),
       });
 
@@ -181,7 +191,7 @@ export function PortfolioUploadForm({
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      }
+    }
   };
 
   return (

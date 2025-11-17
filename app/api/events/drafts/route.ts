@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { SaveEventDraftRequest, EventDraftResponse } from '@/types/events';
 
@@ -67,18 +67,29 @@ const saveDraftSchema = z.object({
 // POST /api/events/drafts - Save event draft
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      userId = user.id;
     }
 
     // Parse and validate request body
@@ -105,8 +116,8 @@ export async function POST(request: NextRequest) {
     const { data: existingDraft, error: checkError } = await supabase
       .from('event_drafts')
       .select('id')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
 
     let draft;
 
@@ -143,7 +154,7 @@ export async function POST(request: NextRequest) {
       const { data: newDraft, error: createError } = await supabase
         .from('event_drafts')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           event_data: draftData.eventData,
           step_number: draftData.stepNumber,
         })
@@ -167,8 +178,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
+    console.error('Error in POST /api/events/drafts:', error);
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      {
+        success: false,
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -177,25 +193,36 @@ export async function POST(request: NextRequest) {
 // GET /api/events/drafts - Get user's event drafts
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      userId = user.id;
     }
 
     // Get user's drafts
     const { data: drafts, error: draftsError } = await supabase
       .from('event_drafts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('updated_at', { ascending: false });
 
     if (draftsError) {
@@ -222,25 +249,36 @@ export async function GET(request: NextRequest) {
 // DELETE /api/events/drafts - Delete user's event draft
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+    } else {
+      // Fallback to middleware client for cookie-based auth
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = middlewareSupabase;
+      userId = user.id;
     }
 
     // Delete user's draft
     const { error: deleteError } = await supabase
       .from('event_drafts')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (deleteError) {
       return NextResponse.json(

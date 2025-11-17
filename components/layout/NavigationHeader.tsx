@@ -27,8 +27,7 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const toggleMobileMenu = () => {
@@ -118,7 +117,7 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300">
                     {user.profile?.avatar_url ? (
                       <img
                         src={user.profile.avatar_url}
@@ -126,7 +125,14 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
                         className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
-                      <User className="h-4 w-4 text-gray-600" />
+                      <span className="text-xs font-semibold text-gray-600">
+                        {(user.profile?.first_name || user.email || 'U')
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </span>
                     )}
                   </div>
                   <span className="text-sm text-gray-700">

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 import { z } from 'zod';
 
 const step3Schema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
+  position: z.string().min(1, 'Your position/role is required'),
   business_address: z.string().min(5, 'Business address is required'),
   nzbn: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters'),
@@ -22,16 +23,26 @@ const step3Schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user ID from request headers (sent by client)
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
+
+    // Create Supabase client with service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Validate request body
     const body = await request.json();
@@ -41,11 +52,41 @@ export async function POST(request: NextRequest) {
     const { data: existingBusinessProfile } = await supabase
       .from('business_profiles')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    // Update profile with position/role
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingProfile) {
+      // Update existing profile with position
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({
+          // Store position in preferences JSONB field
+          preferences: {
+            ...((existingProfile.preferences as any) || {}),
+            position: validatedData.position,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (profileUpdateError) {
+        console.error(
+          'Failed to update profile with position:',
+          profileUpdateError
+        );
+        // Continue anyway - position is not critical
+      }
+    }
 
     const businessProfileData = {
-      user_id: user.id,
+      user_id: userId,
       company_name: validatedData.company_name,
       description: validatedData.description,
       location: validatedData.business_address,
@@ -63,9 +104,9 @@ export async function POST(request: NextRequest) {
           ...businessProfileData,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         return NextResponse.json(

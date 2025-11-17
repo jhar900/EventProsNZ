@@ -19,11 +19,19 @@ function AuthGuard({
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before checking localStorage (prevents hydration mismatch)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    // Only check localStorage after component is mounted (prevents hydration mismatch)
+    if (!mounted) return;
+
     // Show content immediately if we have cached user data
-    const cachedUser =
-      typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+    const cachedUser = localStorage.getItem('user_data');
 
     if (cachedUser && requireAuth) {
       // We have cached user, show content immediately
@@ -56,7 +64,7 @@ function AuthGuard({
     }
 
     return () => clearTimeout(timeout);
-  }, [user, isLoading, requireAuth, redirectTo, router]);
+  }, [user, isLoading, requireAuth, redirectTo, router, mounted]);
 
   // Show content immediately if we have user data (even if still loading)
   // Only block if we're definitely redirecting
@@ -64,9 +72,9 @@ function AuthGuard({
     return null; // Will redirect
   }
 
-  // Check for cached user data to show content immediately
+  // Check for cached user data to show content immediately (only after mount)
   const hasCachedUser =
-    typeof window !== 'undefined' &&
+    mounted &&
     localStorage.getItem('user_data') &&
     localStorage.getItem('is_authenticated') === 'true';
 

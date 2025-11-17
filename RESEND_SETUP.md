@@ -69,3 +69,4 @@ When you're ready for production:
 1. Verify your domain in Resend dashboard
 2. Update `RESEND_FROM_EMAIL` to use your verified domain
 3. That's it! Same API key works for production
+

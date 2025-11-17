@@ -35,6 +35,8 @@ export function EventLocationInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Debounced search
   useEffect(() => {
@@ -78,7 +80,7 @@ export function EventLocationInput({
       setShowSuggestions(true);
     } catch (err) {
       setError('Failed to search locations. Please try again.');
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -117,10 +119,38 @@ export function EventLocationInput({
     }
   };
 
-  const handleInputBlur = () => {
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Don't hide suggestions if clicking inside the suggestions dropdown
+    if (
+      suggestionsRef.current &&
+      suggestionsRef.current.contains(e.relatedTarget as Node)
+    ) {
+      return;
+    }
     // Delay hiding suggestions to allow for clicks
     setTimeout(() => setShowSuggestions(false), 200);
   };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showSuggestions]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -160,14 +190,14 @@ export function EventLocationInput({
           onChange(location);
         } catch (err) {
           setError('Failed to get current location address.');
-          } finally {
+        } finally {
           setIsLoading(false);
         }
       },
       error => {
         setError('Unable to get your current location.');
         setIsLoading(false);
-        }
+      }
     );
   };
 
@@ -177,6 +207,7 @@ export function EventLocationInput({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            ref={inputRef}
             placeholder="Enter event location (e.g., Auckland, New Zealand)"
             value={query}
             onChange={handleInputChange}
@@ -191,13 +222,17 @@ export function EventLocationInput({
 
         {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
-          <Card className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto">
-            <CardContent className="p-0">
+          <Card
+            ref={suggestionsRef}
+            className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto shadow-lg bg-white border border-gray-200"
+          >
+            <CardContent className="p-0 bg-white">
               {suggestions.map(suggestion => (
                 <div
                   key={suggestion.place_id}
                   className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
                   onClick={() => handleSuggestionSelect(suggestion)}
+                  onMouseDown={e => e.preventDefault()}
                 >
                   <div className="flex items-start space-x-2">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -224,19 +259,6 @@ export function EventLocationInput({
           </Card>
         )}
       </div>
-
-      {/* Current Location Button */}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={getCurrentLocation}
-        disabled={isLoading}
-        className="flex items-center gap-2"
-      >
-        <MapPin className="h-4 w-4" />
-        Use Current Location
-      </Button>
 
       {/* Error Message */}
       {error && <p className="text-sm text-destructive">{error}</p>}

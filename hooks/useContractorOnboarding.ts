@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface OnboardingStatus {
   step1_completed: boolean;
@@ -24,28 +25,51 @@ interface OnboardingProgress {
 }
 
 export function useContractorOnboarding() {
+  const { user, isLoading: authLoading } = useAuth();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
+    // Don't fetch if auth is still loading or user is not available
+    if (authLoading || !user?.id) {
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch('/api/onboarding/contractor/status');
+      const response = await fetch('/api/onboarding/contractor/status', {
+        credentials: 'include', // Include cookies in the request
+        headers: {
+          'x-user-id': user.id, // Send user ID in header - same as other steps
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('useContractorOnboarding - Status loaded:', data);
         setStatus(data);
+        setError(null);
+      } else if (response.status === 401) {
+        // If unauthorized, set default values (user might not be logged in yet)
+        setStatus({
+          step1_completed: false,
+          step2_completed: false,
+          step3_completed: false,
+          step4_completed: false,
+          is_submitted: false,
+          approval_status: 'pending',
+        });
         setError(null);
       } else {
         setError('Failed to load onboarding status');
       }
     } catch (err) {
       setError('An error occurred while loading status');
-      } finally {
+    } finally {
       setLoading(false);
     }
-  };
+  }, [authLoading, user?.id]); // Depend on authLoading and user.id
 
   const updateStep = async (step: number) => {
     try {
@@ -54,6 +78,7 @@ export function useContractorOnboarding() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies in the request
       });
 
       if (response.ok) {
@@ -71,12 +96,20 @@ export function useContractorOnboarding() {
   };
 
   const submitForApproval = async () => {
+    // Check if user is available before submitting
+    if (!user?.id) {
+      setError('You must be logged in to submit');
+      return false;
+    }
+
     try {
       const response = await fetch('/api/onboarding/contractor/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id, // Send user ID in header - same as other steps
         },
+        credentials: 'include', // Include cookies in the request
       });
 
       if (response.ok) {
@@ -111,6 +144,14 @@ export function useContractorOnboarding() {
       status.step3_completed,
       status.step4_completed,
     ].filter(Boolean).length;
+
+    console.log('useContractorOnboarding - Calculating progress:', {
+      step1: status.step1_completed,
+      step2: status.step2_completed,
+      step3: status.step3_completed,
+      step4: status.step4_completed,
+      completedSteps,
+    });
 
     const currentStep = completedSteps === 4 ? 4 : completedSteps + 1;
     const completionPercentage = (completedSteps / 4) * 100;
@@ -148,8 +189,11 @@ export function useContractorOnboarding() {
   };
 
   useEffect(() => {
-    loadStatus();
-  }, []);
+    // Only load status when auth is ready
+    if (!authLoading) {
+      loadStatus();
+    }
+  }, [authLoading, loadStatus]);
 
   return {
     status,

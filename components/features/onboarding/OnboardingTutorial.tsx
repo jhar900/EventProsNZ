@@ -73,7 +73,7 @@ export function OnboardingTutorial({
           Platform Tutorial
         </h2>
         <p className="text-gray-600">
-          Let's take a quick tour of what you can do on EventProsNZ
+          Let&apos;s take a quick tour of what you can do on EventProsNZ
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export function OnboardingTutorial({
             <div
               key={index}
               className={`w-2 h-2 rounded-full ${
-                index === currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                index === currentStep ? 'bg-orange-600' : 'bg-gray-300'
               }`}
             />
           ))}
@@ -118,7 +118,7 @@ export function OnboardingTutorial({
             <button
               onClick={handleNext}
               disabled={isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {currentStep === tutorialSteps.length - 1
                 ? 'Get Started'
@@ -128,9 +128,9 @@ export function OnboardingTutorial({
         </div>
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <h4 className="font-medium text-blue-900 mb-2">Quick Tips:</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-md">
+        <h4 className="font-medium text-orange-900 mb-2">Quick Tips:</h4>
+        <ul className="text-sm text-orange-800 space-y-1">
           <li>• Complete your profile to get better contractor matches</li>
           <li>
             • Be specific about your event requirements for accurate quotes

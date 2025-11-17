@@ -30,7 +30,7 @@ export function ProgressIndicator({
 
       <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+          className="bg-orange-600 h-2 rounded-full transition-all duration-300 ease-in-out"
           style={{ width: `${(currentStep / totalSteps) * 100}%` }}
         />
       </div>
@@ -40,15 +40,15 @@ export function ProgressIndicator({
           <div
             key={step.id}
             className={`flex flex-col items-center ${
-              step.id <= currentStep ? 'text-blue-600' : 'text-gray-400'
+              step.id <= currentStep ? 'text-orange-600' : 'text-gray-400'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                 step.id < currentStep
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white'
                   : step.id === currentStep
-                    ? 'bg-blue-100 text-blue-600 border-2 border-blue-600'
+                    ? 'bg-orange-100 text-orange-600 border-2 border-orange-600'
                     : 'bg-gray-200 text-gray-400'
               }`}
             >

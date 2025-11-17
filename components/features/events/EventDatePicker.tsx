@@ -182,37 +182,6 @@ export function EventDatePicker({ value, onChange }: EventDatePickerProps) {
           </p>
         </div>
       )}
-
-      {/* Quick Date Options */}
-      <div className="space-y-2">
-        <Label className="text-sm text-muted-foreground">Quick Select</Label>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'Today', days: 0 },
-            { label: 'Tomorrow', days: 1 },
-            { label: 'Next Week', days: 7 },
-            { label: 'Next Month', days: 30 },
-          ].map(({ label, days }) => {
-            const date = addDays(new Date(), days);
-            const isDisabled = isAfter(date, maxDate);
-
-            return (
-              <Button
-                key={label}
-                variant="outline"
-                size="sm"
-                disabled={isDisabled}
-                onClick={() => {
-                  setSelectedDate(date);
-                  updateDateTime(date, time.hours, time.minutes);
-                }}
-              >
-                {label}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
