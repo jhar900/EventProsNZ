@@ -94,9 +94,12 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
+    console.log('Draft save request body:', JSON.stringify(body, null, 2));
+
     const validationResult = saveDraftSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.error.errors);
       return NextResponse.json(
         {
           success: false,
@@ -179,11 +182,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/events/drafts:', error);
+    console.error(
+      'Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
       {
         success: false,
         message: 'Internal server error',
         error: error instanceof Error ? error.message : 'Unknown error',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.stack
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );

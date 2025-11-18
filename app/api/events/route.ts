@@ -14,55 +14,68 @@ import {
 const createEventSchema = z.object({
   eventType: z.enum(Object.values(EVENT_TYPES) as [string, ...string[]]),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().optional(),
-  eventDate: z.string().datetime('Invalid date format'),
-  durationHours: z.number().min(1).max(168).optional(), // Max 1 week
-  attendeeCount: z.number().min(1).max(10000).optional(),
+  description: z.string().optional().nullable(),
+  eventDate: z.string().refine(
+    val => {
+      if (!val) return false;
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    },
+    { message: 'Invalid date format' }
+  ),
+  durationHours: z.number().min(1).max(168).optional().nullable(), // Max 1 week
+  attendeeCount: z.number().min(1).max(10000).optional().nullable(),
   location: z.object({
     address: z.string().min(1, 'Address is required'),
     coordinates: z.object({
       lat: z.number(),
       lng: z.number(),
     }),
-    placeId: z.string().optional(),
-    city: z.string().optional(),
-    region: z.string().optional(),
-    country: z.string().optional(),
+    placeId: z.string().optional().nullable(),
+    city: z.string().optional().nullable(),
+    region: z.string().optional().nullable(),
+    country: z.string().optional().nullable(),
   }),
-  specialRequirements: z.string().optional(),
+  specialRequirements: z.string().optional().nullable(),
   serviceRequirements: z
     .array(
       z.object({
         category: z.string(),
         type: z.string(),
-        description: z.string().optional(),
+        description: z.string().optional().nullable(),
         priority: z.enum(['low', 'medium', 'high']),
-        estimatedBudget: z.number().min(0).optional(),
+        estimatedBudget: z.number().min(0).optional().nullable(),
         isRequired: z.boolean(),
       })
     )
     .optional()
     .default([]),
-  budgetPlan: z.object({
-    totalBudget: z.number().min(0),
-    breakdown: z.record(
-      z.object({
-        amount: z.number().min(0),
-        percentage: z.number().min(0).max(100),
-      })
-    ),
-    recommendations: z
-      .array(
-        z.object({
-          category: z.string(),
-          suggestedAmount: z.number().min(0),
-          reason: z.string(),
-          confidence: z.number().min(0).max(1),
-        })
-      )
-      .optional()
-      .default([]),
-  }),
+  budgetPlan: z
+    .object({
+      totalBudget: z.number().min(0).default(0),
+      breakdown: z
+        .record(
+          z.object({
+            amount: z.number().min(0),
+            percentage: z.number().min(0).max(100),
+          })
+        )
+        .optional()
+        .default({}),
+      recommendations: z
+        .array(
+          z.object({
+            category: z.string(),
+            suggestedAmount: z.number().min(0),
+            reason: z.string(),
+            confidence: z.number().min(0).max(1),
+          })
+        )
+        .optional()
+        .default([]),
+    })
+    .optional()
+    .default({ totalBudget: 0, breakdown: {}, recommendations: [] }),
   isDraft: z.boolean().optional().default(false),
 });
 
@@ -121,9 +134,12 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
+    console.log('Event creation request body:', JSON.stringify(body, null, 2));
+
     const validationResult = createEventSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.error.errors);
       return NextResponse.json(
         {
           success: false,
@@ -167,7 +183,7 @@ export async function POST(request: NextRequest) {
         location: eventData.location?.address || '',
         location_data: eventData.location || null,
         special_requirements: eventData.specialRequirements || null,
-        budget_total: eventData.budgetPlan?.totalBudget || 0,
+        budget_total: eventData.budgetPlan?.totalBudget ?? 0,
         budget_min: eventData.budgetPlan?.totalBudget
           ? eventData.budgetPlan.totalBudget * 0.8
           : 0, // 20% buffer
@@ -245,11 +261,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/events:', error);
+    console.error(
+      'Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
       {
         success: false,
         message: 'Internal server error',
         error: error instanceof Error ? error.message : 'Unknown error',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.stack
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
