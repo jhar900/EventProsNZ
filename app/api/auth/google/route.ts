@@ -314,6 +314,28 @@ export async function POST(request: NextRequest) {
         // Silently fail if email module can't be loaded
       });
 
+    // Send admin notification email (non-blocking - don't fail registration if email fails)
+    // Use dynamic import to avoid blocking route registration
+    import('@/lib/email/admin-notification-email')
+      .then(({ sendAdminNotificationEmail }) => {
+        sendAdminNotificationEmail({
+          userId: authData.user.id,
+          email: authData.user.email!,
+          firstName,
+          lastName,
+          role,
+        }).catch(error => {
+          // Log error but don't throw - registration should succeed even if email fails
+          console.error(
+            'Failed to send admin notification email during Google OAuth registration:',
+            error
+          );
+        });
+      })
+      .catch(() => {
+        // Silently fail if email module can't be loaded
+      });
+
     // Create JSON response
     const jsonResponse = NextResponse.json({
       message: 'User registered and logged in successfully',

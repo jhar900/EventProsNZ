@@ -19,7 +19,11 @@ const saveDraftSchema = z.object({
           lat: z.number(),
           lng: z.number(),
         }),
-        placeId: z.string().optional(),
+        placeId: z
+          .union([z.string(), z.number()])
+          .transform(val => String(val))
+          .optional()
+          .nullable(),
         city: z.string().optional(),
         region: z.string().optional(),
         country: z.string().optional(),
@@ -67,14 +71,19 @@ const saveDraftSchema = z.object({
 // POST /api/events/drafts - Save event draft
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== POST /api/events/drafts START ===');
+
     // Try to get user ID from header first (sent by client)
     let userId = request.headers.get('x-user-id');
+    console.log('User ID from header:', userId);
 
     let supabase;
     if (userId) {
+      console.log('Using service role client with userId from header');
       // Use service role client if we have user ID from header
       supabase = supabaseAdmin;
     } else {
+      console.log('Using middleware client for cookie-based auth');
       // Fallback to middleware client for cookie-based auth
       const { createClient } = await import('@/lib/supabase/middleware');
       const { supabase: middlewareSupabase } = createClient(request);
@@ -82,15 +91,25 @@ export async function POST(request: NextRequest) {
         data: { user },
         error: authError,
       } = await middlewareSupabase.auth.getUser();
+
+      console.log('Auth result:', { userId: user?.id, authError });
+
       if (authError || !user) {
+        console.error('Auth failed:', authError);
         return NextResponse.json(
-          { success: false, message: 'Unauthorized' },
+          {
+            success: false,
+            message: 'Unauthorized',
+            error: authError?.message,
+          },
           { status: 401 }
         );
       }
       supabase = middlewareSupabase;
       userId = user.id;
     }
+
+    console.log('Authentication successful, userId:', userId);
 
     // Parse and validate request body
     const body = await request.json();
@@ -99,14 +118,15 @@ export async function POST(request: NextRequest) {
     const validationResult = saveDraftSchema.safeParse(body);
 
     if (!validationResult.success) {
-      console.error('Validation errors:', validationResult.error.errors);
+      console.error('Validation errors:', validationResult.error);
+      const errors = validationResult.error?.errors || [];
       return NextResponse.json(
         {
           success: false,
           message: 'Validation failed',
-          errors: validationResult.error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
+          errors: errors.map(err => ({
+            field: err.path?.join('.') || 'unknown',
+            message: err.message || 'Validation error',
           })),
         },
         { status: 400 }
@@ -116,22 +136,32 @@ export async function POST(request: NextRequest) {
     const draftData = validationResult.data;
 
     // Check if user already has a draft
+    console.log('Checking for existing draft for userId:', userId);
     const { data: existingDraft, error: checkError } = await supabase
       .from('event_drafts')
       .select('id')
       .eq('user_id', userId)
       .maybeSingle();
 
+    console.log('Draft check result:', { existingDraft, checkError });
+
     let draft;
 
     if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking draft:', checkError);
       return NextResponse.json(
-        { success: false, message: 'Failed to validate draft' },
+        {
+          success: false,
+          message: 'Failed to validate draft',
+          error: checkError.message,
+          code: checkError.code,
+        },
         { status: 500 }
       );
     }
 
     if (existingDraft) {
+      console.log('Updating existing draft:', existingDraft.id);
       // Update existing draft
       const { data: updatedDraft, error: updateError } = await supabase
         .from('event_drafts')
@@ -145,14 +175,23 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
+        console.error('Error updating draft:', updateError);
         return NextResponse.json(
-          { success: false, message: 'Failed to update draft' },
+          {
+            success: false,
+            message: 'Failed to update draft',
+            error: updateError.message,
+            details: updateError.details,
+            code: updateError.code,
+          },
           { status: 500 }
         );
       }
 
       draft = updatedDraft;
+      console.log('Draft updated successfully');
     } else {
+      console.log('Creating new draft');
       // Create new draft
       const { data: newDraft, error: createError } = await supabase
         .from('event_drafts')
@@ -165,13 +204,28 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError) {
+        console.error('Error creating draft:', createError);
+        console.error('Draft error details:', {
+          message: createError.message,
+          details: createError.details,
+          hint: createError.hint,
+          code: createError.code,
+        });
         return NextResponse.json(
-          { success: false, message: 'Failed to create draft' },
+          {
+            success: false,
+            message: 'Failed to create draft',
+            error: createError.message,
+            details: createError.details,
+            hint: createError.hint,
+            code: createError.code,
+          },
           { status: 500 }
         );
       }
 
       draft = newDraft;
+      console.log('Draft created successfully');
     }
 
     const response: EventDraftResponse = {

@@ -9,3 +9,5 @@ ADD COLUMN IF NOT EXISTS availability TEXT;
 COMMENT ON COLUMN public.services.availability IS 'Service availability information (e.g., "Weekends only", "24/7", etc.)';
 
 
+
+

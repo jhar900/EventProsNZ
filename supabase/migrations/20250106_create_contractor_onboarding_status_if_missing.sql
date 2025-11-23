@@ -106,3 +106,5 @@ CREATE TRIGGER update_contractor_onboarding_status_updated_at
   EXECUTE FUNCTION update_contractor_onboarding_status_updated_at();
 
 
+
+

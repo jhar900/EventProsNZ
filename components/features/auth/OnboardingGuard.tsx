@@ -20,7 +20,11 @@ function OnboardingGuard({
   requireOnboarding = true,
 }: OnboardingGuardProps) {
   const { user, isLoading: authLoading } = useAuth();
-  const { status, isLoading: completionLoading } = useProfileCompletion();
+  const {
+    status,
+    isLoading: completionLoading,
+    error: completionError,
+  } = useProfileCompletion();
   const router = useRouter();
   const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
@@ -40,6 +44,7 @@ function OnboardingGuard({
     '/api',
     '/_next',
     '/favicon',
+    '/events', // Allow access to events pages even if onboarding incomplete
   ];
 
   // Check if current path should be excluded
@@ -63,14 +68,29 @@ function OnboardingGuard({
       return;
     }
 
+    // If there's an error fetching completion status, don't redirect
+    // This prevents redirects when the API is temporarily unavailable
+    // Only redirect if we have a status and it's incomplete
+    if (completionError) {
+      console.warn(
+        'Error fetching profile completion status:',
+        completionError
+      );
+      // Allow access if there's an error - better UX than blocking users
+      setIsChecking(false);
+      return;
+    }
+
     // Check if profile is complete
-    // If status is null and we're not loading, assume incomplete (will redirect)
+    // Only redirect if we have a status and it's confirmed incomplete
+    // Don't redirect if status is null (might be an error, not incomplete)
     // Admins can bypass onboarding requirement
     if (
       user &&
       user.role !== 'admin' &&
       !completionLoading &&
-      (!status || !status.isComplete)
+      status && // Only redirect if we have a status (not null)
+      !status.isComplete
     ) {
       // Determine the correct onboarding route based on user role
       let onboardingRoute = '/onboarding/event-manager';
@@ -99,12 +119,23 @@ function OnboardingGuard({
       return;
     }
 
+    // If no status and not loading (but no error), allow access to prevent blocking
+    // This handles edge cases where status fetch fails silently
+    if (user && !status && !completionLoading && !completionError) {
+      console.warn(
+        'Profile completion status is null but no error - allowing access'
+      );
+      setIsChecking(false);
+      return;
+    }
+
     setIsChecking(false);
   }, [
     user,
     status,
     authLoading,
     completionLoading,
+    completionError,
     requireOnboarding,
     isExcludedPath,
     pathname,

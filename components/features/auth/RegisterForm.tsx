@@ -65,6 +65,7 @@ export default function RegisterForm({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: allows cookies to be set and sent
         body: JSON.stringify({
           email: data.email,
           password: data.password,
@@ -93,6 +94,26 @@ export default function RegisterForm({
         }
 
         throw new Error(errorMessage);
+      }
+
+      // Store user data in localStorage for persistence (so AuthGuard can find it immediately)
+      if (result.user) {
+        localStorage.setItem('user_data', JSON.stringify(result.user));
+        localStorage.setItem('is_authenticated', 'true');
+      }
+
+      // Refresh the Supabase session to pick up cookies set by the server
+      // The cookies are httpOnly, so we need to make a request to refresh the session
+      try {
+        const { supabase } = await import('@/lib/supabase/client');
+        // Try to refresh the session - this will read cookies from the server
+        await supabase.auth.refreshSession();
+      } catch (refreshError) {
+        console.warn(
+          'Failed to refresh session after registration:',
+          refreshError
+        );
+        // Don't fail registration if session refresh fails - cookies should still work for API routes
       }
 
       onSuccess?.(result.user);

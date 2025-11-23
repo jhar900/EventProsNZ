@@ -469,7 +469,8 @@ export function OnboardingWizard() {
                 Welcome to EventProsNZ
               </h1>
               <p className="text-gray-600">
-                Let&apos;s get your profile set up so you can start managing events
+                Let&apos;s get your profile set up so you can start managing
+                events
               </p>
             </div>
 

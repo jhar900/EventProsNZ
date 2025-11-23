@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MicrosoftClarity from '@/components/MicrosoftClarity';
 import { AuthProvider } from '@/components/features/auth/AuthProvider';
 import { ReactQueryProvider } from '@/lib/react-query';
 import { Toaster } from 'sonner';
@@ -41,6 +42,7 @@ export default function RootLayout({
         <ReactQueryProvider>
           <AuthProvider>
             <GoogleAnalytics />
+            <MicrosoftClarity />
             {children}
             <Toaster position="top-right" richColors />
           </AuthProvider>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 import { z } from 'zod';
-import { sendWelcomeEmail } from '@/lib/email/welcome-email';
+// Email imports use dynamic imports to avoid blocking route registration
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -13,6 +14,7 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/auth/register called');
     // Check if Supabase is properly configured
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -107,29 +109,64 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate session for the new user
-    const { data: sessionData, error: sessionError } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
+    // Sign in the user to create a session (so they're automatically logged in)
+    const { data: signInData, error: signInError } =
+      await supabaseAdmin.auth.signInWithPassword({
         email,
+        password,
       });
 
-    if (sessionError) {
+    if (signInError || !signInData.session) {
+      console.error('Failed to sign in user after registration:', signInError);
+      // Don't fail registration, but user will need to log in manually
     }
 
     // Send welcome email (non-blocking - don't fail registration if email fails)
-    sendWelcomeEmail({
-      userId: authData.user.id,
-      email,
-      firstName: first_name,
-      lastName: last_name,
-      role,
-    }).catch(error => {
-      // Log error but don't throw - registration should succeed even if email fails
-      console.error('Failed to send welcome email during registration:', error);
-    });
+    // Use dynamic import to avoid blocking route registration
+    import('@/lib/email/welcome-email')
+      .then(({ sendWelcomeEmail }) => {
+        sendWelcomeEmail({
+          userId: authData.user.id,
+          email,
+          firstName: first_name,
+          lastName: last_name,
+          role,
+        }).catch(error => {
+          // Log error but don't throw - registration should succeed even if email fails
+          console.error(
+            'Failed to send welcome email during registration:',
+            error
+          );
+        });
+      })
+      .catch(() => {
+        // Silently fail if email module can't be loaded
+      });
 
-    return NextResponse.json({
+    // Send admin notification email (non-blocking - don't fail registration if email fails)
+    // Use dynamic import to avoid blocking route registration
+    import('@/lib/email/admin-notification-email')
+      .then(({ sendAdminNotificationEmail }) => {
+        sendAdminNotificationEmail({
+          userId: authData.user.id,
+          email,
+          firstName: first_name,
+          lastName: last_name,
+          role,
+        }).catch(error => {
+          // Log error but don't throw - registration should succeed even if email fails
+          console.error(
+            'Failed to send admin notification email during registration:',
+            error
+          );
+        });
+      })
+      .catch(() => {
+        // Silently fail if email module can't be loaded
+      });
+
+    // Create JSON response
+    const jsonResponse = NextResponse.json({
       message: 'User registered successfully',
       user: {
         id: authData.user.id,
@@ -139,6 +176,73 @@ export async function POST(request: NextRequest) {
         last_name,
       },
     });
+
+    // Set session cookies if we have a session (so user is automatically logged in)
+    if (signInData?.session) {
+      try {
+        // Track cookies as they're set
+        const trackedCookies: Array<{
+          name: string;
+          value: string;
+          options: any;
+        }> = [];
+
+        // Create a custom client that tracks cookies
+        const response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        });
+
+        const supabase = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            cookies: {
+              get(name: string) {
+                return request.cookies.get(name)?.value;
+              },
+              set(name: string, value: string, options: any) {
+                // Track this cookie
+                trackedCookies.push({ name, value, options });
+                // Also set it on the response
+                response.cookies.set(name, value, options);
+              },
+              remove(name: string, options: any) {
+                response.cookies.set(name, '', { ...options, maxAge: 0 });
+              },
+            },
+          }
+        );
+
+        // Set the session - this will call set() multiple times
+        await supabase.auth.setSession({
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        });
+
+        // Now apply all tracked cookies to the JSON response
+        const isLocalhost = request.headers.get('host')?.includes('localhost');
+        trackedCookies.forEach(({ name, value, options }) => {
+          const cookieOptions = {
+            path: options.path || '/',
+            domain: options.domain,
+            maxAge: options.maxAge || 60 * 60 * 24 * 7, // Default to 7 days
+            httpOnly: options.httpOnly ?? true,
+            secure: isLocalhost
+              ? false
+              : (options.secure ?? process.env.NODE_ENV === 'production'),
+            sameSite: (options.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+          };
+          jsonResponse.cookies.set(name, value, cookieOptions);
+        });
+      } catch (cookieError) {
+        console.error('Failed to set session cookies:', cookieError);
+        // Don't fail the request, but log the error
+      }
+    }
+
+    return jsonResponse;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

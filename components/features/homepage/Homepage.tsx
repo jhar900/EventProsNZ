@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { HeroSection } from './HeroSection';
 import { TestimonialsSection } from './TestimonialsSection';
 import { InteractiveMapSection } from './InteractiveMapSection';
@@ -10,10 +10,16 @@ import { FeaturedContractorsSection } from './FeaturedContractorsSection';
 import { StatisticsSection } from './StatisticsSection';
 import { NZPrideSection } from './NZPrideSection';
 import { HomepageFooter } from './HomepageFooter';
-import { HomepageLayout } from './HomepageLayout';
+import { HomepageLayout, HomepageModalContext } from './HomepageLayout';
 
 interface HomepageProps {
   className?: string;
+}
+
+// Wrapper component that uses the context
+function HeroSectionWithModal() {
+  const context = useContext(HomepageModalContext);
+  return <HeroSection onRegisterClick={context?.onRegisterClick} />;
 }
 
 export function Homepage({ className = '' }: HomepageProps) {
@@ -22,7 +28,7 @@ export function Homepage({ className = '' }: HomepageProps) {
       {/* Main content with top padding to account for fixed navigation */}
       <main className="pt-16">
         {/* Hero Section */}
-        <HeroSection />
+        <HeroSectionWithModal />
 
         {/* Testimonials Section */}
         <TestimonialsSection />

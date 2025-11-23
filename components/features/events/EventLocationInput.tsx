@@ -92,7 +92,7 @@ export function EventLocationInput({
         lat: parseFloat(suggestion.lat),
         lng: parseFloat(suggestion.lon),
       },
-      placeId: suggestion.place_id,
+      placeId: String(suggestion.place_id), // Convert to string as Nominatim returns number
       city: suggestion.address?.city,
       region: suggestion.address?.state,
       country: suggestion.address?.country || 'New Zealand',

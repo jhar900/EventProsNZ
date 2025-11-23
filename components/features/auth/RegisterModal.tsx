@@ -25,12 +25,14 @@ export default function RegisterModal({
     onClose();
 
     // Redirect based on user role
+    // New users should go to onboarding to complete their profile
     if (user.role === 'admin') {
       router.push('/admin/dashboard');
     } else if (user.role === 'contractor') {
-      router.push('/contractor/dashboard');
+      router.push('/onboarding/contractor');
     } else {
-      router.push('/dashboard');
+      // event_manager role
+      router.push('/onboarding/event-manager');
     }
   };
 

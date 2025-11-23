@@ -12,26 +12,36 @@ import {
 
 // Validation schemas
 const createEventSchema = z.object({
-  eventType: z.enum(Object.values(EVENT_TYPES) as [string, ...string[]]),
+  eventType: z.enum(Object.values(EVENT_TYPES) as [string, ...string[]], {
+    errorMap: () => ({ message: 'Please select a valid event type' }),
+  }),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   description: z.string().optional().nullable(),
   eventDate: z.string().refine(
     val => {
-      if (!val) return false;
+      if (!val || val.trim() === '') return false;
       const date = new Date(val);
       return !isNaN(date.getTime());
     },
-    { message: 'Invalid date format' }
+    { message: 'Invalid date format - please select a valid date and time' }
   ),
   durationHours: z.number().min(1).max(168).optional().nullable(), // Max 1 week
   attendeeCount: z.number().min(1).max(10000).optional().nullable(),
   location: z.object({
     address: z.string().min(1, 'Address is required'),
     coordinates: z.object({
-      lat: z.number(),
-      lng: z.number(),
+      lat: z.number().refine(val => val !== 0, {
+        message: 'Please select a valid location',
+      }),
+      lng: z.number().refine(val => val !== 0, {
+        message: 'Please select a valid location',
+      }),
     }),
-    placeId: z.string().optional().nullable(),
+    placeId: z
+      .union([z.string(), z.number()])
+      .transform(val => String(val))
+      .optional()
+      .nullable(),
     city: z.string().optional().nullable(),
     region: z.string().optional().nullable(),
     country: z.string().optional().nullable(),
@@ -53,15 +63,7 @@ const createEventSchema = z.object({
   budgetPlan: z
     .object({
       totalBudget: z.number().min(0).default(0),
-      breakdown: z
-        .record(
-          z.object({
-            amount: z.number().min(0),
-            percentage: z.number().min(0).max(100),
-          })
-        )
-        .optional()
-        .default({}),
+      breakdown: z.record(z.string(), z.any()).optional().default({}),
       recommendations: z
         .array(
           z.object({
@@ -92,12 +94,16 @@ const getEventsSchema = z.object({
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== POST /api/events START ===');
+
     // Try to get user ID from header first (sent by client)
     let userId = request.headers.get('x-user-id');
+    console.log('User ID from header:', userId);
 
     let supabase;
     let user;
     if (userId) {
+      console.log('Using service role client with userId from header');
       // Use service role client if we have user ID from header
       supabase = supabaseAdmin;
       // Verify user exists
@@ -106,14 +112,23 @@ export async function POST(request: NextRequest) {
         .select('user_id')
         .eq('user_id', userId)
         .maybeSingle();
+
+      console.log('User verification result:', { userData, userError });
+
       if (userError || !userData) {
+        console.error('User verification failed:', userError);
         return NextResponse.json(
-          { success: false, message: 'Unauthorized' },
+          {
+            success: false,
+            message: 'Unauthorized',
+            error: userError?.message,
+          },
           { status: 401 }
         );
       }
       user = { id: userId };
     } else {
+      console.log('Using middleware client for cookie-based auth');
       // Fallback to middleware client for cookie-based auth
       const { createClient } = await import('@/lib/supabase/middleware');
       const { supabase: middlewareSupabase } = createClient(request);
@@ -121,9 +136,17 @@ export async function POST(request: NextRequest) {
         data: { user: authUser },
         error: authError,
       } = await middlewareSupabase.auth.getUser();
+
+      console.log('Auth result:', { authUser: authUser?.id, authError });
+
       if (authError || !authUser) {
+        console.error('Auth failed:', authError);
         return NextResponse.json(
-          { success: false, message: 'Unauthorized' },
+          {
+            success: false,
+            message: 'Unauthorized',
+            error: authError?.message,
+          },
           { status: 401 }
         );
       }
@@ -132,80 +155,176 @@ export async function POST(request: NextRequest) {
       userId = authUser.id;
     }
 
-    // Parse and validate request body
-    const body = await request.json();
-    console.log('Event creation request body:', JSON.stringify(body, null, 2));
+    console.log('Authentication successful, userId:', userId);
 
-    const validationResult = createEventSchema.safeParse(body);
+    // Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+      console.log(
+        'Event creation request body:',
+        JSON.stringify(body, null, 2)
+      );
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Invalid request body',
+          error: 'Failed to parse JSON',
+        },
+        { status: 400 }
+      );
+    }
+
+    let validationResult;
+    try {
+      validationResult = createEventSchema.safeParse(body);
+    } catch (schemaError) {
+      console.error('Schema validation error:', schemaError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation schema error',
+          error:
+            schemaError instanceof Error
+              ? schemaError.message
+              : 'Unknown schema error',
+        },
+        { status: 500 }
+      );
+    }
 
     if (!validationResult.success) {
-      console.error('Validation errors:', validationResult.error.errors);
+      console.error('Validation errors:', validationResult.error);
+      const errors = validationResult.error?.errors || [];
       return NextResponse.json(
         {
           success: false,
           message: 'Validation failed',
-          errors: validationResult.error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
+          errors: errors.map(err => ({
+            field: err.path?.join('.') || 'unknown',
+            message: err.message || 'Validation error',
           })),
         },
         { status: 400 }
       );
     }
 
-    const eventData = validationResult.data;
+    let eventData = validationResult.data;
+
+    // Clean breakdown to ensure all values are objects with amount and percentage
+    if (eventData.budgetPlan?.breakdown) {
+      const cleanedBreakdown: Record<
+        string,
+        { amount: number; percentage: number }
+      > = {};
+      Object.entries(eventData.budgetPlan.breakdown).forEach(([key, value]) => {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'amount' in value &&
+          'percentage' in value
+        ) {
+          cleanedBreakdown[key] = {
+            amount: typeof value.amount === 'number' ? value.amount : 0,
+            percentage:
+              typeof value.percentage === 'number' ? value.percentage : 0,
+          };
+        }
+        // Skip invalid entries (strings, numbers, etc.)
+      });
+      eventData = {
+        ...eventData,
+        budgetPlan: {
+          ...eventData.budgetPlan,
+          breakdown: cleanedBreakdown,
+        },
+      };
+    }
 
     // Check if user is an event manager
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
+    console.log('Checking user role for userId:', userId);
+    const { data: userData, error: userError } = await supabase
+      .from('users')
       .select('role')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle();
 
-    if (profileError || !userProfile || userProfile.role !== 'event_manager') {
+    console.log('User role check:', { userData, userError });
+
+    if (userError || !userData || userData.role !== 'event_manager') {
+      console.error('User is not an event manager:', {
+        role: userData?.role,
+        userError,
+      });
       return NextResponse.json(
-        { success: false, message: 'Only event managers can create events' },
+        {
+          success: false,
+          message: 'Only event managers can create events',
+          role: userData?.role,
+          error: userError?.message,
+        },
         { status: 403 }
       );
     }
 
+    // Prepare event insert data - only include columns that exist in the events table
+    const eventInsertData: any = {
+      user_id: user.id, // Events table uses user_id, not event_manager_id
+      title: eventData.title,
+      event_date: eventData.eventDate,
+      event_type: eventData.eventType,
+      location: eventData.location?.address || '',
+      attendee_count: eventData.attendeeCount || null,
+      duration_hours: eventData.durationHours || null,
+      budget: eventData.budgetPlan?.totalBudget ?? 0,
+      status: eventData.isDraft ? 'draft' : 'planning',
+    };
+
+    // Add optional fields only if they exist in the schema
+    if (eventData.description) {
+      eventInsertData.description = eventData.description;
+    }
+    if (eventData.specialRequirements) {
+      // Try requirements first (from original schema), then special_requirements
+      eventInsertData.requirements = eventData.specialRequirements;
+    }
+
+    console.log(
+      'Inserting event with data:',
+      JSON.stringify(eventInsertData, null, 2)
+    );
+
     // Create event
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .insert({
-        event_manager_id: user.id,
-        title: eventData.title,
-        description: eventData.description,
-        event_date: eventData.eventDate,
-        event_type: eventData.eventType,
-        duration_hours: eventData.durationHours,
-        attendee_count: eventData.attendeeCount,
-        location: eventData.location?.address || '',
-        location_data: eventData.location || null,
-        special_requirements: eventData.specialRequirements || null,
-        budget_total: eventData.budgetPlan?.totalBudget ?? 0,
-        budget_min: eventData.budgetPlan?.totalBudget
-          ? eventData.budgetPlan.totalBudget * 0.8
-          : 0, // 20% buffer
-        budget_max: eventData.budgetPlan?.totalBudget
-          ? eventData.budgetPlan.totalBudget * 1.2
-          : 0, // 20% buffer
-        status: eventData.isDraft ? 'draft' : 'planning',
-      })
+      .insert(eventInsertData)
       .select()
       .single();
 
     if (eventError) {
       console.error('Error creating event:', eventError);
+      console.error('Event error details:', {
+        message: eventError.message,
+        details: eventError.details,
+        hint: eventError.hint,
+        code: eventError.code,
+      });
       return NextResponse.json(
         {
           success: false,
           message: 'Failed to create event',
           error: eventError.message,
+          details: eventError.details,
+          hint: eventError.hint,
+          code: eventError.code,
         },
         { status: 500 }
       );
     }
+
+    console.log('Event created successfully:', event?.id);
 
     // Create service requirements if provided
     if (
@@ -294,20 +413,64 @@ export async function GET(request: NextRequest) {
       supabase = supabaseAdmin;
     } else {
       // Fallback to middleware client for cookie-based auth
-      const { createClient } = await import('@/lib/supabase/middleware');
-      const { supabase: middlewareSupabase } = createClient(request);
-      const {
-        data: { user },
-        error: authError,
-      } = await middlewareSupabase.auth.getUser();
-      if (authError || !user) {
+      try {
+        const { createClient } = await import('@/lib/supabase/middleware');
+        const { supabase: middlewareSupabase } = createClient(request);
+        const {
+          data: { user },
+          error: authError,
+        } = await middlewareSupabase.auth.getUser();
+
+        // Handle refresh token errors gracefully
+        if (authError) {
+          // Check if it's a refresh token error
+          if (
+            authError.message?.includes('refresh_token_not_found') ||
+            authError.message?.includes('Invalid Refresh Token')
+          ) {
+            console.warn(
+              'Refresh token invalid, user may need to re-authenticate'
+            );
+            return NextResponse.json(
+              {
+                success: false,
+                message: 'Session expired. Please log in again.',
+                code: 'SESSION_EXPIRED',
+              },
+              { status: 401 }
+            );
+          }
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Unauthorized',
+              error: authError.message,
+            },
+            { status: 401 }
+          );
+        }
+
+        if (!user) {
+          return NextResponse.json(
+            { success: false, message: 'Unauthorized' },
+            { status: 401 }
+          );
+        }
+
+        supabase = middlewareSupabase;
+        userId = user.id;
+      } catch (error: any) {
+        // Handle any other auth errors
+        console.error('Auth error in GET /api/events:', error);
         return NextResponse.json(
-          { success: false, message: 'Unauthorized' },
+          {
+            success: false,
+            message: 'Authentication failed. Please log in again.',
+            error: error.message,
+          },
           { status: 401 }
         );
       }
-      supabase = middlewareSupabase;
-      userId = user.id;
     }
 
     // Parse and validate query parameters
@@ -339,26 +502,18 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query
+    // Note: events table uses user_id, not event_manager_id
     let query = supabase
       .from('events')
-      .select(
-        `
-        *,
-        profiles!events_event_manager_id_fkey (
-          first_name,
-          last_name,
-          avatar_url
-        )
-      `
-      )
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     // Apply filters
     if (filterUserId) {
-      query = query.eq('event_manager_id', filterUserId);
+      query = query.eq('user_id', filterUserId);
     } else {
       // If no filterUserId specified, only show current user's own events
-      query = query.eq('event_manager_id', userId);
+      query = query.eq('user_id', userId);
     }
 
     if (status) {
@@ -375,13 +530,19 @@ export async function GET(request: NextRequest) {
     const { data: events, error: eventsError, count } = await query;
 
     if (eventsError) {
+      console.error('Error fetching events:', eventsError);
       return NextResponse.json(
-        { success: false, message: 'Failed to fetch events' },
+        {
+          success: false,
+          message: 'Failed to fetch events',
+          error: eventsError.message,
+        },
         { status: 500 }
       );
     }
 
-    const response: EventListResponse = {
+    const response = {
+      success: true,
       events: events || [],
       total: count || 0,
       page,

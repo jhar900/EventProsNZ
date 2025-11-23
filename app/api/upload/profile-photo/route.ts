@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,21 +23,9 @@ export async function POST(request: NextRequest) {
 
     console.log('Received user ID for profile photo upload:', userId);
 
-    // Create Supabase client with service role for storage operations
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-        },
-      }
-    );
-
+    // Use supabaseAdmin which bypasses RLS and has full access
     // Verify user exists in profiles table (optional check - profile might not exist yet during onboarding)
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('user_id')
       .eq('user_id', userId)
@@ -87,32 +75,39 @@ export async function POST(request: NextRequest) {
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `profile-photos/${fileName}`;
 
-    // Upload file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Upload file to Supabase Storage using admin client (bypasses RLS)
+    console.log('Uploading file to path:', filePath);
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
+        contentType: file.type,
       });
 
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       return NextResponse.json(
         {
           error: 'Failed to upload file',
+          details: uploadError.message,
         },
         { status: 500 }
       );
     }
 
+    console.log('Upload successful:', uploadData);
+
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    } = supabaseAdmin.storage.from('avatars').getPublicUrl(filePath);
 
     // Update user profile with new avatar URL (if profile exists)
     // If profile doesn't exist yet, it will be created in step 1 of onboarding
     if (profileData) {
-      const { error: updateError } = await supabase
+      console.log('Updating profile with avatar URL:', publicUrl);
+      const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({
           avatar_url: publicUrl,
@@ -121,8 +116,9 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId);
 
       if (updateError) {
+        console.error('Profile update error:', updateError);
         // If profile update fails, clean up the uploaded file
-        await supabase.storage.from('avatars').remove([filePath]);
+        await supabaseAdmin.storage.from('avatars').remove([filePath]);
 
         return NextResponse.json(
           {
@@ -145,9 +141,11 @@ export async function POST(request: NextRequest) {
       message: 'Profile photo uploaded successfully',
     });
   } catch (error) {
+    console.error('Profile photo upload error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -165,21 +163,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Create Supabase client with service role for storage operations
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-        },
-      }
-    );
-
+    // Use supabaseAdmin which bypasses RLS and has full access
     // Get current profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('avatar_url')
       .eq('user_id', userId)
@@ -198,7 +184,7 @@ export async function DELETE(request: NextRequest) {
     const filePath = `profile-photos/${fileName}`;
 
     // Delete file from storage
-    const { error: deleteError } = await supabase.storage
+    const { error: deleteError } = await supabaseAdmin.storage
       .from('avatars')
       .remove([filePath]);
 
@@ -206,13 +192,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Failed to delete file from storage',
+          details: deleteError.message,
         },
         { status: 500 }
       );
     }
 
     // Update profile to remove avatar URL
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         avatar_url: null,
@@ -234,9 +221,11 @@ export async function DELETE(request: NextRequest) {
       message: 'Profile photo deleted successfully',
     });
   } catch (error) {
+    console.error('Profile photo delete error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

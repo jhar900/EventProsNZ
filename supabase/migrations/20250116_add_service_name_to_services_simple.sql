@@ -11,3 +11,5 @@ SET service_name = service_type
 WHERE service_name IS NULL AND service_type IS NOT NULL;
 
 
+
+

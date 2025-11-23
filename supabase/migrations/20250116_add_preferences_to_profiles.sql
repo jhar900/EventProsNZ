@@ -12,3 +12,5 @@ COMMENT ON COLUMN public.profiles.preferences IS 'User preferences stored as JSO
 CREATE INDEX IF NOT EXISTS idx_profiles_preferences ON public.profiles USING gin (preferences);
 
 
+
+

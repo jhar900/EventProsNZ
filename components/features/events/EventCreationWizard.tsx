@@ -107,7 +107,15 @@ export function EventCreationWizard({
             onComplete?.(result.event.id);
             router.push(`/events/${result.event.id}`);
           }
-        } catch (error) {}
+        } catch (error) {
+          console.error('Error submitting event:', error);
+          // Error is already handled in the store and validationErrors are set
+          // The validation errors will be displayed in the Alert component
+          if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+          }
+        }
       }
     }
   };

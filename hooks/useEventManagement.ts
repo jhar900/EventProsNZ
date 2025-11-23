@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useAuth } from './useAuth';
 import {
   Event,
   EventVersion,
@@ -52,6 +53,7 @@ interface DuplicationData {
 }
 
 export function useEventManagement() {
+  const { user } = useAuth();
   const [state, setState] = useState<EventManagementStore>({
     events: [],
     currentEvent: null,
@@ -73,53 +75,75 @@ export function useEventManagement() {
   };
 
   // Load events with filtering
-  const loadEvents = useCallback(async (filters?: EventFilters) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const loadEvents = useCallback(
+    async (filters?: EventFilters) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const queryParams = new URLSearchParams();
-      if (filters?.status) queryParams.append('status', filters.status);
-      if (filters?.eventType)
-        queryParams.append('eventType', filters.eventType);
-      if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
-      if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
+        const queryParams = new URLSearchParams();
+        if (filters?.status) queryParams.append('status', filters.status);
+        if (filters?.eventType)
+          queryParams.append('eventType', filters.eventType);
+        if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
 
-      const response = await fetch(`/api/events?${queryParams.toString()}`);
-      const data = await response.json();
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
 
-      if (data.success) {
-        setState(prev => ({ ...prev, events: data.events }));
-      } else {
-        setError(data.message || 'Failed to load events');
-      }
-    } catch (error) {
-      setError('Failed to load events');
+        const response = await fetch(`/api/events?${queryParams.toString()}`, {
+          headers,
+          credentials: 'include',
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({ ...prev, events: data.events }));
+        } else {
+          setError(data.message || 'Failed to load events');
+        }
+      } catch (error) {
+        setError('Failed to load events');
       } finally {
-      setLoading(false);
-    }
-  }, []);
+        setLoading(false);
+      }
+    },
+    [user]
+  );
 
   // Load specific event
-  const loadEvent = useCallback(async (eventId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const loadEvent = useCallback(
+    async (eventId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response = await fetch(`/api/events/${eventId}`);
-      const data = await response.json();
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
 
-      if (data.success) {
-        setState(prev => ({ ...prev, currentEvent: data.event }));
-      } else {
-        setError(data.message || 'Failed to load event');
-      }
-    } catch (error) {
-      setError('Failed to load event');
+        const response = await fetch(`/api/events/${eventId}`, {
+          headers,
+          credentials: 'include',
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setState(prev => ({ ...prev, currentEvent: data.event }));
+        } else {
+          setError(data.message || 'Failed to load event');
+        }
+      } catch (error) {
+        setError('Failed to load event');
       } finally {
-      setLoading(false);
-    }
-  }, []);
+        setLoading(false);
+      }
+    },
+    [user]
+  );
 
   // Update event status
   const updateEventStatus = useCallback(
@@ -151,7 +175,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to update event status');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -185,7 +209,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to create version');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -219,7 +243,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to create milestone');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -258,7 +282,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to update milestone');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -295,7 +319,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to complete event');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -329,7 +353,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to submit feedback');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -363,7 +387,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to duplicate event');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -389,7 +413,7 @@ export function useEventManagement() {
         }
       } catch (error) {
         setError('Failed to load dashboard');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },

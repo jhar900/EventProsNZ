@@ -59,7 +59,9 @@ export function PersonalInfoForm({
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Personal Information
         </h2>
-        <p className="text-gray-600">Let&apos;s start with your basic information</p>
+        <p className="text-gray-600">
+          Let&apos;s start with your basic information
+        </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

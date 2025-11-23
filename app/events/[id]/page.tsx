@@ -1,3 +1,4 @@
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { EventManagement } from '@/components/features/events/management/EventManagement';
 
 interface EventPageProps {
@@ -7,5 +8,9 @@ interface EventPageProps {
 }
 
 export default function EventPage({ params }: EventPageProps) {
-  return <EventManagement eventId={params.id} initialTab="overview" />;
+  return (
+    <DashboardLayout>
+      <EventManagement eventId={params.id} initialTab="overview" />
+    </DashboardLayout>
+  );
 }

@@ -339,23 +339,23 @@ export function BusinessInfoForm({
       setSelectedServiceAreas(prev => {
         const hasNationwide = prev.includes('Nationwide');
         const hasRegions = prev.some(area => NZ_REGIONS.includes(area));
-        
+
         // If we have regions but no "Nationwide", or if we have both, clean it up
         if (hasRegions || (hasNationwide && prev.length > 1)) {
           return ['Nationwide'];
         }
-        
+
         // If we only have "Nationwide", keep it
         if (hasNationwide && prev.length === 1) {
           return prev;
         }
-        
+
         // Otherwise, set to ["Nationwide"]
         return ['Nationwide'];
       });
       return;
     }
-    
+
     if (
       formServiceAreas &&
       Array.isArray(formServiceAreas) &&
@@ -431,7 +431,9 @@ export function BusinessInfoForm({
     if (type === 'nationwide') {
       // When selecting nationwide, explicitly clear ALL individual regions and set only "Nationwide"
       // First, filter out ALL regions from current selection to ensure clean state
-      const currentAreas = selectedServiceAreas.filter(area => !NZ_REGIONS.includes(area));
+      const currentAreas = selectedServiceAreas.filter(
+        area => !NZ_REGIONS.includes(area)
+      );
       const nationwideAreas = ['Nationwide'];
 
       // Update coverage type first
@@ -449,7 +451,10 @@ export function BusinessInfoForm({
       // Force a second update to ensure form state is clean
       setTimeout(() => {
         const currentFormAreas = watch('service_areas');
-        if (Array.isArray(currentFormAreas) && currentFormAreas.some(area => NZ_REGIONS.includes(area))) {
+        if (
+          Array.isArray(currentFormAreas) &&
+          currentFormAreas.some(area => NZ_REGIONS.includes(area))
+        ) {
           setValue('service_areas', ['Nationwide'], {
             shouldValidate: true,
             shouldDirty: true,
@@ -833,32 +838,32 @@ export function BusinessInfoForm({
                   return area !== 'Nationwide';
                 })
                 .map(area => (
-                <span
-                  key={area}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  {area}
-                  <button
-                    type="button"
-                    onClick={() => handleAreaToggle(area)}
-                    className="ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-500"
+                  <span
+                    key={area}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                   >
-                    <span className="sr-only">Remove</span>
-                    <svg
-                      className="h-2 w-2"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 8 8"
+                    {area}
+                    <button
+                      type="button"
+                      onClick={() => handleAreaToggle(area)}
+                      className="ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-500"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeWidth="1.5"
-                        d="m1 1 6 6m0-6-6 6"
-                      />
-                    </svg>
-                  </button>
-                </span>
-              ))}
+                      <span className="sr-only">Remove</span>
+                      <svg
+                        className="h-2 w-2"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 8 8"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeWidth="1.5"
+                          d="m1 1 6 6m0-6-6 6"
+                        />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
             </div>
           </div>
         )}

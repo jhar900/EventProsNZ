@@ -7,9 +7,13 @@ import { ArrowRight, Star, Users, MapPin, Calendar } from 'lucide-react';
 
 interface HeroSectionProps {
   className?: string;
+  onRegisterClick?: () => void;
 }
 
-export function HeroSection({ className = '' }: HeroSectionProps) {
+export function HeroSection({
+  className = '',
+  onRegisterClick,
+}: HeroSectionProps) {
   return (
     <section
       className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
@@ -63,15 +67,26 @@ export function HeroSection({ className = '' }: HeroSectionProps) {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-          <Link href="/register">
+          {onRegisterClick ? (
             <Button
               size="lg"
+              onClick={onRegisterClick}
               className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               Get Started Free
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-          </Link>
+          ) : (
+            <Link href="/register">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          )}
 
           <Link href="/contractors">
             <Button

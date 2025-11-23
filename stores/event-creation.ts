@@ -220,9 +220,20 @@ export const useEventCreationStore = create<EventCreationState>()(
             }),
           });
 
-          const data = await response.json();
+          let data;
+          try {
+            data = await response.json();
+          } catch (parseError) {
+            console.error('Failed to parse draft response:', parseError);
+            // Don't throw for draft saves - they're not critical
+            return;
+          }
 
-          if (!data.success) {
+          if (!response.ok || !data.success) {
+            console.warn(
+              'Failed to save draft:',
+              data.message || response.statusText
+            );
           }
         } catch (error) {
         } finally {
@@ -244,29 +255,205 @@ export const useEventCreationStore = create<EventCreationState>()(
             headers['x-user-id'] = userId;
           }
 
+          // Clean and prepare payload - only include defined values
+          const payload: any = {
+            eventType: eventData.eventType,
+            title: eventData.title,
+            eventDate: eventData.eventDate,
+            location: {
+              address: eventData.location?.address || '',
+              coordinates: {
+                lat: eventData.location?.coordinates?.lat ?? 0,
+                lng: eventData.location?.coordinates?.lng ?? 0,
+              },
+            },
+            serviceRequirements: serviceRequirements || [],
+            budgetPlan: (() => {
+              const plan = budgetPlan || {
+                totalBudget: 0,
+                breakdown: {},
+                recommendations: [],
+              };
+
+              // Clean breakdown to ensure all values are objects with amount and percentage
+              const cleanedBreakdown: Record<
+                string,
+                { amount: number; percentage: number }
+              > = {};
+              if (plan.breakdown && typeof plan.breakdown === 'object') {
+                Object.entries(plan.breakdown).forEach(([key, value]) => {
+                  if (
+                    typeof value === 'object' &&
+                    value !== null &&
+                    'amount' in value &&
+                    'percentage' in value
+                  ) {
+                    cleanedBreakdown[key] = {
+                      amount:
+                        typeof value.amount === 'number' ? value.amount : 0,
+                      percentage:
+                        typeof value.percentage === 'number'
+                          ? value.percentage
+                          : 0,
+                    };
+                  } else {
+                    // Skip invalid entries
+                    console.warn(
+                      `Skipping invalid breakdown entry for key "${key}":`,
+                      value
+                    );
+                  }
+                });
+              }
+
+              return {
+                totalBudget: plan.totalBudget || 0,
+                breakdown: cleanedBreakdown,
+                recommendations: plan.recommendations || [],
+              };
+            })(),
+            isDraft: false,
+          };
+
+          // Add optional fields only if they have values
+          if (eventData.description)
+            payload.description = eventData.description;
+          if (eventData.durationHours)
+            payload.durationHours = eventData.durationHours;
+          if (eventData.attendeeCount)
+            payload.attendeeCount = eventData.attendeeCount;
+          if (eventData.specialRequirements)
+            payload.specialRequirements = eventData.specialRequirements;
+
+          // Add optional location fields
+          if (eventData.location?.placeId)
+            payload.location.placeId = String(eventData.location.placeId);
+          if (eventData.location?.city)
+            payload.location.city = eventData.location.city;
+          if (eventData.location?.region)
+            payload.location.region = eventData.location.region;
+          if (eventData.location?.country)
+            payload.location.country = eventData.location.country;
+
+          const cleanPayload = payload;
+
+          // Validate required fields before sending
+          if (!cleanPayload.eventType || cleanPayload.eventType === '') {
+            throw new Error('Event type is required');
+          }
+          if (!cleanPayload.title || cleanPayload.title.trim() === '') {
+            throw new Error('Event title is required');
+          }
+          if (!cleanPayload.eventDate) {
+            throw new Error('Event date is required');
+          }
+          if (
+            !cleanPayload.location?.address ||
+            cleanPayload.location.address.trim() === ''
+          ) {
+            throw new Error('Event location is required');
+          }
+          if (
+            cleanPayload.location.coordinates.lat === 0 &&
+            cleanPayload.location.coordinates.lng === 0
+          ) {
+            throw new Error(
+              'Please select a valid location from the suggestions'
+            );
+          }
+
+          console.log(
+            'Submitting event with payload:',
+            JSON.stringify(cleanPayload, null, 2)
+          );
+
           const response = await fetch('/api/events', {
             method: 'POST',
             headers,
             credentials: 'include',
-            body: JSON.stringify({
-              ...eventData,
-              serviceRequirements,
-              budgetPlan,
-              isDraft: false,
-            }),
+            body: JSON.stringify(cleanPayload),
           });
 
-          const data = await response.json();
+          let data;
+          try {
+            data = await response.json();
+            console.log('Response data:', data);
+            if (!response.ok && data.errors) {
+              console.error('Validation errors from server:', data.errors);
+            }
+          } catch (parseError) {
+            console.error('Failed to parse response:', parseError);
+            const text = await response
+              .text()
+              .catch(() => 'Unable to read response');
+            console.error('Response text:', text);
+            throw new Error(
+              `Server error: ${response.status} ${response.statusText}`
+            );
+          }
+
+          if (!response.ok) {
+            console.error('Response not OK:', {
+              status: response.status,
+              statusText: response.statusText,
+              data,
+            });
+            const errors = data.errors || [];
+            if (data.error) {
+              errors.push({
+                field: 'general',
+                message: data.error,
+              });
+            }
+            if (data.details) {
+              errors.push({
+                field: 'general',
+                message: `Details: ${data.details}`,
+              });
+            }
+            if (data.hint) {
+              errors.push({
+                field: 'general',
+                message: `Hint: ${data.hint}`,
+              });
+            }
+            set({ validationErrors: errors });
+            throw new Error(
+              data.message || data.error || `Server error: ${response.status}`
+            );
+          }
 
           if (data.success) {
             // Reset wizard after successful submission
             get().resetWizard();
             return data;
           } else {
-            set({ validationErrors: data.errors || [] });
+            const errors = data.errors || [];
+            if (data.error) {
+              errors.push({
+                field: 'general',
+                message: data.error,
+              });
+            }
+            set({ validationErrors: errors });
             throw new Error(data.message || 'Failed to create event');
           }
         } catch (error) {
+          console.error('Error in submitEvent:', error);
+          if (error instanceof Error) {
+            // If we don't have validation errors set, add the error message
+            const currentErrors = get().validationErrors;
+            if (currentErrors.length === 0) {
+              set({
+                validationErrors: [
+                  {
+                    field: 'general',
+                    message: error.message || 'An unexpected error occurred',
+                  },
+                ],
+              });
+            }
+          }
           throw error;
         } finally {
           set({ isLoading: false });

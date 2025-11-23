@@ -24,6 +24,7 @@ import {
   Edit,
   Copy,
   Trash2,
+  MapPin,
 } from 'lucide-react';
 import { EventStatusTracking } from './EventStatusTracking';
 import { EventVersionHistory } from './EventVersionHistory';
@@ -81,8 +82,14 @@ export function EventManagement({
   useEffect(() => {
     if (currentEvent) {
       setSelectedEvent(currentEvent);
+    } else if (eventId && events.length > 0) {
+      // If we have eventId but currentEvent is not set, try to find it in events list
+      const foundEvent = events.find(e => e.id === eventId);
+      if (foundEvent) {
+        setSelectedEvent(foundEvent);
+      }
     }
-  }, [currentEvent]);
+  }, [currentEvent, eventId, events]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,22 +135,157 @@ export function EventManagement({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Event Management
+            {selectedEvent ? selectedEvent.title : 'Event Management'}
           </h1>
           <p className="text-muted-foreground">
-            Manage your events throughout their lifecycle
+            {selectedEvent
+              ? 'Manage your event details and progress'
+              : 'Manage your events throughout their lifecycle'}
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
+          <Button variant="outline" size="sm" asChild>
+            <a href="/events/create">
+              <Plus className="h-4 w-4 mr-2" />
+              New Event
+            </a>
           </Button>
-          <Button variant="outline" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          {selectedEvent && (
+            <Button variant="outline" size="sm" asChild>
+              <a href={`/events/${selectedEvent.id}/edit`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </a>
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Event Details Summary - Show when event is selected */}
+      {selectedEvent && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Event Details</CardTitle>
+              <Badge className={getStatusColor(selectedEvent.status)}>
+                {getStatusIcon(selectedEvent.status)}
+                <span className="ml-1 capitalize">
+                  {selectedEvent.status.replace('_', ' ')}
+                </span>
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Event Date
+                </div>
+                <p className="font-medium">
+                  {new Date(selectedEvent.event_date).toLocaleDateString(
+                    'en-NZ',
+                    {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(selectedEvent.event_date).toLocaleTimeString(
+                    'en-NZ',
+                    {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }
+                  )}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Duration
+                </div>
+                <p className="font-medium">
+                  {selectedEvent.duration_hours
+                    ? `${selectedEvent.duration_hours} hours`
+                    : 'Not specified'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Users className="h-4 w-4 mr-2" />
+                  Attendees
+                </div>
+                <p className="font-medium">
+                  {selectedEvent.attendee_count
+                    ? selectedEvent.attendee_count.toLocaleString()
+                    : 'Not specified'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Budget
+                </div>
+                <p className="font-medium">
+                  $
+                  {(
+                    selectedEvent.budget ||
+                    selectedEvent.budget_total ||
+                    0
+                  ).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {selectedEvent.location && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-start space-x-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium">{selectedEvent.location}</p>
+                    {selectedEvent.location_data?.city && (
+                      <p className="text-sm text-muted-foreground">
+                        {selectedEvent.location_data.city}
+                        {selectedEvent.location_data.region &&
+                          `, ${selectedEvent.location_data.region}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedEvent.description && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Description
+                  </p>
+                  <p className="text-sm">{selectedEvent.description}</p>
+                </div>
+              </div>
+            )}
+
+            {selectedEvent.requirements && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Special Requirements
+                  </p>
+                  <p className="text-sm">{selectedEvent.requirements}</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Event Selection */}
       {!eventId && (
