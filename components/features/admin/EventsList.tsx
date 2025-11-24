@@ -25,9 +25,17 @@ interface Event {
     | 'cancelled';
   created_at: string;
   updated_at: string;
-  users: {
+  event_manager: {
     email: string;
     created_at: string;
+    profile: {
+      first_name: string | null;
+      last_name: string | null;
+      avatar_url: string | null;
+    } | null;
+    business_profile: {
+      company_name: string | null;
+    } | null;
   } | null;
 }
 
@@ -256,11 +264,45 @@ export function EventsList() {
                     </h3>
                     {getStatusBadge(event.status)}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Event Manager: </span>
-                      <span>{event.users?.email || 'N/A'}</span>
+                  {/* Event Manager Info */}
+                  {event.event_manager && (
+                    <div className="flex items-center space-x-3 mb-3 pb-3 border-b border-gray-200">
+                      {event.event_manager.profile?.avatar_url ? (
+                        <img
+                          src={event.event_manager.profile.avatar_url}
+                          alt={
+                            event.event_manager.profile.first_name &&
+                            event.event_manager.profile.last_name
+                              ? `${event.event_manager.profile.first_name} ${event.event_manager.profile.last_name}`
+                              : 'Event Manager'
+                          }
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center text-white font-semibold text-sm">
+                          {event.event_manager.profile?.first_name?.[0] ||
+                            event.event_manager.email[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {event.event_manager.profile?.first_name &&
+                          event.event_manager.profile?.last_name
+                            ? `${event.event_manager.profile.first_name} ${event.event_manager.profile.last_name}`
+                            : event.event_manager.email}
+                        </div>
+                        {event.event_manager.business_profile?.company_name && (
+                          <div className="text-sm text-gray-600">
+                            {event.event_manager.business_profile.company_name}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-500">
+                          {event.event_manager.email}
+                        </div>
+                      </div>
                     </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
                     <div>
                       <span className="font-medium">Event Date: </span>
                       <span>{formatDate(event.event_date)}</span>

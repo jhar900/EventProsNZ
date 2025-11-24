@@ -1,33 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    // Validate admin access
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 
@@ -71,15 +55,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user emails for event managers
+    // Fetch user data with profiles and business profiles for event managers
+    // Handle both event_manager_id and user_id (in case column name differs)
     const eventManagerIds = [
-      ...new Set((events || []).map(e => e.event_manager_id)),
+      ...new Set(
+        (events || [])
+          .map(e => (e as any).event_manager_id || (e as any).user_id)
+          .filter((id): id is string => id != null && id !== 'undefined')
+      ),
     ];
     const { data: users, error: usersError } =
       eventManagerIds.length > 0
         ? await supabaseAdmin
             .from('users')
-            .select('id, email, created_at')
+            .select(
+              `
+              id,
+              email,
+              created_at,
+              profiles (
+                first_name,
+                last_name,
+                avatar_url
+              ),
+              business_profiles (
+                company_name
+              )
+            `
+            )
             .in('id', eventManagerIds)
         : { data: [], error: null };
 
@@ -90,16 +93,33 @@ export async function GET(request: NextRequest) {
 
     // Map users to events
     const usersMap = new Map(
-      (users || []).map(u => [
-        u.id,
-        { email: u.email, created_at: u.created_at },
-      ])
+      (users || []).map(u => {
+        // Handle profiles being an array (Supabase sometimes returns arrays for relations)
+        const profile = Array.isArray(u.profiles) ? u.profiles[0] : u.profiles;
+        const businessProfile = Array.isArray(u.business_profiles)
+          ? u.business_profiles[0]
+          : u.business_profiles;
+
+        return [
+          u.id,
+          {
+            email: u.email,
+            created_at: u.created_at,
+            profile: profile || null,
+            business_profile: businessProfile || null,
+          },
+        ];
+      })
     );
 
-    const eventsWithUsers = (events || []).map(event => ({
-      ...event,
-      users: usersMap.get(event.event_manager_id) || null,
-    }));
+    const eventsWithUsers = (events || []).map(event => {
+      const managerId =
+        (event as any).event_manager_id || (event as any).user_id;
+      return {
+        ...event,
+        event_manager: usersMap.get(managerId) || null,
+      };
+    });
 
     return NextResponse.json({
       events: eventsWithUsers,

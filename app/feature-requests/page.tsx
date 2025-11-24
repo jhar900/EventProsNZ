@@ -362,8 +362,26 @@ export default function FeatureRequestsPage() {
       );
 
       if (response.ok) {
-        // Reload the current page to get updated vote counts
-        loadFeatureRequests(currentPage, filters);
+        // Fetch updated vote count for just this request without reloading all
+        // This keeps the cards visible and just updates the numbers
+        const voteResponse = await fetch(
+          `/api/feature-requests/${featureRequestId}/vote`,
+          { credentials: 'include' }
+        );
+        if (voteResponse.ok) {
+          const voteData = await voteResponse.json();
+          const newTotal =
+            voteData.vote_counts.upvotes - voteData.vote_counts.downvotes;
+
+          // Update just this request's vote count without reloading the entire list
+          setFeatureRequests(prev =>
+            prev.map(request =>
+              request.id === featureRequestId
+                ? { ...request, vote_count: newTotal }
+                : request
+            )
+          );
+        }
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to vote');

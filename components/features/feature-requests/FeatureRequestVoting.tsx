@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ThumbsUp, ThumbsDown, Users, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface VoteData {
   upvotes: number;
@@ -26,16 +27,16 @@ export default function FeatureRequestVoting({
   onVoteChange,
   showAnalytics = false,
 }: FeatureRequestVotingProps) {
+  const { user } = useAuth();
   const [voteData, setVoteData] = useState<VoteData>({
     upvotes: 0,
     downvotes: 0,
     total: initialVoteCount,
     user_vote: null,
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Load voting data on mount
+  // Load voting data on mount and when user changes
   useEffect(() => {
     const loadVoteData = async () => {
       try {
@@ -44,12 +45,20 @@ export default function FeatureRequestVoting({
         );
         if (response.ok) {
           const data = await response.json();
-          setVoteData({
+          const newVoteData = {
             upvotes: data.vote_counts.upvotes,
             downvotes: data.vote_counts.downvotes,
             total: data.vote_counts.total,
             user_vote: data.user_vote,
-          });
+          };
+          setVoteData(newVoteData);
+          console.log('Vote data loaded:', newVoteData);
+        } else {
+          console.error(
+            'Failed to load vote data:',
+            response.status,
+            response.statusText
+          );
         }
       } catch (error) {
         console.error('Error loading vote data:', error);
@@ -57,80 +66,145 @@ export default function FeatureRequestVoting({
     };
 
     loadVoteData();
-  }, [featureRequestId]);
+  }, [featureRequestId, user?.id]); // Reload when user changes
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (isVoting) return;
 
+    if (!user) {
+      toast.error('Please log in to vote on feature requests');
+      return;
+    }
+
     setIsVoting(true);
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Include user ID in header as fallback if cookies fail
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+        console.log('Vote - Sending user ID in header:', user.id);
+      } else {
+        console.log('Vote - No user ID available:', { user, hasUser: !!user });
+      }
+
       const response = await fetch(
         `/api/feature-requests/${featureRequestId}/vote`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({ vote_type: voteType }),
         }
       );
 
-      if (response.ok) {
-        const result = await response.json();
-
-        // Update local state based on the result
-        if (result.action === 'removed') {
-          setVoteData(prev => ({
-            ...prev,
-            user_vote: null,
-            total: prev.total + (voteType === 'upvote' ? -1 : 1),
-            upvotes: voteType === 'upvote' ? prev.upvotes - 1 : prev.upvotes,
-            downvotes:
-              voteType === 'downvote' ? prev.downvotes - 1 : prev.downvotes,
-          }));
-          toast.success('Vote removed');
-        } else if (result.action === 'updated') {
-          setVoteData(prev => {
-            const newUpvotes =
-              voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes - 1;
-            const newDownvotes =
-              voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes - 1;
-            return {
-              ...prev,
-              user_vote: voteType,
-              total: newUpvotes - newDownvotes,
-              upvotes: newUpvotes,
-              downvotes: newDownvotes,
-            };
+      if (!response.ok) {
+        let errorMessage = 'Failed to vote';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.message || errorMessage;
+          console.error('Vote error response:', {
+            status: response.status,
+            statusText: response.statusText,
+            error,
           });
-          toast.success('Vote updated');
-        } else if (result.action === 'created') {
-          setVoteData(prev => {
-            const newUpvotes =
-              voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes;
-            const newDownvotes =
-              voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes;
-            return {
-              ...prev,
-              user_vote: voteType,
-              total: newUpvotes - newDownvotes,
-              upvotes: newUpvotes,
-              downvotes: newDownvotes,
-            };
+        } catch (parseError) {
+          const text = await response.text();
+          console.error('Vote error (non-JSON):', {
+            status: response.status,
+            statusText: response.statusText,
+            text,
           });
-          toast.success('Vote recorded');
+          errorMessage = `Failed to vote: ${response.status} ${response.statusText}`;
         }
+        toast.error(errorMessage);
+        return;
+      }
 
+      const result = await response.json();
+      console.log('Vote success:', result);
+
+      // Update local state based on the result
+      if (result.action === 'removed') {
+        setVoteData(prev => ({
+          ...prev,
+          user_vote: null,
+          total: prev.total + (voteType === 'upvote' ? -1 : 1),
+          upvotes: voteType === 'upvote' ? prev.upvotes - 1 : prev.upvotes,
+          downvotes:
+            voteType === 'downvote' ? prev.downvotes - 1 : prev.downvotes,
+        }));
+        toast.success('Vote removed');
+      } else if (result.action === 'updated') {
+        setVoteData(prev => {
+          const newUpvotes =
+            voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes - 1;
+          const newDownvotes =
+            voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes - 1;
+          return {
+            ...prev,
+            user_vote: voteType,
+            total: newUpvotes - newDownvotes,
+            upvotes: newUpvotes,
+            downvotes: newDownvotes,
+          };
+        });
+        toast.success('Vote updated');
+      } else if (result.action === 'created') {
+        setVoteData(prev => {
+          const newUpvotes =
+            voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes;
+          const newDownvotes =
+            voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes;
+          return {
+            ...prev,
+            user_vote: voteType,
+            total: newUpvotes - newDownvotes,
+            upvotes: newUpvotes,
+            downvotes: newDownvotes,
+          };
+        });
+        toast.success('Vote recorded');
+      }
+
+      // Reload vote data to ensure consistency
+      const reloadResponse = await fetch(
+        `/api/feature-requests/${featureRequestId}/vote`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (reloadResponse.ok) {
+        const reloadData = await reloadResponse.json();
+        const updatedVoteData = {
+          upvotes: reloadData.vote_counts.upvotes,
+          downvotes: reloadData.vote_counts.downvotes,
+          total: reloadData.vote_counts.total,
+          user_vote: reloadData.user_vote,
+        };
+        setVoteData(updatedVoteData);
+
+        // Call callback with the updated data
         if (onVoteChange) {
-          onVoteChange(voteData);
+          onVoteChange(updatedVoteData);
         }
       } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to vote');
+        // If reload fails, still call callback with current state
+        if (onVoteChange) {
+          // Use a function to get the latest state
+          setVoteData(prev => {
+            onVoteChange(prev);
+            return prev;
+          });
+        }
       }
     } catch (error) {
       console.error('Error voting:', error);
-      toast.error('Failed to vote');
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to vote';
+      toast.error(`Vote failed: ${errorMessage}`);
     } finally {
       setIsVoting(false);
     }

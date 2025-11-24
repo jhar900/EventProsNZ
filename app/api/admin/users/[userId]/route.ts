@@ -1,40 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    // Validate admin access
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 
     const { userId } = params;
 
     // Use admin client to bypass RLS for fetching user details
-    const adminSupabase = supabaseAdmin;
+    // In development mode, authResult.supabase might be null, so use supabaseAdmin
+    const adminSupabase = authResult.supabase || supabaseAdmin;
 
     // Get user details with profile and business profile
     const { data: userDetails, error: userDetailsError } = await adminSupabase
@@ -93,29 +79,16 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    // Validate admin access
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
+
+    const user = authResult.user;
 
     const { userId } = params;
     const body = await request.json();
@@ -133,7 +106,11 @@ export async function PUT(
     if (status) updateData.status = status;
     updateData.updated_at = new Date().toISOString();
 
-    const { data: updatedUser, error: updateError } = await supabase
+    // Use admin client to bypass RLS for updating user details
+    // In development mode, authResult.supabase might be null, so use supabaseAdmin
+    const adminSupabase = authResult.supabase || supabaseAdmin;
+
+    const { data: updatedUser, error: updateError } = await adminSupabase
       .from('users')
       .update(updateData)
       .eq('id', userId)
@@ -147,20 +124,22 @@ export async function PUT(
       );
     }
 
-    // Log admin action
-    await supabase.from('activity_logs').insert({
-      user_id: user.id,
-      action: 'admin_update_user',
-      details: {
-        target_user_id: userId,
-        changes: updateData,
-        admin_user_id: user.id,
-      },
-      ip_address:
-        request.headers.get('x-forwarded-for') ||
-        request.headers.get('x-real-ip'),
-      user_agent: request.headers.get('user-agent'),
-    });
+    // Log admin action (only if we have a supabase client)
+    if (authResult.supabase) {
+      await authResult.supabase.from('activity_logs').insert({
+        user_id: user.id,
+        action: 'admin_update_user',
+        details: {
+          target_user_id: userId,
+          changes: updateData,
+          admin_user_id: user.id,
+        },
+        ip_address:
+          request.headers.get('x-forwarded-for') ||
+          request.headers.get('x-real-ip'),
+        user_agent: request.headers.get('user-agent'),
+      });
+    }
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
