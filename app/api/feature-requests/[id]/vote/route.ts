@@ -272,19 +272,40 @@ export async function GET(
 
     // Try to get user - authentication is optional for viewing votes
     let user: any = null;
-    try {
-      const { supabase } = createClient(request);
-      const {
-        data: { user: authUser },
-        error: authError,
-      } = await supabase.auth.getUser();
 
-      // Only set user if we successfully got one (ignore auth errors for viewing)
-      if (authUser && !authError) {
-        user = authUser;
+    // Try to get user ID from header first (sent by client as fallback)
+    const userId = request.headers.get('x-user-id');
+
+    if (userId) {
+      // If we have user ID from header, verify it exists and use it
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role')
+        .eq('id', userId)
+        .single();
+
+      if (userData) {
+        user = { id: userData.id, email: userData.email, role: userData.role };
       }
-    } catch (e) {
-      // Ignore auth errors for viewing votes
+    }
+
+    // If no user from header, try cookie-based authentication
+    if (!user) {
+      try {
+        const { supabase } = createClient(request);
+        const {
+          data: { user: authUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        // Only set user if we successfully got one (ignore auth errors for viewing)
+        if (authUser && !authError) {
+          user = authUser;
+        }
+      } catch (e) {
+        // Ignore auth errors for viewing votes
+      }
     }
 
     // Get voting data for the feature request

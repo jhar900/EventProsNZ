@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ThumbsUp, ThumbsDown, Users, TrendingUp } from 'lucide-react';
+import { ThumbsUp, Users, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,7 +11,7 @@ interface VoteData {
   upvotes: number;
   downvotes: number;
   total: number;
-  user_vote: 'upvote' | 'downvote' | null;
+  user_vote: 'upvote' | null;
 }
 
 interface FeatureRequestVotingProps {
@@ -68,7 +68,7 @@ export default function FeatureRequestVoting({
     loadVoteData();
   }, [featureRequestId, user?.id]); // Reload when user changes
 
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+  const handleVote = async (voteType: 'upvote') => {
     if (isVoting) return;
 
     if (!user) {
@@ -131,39 +131,29 @@ export default function FeatureRequestVoting({
         setVoteData(prev => ({
           ...prev,
           user_vote: null,
-          total: prev.total + (voteType === 'upvote' ? -1 : 1),
-          upvotes: voteType === 'upvote' ? prev.upvotes - 1 : prev.upvotes,
-          downvotes:
-            voteType === 'downvote' ? prev.downvotes - 1 : prev.downvotes,
+          total: prev.total - 1,
+          upvotes: prev.upvotes - 1,
         }));
         toast.success('Vote removed');
       } else if (result.action === 'updated') {
         setVoteData(prev => {
-          const newUpvotes =
-            voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes - 1;
-          const newDownvotes =
-            voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes - 1;
+          const newUpvotes = prev.upvotes + 1;
           return {
             ...prev,
             user_vote: voteType,
-            total: newUpvotes - newDownvotes,
+            total: newUpvotes - prev.downvotes,
             upvotes: newUpvotes,
-            downvotes: newDownvotes,
           };
         });
         toast.success('Vote updated');
       } else if (result.action === 'created') {
         setVoteData(prev => {
-          const newUpvotes =
-            voteType === 'upvote' ? prev.upvotes + 1 : prev.upvotes;
-          const newDownvotes =
-            voteType === 'downvote' ? prev.downvotes + 1 : prev.downvotes;
+          const newUpvotes = prev.upvotes + 1;
           return {
             ...prev,
             user_vote: voteType,
-            total: newUpvotes - newDownvotes,
+            total: newUpvotes - prev.downvotes,
             upvotes: newUpvotes,
-            downvotes: newDownvotes,
           };
         });
         toast.success('Vote recorded');
@@ -210,18 +200,16 @@ export default function FeatureRequestVoting({
     }
   };
 
-  const getVoteButtonVariant = (voteType: 'upvote' | 'downvote') => {
-    if (voteData.user_vote === voteType) {
+  const getVoteButtonVariant = () => {
+    if (voteData.user_vote === 'upvote') {
       return 'default';
     }
     return 'outline';
   };
 
-  const getVoteButtonClass = (voteType: 'upvote' | 'downvote') => {
-    if (voteData.user_vote === voteType) {
-      return voteType === 'upvote'
-        ? 'bg-green-500 hover:bg-green-600 text-white'
-        : 'bg-red-500 hover:bg-red-600 text-white';
+  const getVoteButtonClass = () => {
+    if (voteData.user_vote === 'upvote') {
+      return 'bg-orange-50 hover:bg-orange-100 border-orange-500';
     }
     return '';
   };
@@ -233,24 +221,24 @@ export default function FeatureRequestVoting({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Button
-                variant={getVoteButtonVariant('upvote')}
+                variant={getVoteButtonVariant()}
                 size="sm"
                 onClick={() => handleVote('upvote')}
                 disabled={isVoting}
-                className={`flex items-center gap-2 ${getVoteButtonClass('upvote')}`}
+                className={`flex items-center gap-2 ${getVoteButtonClass()}`}
               >
-                <ThumbsUp className="w-4 h-4" />
-                {voteData.upvotes}
-              </Button>
-              <Button
-                variant={getVoteButtonVariant('downvote')}
-                size="sm"
-                onClick={() => handleVote('downvote')}
-                disabled={isVoting}
-                className={`flex items-center gap-2 ${getVoteButtonClass('downvote')}`}
-              >
-                <ThumbsDown className="w-4 h-4" />
-                {voteData.downvotes}
+                <ThumbsUp
+                  className={`w-4 h-4 ${voteData.user_vote === 'upvote' ? 'text-orange-600' : ''}`}
+                />
+                <span
+                  className={
+                    voteData.user_vote === 'upvote'
+                      ? 'text-orange-600 font-medium'
+                      : ''
+                  }
+                >
+                  {voteData.upvotes}
+                </span>
               </Button>
             </div>
 
@@ -264,20 +252,15 @@ export default function FeatureRequestVoting({
               {showAnalytics && (
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>
-                    {voteData.upvotes + voteData.downvotes} total votes
-                  </span>
+                  <span>{voteData.upvotes} total votes</span>
                 </div>
               )}
             </div>
           </div>
 
-          {voteData.user_vote && (
+          {voteData.user_vote === 'upvote' && (
             <div className="text-sm text-gray-600">
-              You voted:{' '}
-              <span className="font-medium capitalize">
-                {voteData.user_vote}
-              </span>
+              You voted: <span className="font-medium capitalize">upvote</span>
             </div>
           )}
         </div>
@@ -296,35 +279,7 @@ export default function FeatureRequestVoting({
                   <div
                     className="bg-green-500 h-2 rounded-full"
                     style={{
-                      width: `${
-                        voteData.upvotes + voteData.downvotes > 0
-                          ? (voteData.upvotes /
-                              (voteData.upvotes + voteData.downvotes)) *
-                            100
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between">
-                  <span>Downvotes</span>
-                  <span className="font-medium text-red-600">
-                    {voteData.downvotes}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div
-                    className="bg-red-500 h-2 rounded-full"
-                    style={{
-                      width: `${
-                        voteData.upvotes + voteData.downvotes > 0
-                          ? (voteData.downvotes /
-                              (voteData.upvotes + voteData.downvotes)) *
-                            100
-                          : 0
-                      }%`,
+                      width: `${voteData.upvotes > 0 ? 100 : 0}%`,
                     }}
                   />
                 </div>

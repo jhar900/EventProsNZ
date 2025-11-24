@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Card,
   CardContent,
@@ -14,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp,
-  ThumbsDown,
   MessageCircle,
   Eye,
   Calendar,
@@ -60,8 +60,9 @@ interface FeatureRequestCardProps {
   is_public?: boolean;
   className?: string;
   showVoting?: boolean;
-  onVote?: (featureRequestId: string, voteType: 'upvote' | 'downvote') => void;
+  onVote?: (featureRequestId: string, voteType: 'upvote') => void;
   onClick?: () => void;
+  user_vote?: 'upvote' | null;
 }
 
 export default function FeatureRequestCard({
@@ -84,8 +85,54 @@ export default function FeatureRequestCard({
   showVoting = true,
   onVote,
   onClick,
+  user_vote: initialUserVote = null,
 }: FeatureRequestCardProps) {
+  const { user } = useAuth();
   const [isVoting, setIsVoting] = useState(false);
+  const [userVote, setUserVote] = useState<'upvote' | null>(initialUserVote);
+  const isVotingRef = useRef(false);
+
+  // Load user vote on mount and when user changes
+  useEffect(() => {
+    // Don't reload if we're currently voting (to prevent race conditions)
+    if (isVotingRef.current) {
+      return;
+    }
+
+    const loadUserVote = async () => {
+      if (!user?.id) {
+        setUserVote(null);
+        return;
+      }
+
+      try {
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+
+        const response = await fetch(`/api/feature-requests/${id}/vote`, {
+          credentials: 'include',
+          headers,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserVote(data.user_vote === 'upvote' ? 'upvote' : null);
+        }
+      } catch (error) {
+        console.error('Error loading user vote:', error);
+      }
+    };
+
+    loadUserVote();
+  }, [id, user?.id]);
+
+  // Update userVote when initialUserVote prop changes (if parent provides it)
+  useEffect(() => {
+    if (initialUserVote !== undefined && !isVotingRef.current) {
+      setUserVote(initialUserVote);
+    }
+  }, [initialUserVote]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -158,16 +205,71 @@ export default function FeatureRequestCard({
     }
   };
 
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+  const handleVote = async () => {
     if (isVoting) return;
 
     setIsVoting(true);
+    isVotingRef.current = true;
+
     try {
+      // Let the parent handle the vote API call - this ensures vote count updates correctly
       if (onVote) {
-        onVote(id, voteType);
+        await onVote(id, 'upvote');
+      }
+
+      // After parent handles the vote, reload user vote state
+      // The parent updates vote_count, we just need to update userVote state
+      // Add a small delay to ensure the API has processed the vote
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      try {
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+
+        const voteResponse = await fetch(`/api/feature-requests/${id}/vote`, {
+          credentials: 'include',
+          headers,
+        });
+        if (voteResponse.ok) {
+          const voteData = await voteResponse.json();
+          const newUserVote = voteData.user_vote === 'upvote' ? 'upvote' : null;
+          setUserVote(newUserVote);
+          console.log('User vote state updated:', newUserVote, voteData);
+        }
+      } catch (error) {
+        console.error('Error reloading vote state:', error);
+      }
+    } catch (error) {
+      console.error('Error voting:', error);
+      // On error, reload current vote state
+      try {
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+
+        const currentVoteResponse = await fetch(
+          `/api/feature-requests/${id}/vote`,
+          {
+            credentials: 'include',
+            headers,
+          }
+        );
+        if (currentVoteResponse.ok) {
+          const currentVoteData = await currentVoteResponse.json();
+          setUserVote(currentVoteData.user_vote === 'upvote' ? 'upvote' : null);
+        }
+      } catch (reloadError) {
+        console.error('Error reloading vote state:', reloadError);
       }
     } finally {
       setIsVoting(false);
+      // Delay resetting the ref to prevent useEffect from interfering
+      setTimeout(() => {
+        isVotingRef.current = false;
+      }, 500);
     }
   };
 
@@ -271,22 +373,24 @@ export default function FeatureRequestCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleVote('upvote')}
+                onClick={handleVote}
                 disabled={isVoting}
-                className="flex items-center gap-1"
+                className={`flex items-center gap-1 ${
+                  userVote === 'upvote'
+                    ? 'bg-orange-50 hover:bg-orange-100 border-orange-500'
+                    : ''
+                }`}
               >
-                <ThumbsUp className="w-4 h-4" />
-                {vote_count > 0 ? vote_count : 0}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleVote('downvote')}
-                disabled={isVoting}
-                className="flex items-center gap-1"
-              >
-                <ThumbsDown className="w-4 h-4" />
+                <ThumbsUp
+                  className={`w-4 h-4 ${userVote === 'upvote' ? 'text-orange-600' : ''}`}
+                />
+                <span
+                  className={
+                    userVote === 'upvote' ? 'text-orange-600 font-medium' : ''
+                  }
+                >
+                  {vote_count > 0 ? vote_count : 0}
+                </span>
               </Button>
             </div>
 

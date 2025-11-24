@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import {
   ArrowLeft,
   ThumbsUp,
-  ThumbsDown,
   MessageCircle,
   Eye,
   Calendar,
@@ -150,10 +149,7 @@ export default function FeatureRequestPage() {
     checkAdminStatus();
   }, []);
 
-  const handleVote = async (
-    featureRequestId: string,
-    voteType: 'upvote' | 'downvote'
-  ) => {
+  const handleVote = async (featureRequestId: string, voteType: 'upvote') => {
     try {
       const response = await fetch(
         `/api/feature-requests/${featureRequestId}/vote`,
@@ -162,6 +158,7 @@ export default function FeatureRequestPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({ vote_type: voteType }),
         }
       );

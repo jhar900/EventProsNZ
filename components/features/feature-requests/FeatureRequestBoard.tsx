@@ -51,7 +51,7 @@ interface FeatureRequest {
 interface FeatureRequestBoardProps {
   featureRequests: FeatureRequest[];
   onStatusUpdate: (requestId: string, newStatus: string) => Promise<void>;
-  onVote: (featureRequestId: string, voteType: 'upvote' | 'downvote') => void;
+  onVote: (featureRequestId: string, voteType: 'upvote') => void;
   onClick: (request: FeatureRequest) => void;
 }
 

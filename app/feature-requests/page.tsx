@@ -344,18 +344,22 @@ export default function FeatureRequestsPage() {
     }
   };
 
-  const handleVote = async (
-    featureRequestId: string,
-    voteType: 'upvote' | 'downvote'
-  ) => {
+  const handleVote = async (featureRequestId: string, voteType: 'upvote') => {
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Include user ID in header as fallback if cookies fail
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch(
         `/api/feature-requests/${featureRequestId}/vote`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           credentials: 'include',
           body: JSON.stringify({ vote_type: voteType }),
         }
@@ -381,10 +385,13 @@ export default function FeatureRequestsPage() {
                 : request
             )
           );
+        } else {
+          console.error('Failed to fetch updated vote count');
         }
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to vote');
+        console.error('Vote failed:', error);
       }
     } catch (error) {
       console.error('Error voting:', error);
