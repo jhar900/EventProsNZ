@@ -57,10 +57,16 @@ export class ContractorDirectoryService {
       params.q = filters.q;
     }
 
-    // Convert serviceType to service_types parameter
-    // serviceType is a single string, but API expects comma-separated list
-    if (filters.serviceType) {
-      params.service_types = filters.serviceType; // API will split this
+    // Handle serviceTypes array (preferred) or legacy serviceType string
+    if (
+      filters.serviceTypes &&
+      Array.isArray(filters.serviceTypes) &&
+      filters.serviceTypes.length > 0
+    ) {
+      params.service_types = filters.serviceTypes.join(',');
+    } else if (filters.serviceType) {
+      // Legacy support for single serviceType
+      params.service_types = filters.serviceType;
     }
 
     if (filters.location) {
@@ -83,7 +89,11 @@ export class ContractorDirectoryService {
     sort: string = 'premium_first'
   ): Promise<ContractorDirectoryResponse> {
     // Check if we have any filters - if so, use search endpoint
-    const hasFilters = filters.q || filters.serviceType || filters.location;
+    const hasFilters =
+      filters.q ||
+      (filters.serviceTypes && filters.serviceTypes.length > 0) ||
+      filters.serviceType ||
+      filters.location;
 
     if (hasFilters) {
       // Use search endpoint when filters are present
@@ -115,10 +125,11 @@ export class ContractorDirectoryService {
     limit: number = 12
   ): Promise<ContractorDirectoryResponse> {
     // Convert filter names to match search API expectations
+    const filterParams = this.convertFiltersToSearchParams(filters);
     const searchParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...this.convertFiltersToSearchParams(filters),
+      ...filterParams,
     });
 
     const response = await fetch(`${API_BASE_URL}/search?${searchParams}`);

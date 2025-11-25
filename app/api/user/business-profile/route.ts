@@ -12,6 +12,7 @@ const updateBusinessProfileSchema = z.object({
   description: z.string().max(1000, 'Description too long').optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   location: z.string().max(100, 'Location too long').optional(),
+  service_areas: z.array(z.string()).optional(),
   service_categories: z
     .array(z.string())
     .max(10, 'Too many service categories')
@@ -52,6 +53,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
 
+    // First, verify the user exists in public.users
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ businessProfile: null });
+    }
+
+    // Now try to get the business profile
     const { data: businessProfile, error: businessProfileError } =
       await supabaseAdmin
         .from('business_profiles')

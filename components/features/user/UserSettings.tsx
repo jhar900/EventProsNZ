@@ -13,6 +13,8 @@ const settingsSchema = z.object({
   marketing_emails: z.boolean(),
   timezone: z.string().max(50, 'Timezone too long'),
   language: z.string().max(10, 'Language code too long'),
+  show_on_homepage_map: z.boolean(),
+  publish_to_contractors: z.boolean(),
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
@@ -66,6 +68,8 @@ export default function UserSettings({
       marketing_emails: false,
       timezone: 'Pacific/Auckland',
       language: 'en',
+      show_on_homepage_map: false,
+      publish_to_contractors: false,
     },
   });
 
@@ -78,38 +82,8 @@ export default function UserSettings({
       // Get user verification status from user object
       const userVerified = user.is_verified || false;
 
-      // For contractors, also get business profile verification
-      let businessVerified: boolean | undefined;
-      let businessVerificationDate: string | undefined;
-
-      if (user.role === 'contractor') {
-        try {
-          const response = await fetch('/api/user/business-profile', {
-            headers: {
-              'x-user-id': user.id,
-            },
-            credentials: 'include',
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const businessProfile =
-              data.businessProfile || data.business_profile;
-            if (businessProfile) {
-              businessVerified = businessProfile.is_verified || false;
-              businessVerificationDate = businessProfile.verification_date;
-            }
-          }
-        } catch (err) {
-          console.error('Error loading business profile:', err);
-        }
-      }
-
       setVerificationStatus({
         userVerified,
-        businessVerified:
-          user.role === 'contractor' ? businessVerified : undefined,
-        businessVerificationDate,
       });
     } catch (err) {
       console.error('Error loading verification status:', err);
@@ -120,7 +94,7 @@ export default function UserSettings({
     } finally {
       setLoadingVerification(false);
     }
-  }, [user?.id, user?.is_verified, user?.role]);
+  }, [user?.id, user?.is_verified]);
 
   const loadSettings = useCallback(async () => {
     if (!user?.id) return;
@@ -148,6 +122,8 @@ export default function UserSettings({
           marketing_emails: false,
           timezone: 'Pacific/Auckland',
           language: 'en',
+          show_on_homepage_map: false,
+          publish_to_contractors: false,
         };
         setSettings(defaultSettings);
         reset(defaultSettings);
@@ -170,6 +146,8 @@ export default function UserSettings({
         marketing_emails: false,
         timezone: 'Pacific/Auckland',
         language: 'en',
+        show_on_homepage_map: false,
+        publish_to_contractors: false,
       };
       setSettings(defaultSettings);
       reset(defaultSettings);
@@ -192,6 +170,8 @@ export default function UserSettings({
         marketing_emails: false,
         timezone: 'Pacific/Auckland',
         language: 'en',
+        show_on_homepage_map: false,
+        publish_to_contractors: false,
       };
       setSettings(defaultSettings);
       reset(defaultSettings);
@@ -333,60 +313,15 @@ export default function UserSettings({
                     </span>
                   </div>
 
-                  {/* Business Verification Status (for contractors) */}
-                  {user.role === 'contractor' &&
-                    verificationStatus.businessVerified !== undefined && (
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center">
-                          {verificationStatus.businessVerified ? (
-                            <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-yellow-600 mr-3" />
-                          )}
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Business Verification
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {verificationStatus.businessVerified
-                                ? verificationStatus.businessVerificationDate
-                                  ? `Verified on ${new Date(
-                                      verificationStatus.businessVerificationDate
-                                    ).toLocaleDateString()}`
-                                  : 'Your business has been verified'
-                                : 'Your business verification is pending admin approval'}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            verificationStatus.businessVerified
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {verificationStatus.businessVerified
-                            ? 'Verified'
-                            : 'Pending'}
-                        </span>
-                      </div>
-                    )}
-
                   {/* Overall Status Message */}
-                  {user.role === 'contractor' &&
-                    (!verificationStatus.userVerified ||
-                      !verificationStatus.businessVerified) && (
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          {!verificationStatus.userVerified &&
-                          !verificationStatus.businessVerified
-                            ? 'Your account and business are pending verification. You will be notified once verification is complete.'
-                            : !verificationStatus.businessVerified
-                              ? 'Your business profile is pending verification. Once verified, you will have access to additional features.'
-                              : 'Your account verification is pending. You will be notified once verification is complete.'}
-                        </p>
-                      </div>
-                    )}
+                  {!verificationStatus.userVerified && (
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        Your account verification is pending. You will be
+                        notified once verification is complete.
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">
@@ -405,58 +340,6 @@ export default function UserSettings({
             </h3>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  Notifications
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <input
-                      {...register('email_notifications')}
-                      type="checkbox"
-                      id="email_notifications"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="email_notifications"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Email notifications
-                    </label>
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      {...register('sms_notifications')}
-                      type="checkbox"
-                      id="sms_notifications"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="sms_notifications"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      SMS notifications
-                    </label>
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      {...register('marketing_emails')}
-                      type="checkbox"
-                      id="marketing_emails"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="marketing_emails"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Marketing emails
-                    </label>
-                  </div>
-                </div>
-              </div>
-
               <div>
                 <h4 className="text-md font-medium text-gray-900 mb-3">
                   General
@@ -510,6 +393,48 @@ export default function UserSettings({
                         {errors.language.message}
                       </p>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  Publication
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex items-start">
+                    <input
+                      {...register('show_on_homepage_map')}
+                      type="checkbox"
+                      id="show_on_homepage_map"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    />
+                    <label
+                      htmlFor="show_on_homepage_map"
+                      className="ml-2 text-sm text-gray-700"
+                    >
+                      Add a pin of my business address to the map on Event Pros
+                      NZ homepage{' '}
+                      <span className="text-gray-500 italic">
+                        (This is more exposure for your business!)
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      {...register('publish_to_contractors')}
+                      type="checkbox"
+                      id="publish_to_contractors"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    />
+                    <label
+                      htmlFor="publish_to_contractors"
+                      className="ml-2 text-sm text-gray-700"
+                    >
+                      Add my business to the contractors database and publish my
+                      business profile page
+                    </label>
                   </div>
                 </div>
               </div>

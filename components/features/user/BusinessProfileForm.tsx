@@ -8,6 +8,29 @@ import { useAuth } from '@/hooks/useAuth';
 import AddressAutosuggest from './AddressAutosuggest';
 import BusinessLogoUpload from './BusinessLogoUpload';
 
+const NZ_REGIONS = [
+  'Auckland',
+  'Wellington',
+  'Christchurch',
+  'Hamilton',
+  'Tauranga',
+  'Napier',
+  'Dunedin',
+  'Palmerston North',
+  'Nelson',
+  'Rotorua',
+  'Invercargill',
+  'Whangarei',
+  'New Plymouth',
+  'Whanganui',
+  'Gisborne',
+  'Timaru',
+  'Pukekohe',
+  'Masterton',
+  'Levin',
+  'Ashburton',
+];
+
 const businessProfileSchema = z.object({
   company_name: z
     .string()
@@ -16,6 +39,10 @@ const businessProfileSchema = z.object({
   description: z.string().max(1000, 'Description too long').optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   location: z.string().max(100, 'Location too long').optional(),
+  service_areas: z
+    .array(z.string())
+    .min(1, 'At least one service area is required')
+    .optional(),
   service_categories: z
     .array(z.string())
     .max(10, 'Too many service categories')
@@ -66,6 +93,12 @@ export default function BusinessProfileForm({
   const [isCreating, setIsCreating] = useState(false);
   const [serviceCategories, setServiceCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [selectedServiceAreas, setSelectedServiceAreas] = useState<string[]>(
+    []
+  );
+  const [coverageType, setCoverageType] = useState<'regions' | 'nationwide'>(
+    'regions'
+  );
 
   const methods = useForm<BusinessProfileFormData>({
     resolver: zodResolver(businessProfileSchema),
@@ -77,9 +110,31 @@ export default function BusinessProfileForm({
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = methods;
 
   const selectedCategories = watch('service_categories') || [];
+  const formServiceAreas = watch('service_areas') || [];
+
+  // Sync form service_areas with selectedServiceAreas state
+  useEffect(() => {
+    if (Array.isArray(formServiceAreas) && formServiceAreas.length > 0) {
+      const hasNationwide = formServiceAreas.includes('Nationwide');
+      if (hasNationwide && coverageType !== 'nationwide') {
+        setCoverageType('nationwide');
+        setSelectedServiceAreas(['Nationwide']);
+      } else if (!hasNationwide && coverageType === 'nationwide') {
+        setCoverageType('regions');
+        setSelectedServiceAreas(
+          formServiceAreas.filter(area => NZ_REGIONS.includes(area))
+        );
+      } else if (!hasNationwide) {
+        setSelectedServiceAreas(
+          formServiceAreas.filter(area => NZ_REGIONS.includes(area))
+        );
+      }
+    }
+  }, [formServiceAreas, coverageType]);
 
   // Load service categories from API
   useEffect(() => {
@@ -116,11 +171,31 @@ export default function BusinessProfileForm({
 
     if (user?.business_profile) {
       console.log('Loading existing business profile data into form');
+      const serviceAreas = user.business_profile.service_areas || [];
+      const hasNationwide =
+        Array.isArray(serviceAreas) && serviceAreas.includes('Nationwide');
+      const initialCoverageType = hasNationwide ? 'nationwide' : 'regions';
+
+      let finalServiceAreas: string[];
+      if (initialCoverageType === 'nationwide') {
+        finalServiceAreas = ['Nationwide'];
+      } else {
+        finalServiceAreas = Array.isArray(serviceAreas)
+          ? serviceAreas.filter(
+              area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+            )
+          : [];
+      }
+
+      setCoverageType(initialCoverageType);
+      setSelectedServiceAreas(finalServiceAreas);
+
       reset({
         company_name: user.business_profile.company_name || '',
         description: user.business_profile.description || '',
         website: user.business_profile.website || '',
         location: user.business_profile.location || '',
+        service_areas: finalServiceAreas,
         service_categories: user.business_profile.service_categories || [],
         facebook_url: user.business_profile.facebook_url || '',
         instagram_url: user.business_profile.instagram_url || '',
@@ -150,8 +225,13 @@ export default function BusinessProfileForm({
       }
 
       // Clean up social media URLs - convert empty strings to undefined
+      // Ensure service_areas is included from the form state
       const cleanedData = {
         ...data,
+        service_areas:
+          selectedServiceAreas.length > 0
+            ? selectedServiceAreas
+            : data.service_areas || [],
         facebook_url: data.facebook_url?.trim() || undefined,
         instagram_url: data.instagram_url?.trim() || undefined,
         linkedin_url: data.linkedin_url?.trim() || undefined,
@@ -223,6 +303,47 @@ export default function BusinessProfileForm({
       }
     }
     reset({ ...watch(), service_categories: currentCategories });
+  };
+
+  const handleAreaToggle = (area: string) => {
+    if (area === 'Nationwide') {
+      // If clicking Nationwide, switch to nationwide mode
+      handleCoverageTypeChange('nationwide');
+      return;
+    }
+
+    const newAreas = selectedServiceAreas.includes(area)
+      ? selectedServiceAreas.filter(a => a !== area)
+      : [...selectedServiceAreas, area];
+
+    setSelectedServiceAreas(newAreas);
+    setValue('service_areas', newAreas, { shouldDirty: true });
+  };
+
+  const handleCoverageTypeChange = (type: 'regions' | 'nationwide') => {
+    if (type === 'nationwide') {
+      const nationwideAreas = ['Nationwide'];
+      setCoverageType('nationwide');
+      setSelectedServiceAreas(nationwideAreas);
+      setValue('service_areas', nationwideAreas, { shouldDirty: true });
+    } else {
+      const regionsOnly = selectedServiceAreas.filter(
+        area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+      );
+      setCoverageType('regions');
+      setSelectedServiceAreas(regionsOnly);
+      setValue('service_areas', regionsOnly, { shouldDirty: true });
+    }
+  };
+
+  const selectAllRegions = () => {
+    setSelectedServiceAreas(NZ_REGIONS);
+    setValue('service_areas', NZ_REGIONS, { shouldDirty: true });
+  };
+
+  const clearAllRegions = () => {
+    setSelectedServiceAreas([]);
+    setValue('service_areas', [], { shouldDirty: true });
   };
 
   return (
@@ -329,6 +450,89 @@ export default function BusinessProfileForm({
                   </p>
                 )}
               </div>
+
+              {/* Service Coverage Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Service Coverage
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="coverageType"
+                      value="nationwide"
+                      checked={coverageType === 'nationwide'}
+                      onChange={() => handleCoverageTypeChange('nationwide')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Nationwide coverage
+                    </span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="coverageType"
+                      value="regions"
+                      checked={coverageType === 'regions'}
+                      onChange={() => handleCoverageTypeChange('regions')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Specific regions in New Zealand
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Region Selection */}
+              {coverageType === 'regions' && (
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Select Service Areas
+                    </label>
+                    <div className="space-x-2">
+                      <button
+                        type="button"
+                        onClick={selectAllRegions}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearAllRegions}
+                        className="text-xs text-gray-600 hover:text-gray-800"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3">
+                    {NZ_REGIONS.map(region => (
+                      <label key={region} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedServiceAreas.includes(region)}
+                          onChange={() => handleAreaToggle(region)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          {region}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.service_areas && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.service_areas.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

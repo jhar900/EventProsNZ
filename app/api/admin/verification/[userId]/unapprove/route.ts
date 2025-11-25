@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
-const approveSchema = z.object({
+const unapproveSchema = z.object({
   reason: z.string().optional(),
 });
 
@@ -27,20 +27,20 @@ export async function POST(
 
     const userId = params.userId;
     const body = await request.json();
-    const { reason } = approveSchema.parse(body);
+    const { reason } = unapproveSchema.parse(body);
 
-    // Update user verification status
+    // Update user verification status to false (pending)
     const { error: updateError } = await adminSupabase
       .from('users')
       .update({
-        is_verified: true,
+        is_verified: false,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
     if (updateError) {
       return NextResponse.json(
-        { error: 'Failed to approve user' },
+        { error: 'Failed to unapprove user' },
         { status: 400 }
       );
     }
@@ -49,12 +49,13 @@ export async function POST(
     const { error: businessUpdateError } = await adminSupabase
       .from('business_profiles')
       .update({
-        is_verified: true,
-        verification_date: new Date().toISOString(),
+        is_verified: false,
+        verification_date: null,
       })
       .eq('user_id', userId);
 
     if (businessUpdateError) {
+      // Log but don't fail
     }
 
     // Log verification action
@@ -65,9 +66,9 @@ export async function POST(
       );
     const logData: any = {
       user_id: userId,
-      action: 'approve',
-      status: 'approved',
-      reason: reason || 'User approved by admin',
+      action: 'resubmit',
+      status: 'pending',
+      reason: reason || 'User unapproved and moved back to pending',
     };
     if (isValidUUID) {
       logData.admin_id = adminUser.id;
@@ -80,6 +81,7 @@ export async function POST(
       .single();
 
     if (logError) {
+      // Log but don't fail
     }
 
     return NextResponse.json({

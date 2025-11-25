@@ -86,6 +86,9 @@ export function BusinessInfoForm({
   const [coverageType, setCoverageType] = useState<'regions' | 'nationwide'>(
     'regions'
   );
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [initialFormData, setInitialFormData] =
+    useState<BusinessInfoFormData | null>(null);
 
   const {
     register,
@@ -96,7 +99,7 @@ export function BusinessInfoForm({
     reset,
   } = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
-    defaultValues: {
+    defaultValues: initialFormData || {
       service_areas: [],
       service_categories: [],
       social_links: {
@@ -194,9 +197,10 @@ export function BusinessInfoForm({
   };
 
   // Load existing business profile data when component mounts
+  // Wait for service categories to be loaded first
   useEffect(() => {
     const loadBusinessProfileData = async () => {
-      if (!user?.id) return;
+      if (!user?.id || loadingCategories) return;
 
       try {
         const response = await fetch('/api/user/business-profile', {
@@ -209,7 +213,8 @@ export function BusinessInfoForm({
 
         if (response.ok) {
           const result = await response.json();
-          const businessProfile = result.businessProfile;
+          const businessProfile =
+            result.businessProfile || result.business_profile;
 
           if (businessProfile) {
             // Get service areas (handle both array and single value)
@@ -218,19 +223,12 @@ export function BusinessInfoForm({
               ? rawServiceAreas
               : [];
 
-            console.log(
-              'Loading business profile - raw service areas:',
-              rawServiceAreas
-            );
-            console.log('Processing service areas:', serviceAreas);
-
             // Determine coverage type based on whether "Nationwide" is in the array
             const hasNationwide = serviceAreas.includes('Nationwide');
             const initialCoverageType = hasNationwide
               ? 'nationwide'
               : 'regions';
 
-            console.log('Coverage type:', initialCoverageType);
             setCoverageType(initialCoverageType);
 
             // Set selected service areas based on coverage type
@@ -245,16 +243,20 @@ export function BusinessInfoForm({
               );
             }
 
-            console.log('Final service areas to set:', finalServiceAreas);
             setSelectedServiceAreas(finalServiceAreas);
             setValue('service_areas', finalServiceAreas, {
               shouldDirty: false,
             });
 
             // Get service categories (handle both array and single value)
+            // Only filter if serviceCategories is loaded
             const profileCategories = businessProfile.service_categories || [];
             const validCategories = Array.isArray(profileCategories)
-              ? profileCategories.filter(cat => serviceCategories.includes(cat))
+              ? serviceCategories.length > 0
+                ? profileCategories.filter(cat =>
+                    serviceCategories.includes(cat)
+                  )
+                : profileCategories // If categories not loaded yet, use all from profile
               : [];
             setSelectedServiceCategories(validCategories);
             setValue('service_categories', validCategories, {
@@ -294,7 +296,7 @@ export function BusinessInfoForm({
 
             // Populate form with existing data
             // Use the same finalServiceAreas we calculated above
-            reset({
+            const formData = {
               company_name: businessProfile.company_name || '',
               business_address:
                 businessProfile.business_address ||
@@ -306,28 +308,68 @@ export function BusinessInfoForm({
               service_categories: validCategories,
               logo_url: businessProfile.logo_url || '',
               social_links: socialLinksData,
+            };
+
+            // Store initial form data
+            setInitialFormData(formData);
+            setIsDataLoaded(true);
+
+            // Reset the form with all data - this should update all registered fields
+            reset(formData, {
+              keepDefaultValues: false,
             });
 
-            // Ensure state is synced after reset (in case reset clears it)
+            // Immediately set state for checkboxes/selects
+            setSelectedServiceAreas(finalServiceAreas);
+            setSelectedServiceCategories(validCategories);
+            setCoverageType(initialCoverageType);
+
+            // Use a small delay to ensure form is ready, then set all values explicitly
+            // This ensures fields that might not be registered properly get updated
             setTimeout(() => {
-              console.log(
-                'Syncing state after reset - finalServiceAreas:',
-                finalServiceAreas
-              );
-              setSelectedServiceAreas(finalServiceAreas);
+              // Explicitly set each field to ensure they're updated
+              setValue('company_name', formData.company_name, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+              setValue('business_address', formData.business_address, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+              setValue('nzbn', formData.nzbn, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+              setValue('description', formData.description, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+              setValue('logo_url', formData.logo_url, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
               setValue('service_areas', finalServiceAreas, {
                 shouldDirty: false,
+                shouldValidate: false,
               });
-            }, 0);
+              setValue('service_categories', validCategories, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+              setValue('social_links', socialLinksData, {
+                shouldDirty: false,
+                shouldValidate: false,
+              });
+            }, 300);
           }
         }
       } catch (error) {
-        console.error('Failed to load business profile data:', error);
+        // Silently fail - user might not have a business profile yet
       }
     };
 
     loadBusinessProfileData();
-  }, [user?.id, reset, setValue]);
+  }, [user?.id, reset, setValue, loadingCategories, serviceCategories, watch]);
 
   // Sync form's service_areas with selectedServiceAreas state
   // This ensures checkboxes reflect the form state
@@ -373,7 +415,6 @@ export function BusinessInfoForm({
       const formAreasString = JSON.stringify([...areasToSync].sort());
       const stateAreasString = JSON.stringify([...selectedServiceAreas].sort());
       if (formAreasString !== stateAreasString) {
-        console.log('Syncing selectedServiceAreas from form:', areasToSync);
         setSelectedServiceAreas(areasToSync);
       }
     } else if (
@@ -384,7 +425,6 @@ export function BusinessInfoForm({
       coverageType === 'regions'
     ) {
       // If form has empty array but state has values, sync to empty (only in regions mode)
-      console.log('Syncing selectedServiceAreas to empty array');
       setSelectedServiceAreas([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -490,11 +530,6 @@ export function BusinessInfoForm({
   };
 
   const onSubmit = async (data: BusinessInfoFormData) => {
-    console.log('onSubmit called with data:', data);
-    console.log('Form errors:', errors);
-    console.log('Selected service areas:', selectedServiceAreas);
-    console.log('Selected service categories:', selectedServiceCategories);
-
     setIsSubmitting(true);
     setError(null);
 
@@ -534,8 +569,6 @@ export function BusinessInfoForm({
       service_categories: selectedServiceCategories,
     };
 
-    console.log('Submitting business info form:', formData);
-
     try {
       const response = await fetch('/api/onboarding/contractor/step2', {
         method: 'POST',
@@ -556,16 +589,7 @@ export function BusinessInfoForm({
         return;
       }
 
-      console.log('API response:', {
-        status: response.status,
-        ok: response.ok,
-        data: responseData,
-      });
-
       if (response.ok) {
-        console.log(
-          'Form submission successful, calling onComplete and onNext'
-        );
         onComplete();
         onNext();
       } else {
@@ -610,9 +634,9 @@ export function BusinessInfoForm({
       )}
 
       <form
+        key={isDataLoaded ? 'form-loaded' : 'form-loading'}
         onSubmit={handleSubmit(onSubmit, errors => {
           console.error('Form validation errors:', errors);
-          console.log('Form validation failed - onSubmit not called');
           // Show first validation error
           const firstError = Object.values(errors)[0];
           if (firstError) {
@@ -629,9 +653,12 @@ export function BusinessInfoForm({
             Company Name *
           </label>
           <input
-            {...register('company_name')}
             type="text"
             id="company_name"
+            value={watch('company_name') || ''}
+            onChange={e =>
+              setValue('company_name', e.target.value, { shouldDirty: true })
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter your company name"
           />
@@ -713,9 +740,12 @@ export function BusinessInfoForm({
             NZBN (New Zealand Business Number) - Optional
           </label>
           <input
-            {...register('nzbn')}
             type="text"
             id="nzbn"
+            value={watch('nzbn') || ''}
+            onChange={e =>
+              setValue('nzbn', e.target.value, { shouldDirty: true })
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter your NZBN (optional)"
           />
@@ -732,9 +762,12 @@ export function BusinessInfoForm({
             Business Description *
           </label>
           <textarea
-            {...register('description')}
             id="description"
             rows={4}
+            value={watch('description') || ''}
+            onChange={e =>
+              setValue('description', e.target.value, { shouldDirty: true })
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Describe your business and what makes you unique"
           />

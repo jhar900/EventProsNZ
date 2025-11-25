@@ -21,9 +21,18 @@ export function AddressAutocomplete({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const { isLoaded, mapboxgl } = useMapbox();
+
+  // Sync input value when prop changes (e.g., when form is reset with existing data)
+  useEffect(() => {
+    setInputValue(value);
+    if (inputRef.current) {
+      inputRef.current.value = value;
+    }
+  }, [value]);
 
   useEffect(() => {
     if (!isLoaded || !mapboxgl) return;
@@ -74,6 +83,7 @@ export function AddressAutocomplete({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
+    setInputValue(query);
     onChange(query);
 
     if (query.length > 2) {
@@ -107,7 +117,7 @@ export function AddressAutocomplete({
         ref={inputRef}
         id={id}
         type="text"
-        value={value}
+        value={inputValue}
         onChange={handleInputChange}
         onFocus={handleInputFocus}
         placeholder={placeholder}

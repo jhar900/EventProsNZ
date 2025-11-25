@@ -32,7 +32,7 @@ export default function RegisterPage() {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900">Event Pros NZ</h1>
             <p className="mt-2 text-sm text-gray-600">
-              New Zealand's Event Ecosystem
+              New Zealand&apos;s Event Ecosystem
             </p>
           </div>
 

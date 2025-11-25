@@ -25,19 +25,20 @@ export function ContractorGrid({
   className = '',
 }: ContractorGridProps) {
   const gridClasses = isFeatured
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-12'
-    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-12';
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
 
   return (
     <div className={className}>
       <div className={gridClasses}>
         {contractors.map(contractor => (
-          <ContractorCard
-            key={contractor.id}
-            contractor={contractor}
-            viewMode={viewMode}
-            isFeatured={isFeatured}
-          />
+          <div key={contractor.id} className="pt-12">
+            <ContractorCard
+              contractor={contractor}
+              viewMode={viewMode}
+              isFeatured={isFeatured}
+            />
+          </div>
         ))}
       </div>
 

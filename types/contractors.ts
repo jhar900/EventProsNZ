@@ -71,7 +71,8 @@ export interface Testimonial {
 
 export interface ContractorFilters {
   q?: string;
-  serviceType?: string;
+  serviceType?: string; // Deprecated - use serviceTypes instead
+  serviceTypes?: string[]; // Multiple service types
   location?: string;
   priceMin?: number;
   priceMax?: number;

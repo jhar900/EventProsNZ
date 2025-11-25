@@ -56,7 +56,7 @@ export function ContractorDetails({
         setServices(servicesResponse.services);
         setReviews(reviewsResponse.reviews);
       } catch (error) {
-        } finally {
+      } finally {
         setIsLoadingServices(false);
         setIsLoadingReviews(false);
       }
@@ -140,20 +140,22 @@ export function ContractorDetails({
             </div>
           </div>
 
-          {/* Avatar */}
+          {/* Company Logo */}
           <div className="ml-6">
             <div className="relative w-24 h-24">
-              {contractor.avatarUrl ? (
+              {contractor.logoUrl ? (
                 <Image
-                  src={contractor.avatarUrl}
-                  alt={displayName}
+                  src={contractor.logoUrl}
+                  alt={contractor.companyName || displayName}
                   fill
                   className="rounded-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
                   <span className="text-gray-500 font-semibold text-2xl">
-                    {displayName.charAt(0).toUpperCase()}
+                    {(contractor.companyName || displayName)
+                      .charAt(0)
+                      .toUpperCase()}
                   </span>
                 </div>
               )}
@@ -315,11 +317,11 @@ export function ContractorDetails({
                   <p className="text-gray-600 mt-2">Loading services...</p>
                 </div>
               ) : services.length > 0 ? (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {services.map(service => (
-                    <div
+                    <Card
                       key={service.id}
-                      className="border border-gray-200 rounded-lg p-4"
+                      className="p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium text-gray-900">
@@ -343,7 +345,7 @@ export function ContractorDetails({
                           <span>{service.availability}</span>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   ))}
                 </div>
               ) : (

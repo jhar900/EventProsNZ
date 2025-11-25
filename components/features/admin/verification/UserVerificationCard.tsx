@@ -16,6 +16,7 @@ import {
   Clock,
   Globe,
   DollarSign,
+  RotateCcw,
 } from 'lucide-react';
 
 interface User {
@@ -23,6 +24,7 @@ interface User {
   email: string;
   role: 'event_manager' | 'contractor' | 'admin';
   is_verified: boolean;
+  verification_status?: 'pending' | 'approved' | 'rejected' | 'onboarding'; // Explicit status from API
   created_at: string;
   updated_at: string;
   last_login?: string;
@@ -43,6 +45,7 @@ interface User {
     social_links?: Record<string, string>;
     is_verified: boolean;
     verification_date?: string;
+    logo_url?: string;
   };
 }
 
@@ -65,6 +68,7 @@ interface UserVerificationCardProps {
   onApprove: (userId: string, reason?: string) => void;
   onReject: (userId: string, reason: string, feedback?: string) => void;
   onResubmit: (userId: string) => void;
+  onUnapprove?: (userId: string, reason?: string) => void;
   isLoading: boolean;
 }
 
@@ -74,12 +78,14 @@ export function UserVerificationCard({
   onApprove,
   onReject,
   onResubmit,
+  onUnapprove,
   isLoading,
 }: UserVerificationCardProps) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectFeedback, setRejectFeedback] = useState('');
   const [approveReason, setApproveReason] = useState('');
+  const [unapproveReason, setUnapproveReason] = useState('');
 
   const handleApprove = () => {
     onApprove(user.id, approveReason);
@@ -95,12 +101,37 @@ export function UserVerificationCard({
     }
   };
 
+  const handleUnapprove = () => {
+    if (onUnapprove) {
+      onUnapprove(user.id, unapproveReason);
+      setUnapproveReason('');
+    }
+  };
+
   const getStatusBadge = () => {
-    if (user.is_verified) {
+    // Use explicit verification_status if available, otherwise fall back to is_verified
+    const status =
+      user.verification_status || (user.is_verified ? 'approved' : 'pending');
+
+    if (status === 'approved') {
       return (
         <Badge className="bg-green-100 text-green-800">
           <CheckCircle className="h-3 w-3 mr-1" />
           Approved
+        </Badge>
+      );
+    } else if (status === 'rejected') {
+      return (
+        <Badge className="bg-red-100 text-red-800">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejected
+        </Badge>
+      );
+    } else if (status === 'onboarding') {
+      return (
+        <Badge className="bg-blue-100 text-blue-800">
+          <Clock className="h-3 w-3 mr-1" />
+          Onboarding
         </Badge>
       );
     } else {
@@ -150,10 +181,10 @@ export function UserVerificationCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
-                {user.profiles.profile_photo_url ? (
+                {user.profiles?.profile_photo_url ? (
                   <img
                     src={user.profiles.profile_photo_url}
-                    alt={`${user.profiles.first_name} ${user.profiles.last_name}`}
+                    alt={`${user.profiles.first_name || ''} ${user.profiles.last_name || ''}`}
                     className="h-16 w-16 rounded-full object-cover"
                   />
                 ) : (
@@ -163,7 +194,9 @@ export function UserVerificationCard({
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-xl font-bold">
-                    {user.profiles.first_name} {user.profiles.last_name}
+                    {user.profiles
+                      ? `${user.profiles.first_name || ''} ${user.profiles.last_name || ''}`.trim()
+                      : user.email}
                   </h2>
                   {getStatusBadge()}
                   {getRoleBadge(user.role)}
@@ -183,25 +216,49 @@ export function UserVerificationCard({
               <User className="h-4 w-4" />
               Personal Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              {user.profiles.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span>{user.profiles.phone}</span>
-                </div>
-              )}
-              {user.profiles.address && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                  <span>{user.profiles.address}</span>
-                </div>
-              )}
-              {user.profiles.bio && (
-                <div className="md:col-span-2">
-                  <p className="text-gray-600">{user.profiles.bio}</p>
-                </div>
-              )}
-            </div>
+            {user.profiles ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {user.profiles.phone ? (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-gray-500" />
+                    <span>{user.profiles.phone}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Phone className="h-4 w-4" />
+                    <span>Not provided</span>
+                  </div>
+                )}
+                {user.profiles.address ? (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span>{user.profiles.address}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <MapPin className="h-4 w-4" />
+                    <span>Not provided</span>
+                  </div>
+                )}
+                {user.profiles.bio && (
+                  <div className="md:col-span-2">
+                    <p className="text-gray-600">{user.profiles.bio}</p>
+                  </div>
+                )}
+                {user.profiles.first_name && (
+                  <div className="md:col-span-2">
+                    <p className="text-gray-600">
+                      <span className="font-medium">Name: </span>
+                      {user.profiles.first_name} {user.profiles.last_name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">
+                No profile information available
+              </p>
+            )}
           </div>
 
           {/* Business Information */}
@@ -217,10 +274,23 @@ export function UserVerificationCard({
                 )}
               </h3>
               <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium">
-                    {user.business_profiles.company_name}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {user.business_profiles.logo_url && (
+                    <img
+                      src={user.business_profiles.logo_url}
+                      alt={`${user.business_profiles.company_name} logo`}
+                      className="h-16 w-16 rounded-lg object-cover border border-gray-200"
+                      onError={e => {
+                        // Hide image if it fails to load
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div>
+                    <span className="font-medium">
+                      {user.business_profiles.company_name}
+                    </span>
+                  </div>
                 </div>
                 {user.business_profiles.description && (
                   <p className="text-gray-600">
@@ -257,35 +327,40 @@ export function UserVerificationCard({
                     </div>
                   )}
                 {user.business_profiles.social_links &&
-                  Object.keys(user.business_profiles.social_links).length >
-                    0 && (
-                    <div>
-                      <span className="font-medium">Social Links: </span>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {Object.entries(
-                          user.business_profiles.social_links
-                        ).map(([platform, url]) => (
-                          <a
-                            key={platform}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-orange-600 hover:text-orange-700 text-xs flex items-center gap-1"
-                          >
-                            <Globe className="h-3 w-3" />
-                            {platform}
-                          </a>
-                        ))}
+                  (() => {
+                    const validLinks = Object.entries(
+                      user.business_profiles.social_links
+                    ).filter(
+                      ([, url]) =>
+                        url && typeof url === 'string' && url.trim() !== ''
+                    );
+                    return validLinks.length > 0 ? (
+                      <div>
+                        <span className="font-medium">Social Links: </span>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {validLinks.map(([platform, url]) => (
+                            <a
+                              key={platform}
+                              href={url as string}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-orange-600 hover:text-orange-700 text-xs flex items-center gap-1"
+                            >
+                              <Globe className="h-3 w-3" />
+                              {platform}
+                            </a>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null;
+                  })()}
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          {!user.is_verified && (
-            <div className="border-t pt-4">
+          <div className="border-t pt-4">
+            {!user.is_verified ? (
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
                   <input
@@ -321,58 +396,97 @@ export function UserVerificationCard({
                   Request Resubmission
                 </Button>
               </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Unapproval reason (optional)"
+                    value={unapproveReason}
+                    onChange={e => setUnapproveReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                {onUnapprove && (
+                  <Button
+                    onClick={handleUnapprove}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Unapprove
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowRejectForm(!showRejectForm)}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Reject
+                </Button>
+                <Button
+                  onClick={() => onResubmit(user.id)}
+                  disabled={isLoading}
+                  variant="outline"
+                >
+                  Request Resubmission
+                </Button>
+              </div>
+            )}
 
-              {/* Reject Form */}
-              {showRejectForm && (
-                <div className="mt-4 p-4 border border-red-200 rounded-lg bg-red-50">
-                  <h4 className="font-semibold text-red-800 mb-2">
-                    Rejection Details
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-red-700 mb-1">
-                        Reason for rejection *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g., Incomplete business information"
-                        value={rejectReason}
-                        onChange={e => setRejectReason(e.target.value)}
-                        className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-red-700 mb-1">
-                        Feedback for user (optional)
-                      </label>
-                      <textarea
-                        placeholder="Provide specific feedback to help the user improve their profile..."
-                        value={rejectFeedback}
-                        onChange={e => setRejectFeedback(e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleReject}
-                        disabled={!rejectReason.trim() || isLoading}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Confirm Rejection
-                      </Button>
-                      <Button
-                        onClick={() => setShowRejectForm(false)}
-                        variant="outline"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+            {/* Reject Form */}
+            {showRejectForm && (
+              <div className="mt-4 p-4 border border-red-200 rounded-lg bg-red-50">
+                <h4 className="font-semibold text-red-800 mb-2">
+                  Rejection Details
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Reason for rejection *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Incomplete business information"
+                      value={rejectReason}
+                      onChange={e => setRejectReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Feedback for user (optional)
+                    </label>
+                    <textarea
+                      placeholder="Provide specific feedback to help the user improve their profile..."
+                      value={rejectFeedback}
+                      onChange={e => setRejectFeedback(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleReject}
+                      disabled={!rejectReason.trim() || isLoading}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Confirm Rejection
+                    </Button>
+                    <Button
+                      onClick={() => setShowRejectForm(false)}
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

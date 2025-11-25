@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
 const rejectSchema = z.object({
@@ -12,37 +13,25 @@ export async function POST(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const supabase = createClient();
-
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
+    // Validate admin access
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
+
+    // Use admin client to bypass RLS
+    const adminSupabase = authResult.supabase || supabaseAdmin;
+    const adminUser = authResult.user;
 
     const userId = params.userId;
     const body = await request.json();
     const { reason, feedback } = rejectSchema.parse(body);
 
     // Update user verification status
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminSupabase
       .from('users')
       .update({
         is_verified: false,
@@ -58,7 +47,7 @@ export async function POST(
     }
 
     // Update business profile verification if exists
-    const { error: businessUpdateError } = await supabase
+    const { error: businessUpdateError } = await adminSupabase
       .from('business_profiles')
       .update({
         is_verified: false,
@@ -67,23 +56,50 @@ export async function POST(
       .eq('user_id', userId);
 
     if (businessUpdateError) {
-      }
+    }
 
-    // Log verification action
-    const { data: verificationLog, error: logError } = await supabase
+    // Log verification action - CRITICAL: This must succeed for rejected filter to work
+    // admin_id can be null for dev/admin users that don't have a UUID
+    const logData: any = {
+      user_id: userId,
+      action: 'reject',
+      status: 'rejected',
+      reason: reason,
+    };
+
+    // Only include admin_id if it's a valid UUID (not a dev user string)
+    const isValidUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        adminUser.id
+      );
+    if (isValidUUID) {
+      logData.admin_id = adminUser.id;
+    }
+
+    // Include feedback if provided
+    if (feedback) {
+      logData.feedback = feedback;
+    }
+
+    const { data: verificationLog, error: logError } = await adminSupabase
       .from('verification_logs')
-      .insert({
-        user_id: userId,
-        action: 'reject',
-        status: 'rejected',
-        reason: reason,
-        admin_id: user.id,
-      })
+      .insert(logData)
       .select()
       .single();
 
     if (logError) {
-      }
+      console.error('Error logging rejection:', logError);
+      // If logging fails, the user will appear in pending list
+      // Return error so frontend knows something went wrong
+      return NextResponse.json(
+        {
+          error: 'User rejected but verification log could not be saved',
+          details: logError.message,
+          success: false,
+        },
+        { status: 500 }
+      );
+    }
 
     // TODO: Send rejection email to user with feedback
 

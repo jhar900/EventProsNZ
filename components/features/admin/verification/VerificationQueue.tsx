@@ -22,12 +22,14 @@ interface User {
   email: string;
   role: 'event_manager' | 'contractor' | 'admin';
   is_verified: boolean;
+  verification_status?: 'pending' | 'approved' | 'rejected' | 'onboarding'; // Explicit status from API
   created_at: string;
   profiles: {
     first_name: string;
     last_name: string;
     phone?: string;
     address?: string;
+    avatar_url?: string;
   };
   business_profiles?: {
     company_name: string;
@@ -48,8 +50,8 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
-    'all' | 'pending' | 'approved' | 'rejected'
-  >('all');
+    'all' | 'pending' | 'approved' | 'rejected' | 'onboarding'
+  >('pending');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +80,14 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
 
       if (response.ok) {
         const data = await response.json();
+        // Debug: log first user's profile structure
+        if (data.verifications && data.verifications.length > 0) {
+          console.log('First user from API:', {
+            id: data.verifications[0].id,
+            profiles: data.verifications[0].profiles,
+            avatar_url: data.verifications[0].profiles?.avatar_url,
+          });
+        }
         setUsers(data.verifications);
         setTotalCount(data.total);
       } else {
@@ -109,11 +119,29 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
   });
 
   const getStatusBadge = (user: User) => {
-    if (user.is_verified) {
+    // Use explicit verification_status if available, otherwise fall back to is_verified
+    const status =
+      user.verification_status || (user.is_verified ? 'approved' : 'pending');
+
+    if (status === 'approved') {
       return (
         <Badge className="bg-green-100 text-green-800">
           <CheckCircle className="h-3 w-3 mr-1" />
           Approved
+        </Badge>
+      );
+    } else if (status === 'rejected') {
+      return (
+        <Badge className="bg-red-100 text-red-800">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejected
+        </Badge>
+      );
+    } else if (status === 'onboarding') {
+      return (
+        <Badge className="bg-blue-100 text-blue-800">
+          <Clock className="h-3 w-3 mr-1" />
+          Onboarding
         </Badge>
       );
     } else {
@@ -195,6 +223,7 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="all">All Status</option>
+                <option value="onboarding">Onboarding</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
@@ -222,8 +251,28 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <User className="h-6 w-6 text-gray-600" />
+                      <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        {(() => {
+                          // Handle both array and object formats
+                          const profile = Array.isArray(user.profiles)
+                            ? user.profiles[0]
+                            : user.profiles;
+                          const avatarUrl = profile?.avatar_url;
+
+                          return avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={`${profile?.first_name || ''} ${profile?.last_name || ''}`}
+                              className="h-12 w-12 rounded-full object-cover"
+                              onError={e => {
+                                // Fallback to icon if image fails to load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <User className="h-6 w-6 text-gray-600" />
+                          );
+                        })()}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">

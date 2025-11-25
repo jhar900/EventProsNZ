@@ -73,6 +73,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Automatically enable publication settings when onboarding is completed
+    // Get current profile preferences
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('preferences')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!profileError && profile) {
+      const currentPreferences = profile.preferences || {};
+
+      // Update preferences to enable publication settings
+      const updatedPreferences = {
+        ...currentPreferences,
+        show_on_homepage_map: true,
+        publish_to_contractors: true,
+      };
+
+      // Update profile with new preferences
+      const { error: updatePrefsError } = await supabase
+        .from('profiles')
+        .update({ preferences: updatedPreferences })
+        .eq('user_id', userId);
+
+      if (updatePrefsError) {
+        // Log error but don't fail the submission
+        console.error(
+          'Failed to update publication preferences:',
+          updatePrefsError
+        );
+      }
+    }
+
     // TODO: Send admin notification email
     // This would typically integrate with SendGrid or similar service
     return NextResponse.json({

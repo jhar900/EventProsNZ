@@ -73,7 +73,13 @@ export function ContractorFilters({
   }, [searchQuery]);
 
   useEffect(() => {
-    setLocalFilters(filters);
+    // Migrate old serviceType to serviceTypes array for backward compatibility
+    const migratedFilters = { ...filters };
+    if (filters.serviceType && !filters.serviceTypes) {
+      migratedFilters.serviceTypes = [filters.serviceType];
+      // Don't remove serviceType yet to maintain backward compatibility
+    }
+    setLocalFilters(migratedFilters);
   }, [filters]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -83,6 +89,10 @@ export function ContractorFilters({
 
   const handleFilterChange = (key: keyof ContractorFiltersType, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
+    // When setting serviceTypes, remove the old serviceType for consistency
+    if (key === 'serviceTypes') {
+      delete newFilters.serviceType;
+    }
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -92,6 +102,7 @@ export function ContractorFilters({
     const clearedFilters: ContractorFiltersType = {
       q: undefined,
       serviceType: undefined,
+      serviceTypes: undefined,
       location: undefined,
     };
     setLocalFilters(clearedFilters);
@@ -101,14 +112,20 @@ export function ContractorFilters({
     onFilterChange({});
   };
 
-  const hasActiveFilters = Object.values(filters).some(
-    value => value !== undefined && value !== null && value !== ''
-  );
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => {
+    if (key === 'serviceTypes') {
+      return Array.isArray(value) && value.length > 0;
+    }
+    return value !== undefined && value !== null && value !== '';
+  });
 
   const getActiveFilterCount = () => {
-    return Object.values(filters).filter(
-      value => value !== undefined && value !== null && value !== ''
-    ).length;
+    return Object.entries(filters).filter(([key, value]) => {
+      if (key === 'serviceTypes') {
+        return Array.isArray(value) && value.length > 0;
+      }
+      return value !== undefined && value !== null && value !== '';
+    }).length;
   };
 
   return (
@@ -194,24 +211,30 @@ export function ContractorFilters({
                   No service categories available
                 </div>
               ) : (
-                serviceTypes.map(type => (
-                  <Button
-                    key={type}
-                    variant={
-                      localFilters.serviceType === type ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() =>
-                      handleFilterChange(
-                        'serviceType',
-                        localFilters.serviceType === type ? undefined : type
-                      )
-                    }
-                    className="text-xs"
-                  >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Button>
-                ))
+                serviceTypes.map(type => {
+                  const selectedServiceTypes = localFilters.serviceTypes || [];
+                  const isSelected = selectedServiceTypes.includes(type);
+                  return (
+                    <Button
+                      key={type}
+                      variant={isSelected ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        const currentTypes = localFilters.serviceTypes || [];
+                        const newTypes = isSelected
+                          ? currentTypes.filter(t => t !== type)
+                          : [...currentTypes, type];
+                        handleFilterChange(
+                          'serviceTypes',
+                          newTypes.length > 0 ? newTypes : undefined
+                        );
+                      }}
+                      className="text-xs"
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Button>
+                  );
+                })
               )}
             </div>
           </div>

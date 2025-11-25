@@ -1,53 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const supabase = createClient();
-
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
+    // Validate admin access
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
+
+    // Use admin client to bypass RLS
+    const adminSupabase = authResult.supabase || supabaseAdmin;
+    const adminUser = authResult.user;
 
     const userId = params.userId;
 
     // Log resubmission action
-    const { data: verificationLog, error: logError } = await supabase
+    // Only include admin_id if it's a valid UUID (not a dev user string)
+    const isValidUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        adminUser.id
+      );
+    const logData: any = {
+      user_id: userId,
+      action: 'resubmit',
+      status: 'pending',
+      reason: 'User resubmitted for verification',
+    };
+    if (isValidUUID) {
+      logData.admin_id = adminUser.id;
+    }
+
+    const { data: verificationLog, error: logError } = await adminSupabase
       .from('verification_logs')
-      .insert({
-        user_id: userId,
-        action: 'resubmit',
-        status: 'pending',
-        reason: 'User resubmitted for verification',
-        admin_id: user.id,
-      })
+      .insert(logData)
       .select()
       .single();
 
     if (logError) {
-      }
+    }
 
     return NextResponse.json({
       success: true,

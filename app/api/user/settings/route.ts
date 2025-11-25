@@ -9,6 +9,8 @@ const updateSettingsSchema = z.object({
   marketing_emails: z.boolean().optional(),
   timezone: z.string().max(50, 'Timezone too long').optional(),
   language: z.string().max(10, 'Language code too long').optional(),
+  show_on_homepage_map: z.boolean().optional(),
+  publish_to_contractors: z.boolean().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
             marketing_emails: false,
             timezone: 'Pacific/Auckland',
             language: 'en',
+            show_on_homepage_map: false,
+            publish_to_contractors: false,
           },
         });
       }
@@ -55,6 +59,8 @@ export async function GET(request: NextRequest) {
           marketing_emails: false,
           timezone: 'Pacific/Auckland',
           language: 'en',
+          show_on_homepage_map: false,
+          publish_to_contractors: false,
         },
       });
     }
@@ -65,6 +71,8 @@ export async function GET(request: NextRequest) {
       sms_notifications: false,
       marketing_emails: false,
       language: 'en',
+      show_on_homepage_map: false,
+      publish_to_contractors: false,
     };
 
     return NextResponse.json({
@@ -83,6 +91,8 @@ export async function GET(request: NextRequest) {
         marketing_emails: false,
         timezone: 'Pacific/Auckland',
         language: 'en',
+        show_on_homepage_map: false,
+        publish_to_contractors: false,
       },
     });
   }
@@ -129,6 +139,8 @@ export async function PUT(request: NextRequest) {
       sms_notifications: false,
       marketing_emails: false,
       language: 'en',
+      show_on_homepage_map: false,
+      publish_to_contractors: false,
     };
 
     // Update preferences

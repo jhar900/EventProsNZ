@@ -150,17 +150,19 @@ export function ContractorCard({
           }
         >
           <div className="relative w-24 h-24 mx-auto sm:mx-0 z-20">
-            {contractor.logoUrl || contractor.avatarUrl ? (
+            {contractor.logoUrl ? (
               <Image
-                src={contractor.logoUrl || contractor.avatarUrl || ''}
-                alt={displayName}
+                src={contractor.logoUrl}
+                alt={contractor.companyName || displayName}
                 fill
                 className="rounded-full object-cover border border-gray-200 group-hover:border-gray-300 transition-colors duration-200"
               />
             ) : (
               <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border border-gray-200 group-hover:border-gray-300 transition-colors duration-200">
                 <span className="text-gray-500 font-semibold text-xl">
-                  {displayName.charAt(0).toUpperCase()}
+                  {(contractor.companyName || displayName)
+                    .charAt(0)
+                    .toUpperCase()}
                 </span>
               </div>
             )}

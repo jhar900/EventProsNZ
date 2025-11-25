@@ -113,8 +113,7 @@ export function ContractorProfile({
           text: `Check out ${displayName}'s profile on EventPros NZ`,
           url: shareUrl,
         });
-      } catch (error) {
-        }
+      } catch (error) {}
     } else {
       // Fallback: copy to clipboard
       await navigator.clipboard.writeText(shareUrl);
@@ -178,19 +177,21 @@ export function ContractorProfile({
 
           {/* Avatar and Actions */}
           <div className="flex flex-col items-center lg:items-end space-y-4">
-            {/* Avatar */}
+            {/* Company Logo */}
             <div className="relative w-24 h-24">
-              {contractor.avatarUrl ? (
+              {contractor.logoUrl ? (
                 <Image
-                  src={contractor.avatarUrl}
-                  alt={displayName}
+                  src={contractor.logoUrl}
+                  alt={contractor.companyName || displayName}
                   fill
                   className="rounded-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
                   <span className="text-gray-500 font-semibold text-2xl">
-                    {displayName.charAt(0).toUpperCase()}
+                    {(contractor.companyName || displayName)
+                      .charAt(0)
+                      .toUpperCase()}
                   </span>
                 </div>
               )}
