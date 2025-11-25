@@ -110,7 +110,8 @@ async function processAdminUsersRequest(
           company_name,
           subscription_tier,
           website,
-          description
+          description,
+          logo_url
         )
       `,
       { count: 'exact' }
@@ -220,6 +221,94 @@ async function processAdminUsersRequest(
       );
     }
 
+    // Get all rejected user IDs to determine verification status
+    const { data: rejectedLogs } = await dbClient
+      .from('verification_logs')
+      .select('user_id')
+      .or('action.eq.reject,status.eq.rejected');
+
+    const rejectedUserIds = new Set(
+      (rejectedLogs || []).map((log: any) => log.user_id)
+    );
+
+    // Get onboarding status for all contractors in the result set
+    const contractorUserIds = (users || [])
+      .filter((u: any) => u.role === 'contractor')
+      .map((u: any) => u.id);
+
+    let onboardingStatusMap = new Map<string, boolean>();
+    if (contractorUserIds.length > 0) {
+      const { data: onboardingStatuses } = await dbClient
+        .from('contractor_onboarding_status')
+        .select('user_id, is_submitted')
+        .in('user_id', contractorUserIds);
+
+      if (onboardingStatuses) {
+        onboardingStatusMap = new Map(
+          onboardingStatuses.map((status: any) => [
+            status.user_id,
+            status.is_submitted,
+          ])
+        );
+      }
+    }
+
+    // Transform users data to include verification_status
+    const transformedUsers = (users || []).map((user: any) => {
+      // Supabase returns profiles as an array even for one-to-one relationships
+      const profile = Array.isArray(user.profiles)
+        ? user.profiles[0]
+        : user.profiles;
+
+      // Supabase returns business_profiles as an array even for one-to-one relationships
+      const businessProfile = Array.isArray(user.business_profiles)
+        ? user.business_profiles[0]
+        : user.business_profiles;
+
+      // Determine verification status with correct priority:
+      // 1. Approved (is_verified = true) - highest priority
+      // 2. Rejected (has rejection log) - second priority
+      // 3. Onboarding (contractor with is_submitted = false or no onboarding record) - third priority
+      // 4. Pending (default for unverified users who completed onboarding) - lowest priority
+      let verification_status:
+        | 'pending'
+        | 'approved'
+        | 'rejected'
+        | 'onboarding' = 'pending';
+
+      // Priority 1: Approved
+      if (user.is_verified) {
+        verification_status = 'approved';
+      }
+      // Priority 2: Rejected (check after approved, but before onboarding)
+      else if (rejectedUserIds.has(user.id)) {
+        verification_status = 'rejected';
+      }
+      // Priority 3: Onboarding (only for contractors)
+      else if (user.role === 'contractor') {
+        const isSubmitted = onboardingStatusMap.get(user.id);
+        // If explicitly false or undefined (no record), they're in onboarding
+        if (isSubmitted === false || isSubmitted === undefined) {
+          verification_status = 'onboarding';
+        }
+        // If submitted but not verified, they're pending
+        else if (isSubmitted === true && !user.is_verified) {
+          verification_status = 'pending';
+        }
+      }
+      // Priority 4: Pending (default for non-contractors or contractors who completed onboarding)
+      else {
+        verification_status = 'pending';
+      }
+
+      return {
+        ...user,
+        profiles: profile || null,
+        business_profiles: businessProfile || null,
+        verification_status,
+      };
+    });
+
     // Log admin search action (skip if no supabase client available)
     // Skip logging for admin token bypass to avoid any potential filtering
     try {
@@ -254,7 +343,7 @@ async function processAdminUsersRequest(
     }
 
     return NextResponse.json({
-      users: users || [],
+      users: transformedUsers || [],
       total: count || 0,
       limit,
       offset,

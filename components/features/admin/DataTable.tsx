@@ -295,6 +295,8 @@ export const StatusBadge = ({ status }: { status: string }) => {
       case 'pending':
       case 'inactive':
         return 'bg-yellow-100 text-yellow-800';
+      case 'onboarding':
+        return 'bg-blue-100 text-blue-800';
       case 'suspended':
       case 'rejected':
         return 'bg-red-100 text-red-800';
@@ -303,10 +305,24 @@ export const StatusBadge = ({ status }: { status: string }) => {
     }
   };
 
+  // Format status display text
+  const getStatusText = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'onboarding':
+        return 'Onboarding';
+      case 'pending':
+        return 'Pending';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   return (
-    <Badge className={getStatusColor(status)}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </Badge>
+    <Badge className={getStatusColor(status)}>{getStatusText(status)}</Badge>
   );
 };
 

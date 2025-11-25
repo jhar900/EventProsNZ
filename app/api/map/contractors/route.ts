@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         `
         user_id,
         company_name,
+        description,
         location,
         logo_url,
         is_verified,
@@ -137,6 +138,7 @@ export async function GET(request: NextRequest) {
         return {
           id: contractor.user_id,
           company_name: contractor.company_name || 'Unnamed Business',
+          description: contractor.description || null,
           business_address: contractor.location || '', // Use location field as business_address
           service_type: serviceTypeValue,
           location,

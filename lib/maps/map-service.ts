@@ -8,12 +8,14 @@ import { MAPBOX_CONFIG } from './mapbox-config';
 export interface MapContractor {
   id: string;
   company_name: string;
+  description?: string | null;
   business_address: string;
   service_type: string;
   location: {
     lat: number;
     lng: number;
   };
+  logo_url?: string | null;
   is_verified: boolean;
   subscription_tier: string;
 }

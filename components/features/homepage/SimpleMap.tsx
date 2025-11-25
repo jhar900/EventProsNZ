@@ -410,6 +410,8 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
 
     // Store markers so we can clean them up
     const markers: any[] = [];
+    // Track the currently open popup to ensure only one is open at a time
+    let currentPopup: any = null;
     let isMounted = true;
 
     // Dynamically get mapboxgl from the map instance
@@ -420,6 +422,33 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
 
       if (!isMounted || !map) return;
 
+      // Service icons and colors mapping
+      const serviceConfig: Record<string, { icon: string; color: string }> = {
+        catering: { icon: '🍽️', color: '#ef4444' },
+        photography: { icon: '📸', color: '#3b82f6' },
+        music: { icon: '🎵', color: '#8b5cf6' },
+        venue: { icon: '🏛️', color: '#10b981' },
+        decorations: { icon: '🎨', color: '#f59e0b' },
+        transportation: { icon: '🚗', color: '#6b7280' },
+        security: { icon: '🛡️', color: '#dc2626' },
+        other: { icon: '⚙️', color: '#6b7280' },
+      };
+
+      // Helper function to format service type
+      const formatServiceType = (type: string): string => {
+        return type
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      };
+
+      // Helper function to escape HTML entities for security
+      const escapeHtml = (text: string): string => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
+
       // Add markers for each contractor
       contractors.forEach(contractor => {
         // API returns location with lat/lng (not latitude/longitude)
@@ -428,15 +457,115 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
           contractor.location.lat &&
           contractor.location.lng
         ) {
-          // Create a popup with contractor info
-          const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-            `<div class="p-2">
-              <h3 class="font-semibold text-sm mb-1">${contractor.company_name || 'Unnamed'}</h3>
-              <p class="text-xs text-gray-600 mb-1">${contractor.service_type || 'Service provider'}</p>
-              ${contractor.business_address ? `<p class="text-xs text-gray-500">${contractor.business_address}</p>` : ''}
-              ${contractor.is_verified ? '<span class="text-xs text-green-600 font-medium">✓ Verified</span>' : ''}
-            </div>`
+          const serviceType = contractor.service_type?.toLowerCase() || 'other';
+          const config = serviceConfig[serviceType] || serviceConfig.other;
+          const formattedServiceType = formatServiceType(
+            contractor.service_type || 'Service Provider'
           );
+
+          // Escape user-provided content to prevent XSS
+          const companyName = escapeHtml(contractor.company_name || 'Unnamed');
+          const description = contractor.description
+            ? escapeHtml(contractor.description)
+            : null;
+          const address = contractor.business_address
+            ? escapeHtml(contractor.business_address)
+            : '';
+          const contractorId = escapeHtml(contractor.id);
+          // Logo URL should not be HTML-escaped as it's used in src attribute
+          // It's safe as it comes from our database
+          const logoUrl = contractor.logo_url || null;
+
+          // Determine what to show in the logo/icon area
+          // Show logo if available, otherwise show service icon
+          const logoDisplay = logoUrl
+            ? `<img src="${logoUrl}" alt="${companyName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.onerror=null; this.style.display='none'; this.parentElement.style.backgroundColor='${config.color}'; this.parentElement.innerHTML='${config.icon}';" />`
+            : config.icon;
+
+          // Create enhanced popup HTML with better styling
+          const popupHTML = `
+            <div style="min-width: 280px; max-width: 320px; font-family: system-ui, -apple-system, sans-serif;">
+              <!-- Header with logo/icon and company name -->
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background-color: ${logoUrl ? '#ffffff' : config.color}; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; border: ${logoUrl ? '1px solid #e5e7eb' : 'none'};">
+                  ${logoDisplay}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 4px 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${companyName}
+                  </h3>
+                  <p style="font-size: 13px; color: #6b7280; margin: 0; text-transform: capitalize;">
+                    ${escapeHtml(formattedServiceType)}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Business Description -->
+              ${
+                description
+                  ? `
+              <div style="margin-bottom: 12px;">
+                <p style="font-size: 13px; color: #4b5563; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                  ${description}
+                </p>
+              </div>
+              `
+                  : ''
+              }
+
+              <!-- Address -->
+              ${
+                address
+                  ? `
+                <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 12px; padding: 8px; background-color: #f9fafb; border-radius: 6px;">
+                  <span style="font-size: 14px; flex-shrink: 0; margin-top: 2px;">📍</span>
+                  <p style="font-size: 12px; color: #4b5563; margin: 0; line-height: 1.5; word-break: break-word;">
+                    ${address}
+                  </p>
+                </div>
+              `
+                  : ''
+              }
+
+              <!-- Action Button -->
+              <a 
+                href="/contractors/${contractorId}" 
+                style="display: block; width: 100%; padding: 10px 16px; background-color: #2563eb; color: white; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: background-color 0.2s;"
+                onmouseover="this.style.backgroundColor='#1d4ed8'"
+                onmouseout="this.style.backgroundColor='#2563eb'"
+              >
+                View Profile →
+              </a>
+            </div>
+          `;
+
+          // Create a popup with enhanced styling
+          const popup = new mapboxgl.Popup({
+            offset: 25,
+            closeButton: true,
+            closeOnClick: false,
+            className: 'mapbox-popup-enhanced',
+          }).setHTML(popupHTML);
+
+          // Handle popup open event to close any previously open popup
+          popup.on('open', () => {
+            // Close any previously open popup
+            if (currentPopup && currentPopup !== popup) {
+              try {
+                currentPopup.remove();
+              } catch (e) {
+                // Popup might already be closed, ignore error
+              }
+            }
+            currentPopup = popup;
+          });
+
+          // Handle popup close event to clear the reference
+          popup.on('close', () => {
+            if (currentPopup === popup) {
+              currentPopup = null;
+            }
+          });
 
           // Create and add marker with orange color to match brand
           const marker = new mapboxgl.Marker({
@@ -446,6 +575,17 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
             .setLngLat([contractor.location.lng, contractor.location.lat])
             .setPopup(popup)
             .addTo(map);
+
+          // Also handle marker click to ensure previous popup closes before opening new one
+          marker.getElement().addEventListener('click', () => {
+            if (currentPopup && currentPopup !== popup) {
+              try {
+                currentPopup.remove();
+              } catch (e) {
+                // Popup might already be closed, ignore error
+              }
+            }
+          });
 
           markers.push(marker);
         } else {

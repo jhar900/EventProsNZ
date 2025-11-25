@@ -52,6 +52,7 @@ interface User {
   role: 'event_manager' | 'contractor' | 'admin';
   is_verified: boolean;
   status?: 'active' | 'suspended' | 'deleted'; // Optional since it doesn't exist in DB
+  verification_status?: 'onboarding' | 'pending' | 'approved' | 'rejected';
   last_login: string | null;
   created_at: string;
   profiles?: {
@@ -135,19 +136,38 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     data?: any
   ) => {
     try {
+      setIsLoading(true);
+      // Verify and unverify endpoints use POST, others use PUT
+      const method =
+        action === 'verify' || action === 'unverify' ? 'POST' : 'PUT';
+
       const response = await fetch(`/api/admin/users/${userId}/${action}`, {
-        method: 'PUT',
+        method,
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-token': 'admin-secure-token-2024-eventpros', // Same token as users list
         },
-        body: JSON.stringify(data),
+        body: data ? JSON.stringify(data) : undefined,
       });
 
       if (response.ok) {
         await loadUsers();
         onUserUpdate?.(userId, data);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Failed to ${action} user:`, errorData);
+        alert(
+          `Failed to ${action} user: ${errorData.error || 'Unknown error'}`
+        );
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(`Error ${action}ing user:`, error);
+      alert(
+        `Error ${action}ing user: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpdateUser = async () => {
@@ -176,19 +196,58 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const columns = [
     {
       key: 'email',
-      label: 'Email',
-      render: (value: string, row: User) => (
-        <EmailCell email={value} userId={row.id} onClick={handleEmailClick} />
-      ),
-    },
-    {
-      key: 'profiles.first_name',
-      label: 'Name',
-      render: (value: any, row: User) => (
-        <div>
-          {row.profiles?.first_name} {row.profiles?.last_name}
-        </div>
-      ),
+      label: 'User',
+      render: (value: string, row: User) => {
+        const firstName = row.profiles?.first_name || '';
+        const lastName = row.profiles?.last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        const avatarUrl = row.profiles?.avatar_url;
+        const initials = fullName
+          ? `${firstName.charAt(0) || ''}${lastName.charAt(0) || ''}`.toUpperCase()
+          : value.charAt(0).toUpperCase();
+
+        return (
+          <div className="flex items-center gap-3">
+            {/* Profile Picture */}
+            <div className="flex-shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={fullName || value}
+                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                  onError={e => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 border border-gray-300">${initials}</div>`;
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 border border-gray-300">
+                  {initials}
+                </div>
+              )}
+            </div>
+
+            {/* Name and Email */}
+            <div className="flex flex-col min-w-0">
+              {fullName && (
+                <span className="font-medium text-gray-900 mb-1 truncate">
+                  {fullName}
+                </span>
+              )}
+              <EmailCell
+                email={value}
+                userId={row.id}
+                onClick={handleEmailClick}
+              />
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: 'role',
@@ -198,9 +257,16 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
       ),
     },
     {
-      key: 'status',
+      key: 'verification_status',
       label: 'Status',
-      render: (value: string) => <StatusBadge status={value || 'active'} />,
+      render: (value: string, row: User) => (
+        <StatusBadge
+          status={
+            row.verification_status ||
+            (row.is_verified ? 'approved' : 'pending')
+          }
+        />
+      ),
     },
     {
       key: 'is_verified',
@@ -212,9 +278,52 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     {
       key: 'business_profiles.company_name',
       label: 'Company',
-      render: (value: any, row: User) => (
-        <span>{row.business_profiles?.company_name || '-'}</span>
-      ),
+      render: (value: any, row: User) => {
+        const companyName = row.business_profiles?.company_name;
+        const logoUrl = row.business_profiles?.logo_url;
+        const companyInitials = companyName
+          ? companyName
+              .split(' ')
+              .map((word: string) => word.charAt(0))
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)
+          : '';
+
+        if (!companyName) {
+          return <span className="text-muted-foreground">-</span>;
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            {/* Company Logo */}
+            <div className="flex-shrink-0">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={companyName}
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                  onError={e => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 border border-gray-300">${companyInitials}</div>`;
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 border border-gray-300">
+                  {companyInitials}
+                </div>
+              )}
+            </div>
+            {/* Company Name */}
+            <span className="font-medium">{companyName}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'last_login',
@@ -269,6 +378,15 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         >
           <Shield className="h-4 w-4 mr-2" />
           Verify
+        </DropdownMenuItem>
+      )}
+      {user.is_verified && (
+        <DropdownMenuItem
+          onClick={() => handleUserAction(user.id, 'unverify')}
+          className="text-orange-600"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Unverify
         </DropdownMenuItem>
       )}
     </>

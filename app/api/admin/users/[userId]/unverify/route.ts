@@ -51,28 +51,37 @@ export async function POST(
 
     const { userId } = params;
 
-    // Verify the user
-    const { data: verifiedUser, error: verifyError } = await supabase
+    // Unverify the user
+    const { data: unverifiedUser, error: unverifyError } = await supabase
       .from('users')
       .update({
-        is_verified: true,
+        is_verified: false,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
       .select()
       .single();
 
-    if (verifyError) {
+    if (unverifyError) {
       return NextResponse.json(
-        { error: 'Failed to verify user', details: verifyError.message },
+        { error: 'Failed to unverify user', details: unverifyError.message },
         { status: 500 }
       );
     }
 
+    // Also update business profile verification if exists
+    await supabase
+      .from('business_profiles')
+      .update({
+        is_verified: false,
+        verification_date: null,
+      })
+      .eq('user_id', userId);
+
     // Log admin action
     await supabase.from('activity_logs').insert({
       user_id: adminUser.id,
-      action: 'admin_verify_user',
+      action: 'admin_unverify_user',
       details: {
         target_user_id: userId,
         admin_user_id: adminUser.id,
@@ -84,8 +93,8 @@ export async function POST(
     });
 
     return NextResponse.json({
-      message: 'User verified successfully',
-      user: verifiedUser,
+      message: 'User unverified successfully',
+      user: unverifiedUser,
     });
   } catch (error) {
     return NextResponse.json(
