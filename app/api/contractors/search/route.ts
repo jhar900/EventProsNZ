@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
         id,
         email,
         created_at,
+        status,
         profiles(
           first_name,
           last_name,
@@ -125,7 +126,8 @@ export async function GET(request: NextRequest) {
       `,
         { count: 'exact' }
       )
-      .eq('role', 'contractor');
+      .eq('role', 'contractor')
+      .neq('status', 'suspended');
 
     // Note: All filters are applied after fetching due to Supabase limitations
     // with nested queries and array operations on joined tables

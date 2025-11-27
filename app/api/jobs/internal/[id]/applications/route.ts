@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { JobService } from '@/lib/jobs/job-service';
 import { createClient } from '@/lib/supabase/server';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
 const jobService = new JobService();
@@ -46,6 +47,16 @@ export async function POST(
         },
         { status: 401 }
       );
+    }
+
+    // Check suspension status
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      user.id,
+      supabase
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
     }
 
     const jobId = params.id;

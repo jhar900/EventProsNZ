@@ -16,7 +16,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp,
   MessageCircle,
-  Eye,
   Calendar,
   User,
   Tag,
@@ -395,11 +394,6 @@ export default function FeatureRequestCard({
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {view_count} views
-              </div>
-
               <div className="flex items-center gap-1">
                 <MessageCircle className="w-4 h-4" />
                 {comments_count} {comments_count === 1 ? 'comment' : 'comments'}

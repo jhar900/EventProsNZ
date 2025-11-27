@@ -499,12 +499,6 @@ export default function FeatureRequestAnalytics() {
                       </div>
                       <div className="text-center">
                         <div className="text-sm font-medium">
-                          {request.view_count}
-                        </div>
-                        <div className="text-xs text-gray-500">Views</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-sm font-medium">
                           {request.comments_count}
                         </div>
                         <div className="text-xs text-gray-500">Comments</div>

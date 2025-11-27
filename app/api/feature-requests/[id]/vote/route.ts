@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
 const voteSchema = z.object({
@@ -14,6 +15,9 @@ export async function POST(
     // Handle params being a Promise (Next.js 15)
     const resolvedParams = await Promise.resolve(params);
     const featureRequestId = resolvedParams.id;
+
+    // Import supabaseAdmin once for use throughout the function
+    const { supabaseAdmin } = await import('@/lib/supabase/server');
 
     // Try to get user ID from header first (sent by client as fallback)
     let userId = request.headers.get('x-user-id');
@@ -44,7 +48,6 @@ export async function POST(
 
     if (userId) {
       // If we have user ID from header or cookie, verify it exists and use it
-      const { supabaseAdmin } = await import('@/lib/supabase/server');
       const { data: userData, error: userError } = await supabaseAdmin
         .from('users')
         .select('id, email, role')
@@ -125,11 +128,20 @@ export async function POST(
       );
     }
 
+    // Check suspension status
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      user.id,
+      supabaseAdmin
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
+    }
+
     const body = await request.json();
     const { vote_type } = voteSchema.parse(body);
 
     // Use admin client for database operations since we already have authenticated user
-    const { supabaseAdmin } = await import('@/lib/supabase/server');
 
     // Check if feature request exists
     const { data: featureRequest, error: fetchError } = await supabaseAdmin
@@ -270,6 +282,9 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const featureRequestId = resolvedParams.id;
 
+    // Import supabaseAdmin once for use throughout the function
+    const { supabaseAdmin } = await import('@/lib/supabase/server');
+
     // Try to get user - authentication is optional for viewing votes
     let user: any = null;
 
@@ -278,7 +293,6 @@ export async function GET(
 
     if (userId) {
       // If we have user ID from header, verify it exists and use it
-      const { supabaseAdmin } = await import('@/lib/supabase/server');
       const { data: userData, error: userError } = await supabaseAdmin
         .from('users')
         .select('id, email, role')
@@ -310,7 +324,6 @@ export async function GET(
 
     // Get voting data for the feature request
     // Use admin client to bypass RLS
-    const { supabaseAdmin } = await import('@/lib/supabase/server');
     const { data: votes, error } = await supabaseAdmin
       .from('feature_request_votes')
       .select('id, vote_type, created_at, user_id')

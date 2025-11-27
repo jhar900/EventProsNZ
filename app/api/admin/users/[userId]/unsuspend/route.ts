@@ -58,41 +58,24 @@ export async function POST(
     }
 
     const { userId } = params;
-    const body = await request.json();
-    const { reason } = body;
 
-    if (!reason || reason.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Suspension reason is required' },
-        { status: 400 }
-      );
-    }
-
-    // Prevent admin from suspending themselves
-    if (userId === user.id) {
-      return NextResponse.json(
-        { error: 'Cannot suspend your own account' },
-        { status: 400 }
-      );
-    }
-
-    // Suspend the user
-    const { data: suspendedUser, error: suspendError } = await supabase
+    // Unsuspend the user
+    const { data: unsuspendedUser, error: unsuspendError } = await supabase
       .from('users')
       .update({
-        status: 'suspended',
-        suspension_reason: reason,
-        suspended_at: new Date().toISOString(),
-        suspended_by: user.id,
+        status: 'active',
+        suspension_reason: null,
+        suspended_at: null,
+        suspended_by: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
       .select()
       .single();
 
-    if (suspendError) {
+    if (unsuspendError) {
       return NextResponse.json(
-        { error: 'Failed to suspend user', details: suspendError.message },
+        { error: 'Failed to unsuspend user', details: unsuspendError.message },
         { status: 500 }
       );
     }
@@ -100,10 +83,9 @@ export async function POST(
     // Log admin action
     await supabase.from('activity_logs').insert({
       user_id: user.id,
-      action: 'admin_suspend_user',
+      action: 'admin_unsuspend_user',
       details: {
         target_user_id: userId,
-        reason: reason,
         admin_user_id: user.id,
       },
       ip_address:
@@ -113,8 +95,8 @@ export async function POST(
     });
 
     return NextResponse.json({
-      message: 'User suspended successfully',
-      user: suspendedUser,
+      message: 'User unsuspended successfully',
+      user: unsuspendedUser,
     });
   } catch (error) {
     return NextResponse.json(

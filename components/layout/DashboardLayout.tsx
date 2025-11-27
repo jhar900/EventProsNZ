@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import OnboardingGuard from '@/components/features/auth/OnboardingGuard';
+import { SuspensionNotice } from '@/components/features/dashboard/SuspensionNotice';
 import {
   LayoutDashboard,
   Calendar,
@@ -378,7 +379,10 @@ export default function DashboardLayout({
           </div>
 
           {/* Page content */}
-          <div className={`${className}`}>{children}</div>
+          <div className={`${className}`}>
+            <SuspensionNotice />
+            {children}
+          </div>
         </div>
       </div>
     </OnboardingGuard>

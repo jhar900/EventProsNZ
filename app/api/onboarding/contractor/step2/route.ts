@@ -13,7 +13,7 @@ const step2Schema = z.object({
   service_categories: z
     .array(z.string())
     .min(1, 'At least one service category is required'),
-  logo_url: z.string().url().optional().or(z.literal('')),
+  logo_url: z.string().url().min(1, 'Company logo is required'),
   social_links: z
     .object({
       website: z.string().url().optional().or(z.literal('')),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
 // Validation schemas
@@ -22,6 +23,16 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check suspension status
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      user.id,
+      supabase
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
     }
 
     // Parse and validate request body

@@ -95,6 +95,7 @@ async function processAdminUsersRequest(
         email,
         role,
         is_verified,
+        status,
         last_login,
         created_at,
         updated_at,
@@ -303,6 +304,7 @@ async function processAdminUsersRequest(
 
       return {
         ...user,
+        status: user.status || 'active', // Include status field, default to 'active'
         profiles: profile || null,
         business_profiles: businessProfile || null,
         verification_status,

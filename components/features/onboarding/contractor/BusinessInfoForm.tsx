@@ -44,7 +44,10 @@ const businessInfoSchema = z.object({
   service_categories: z
     .array(z.string())
     .min(1, 'At least one service category is required'),
-  logo_url: z.string().optional(),
+  logo_url: z
+    .string()
+    .min(1, 'Company logo is required')
+    .url('Company logo must be a valid URL'),
   social_links: z
     .object({
       website: z.string().url().optional().or(z.literal('')),
@@ -675,7 +678,7 @@ export function BusinessInfoForm({
             htmlFor="logo-upload"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Company Logo
+            Company Logo / Photo *
           </label>
           <div className="flex items-center space-x-4 pb-6 border-b border-gray-200">
             <Avatar className="h-20 w-20">

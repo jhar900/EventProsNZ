@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
 // Helper function to escape HTML entities
@@ -590,6 +592,17 @@ export async function POST(request: NextRequest) {
         'getSession and getUser both failed'
       );
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check suspension status
+    const serverSupabase = createServerClient();
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      user.id,
+      serverSupabase
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
     }
 
     const body = await request.json();

@@ -20,6 +20,7 @@ export async function GET(
         id,
         email,
         created_at,
+        status,
         profiles!inner(
           first_name,
           last_name,
@@ -59,6 +60,23 @@ export async function GET(
         { error: 'Contractor not found' },
         { status: 404 }
       );
+    }
+
+    // Check if contractor is suspended - block public access
+    if (contractorData.status === 'suspended') {
+      // Check if user is viewing their own profile
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user || user.id !== contractorId) {
+        // Not viewing own profile, return 404
+        return NextResponse.json(
+          { error: 'Contractor not found' },
+          { status: 404 }
+        );
+      }
+      // If viewing own profile, continue but mark as suspended
     }
 
     // Transform the data to match the expected format

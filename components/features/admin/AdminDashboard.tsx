@@ -43,9 +43,20 @@ export default function AdminDashboard() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
+      const adminToken = 'admin-secure-token-2024-eventpros';
       const [analyticsResponse, healthResponse] = await Promise.all([
-        fetch('/api/admin/analytics?period=7d'),
-        fetch('/api/admin/system?type=health'),
+        fetch('/api/admin/analytics?period=7d', {
+          credentials: 'include', // Include cookies for authentication
+          headers: {
+            'x-admin-token': adminToken,
+          },
+        }),
+        fetch('/api/admin/system?type=health', {
+          credentials: 'include', // Include cookies for authentication
+          headers: {
+            'x-admin-token': adminToken,
+          },
+        }),
       ]);
 
       if (analyticsResponse.ok) {

@@ -48,11 +48,13 @@ export async function GET(request: NextRequest) {
         service_categories,
         users!inner(
           id,
-          role
+          role,
+          status
         )
       `
       )
       .eq('users.role', 'contractor')
+      .neq('users.status', 'suspended')
       .not('location', 'is', null);
 
     // Apply filters

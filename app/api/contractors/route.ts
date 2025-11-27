@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         id,
         email,
         created_at,
+        status,
         profiles!inner(
           first_name,
           last_name,
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
       `,
         { count: 'exact' }
       )
-      .eq('role', 'contractor');
+      .eq('role', 'contractor')
+      .neq('status', 'suspended');
 
     // Apply sorting
     switch (sort) {

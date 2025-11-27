@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 import { createClient as createServerClient } from '@/lib/supabase/server';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 import { RESPONSE_TYPES } from '@/types/inquiries';
 
@@ -226,6 +227,16 @@ export async function POST(
 
     // Use admin client to bypass RLS
     const adminSupabase = createServerClient();
+
+    // Check suspension status
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      user.id,
+      adminSupabase
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
+    }
 
     // Get user role to determine access
     const { data: userProfile, error: profileError } = await adminSupabase

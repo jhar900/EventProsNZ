@@ -31,7 +31,6 @@ import {
   Users,
   Clock,
   Calendar,
-  Eye,
   MessageCircle,
   Tag,
   User as UserIcon,
@@ -1005,22 +1004,13 @@ export default function FeatureRequestsPage() {
                     )}
 
                   {/* Stats */}
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-600">Votes</p>
                         <p className="text-lg font-bold">
                           {selectedRequest.vote_count || 0}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-5 h-5 text-gray-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Views</p>
-                        <p className="text-lg font-bold">
-                          {selectedRequest.view_count || 0}
                         </p>
                       </div>
                     </div>

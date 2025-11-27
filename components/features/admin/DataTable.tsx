@@ -316,6 +316,10 @@ export const StatusBadge = ({ status }: { status: string }) => {
         return 'Approved';
       case 'rejected':
         return 'Rejected';
+      case 'suspended':
+        return 'Suspended';
+      case 'active':
+        return 'Active';
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);
     }

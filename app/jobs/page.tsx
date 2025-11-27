@@ -20,6 +20,8 @@ import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
+import LoginModal from '@/components/features/auth/LoginModal';
+import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
 
 export default function JobsPage() {
   const { user } = useAuth();
@@ -29,6 +31,7 @@ export default function JobsPage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showApplicationHistory, setShowApplicationHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -69,9 +72,7 @@ export default function JobsPage() {
               <p className="text-gray-600 mb-6">
                 You need to be signed in to browse and apply for jobs.
               </p>
-              <Button onClick={() => (window.location.href = '/auth/signin')}>
-                Sign In
-              </Button>
+              <Button onClick={() => setIsLoginModalOpen(true)}>Sign In</Button>
             </Card>
           </div>
         ) : (
@@ -239,6 +240,16 @@ export default function JobsPage() {
           </DashboardLayout>
         )}
       </div>
+
+      {/* Footer */}
+      <HomepageFooter />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        redirectOnSuccess={false}
+      />
     </div>
   );
 }

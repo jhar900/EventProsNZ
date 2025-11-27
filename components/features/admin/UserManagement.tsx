@@ -42,6 +42,7 @@ import {
   Shield,
   Eye,
   Edit,
+  CheckCircle,
 } from 'lucide-react';
 import DataTable, { StatusBadge, DateCell, EmailCell } from './DataTable';
 import { UserProfileModal } from './UserProfileModal';
@@ -94,6 +95,9 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(
     null
   );
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [userToSuspend, setUserToSuspend] = useState<User | null>(null);
 
   const loadUsers = async () => {
     try {
@@ -137,9 +141,14 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   ) => {
     try {
       setIsLoading(true);
-      // Verify and unverify endpoints use POST, others use PUT
+      // Verify, unverify, suspend, and unsuspend endpoints use POST, others use PUT
       const method =
-        action === 'verify' || action === 'unverify' ? 'POST' : 'PUT';
+        action === 'verify' ||
+        action === 'unverify' ||
+        action === 'suspend' ||
+        action === 'unsuspend'
+          ? 'POST'
+          : 'PUT';
 
       const response = await fetch(`/api/admin/users/${userId}/${action}`, {
         method,
@@ -259,14 +268,20 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     {
       key: 'verification_status',
       label: 'Status',
-      render: (value: string, row: User) => (
-        <StatusBadge
-          status={
-            row.verification_status ||
-            (row.is_verified ? 'approved' : 'pending')
-          }
-        />
-      ),
+      render: (value: string, row: User) => {
+        // Show account status (suspended) if applicable, otherwise show verification status
+        if (row.status === 'suspended') {
+          return <StatusBadge status="suspended" />;
+        }
+        return (
+          <StatusBadge
+            status={
+              row.verification_status ||
+              (row.is_verified ? 'approved' : 'pending')
+            }
+          />
+        );
+      },
     },
     {
       key: 'is_verified',
@@ -356,11 +371,23 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
       </DropdownMenuItem>
       {(user.status || 'active') === 'active' ? (
         <DropdownMenuItem
-          onClick={() => handleUserAction(user.id, 'suspend')}
+          onClick={() => {
+            setUserToSuspend(user);
+            setSuspendReason('');
+            setSuspendDialogOpen(true);
+          }}
           className="text-yellow-600"
         >
           <UserX className="h-4 w-4 mr-2" />
           Suspend
+        </DropdownMenuItem>
+      ) : user.status === 'suspended' ? (
+        <DropdownMenuItem
+          onClick={() => handleUserAction(user.id, 'unsuspend')}
+          className="text-green-600"
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          Unsuspend
         </DropdownMenuItem>
       ) : (
         <DropdownMenuItem
@@ -391,6 +418,20 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
       )}
     </>
   );
+
+  const handleSuspendConfirm = async () => {
+    if (!userToSuspend || !suspendReason.trim()) {
+      alert('Please provide a suspension reason');
+      return;
+    }
+
+    await handleUserAction(userToSuspend.id, 'suspend', {
+      reason: suspendReason.trim(),
+    });
+    setSuspendDialogOpen(false);
+    setSuspendReason('');
+    setUserToSuspend(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -544,6 +585,50 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
               Cancel
             </Button>
             <Button onClick={handleUpdateUser}>Update User</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend User Dialog */}
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suspend User</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for suspending this user. This reason will
+              be shown to the user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="suspend-reason">Suspension Reason</Label>
+              <textarea
+                id="suspend-reason"
+                className="mt-1 w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md"
+                value={suspendReason}
+                onChange={e => setSuspendReason(e.target.value)}
+                placeholder="Enter the reason for suspension..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSuspendDialogOpen(false);
+                setSuspendReason('');
+                setUserToSuspend(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSuspendConfirm}
+              disabled={!suspendReason.trim()}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              Suspend User
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 import {
   CreateEventRequest,
@@ -156,6 +157,16 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Authentication successful, userId:', userId);
+
+    // Check suspension status
+    const suspensionResponse = await checkSuspensionAndBlock(
+      request,
+      userId,
+      supabase
+    );
+    if (suspensionResponse) {
+      return suspensionResponse;
+    }
 
     // Parse and validate request body
     let body;
