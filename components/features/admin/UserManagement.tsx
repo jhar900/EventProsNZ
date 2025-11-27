@@ -182,9 +182,35 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
-    await handleUserAction(selectedUser.id, 'update', updateForm);
-    setIsUpdateDialogOpen(false);
-    setSelectedUser(null);
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
+        body: JSON.stringify(updateForm),
+      });
+
+      if (response.ok) {
+        await loadUsers();
+        onUserUpdate?.(selectedUser.id, updateForm);
+        setIsUpdateDialogOpen(false);
+        setSelectedUser(null);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to update user:', errorData);
+        alert(`Failed to update user: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert(
+        `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const openUpdateDialog = (user: User) => {

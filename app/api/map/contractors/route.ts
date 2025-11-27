@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       )
       .eq('users.role', 'contractor')
       .neq('users.status', 'suspended')
+      .eq('is_published', true)
       .not('location', 'is', null);
 
     // Apply filters

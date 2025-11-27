@@ -404,19 +404,16 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
     // We check !map in the condition to prevent re-initialization
   }, [isConfigured, mapboxToken, isInViewport]);
 
-  // Add markers for contractors when map and contractors are loaded
+  // Add clustered markers for contractors when map and contractors are loaded
   useEffect(() => {
     if (!map || !mapLoaded || contractors.length === 0) return;
 
-    // Store markers so we can clean them up
-    const markers: any[] = [];
-    // Track the currently open popup to ensure only one is open at a time
-    let currentPopup: any = null;
     let isMounted = true;
+    let currentPopup: any = null;
 
     // Dynamically get mapboxgl from the map instance
-    const addMarkers = async () => {
-      // Import mapboxgl to get Marker and Popup classes
+    const addClusteredMarkers = async () => {
+      // Import mapboxgl to get Popup class
       const mapboxglModule = await import('mapbox-gl');
       const mapboxgl = mapboxglModule.default;
 
@@ -449,161 +446,302 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
         return div.innerHTML;
       };
 
-      // Add markers for each contractor
-      contractors.forEach(contractor => {
-        // API returns location with lat/lng (not latitude/longitude)
-        if (
-          contractor.location &&
-          contractor.location.lat &&
-          contractor.location.lng
-        ) {
-          const serviceType = contractor.service_type?.toLowerCase() || 'other';
-          const config = serviceConfig[serviceType] || serviceConfig.other;
-          const formattedServiceType = formatServiceType(
-            contractor.service_type || 'Service Provider'
-          );
+      // Convert contractors to GeoJSON format
+      const geojson: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: contractors
+          .filter(
+            contractor =>
+              contractor.location &&
+              contractor.location.lat &&
+              contractor.location.lng
+          )
+          .map(contractor => ({
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: [contractor.location.lng, contractor.location.lat],
+            },
+            properties: {
+              id: contractor.id,
+              company_name: contractor.company_name || 'Unnamed',
+              description: contractor.description || '',
+              business_address: contractor.business_address || '',
+              service_type: contractor.service_type || 'other',
+              logo_url: contractor.logo_url || null,
+            },
+          })),
+      };
 
-          // Escape user-provided content to prevent XSS
-          const companyName = escapeHtml(contractor.company_name || 'Unnamed');
-          const description = contractor.description
-            ? escapeHtml(contractor.description)
-            : null;
-          const address = contractor.business_address
-            ? escapeHtml(contractor.business_address)
-            : '';
-          const contractorId = escapeHtml(contractor.id);
-          // Logo URL should not be HTML-escaped as it's used in src attribute
-          // It's safe as it comes from our database
-          const logoUrl = contractor.logo_url || null;
+      // Check if source already exists and remove it
+      if (map.getSource('contractors')) {
+        map.removeLayer('clusters');
+        map.removeLayer('cluster-count');
+        map.removeLayer('unclustered-point');
+        map.removeSource('contractors');
+      }
 
-          // Determine what to show in the logo/icon area
-          // Show logo if available, otherwise show service icon
-          const logoDisplay = logoUrl
-            ? `<img src="${logoUrl}" alt="${companyName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.onerror=null; this.style.display='none'; this.parentElement.style.backgroundColor='${config.color}'; this.parentElement.innerHTML='${config.icon}';" />`
-            : config.icon;
+      // Add GeoJSON source with clustering enabled
+      map.addSource('contractors', {
+        type: 'geojson',
+        data: geojson,
+        cluster: true,
+        clusterMaxZoom: 14, // Max zoom to cluster points on
+        clusterRadius: 50, // Radius of each cluster when clustering points
+      });
 
-          // Create enhanced popup HTML with better styling
-          const popupHTML = `
-            <div style="min-width: 280px; max-width: 320px; font-family: system-ui, -apple-system, sans-serif;">
-              <!-- Header with logo/icon and company name -->
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background-color: ${logoUrl ? '#ffffff' : config.color}; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; border: ${logoUrl ? '1px solid #e5e7eb' : 'none'};">
-                  ${logoDisplay}
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                  <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 4px 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${companyName}
-                  </h3>
-                  <p style="font-size: 13px; color: #6b7280; margin: 0; text-transform: capitalize;">
-                    ${escapeHtml(formattedServiceType)}
-                  </p>
-                </div>
+      // Add cluster circles layer
+      map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'contractors',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#f97316', // Orange for small clusters
+            10,
+            '#fb923c', // Lighter orange for medium clusters
+            50,
+            '#fdba74', // Even lighter for large clusters
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            20, // Small cluster radius
+            10,
+            30, // Medium cluster radius
+            50,
+            40, // Large cluster radius
+          ],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#fff',
+        },
+      });
+
+      // Add cluster count labels
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'contractors',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+          'text-size': 12,
+        },
+        paint: {
+          'text-color': '#ffffff',
+        },
+      });
+
+      // Add unclustered points (individual contractors)
+      map.addLayer({
+        id: 'unclustered-point',
+        type: 'circle',
+        source: 'contractors',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#f97316',
+          'circle-radius': 8,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#fff',
+        },
+      });
+
+      // Helper function to create popup HTML
+      const createPopupHTML = (contractor: any): string => {
+        const serviceType = contractor.service_type?.toLowerCase() || 'other';
+        const config = serviceConfig[serviceType] || serviceConfig.other;
+        const formattedServiceType = formatServiceType(
+          contractor.service_type || 'Service Provider'
+        );
+
+        const companyName = escapeHtml(contractor.company_name || 'Unnamed');
+        const description = contractor.description
+          ? escapeHtml(contractor.description)
+          : null;
+        const address = contractor.business_address
+          ? escapeHtml(contractor.business_address)
+          : '';
+        const contractorId = escapeHtml(contractor.id);
+        const logoUrl = contractor.logo_url || null;
+
+        const logoDisplay = logoUrl
+          ? `<img src="${logoUrl}" alt="${companyName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.onerror=null; this.style.display='none'; this.parentElement.style.backgroundColor='${config.color}'; this.parentElement.innerHTML='${config.icon}';" />`
+          : config.icon;
+
+        return `
+          <div style="min-width: 280px; max-width: 320px; font-family: system-ui, -apple-system, sans-serif;">
+            <!-- Header with logo/icon and company name -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background-color: ${logoUrl ? '#ffffff' : config.color}; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; border: ${logoUrl ? '1px solid #e5e7eb' : 'none'};">
+                ${logoDisplay}
               </div>
-
-              <!-- Business Description -->
-              ${
-                description
-                  ? `
-              <div style="margin-bottom: 12px;">
-                <p style="font-size: 13px; color: #4b5563; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
-                  ${description}
+              <div style="flex: 1; min-width: 0;">
+                <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 4px 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  ${companyName}
+                </h3>
+                <p style="font-size: 13px; color: #6b7280; margin: 0; text-transform: capitalize;">
+                  ${escapeHtml(formattedServiceType)}
                 </p>
               </div>
-              `
-                  : ''
-              }
-
-              <!-- Address -->
-              ${
-                address
-                  ? `
-                <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 12px; padding: 8px; background-color: #f9fafb; border-radius: 6px;">
-                  <span style="font-size: 14px; flex-shrink: 0; margin-top: 2px;">📍</span>
-                  <p style="font-size: 12px; color: #4b5563; margin: 0; line-height: 1.5; word-break: break-word;">
-                    ${address}
-                  </p>
-                </div>
-              `
-                  : ''
-              }
-
-              <!-- Action Button -->
-              <a 
-                href="/contractors/${contractorId}" 
-                style="display: block; width: 100%; padding: 10px 16px; background-color: #2563eb; color: white; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: background-color 0.2s;"
-                onmouseover="this.style.backgroundColor='#1d4ed8'"
-                onmouseout="this.style.backgroundColor='#2563eb'"
-              >
-                View Profile →
-              </a>
             </div>
-          `;
 
-          // Create a popup with enhanced styling
-          const popup = new mapboxgl.Popup({
-            offset: 25,
-            closeButton: true,
-            closeOnClick: false,
-            className: 'mapbox-popup-enhanced',
-          }).setHTML(popupHTML);
-
-          // Handle popup open event to close any previously open popup
-          popup.on('open', () => {
-            // Close any previously open popup
-            if (currentPopup && currentPopup !== popup) {
-              try {
-                currentPopup.remove();
-              } catch (e) {
-                // Popup might already be closed, ignore error
-              }
+            <!-- Business Description -->
+            ${
+              description
+                ? `
+            <div style="margin-bottom: 12px;">
+              <p style="font-size: 13px; color: #4b5563; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                ${description}
+              </p>
+            </div>
+            `
+                : ''
             }
-            currentPopup = popup;
-          });
 
-          // Handle popup close event to clear the reference
-          popup.on('close', () => {
-            if (currentPopup === popup) {
-              currentPopup = null;
+            <!-- Address -->
+            ${
+              address
+                ? `
+              <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 12px; padding: 8px; background-color: #f9fafb; border-radius: 6px;">
+                <span style="font-size: 14px; flex-shrink: 0; margin-top: 2px;">📍</span>
+                <p style="font-size: 12px; color: #4b5563; margin: 0; line-height: 1.5; word-break: break-word;">
+                  ${address}
+                </p>
+              </div>
+            `
+                : ''
             }
+
+            <!-- Action Button -->
+            <a 
+              href="/contractors/${contractorId}" 
+              style="display: block; width: 100%; padding: 10px 16px; background-color: #2563eb; color: white; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: background-color 0.2s;"
+              onmouseover="this.style.backgroundColor='#1d4ed8'"
+              onmouseout="this.style.backgroundColor='#2563eb'"
+            >
+              View Profile →
+            </a>
+          </div>
+        `;
+      };
+
+      // Handle clicks on clusters - zoom in
+      map.on('click', 'clusters', e => {
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ['clusters'],
+        });
+        const clusterId = features[0].properties?.cluster_id;
+
+        const source = map.getSource('contractors') as any;
+        source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+          if (err) return;
+
+          map.easeTo({
+            center: (features[0].geometry as GeoJSON.Point).coordinates as [
+              number,
+              number,
+            ],
+            zoom: zoom,
           });
+        });
+      });
 
-          // Create and add marker with orange color to match brand
-          const marker = new mapboxgl.Marker({
-            color: '#f97316', // Orange color
-            scale: 0.8,
-          })
-            .setLngLat([contractor.location.lng, contractor.location.lat])
-            .setPopup(popup)
-            .addTo(map);
+      // Handle clicks on unclustered points - show popup
+      map.on('click', 'unclustered-point', e => {
+        const coordinates = (
+          (e.features?.[0].geometry as GeoJSON.Point)?.coordinates || []
+        ).slice() as [number, number];
+        const properties = e.features?.[0].properties;
 
-          // Also handle marker click to ensure previous popup closes before opening new one
-          marker.getElement().addEventListener('click', () => {
-            if (currentPopup && currentPopup !== popup) {
-              try {
-                currentPopup.remove();
-              } catch (e) {
-                // Popup might already be closed, ignore error
-              }
-            }
-          });
+        if (!properties) return;
 
-          markers.push(marker);
-        } else {
-          console.warn('Contractor missing location:', contractor);
+        // Close any existing popup
+        if (currentPopup) {
+          currentPopup.remove();
         }
+
+        // Find the full contractor data
+        const contractor = contractors.find(c => c.id === properties.id);
+        if (!contractor) return;
+
+        // Create and show popup
+        const popupHTML = createPopupHTML(contractor);
+        const popup = new mapboxgl.Popup({
+          offset: 25,
+          closeButton: true,
+          closeOnClick: false,
+          className: 'mapbox-popup-enhanced',
+        })
+          .setLngLat(coordinates)
+          .setHTML(popupHTML)
+          .addTo(map);
+
+        currentPopup = popup;
+
+        popup.on('close', () => {
+          if (currentPopup === popup) {
+            currentPopup = null;
+          }
+        });
+      });
+
+      // Change cursor on hover
+      map.on('mouseenter', 'clusters', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'clusters', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      map.on('mouseenter', 'unclustered-point', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'unclustered-point', () => {
+        map.getCanvas().style.cursor = '';
       });
     };
 
-    addMarkers();
+    addClusteredMarkers();
 
-    // Cleanup function - remove markers when component unmounts or dependencies change
+    // Cleanup function - remove layers and source when component unmounts or dependencies change
     return () => {
       isMounted = false;
-      markers.forEach(marker => {
-        if (marker && marker.remove) {
-          marker.remove();
+      if (!map) return;
+
+      try {
+        // Close popup if open
+        if (currentPopup) {
+          try {
+            currentPopup.remove();
+          } catch (e) {
+            // Popup might already be removed
+          }
+          currentPopup = null;
         }
-      });
+
+        // Check if source exists before trying to remove layers
+        const source = map.getSource('contractors');
+        if (source) {
+          // Remove layers if they exist
+          if (map.getLayer('clusters')) {
+            map.removeLayer('clusters');
+          }
+          if (map.getLayer('cluster-count')) {
+            map.removeLayer('cluster-count');
+          }
+          if (map.getLayer('unclustered-point')) {
+            map.removeLayer('unclustered-point');
+          }
+          // Remove source
+          map.removeSource('contractors');
+        }
+      } catch (e) {
+        // Map might be in an invalid state, ignore cleanup errors
+        console.warn('Error cleaning up map layers (non-critical):', e);
+      }
     };
   }, [map, mapLoaded, contractors]);
 

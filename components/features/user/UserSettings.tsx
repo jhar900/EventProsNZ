@@ -60,6 +60,7 @@ export default function UserSettings({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -72,6 +73,11 @@ export default function UserSettings({
       publish_to_contractors: false,
     },
   });
+
+  // Watch form values for debugging
+  const formValues = watch();
+  console.log('UserSettings: Current form values:', formValues);
+  console.log('UserSettings: Form errors:', errors);
 
   const loadVerificationStatus = useCallback(async () => {
     if (!user?.id) return;
@@ -112,8 +118,26 @@ export default function UserSettings({
       const result = await response.json();
 
       if (response.ok && result.settings) {
-        setSettings(result.settings);
-        reset(result.settings);
+        // Filter to only include fields in the schema
+        const filteredSettings: SettingsFormData = {
+          email_notifications: Boolean(
+            result.settings.email_notifications ?? true
+          ),
+          sms_notifications: Boolean(
+            result.settings.sms_notifications ?? false
+          ),
+          marketing_emails: Boolean(result.settings.marketing_emails ?? false),
+          timezone: String(result.settings.timezone ?? 'Pacific/Auckland'),
+          language: String(result.settings.language ?? 'en'),
+          show_on_homepage_map: Boolean(
+            result.settings.show_on_homepage_map ?? false
+          ),
+          publish_to_contractors: Boolean(
+            result.settings.publish_to_contractors ?? false
+          ),
+        };
+        setSettings(filteredSettings);
+        reset(filteredSettings);
       } else {
         // Use default settings if API fails
         const defaultSettings: SettingsFormData = {
@@ -186,10 +210,22 @@ export default function UserSettings({
       return;
     }
 
+    console.log('UserSettings: onSubmit called with data:', data);
+    console.log(
+      'UserSettings: publish_to_contractors value:',
+      data.publish_to_contractors
+    );
+
     setIsLoading(true);
     setError(null);
 
     try {
+      const requestBody = JSON.stringify(data);
+      console.log(
+        'UserSettings: Sending PUT request to /api/user/settings with body:',
+        requestBody
+      );
+
       const response = await fetch('/api/user/settings', {
         method: 'PUT',
         headers: {
@@ -197,10 +233,12 @@ export default function UserSettings({
           'x-user-id': user.id,
         },
         credentials: 'include',
-        body: JSON.stringify(data),
+        body: requestBody,
       });
 
+      console.log('UserSettings: Response status:', response.status);
       const result = await response.json();
+      console.log('UserSettings: Response data:', result);
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update settings');
@@ -211,6 +249,7 @@ export default function UserSettings({
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to update settings';
+      console.error('UserSettings: Error updating settings:', err);
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -339,7 +378,14 @@ export default function UserSettings({
               Settings & Preferences
             </h3>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={e => {
+                console.log('UserSettings: Form onSubmit event triggered');
+                console.log('UserSettings: Event:', e);
+                handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-6"
+            >
               <div>
                 <h4 className="text-md font-medium text-gray-900 mb-3">
                   General
@@ -449,6 +495,10 @@ export default function UserSettings({
                 <button
                   type="submit"
                   disabled={isLoading}
+                  onClick={() => {
+                    console.log('Save Settings button clicked');
+                    console.log('Form state:', { isLoading, user: user?.id });
+                  }}
                   className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Saving...' : 'Save Settings'}

@@ -50,6 +50,13 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId)
       .maybeSingle();
 
+    // Get business profile to check is_published status
+    const { data: businessProfile } = await supabaseAdmin
+      .from('business_profiles')
+      .select('is_published')
+      .eq('user_id', userId)
+      .maybeSingle();
+
     // If profile not found or error, return default settings
     if (profileError || !profile) {
       return NextResponse.json({
@@ -60,7 +67,7 @@ export async function GET(request: NextRequest) {
           timezone: 'Pacific/Auckland',
           language: 'en',
           show_on_homepage_map: false,
-          publish_to_contractors: false,
+          publish_to_contractors: businessProfile?.is_published ?? false,
         },
       });
     }
@@ -75,9 +82,17 @@ export async function GET(request: NextRequest) {
       publish_to_contractors: false,
     };
 
+    // Use business_profiles.is_published as the source of truth for publish_to_contractors
+    // This ensures the checkbox reflects the actual database state
+    const publishToContractors =
+      businessProfile?.is_published ??
+      preferences.publish_to_contractors ??
+      false;
+
     return NextResponse.json({
       settings: {
         ...preferences,
+        publish_to_contractors: publishToContractors,
         timezone: profile.timezone || 'Pacific/Auckland',
       },
     });
@@ -99,9 +114,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  console.log('PUT /api/user/settings: Request received');
   try {
     // Try to get userId from header first (preferred method)
     let userId = request.headers.get('x-user-id');
+    console.log('PUT /api/user/settings: userId from header:', userId);
 
     // Fallback to middleware client if header not provided
     if (!userId) {
@@ -118,7 +135,13 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('PUT /api/user/settings: Request body:', body);
     const validatedData = updateSettingsSchema.parse(body);
+    console.log('PUT /api/user/settings: Validated data:', validatedData);
+    console.log(
+      'PUT /api/user/settings: publish_to_contractors:',
+      validatedData.publish_to_contractors
+    );
 
     // Get current preferences using service role client
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -171,10 +194,87 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Sync publish_to_contractors preference to business_profiles.is_published
+    if (validatedData.publish_to_contractors !== undefined) {
+      // Ensure boolean value
+      const isPublished = Boolean(validatedData.publish_to_contractors);
+
+      console.log(
+        `Updating business_profiles.is_published for user ${userId} to ${isPublished}`
+      );
+
+      // Check if business profile exists
+      const { data: existingBusinessProfile, error: checkError } =
+        await supabaseAdmin
+          .from('business_profiles')
+          .select('id, is_published')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking business profile:', checkError);
+      }
+
+      if (existingBusinessProfile) {
+        const { data: updatedBusinessProfile, error: businessProfileError } =
+          await supabaseAdmin
+            .from('business_profiles')
+            .update({
+              is_published: isPublished,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId)
+            .select('is_published')
+            .single();
+
+        if (businessProfileError) {
+          // Log error but don't fail the request
+          console.error(
+            'Failed to update business_profiles.is_published:',
+            businessProfileError
+          );
+        } else {
+          console.log(
+            `Successfully updated business_profiles.is_published to ${updatedBusinessProfile?.is_published}`
+          );
+        }
+      } else {
+        console.warn(
+          `Business profile not found for user ${userId}, cannot update is_published`
+        );
+      }
+    }
+
+    // Get the actual is_published value from business_profiles to return accurate state
+    // This ensures we return the actual database value, not just what we tried to set
+    const { data: businessProfile, error: fetchError } = await supabaseAdmin
+      .from('business_profiles')
+      .select('is_published')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error(
+        'Error fetching business profile after update:',
+        fetchError
+      );
+    }
+
+    // Use business_profiles.is_published as the source of truth for the response
+    const publishToContractors =
+      businessProfile?.is_published ??
+      updatedProfile.preferences?.publish_to_contractors ??
+      false;
+
+    console.log(
+      `Final publish_to_contractors value for response: ${publishToContractors}`
+    );
+
     return NextResponse.json({
       message: 'Settings updated successfully',
       settings: {
         ...(updatedProfile.preferences || {}),
+        publish_to_contractors: publishToContractors,
         timezone: updatedProfile.timezone || 'Pacific/Auckland',
       },
     });

@@ -121,7 +121,8 @@ export async function GET(request: NextRequest) {
           review_count,
           is_verified,
           subscription_tier,
-          logo_url
+          logo_url,
+          is_published
         )
       `,
         { count: 'exact' }
@@ -199,6 +200,9 @@ export async function GET(request: NextRequest) {
 
         // Must have both profile and business profile
         if (!profile || !businessProfile) return null;
+
+        // Must be published (is_published = true)
+        if (businessProfile.is_published !== true) return null;
 
         return {
           ...contractor,

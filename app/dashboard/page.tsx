@@ -19,6 +19,7 @@ import {
   ArrowRight,
   Plus,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardStats {
   eventsCount?: number;
@@ -268,100 +269,124 @@ export default function DashboardPage() {
         {/* Quick Stats */}
         {user && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <RoleGuard
-              allowedRoles={['event_manager']}
-              hideOnUnauthorized={true}
-            >
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Total Events
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {loading ? '...' : stats.eventsCount || 0}
-                    </p>
-                  </div>
-                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-                <Link
-                  href="/events"
-                  className="mt-4 text-sm text-blue-600 hover:text-blue-700 flex items-center"
+            {loading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
                 >
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-24 mb-2" />
+                      <Skeleton className="h-8 w-16" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-4 w-20 mt-4" />
+                </div>
+              ))
+            ) : (
+              <>
+                <RoleGuard
+                  allowedRoles={['event_manager']}
+                  hideOnUnauthorized={true}
+                >
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Total Events
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                          {loading ? '...' : stats.eventsCount || 0}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Calendar className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                    <Link
+                      href="/events"
+                      className="mt-4 text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                    >
+                      View all <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Inquiries
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {loading ? '...' : stats.inquiriesCount || 0}
-                    </p>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Inquiries
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                          {loading ? '...' : stats.inquiriesCount || 0}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <MessageSquare className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                    <Link
+                      href="/inquiries"
+                      className="mt-4 text-sm text-green-600 hover:text-green-700 flex items-center"
+                    >
+                      View all <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
                   </div>
-                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <Link
-                  href="/inquiries"
-                  className="mt-4 text-sm text-green-600 hover:text-green-700 flex items-center"
-                >
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </div>
-            </RoleGuard>
+                </RoleGuard>
 
-            <RoleGuard allowedRoles={['contractor']} hideOnUnauthorized={true}>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Inquiries
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {loading ? '...' : stats.inquiriesCount || 0}
-                    </p>
-                  </div>
-                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <Link
-                  href="/inquiries"
-                  className="mt-4 text-sm text-green-600 hover:text-green-700 flex items-center"
+                <RoleGuard
+                  allowedRoles={['contractor']}
+                  hideOnUnauthorized={true}
                 >
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </div>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Inquiries
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                          {loading ? '...' : stats.inquiriesCount || 0}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <MessageSquare className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                    <Link
+                      href="/inquiries"
+                      className="mt-4 text-sm text-green-600 hover:text-green-700 flex items-center"
+                    >
+                      View all <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Job Applications
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {loading ? '...' : stats.applicationsCount || 0}
-                    </p>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Job Applications
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                          {loading ? '...' : stats.applicationsCount || 0}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Briefcase className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                    <Link
+                      href="/jobs"
+                      className="mt-4 text-sm text-purple-600 hover:text-purple-700 flex items-center"
+                    >
+                      View all <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
                   </div>
-                  <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Briefcase className="h-6 w-6 text-purple-600" />
-                  </div>
-                </div>
-                <Link
-                  href="/jobs"
-                  className="mt-4 text-sm text-purple-600 hover:text-purple-700 flex items-center"
-                >
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </div>
-            </RoleGuard>
+                </RoleGuard>
+              </>
+            )}
           </div>
         )}
 
@@ -485,107 +510,140 @@ export default function DashboardPage() {
         {/* Recent Activity */}
         {user && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RoleGuard
-              allowedRoles={['event_manager']}
-              hideOnUnauthorized={true}
-            >
-              {stats.recentEvents && stats.recentEvents.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Recent Events
-                    </h2>
-                    <Link
-                      href="/events"
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      View all
-                    </Link>
-                  </div>
+            {loading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                >
+                  <Skeleton className="h-6 w-32 mb-4" />
                   <div className="space-y-3">
-                    {stats.recentEvents.slice(0, 5).map((event: any) => (
-                      <Link
-                        key={event.id}
-                        href={`/events/${event.id}`}
-                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">
-                              {event.title}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {event.event_type} •{' '}
-                              {new Date(event.event_date).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              event.status === 'confirmed'
-                                ? 'bg-green-100 text-green-800'
-                                : event.status === 'planning'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {event.status}
-                          </span>
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <div key={j} className="flex items-center space-x-3">
+                        <Skeleton className="h-12 w-12 rounded-lg" />
+                        <div className="flex-1">
+                          <Skeleton className="h-4 w-3/4 mb-2" />
+                          <Skeleton className="h-3 w-1/2" />
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </RoleGuard>
+              ))
+            ) : (
+              <>
+                <RoleGuard
+                  allowedRoles={['event_manager']}
+                  hideOnUnauthorized={true}
+                >
+                  {stats.recentEvents && stats.recentEvents.length > 0 && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          Recent Events
+                        </h2>
+                        <Link
+                          href="/events"
+                          className="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          View all
+                        </Link>
+                      </div>
+                      <div className="space-y-3">
+                        {stats.recentEvents.slice(0, 5).map((event: any) => (
+                          <Link
+                            key={event.id}
+                            href={`/events/${event.id}`}
+                            className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900">
+                                  {event.title}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {event.event_type} •{' '}
+                                  {new Date(
+                                    event.event_date
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  event.status === 'confirmed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : event.status === 'planning'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {event.status}
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </RoleGuard>
 
-            <RoleGuard allowedRoles={['contractor']} hideOnUnauthorized={true}>
-              {stats.recentInquiries && stats.recentInquiries.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Recent Inquiries
-                    </h2>
-                    <Link
-                      href="/inquiries"
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      View all
-                    </Link>
-                  </div>
-                  <div className="space-y-3">
-                    {stats.recentInquiries.slice(0, 5).map((inquiry: any) => (
-                      <Link
-                        key={inquiry.id}
-                        href={`/inquiries/${inquiry.id}`}
-                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">
-                              {inquiry.subject || 'New Inquiry'}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {new Date(
-                                inquiry.created_at
-                              ).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              inquiry.status === 'responded'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}
+                <RoleGuard
+                  allowedRoles={['contractor']}
+                  hideOnUnauthorized={true}
+                >
+                  {stats.recentInquiries &&
+                    stats.recentInquiries.length > 0 && (
+                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Recent Inquiries
+                          </h2>
+                          <Link
+                            href="/inquiries"
+                            className="text-sm text-blue-600 hover:text-blue-700"
                           >
-                            {inquiry.status}
-                          </span>
+                            View all
+                          </Link>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </RoleGuard>
+                        <div className="space-y-3">
+                          {stats.recentInquiries
+                            .slice(0, 5)
+                            .map((inquiry: any) => (
+                              <Link
+                                key={inquiry.id}
+                                href={`/inquiries/${inquiry.id}`}
+                                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-900">
+                                      {inquiry.subject || 'New Inquiry'}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      {new Date(
+                                        inquiry.created_at
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                      inquiry.status === 'responded'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {inquiry.status}
+                                  </span>
+                                </div>
+                              </Link>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                </RoleGuard>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -36,6 +36,41 @@ function OnboardingGuard({
     setMounted(true);
   }, []);
 
+  // Check for cached completion status to show content immediately
+  const getCachedCompletionStatus = (): boolean | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('profile_completion_status');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Check if cache is still valid (less than 5 minutes old)
+        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          return parsed.isComplete;
+        }
+      }
+    } catch (e) {
+      // Ignore cache errors
+    }
+    return null;
+  };
+
+  // Cache completion status when we get it
+  useEffect(() => {
+    if (status) {
+      try {
+        localStorage.setItem(
+          'profile_completion_status',
+          JSON.stringify({
+            isComplete: status.isComplete,
+            timestamp: Date.now(),
+          })
+        );
+      } catch (e) {
+        // Ignore cache errors
+      }
+    }
+  }, [status]);
+
   // List of paths that should be excluded from onboarding check
   const excludedPaths = [
     '/onboarding',
@@ -57,15 +92,52 @@ function OnboardingGuard({
       return;
     }
 
-    // Wait for both auth and completion status to load
-    if (authLoading || completionLoading) {
+    // Check for cached completion status - if we have it, show content immediately
+    const cachedIsComplete = getCachedCompletionStatus();
+    if (cachedIsComplete !== null && user) {
+      // We have cached data, show content immediately
+      // Only redirect if cached status says incomplete
+      if (user.role !== 'admin' && !cachedIsComplete) {
+        let onboardingRoute = '/onboarding/event-manager';
+        if (user.role === 'contractor') {
+          onboardingRoute = '/onboarding/contractor';
+        } else if (user.role === 'event_manager') {
+          onboardingRoute = '/onboarding/event-manager';
+        }
+        if (!pathname.startsWith('/onboarding')) {
+          setShouldRedirect(true);
+          router.push(onboardingRoute);
+          return;
+        }
+      }
+      setIsChecking(false);
+      // Still fetch fresh data in background, but don't block UI
       return;
+    }
+
+    // If no cached data, wait for auth but don't wait too long for completion
+    if (authLoading) {
+      return;
+    }
+
+    // Add very short timeout to prevent blocking - show content immediately
+    const timeout = setTimeout(() => {
+      if (isChecking) {
+        // If we've been checking for more than 200ms, allow access
+        // This makes navigation feel instant
+        setIsChecking(false);
+      }
+    }, 200);
+
+    // Wait for completion status, but with very short timeout
+    if (completionLoading) {
+      return () => clearTimeout(timeout);
     }
 
     // If no user, let AuthGuard handle it
     if (!user) {
       setIsChecking(false);
-      return;
+      return () => clearTimeout(timeout);
     }
 
     // If there's an error fetching completion status, don't redirect
@@ -78,7 +150,7 @@ function OnboardingGuard({
       );
       // Allow access if there's an error - better UX than blocking users
       setIsChecking(false);
-      return;
+      return () => clearTimeout(timeout);
     }
 
     // Check if profile is complete
@@ -104,32 +176,33 @@ function OnboardingGuard({
       if (!pathname.startsWith('/onboarding')) {
         setShouldRedirect(true);
         router.push(onboardingRoute);
-        return;
+        return () => clearTimeout(timeout);
       }
     }
 
     // If we have a user and status is complete (or admin), allow access
     if (user && (status?.isComplete || user.role === 'admin')) {
       setIsChecking(false);
-      return;
+      return () => clearTimeout(timeout);
     }
 
-    // If no status yet but user exists and we're still loading, keep checking
+    // If no status yet but user exists and we're still loading, allow access immediately
+    // Don't block navigation - show content and check in background
     if (user && !status && completionLoading) {
-      return;
+      setIsChecking(false); // Allow access immediately
+      return () => clearTimeout(timeout);
     }
 
     // If no status and not loading (but no error), allow access to prevent blocking
     // This handles edge cases where status fetch fails silently
     if (user && !status && !completionLoading && !completionError) {
-      console.warn(
-        'Profile completion status is null but no error - allowing access'
-      );
       setIsChecking(false);
-      return;
+      return () => clearTimeout(timeout);
     }
 
+    // Default: allow access (don't block) - navigation should always feel instant
     setIsChecking(false);
+    return () => clearTimeout(timeout);
   }, [
     user,
     status,
@@ -144,35 +217,54 @@ function OnboardingGuard({
 
   // Show loading state while checking (only after mount to prevent hydration mismatch)
   if (!mounted) {
-    // Return consistent loading state for SSR
+    // Return consistent loading state for SSR - but show content optimistically
     return (
       <AuthGuard>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600">Loading...</span>
+        <div className="relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+            <div
+              className="h-full bg-blue-600 animate-pulse"
+              style={{ width: '30%' }}
+            />
           </div>
+          {children}
         </div>
       </AuthGuard>
     );
   }
 
-  if (isChecking && !isExcludedPath && requireOnboarding) {
-    return (
-      <AuthGuard>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600">Checking profile...</span>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
-
-  // If redirecting, show nothing (redirect will happen)
+  // Show content immediately - never block navigation
+  // Only redirect if we're definitely redirecting
   if (shouldRedirect) {
     return null;
+  }
+
+  // Always show content immediately with subtle loading indicator if checking
+  // This makes navigation feel instant
+  const cachedIsComplete = getCachedCompletionStatus();
+  const isCheckingWithNoCache =
+    isChecking &&
+    !isExcludedPath &&
+    requireOnboarding &&
+    cachedIsComplete === null;
+
+  if (isCheckingWithNoCache) {
+    // Show children immediately with a subtle top loading bar
+    return (
+      <AuthGuard>
+        <div className="relative">
+          {/* Subtle loading indicator at top - non-blocking */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gray-200 z-50">
+            <div
+              className="h-full bg-blue-600 animate-pulse"
+              style={{ width: '30%' }}
+            />
+          </div>
+          {/* Show content immediately - navigation feels instant */}
+          <div className="opacity-100">{children}</div>
+        </div>
+      </AuthGuard>
+    );
   }
 
   // Wrap children with AuthGuard to ensure authentication

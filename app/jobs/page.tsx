@@ -241,8 +241,8 @@ export default function JobsPage() {
         )}
       </div>
 
-      {/* Footer */}
-      <HomepageFooter />
+      {/* Footer - only show if user is not logged in */}
+      {!user && <HomepageFooter />}
 
       {/* Login Modal */}
       <LoginModal

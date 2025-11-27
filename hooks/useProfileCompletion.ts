@@ -28,6 +28,63 @@ export function useProfileCompletion() {
       return;
     }
 
+    // Check cache first
+    try {
+      const cached = localStorage.getItem('profile_completion_status');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Use cache if less than 5 minutes old
+        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          setStatus({
+            isComplete: parsed.isComplete,
+            completionPercentage: parsed.completionPercentage || 0,
+            missingFields: parsed.missingFields || [],
+            requirements: parsed.requirements || {
+              personalInfo: false,
+              contactInfo: false,
+              businessInfo: false,
+              profilePhoto: false,
+            },
+          });
+          setIsLoading(false);
+          // Still fetch fresh data in background, but don't block
+          fetch('/api/profile/completion', {
+            headers: {
+              'x-user-id': user.id,
+            },
+            credentials: 'include',
+          })
+            .then(res => {
+              if (res.ok) {
+                return res.json();
+              }
+            })
+            .then(data => {
+              if (data?.status) {
+                setStatus(data.status);
+                // Update cache
+                localStorage.setItem(
+                  'profile_completion_status',
+                  JSON.stringify({
+                    isComplete: data.status.isComplete,
+                    completionPercentage: data.status.completionPercentage,
+                    missingFields: data.status.missingFields,
+                    requirements: data.status.requirements,
+                    timestamp: Date.now(),
+                  })
+                );
+              }
+            })
+            .catch(() => {
+              // Ignore background fetch errors
+            });
+          return;
+        }
+      }
+    } catch (e) {
+      // Ignore cache errors, continue with fetch
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -51,6 +108,22 @@ export function useProfileCompletion() {
 
       const data = await response.json();
       setStatus(data.status);
+
+      // Cache the result
+      try {
+        localStorage.setItem(
+          'profile_completion_status',
+          JSON.stringify({
+            isComplete: data.status.isComplete,
+            completionPercentage: data.status.completionPercentage,
+            missingFields: data.status.missingFields,
+            requirements: data.status.requirements,
+            timestamp: Date.now(),
+          })
+        );
+      } catch (e) {
+        // Ignore cache errors
+      }
     } catch (err) {
       // Only set error for non-401 errors
       if (err instanceof Error && !err.message.includes('401')) {

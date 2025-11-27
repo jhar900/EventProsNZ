@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
       const { data: businessData, error: businessError } = await supabase
         .from('business_profiles')
         .select('*')
-        .in('user_id', contractorIds);
+        .in('user_id', contractorIds)
+        .eq('is_published', true);
 
       if (!businessError) {
         businessProfiles = businessData || [];
@@ -79,56 +80,70 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the expected format
+    // Only include contractors that have a published business profile
     const transformedContractors =
-      contractors?.map(contractor => {
-        const businessProfile = businessProfiles.find(
-          bp => bp.user_id === contractor.id
-        );
+      contractors
+        ?.map(contractor => {
+          const businessProfile = businessProfiles.find(
+            bp => bp.user_id === contractor.id
+          );
 
-        // Handle profiles array (it should be an array from the join)
-        const profile = Array.isArray(contractor.profiles)
-          ? contractor.profiles[0]
-          : contractor.profiles;
+          // Skip contractors without a published business profile
+          if (!businessProfile) {
+            return null;
+          }
 
-        return {
-          id: contractor.id,
-          email: contractor.email,
-          name: profile
-            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
-            : 'Unknown User',
-          companyName: businessProfile?.company_name || 'No Company Name',
-          description: businessProfile?.description || '',
-          location: businessProfile?.location || profile?.location,
-          avatarUrl: profile?.avatar_url,
-          logoUrl: businessProfile?.logo_url,
-          bio: profile?.bio,
-          serviceCategories: businessProfile?.service_categories || [],
-          averageRating: businessProfile?.average_rating || 0,
-          reviewCount: businessProfile?.review_count || 0,
-          isVerified: businessProfile?.is_verified || false,
-          subscriptionTier: businessProfile?.subscription_tier || 'essential',
-          businessAddress: businessProfile?.location || profile?.location,
-          serviceAreas: businessProfile?.service_categories || [],
-          socialLinks: null,
-          verificationDate: null,
-          services: [], // Services will be fetched separately if needed
-          createdAt: contractor.created_at,
-          isPremium: ['professional', 'enterprise'].includes(
-            businessProfile?.subscription_tier || 'essential'
-          ),
-        };
-      }) || [];
+          // Handle profiles array (it should be an array from the join)
+          const profile = Array.isArray(contractor.profiles)
+            ? contractor.profiles[0]
+            : contractor.profiles;
+
+          return {
+            id: contractor.id,
+            email: contractor.email,
+            name: profile
+              ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+              : 'Unknown User',
+            companyName: businessProfile.company_name || 'No Company Name',
+            description: businessProfile.description || '',
+            location: businessProfile.location || profile?.location,
+            avatarUrl: profile?.avatar_url,
+            logoUrl: businessProfile.logo_url,
+            bio: profile?.bio,
+            serviceCategories: businessProfile.service_categories || [],
+            averageRating: businessProfile.average_rating || 0,
+            reviewCount: businessProfile.review_count || 0,
+            isVerified: businessProfile.is_verified || false,
+            subscriptionTier: businessProfile.subscription_tier || 'essential',
+            businessAddress: businessProfile.location || profile?.location,
+            serviceAreas: businessProfile.service_categories || [],
+            socialLinks: null,
+            verificationDate: null,
+            services: [], // Services will be fetched separately if needed
+            createdAt: contractor.created_at,
+            isPremium: ['professional', 'enterprise'].includes(
+              businessProfile.subscription_tier || 'essential'
+            ),
+          };
+        })
+        .filter(
+          (contractor): contractor is NonNullable<typeof contractor> =>
+            contractor !== null
+        ) || [];
 
     // If no contractors found, return empty array instead of error
     if (transformedContractors.length === 0) {
     }
 
+    // Count should reflect only published contractors
+    const publishedCount = transformedContractors.length;
+
     return NextResponse.json({
       contractors: transformedContractors,
-      total: count || 0,
+      total: publishedCount,
       page,
       limit,
-      totalPages: Math.ceil((count || 0) / limit),
+      totalPages: Math.ceil(publishedCount / limit),
     });
   } catch (error) {
     return NextResponse.json(

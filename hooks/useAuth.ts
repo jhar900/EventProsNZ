@@ -237,24 +237,31 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
+    // Optimistic update: Clear state and localStorage immediately
+    // This makes logout feel instant to the user
+    setUser(null);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('expires_at');
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('is_authenticated');
+    localStorage.removeItem('profile_completion_status'); // Clear cached completion status
+
+    // Run logout operations in parallel and don't wait for them
+    // This makes logout feel instant while cleanup happens in background
+    Promise.all([
+      fetch('/api/auth/logout', {
         method: 'POST',
-      });
-    } catch (error) {
-    } finally {
-      // Clear local storage
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('expires_at');
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('is_authenticated');
-
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-
-      setUser(null);
-    }
+        // Don't wait for response - fire and forget
+      }).catch(() => {
+        // Ignore errors - we've already cleared local state
+      }),
+      supabase.auth.signOut().catch(() => {
+        // Ignore errors - we've already cleared local state
+      }),
+    ]).catch(() => {
+      // Ignore any errors - logout is already complete from user's perspective
+    });
   };
 
   useEffect(() => {

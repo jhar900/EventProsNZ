@@ -48,7 +48,8 @@ export async function GET(
           linkedin_url,
           twitter_url,
           youtube_url,
-          tiktok_url
+          tiktok_url,
+          is_published
         )
       `
       )
@@ -62,21 +63,49 @@ export async function GET(
       );
     }
 
+    // Get current user to check permissions
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Check if user is admin
+    let isAdmin = false;
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      isAdmin = userData?.role === 'admin';
+    }
+
+    const isOwner = user?.id === contractorId;
+
     // Check if contractor is suspended - block public access
     if (contractorData.status === 'suspended') {
-      // Check if user is viewing their own profile
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user || user.id !== contractorId) {
-        // Not viewing own profile, return 404
+      if (!isOwner && !isAdmin) {
+        // Not viewing own profile and not admin, return 404
         return NextResponse.json(
           { error: 'Contractor not found' },
           { status: 404 }
         );
       }
-      // If viewing own profile, continue but mark as suspended
+      // If viewing own profile or admin, continue but mark as suspended
+    }
+
+    // Check if business profile is published
+    const businessProfile = Array.isArray(contractorData.business_profiles)
+      ? contractorData.business_profiles[0]
+      : contractorData.business_profiles;
+
+    if (businessProfile && businessProfile.is_published === false) {
+      // Profile is not published - only allow owner and admin to view
+      if (!isOwner && !isAdmin) {
+        return NextResponse.json(
+          { error: 'Contractor not found' },
+          { status: 404 }
+        );
+      }
     }
 
     // Transform the data to match the expected format
@@ -84,9 +113,7 @@ export async function GET(
       ? contractorData.profiles[0]
       : contractorData.profiles;
 
-    const businessProfile = Array.isArray(contractorData.business_profiles)
-      ? contractorData.business_profiles[0]
-      : contractorData.business_profiles;
+    // businessProfile was already extracted above for the is_published check
 
     // Fetch services for this contractor
     let services: any[] = [];

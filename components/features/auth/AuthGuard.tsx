@@ -93,19 +93,20 @@ function AuthGuard({
     return <>{children}</>;
   }
 
-  // Show minimal loading state that doesn't block the entire page
+  // Show content immediately with subtle loading indicator instead of blocking
   if (isLoading && isChecking && !hasCachedUser) {
     return (
-      <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600">Loading...</span>
-          </div>
+      <div className="relative">
+        {/* Subtle loading indicator at top */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+          <div
+            className="h-full bg-blue-600 animate-pulse"
+            style={{ width: '30%' }}
+          />
         </div>
-        {/* Render children in background so they're ready when auth completes */}
-        <div className="opacity-0 pointer-events-none">{children}</div>
-      </>
+        {/* Show content immediately - navigation feels instant */}
+        <div className="opacity-100">{children}</div>
+      </div>
     );
   }
 

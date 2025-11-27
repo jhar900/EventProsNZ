@@ -24,10 +24,10 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {}
+  const handleLogout = () => {
+    // Optimistic logout - don't wait, just call and redirect
+    logout();
+    window.location.href = '/';
   };
 
   const toggleMobileMenu = () => {
