@@ -21,6 +21,7 @@ import {
   MessageSquare,
   Lightbulb,
   Globe,
+  Briefcase,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -121,6 +122,7 @@ export default function DashboardLayout({
           { href: '/events', label: 'My Events', icon: Calendar },
           { href: '/events/create', label: 'Create Event', icon: Calendar },
           { href: '/contractors', label: 'Find Contractors', icon: Search },
+          { href: '/jobs/manage', label: 'Jobs', icon: Briefcase },
           {
             href: '/budget/analytics',
             label: 'Budget Analytics',

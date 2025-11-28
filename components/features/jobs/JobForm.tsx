@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,38 +34,69 @@ import {
 } from '@/types/jobs';
 
 // Form validation schema
-const jobFormSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z
-    .string()
-    .min(1, 'Description is required')
-    .max(5000, 'Description too long'),
-  job_type: z.enum(['event_manager', 'contractor_internal']),
-  service_category: z.string().min(1, 'Service category is required'),
-  budget_range_min: z.number().min(0).optional(),
-  budget_range_max: z.number().min(0).optional(),
-  location: z
-    .string()
-    .min(1, 'Location is required')
-    .max(200, 'Location too long'),
-  coordinates: z
-    .object({
-      lat: z.number(),
-      lng: z.number(),
-    })
-    .optional(),
-  is_remote: z.boolean().default(false),
-  special_requirements: z
-    .string()
-    .max(2000, 'Special requirements too long')
-    .optional(),
-  contact_email: z.string().email('Invalid email').optional(),
-  contact_phone: z.string().max(50, 'Phone number too long').optional(),
-  response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
-  timeline_start_date: z.string().optional(),
-  timeline_end_date: z.string().optional(),
-  event_id: z.string().uuid().optional(),
-});
+const jobFormSchema = z
+  .object({
+    title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+    description: z
+      .string()
+      .min(1, 'Description is required')
+      .max(5000, 'Description too long'),
+    service_category: z.string().min(1, 'Service category is required'),
+    budget_range_min: z.number().min(0).optional(),
+    budget_range_max: z.number().min(0).optional(),
+    location: z
+      .string()
+      .min(1, 'Location is required')
+      .max(200, 'Location too long'),
+    coordinates: z
+      .object({
+        lat: z.number(),
+        lng: z.number(),
+      })
+      .optional(),
+    is_remote: z.boolean().default(false),
+    special_requirements: z
+      .string()
+      .max(2000, 'Special requirements too long')
+      .optional(),
+    contact_email: z.string().email('Invalid email').optional(),
+    contact_phone: z.string().max(50, 'Phone number too long').optional(),
+    response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
+    timeline_start_date: z.string().optional(),
+    timeline_end_date: z.string().optional(),
+    event_id: z.string().uuid().optional(),
+  })
+  .refine(
+    data => {
+      // If both dates are provided, start date must be before or equal to end date
+      if (data.timeline_start_date && data.timeline_end_date) {
+        const startDate = new Date(data.timeline_start_date);
+        const endDate = new Date(data.timeline_end_date);
+        return startDate <= endDate;
+      }
+      return true;
+    },
+    {
+      message: 'Start date must be before or equal to end date',
+      path: ['timeline_end_date'], // This will show the error on the end_date field
+    }
+  )
+  .refine(
+    data => {
+      // If both budget values are provided, min must be less than or equal to max
+      if (
+        data.budget_range_min !== undefined &&
+        data.budget_range_max !== undefined
+      ) {
+        return data.budget_range_min <= data.budget_range_max;
+      }
+      return true;
+    },
+    {
+      message: 'Minimum budget must be less than or equal to maximum budget',
+      path: ['budget_range_max'],
+    }
+  );
 
 type JobFormData = z.infer<typeof jobFormSchema>;
 
@@ -90,6 +122,7 @@ export function JobForm({
   isEditing = false,
   eventData,
 }: JobFormProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useEventData, setUseEventData] = useState(false);
@@ -104,14 +137,12 @@ export function JobForm({
   } = useForm<JobFormData>({
     resolver: zodResolver(jobFormSchema),
     defaultValues: {
-      job_type: 'event_manager',
       service_category: 'catering',
       is_remote: false,
       ...initialData,
     },
   });
 
-  const watchedJobType = watch('job_type');
   const watchedIsRemote = watch('is_remote');
 
   // Pre-populate form with event data if available
@@ -129,11 +160,19 @@ export function JobForm({
       setIsLoading(true);
       setError(null);
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Include user ID in header as fallback if cookies fail
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch('/api/jobs', {
         method: isEditing ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(data),
       });
 
@@ -201,35 +240,6 @@ export function JobForm({
               )}
             </div>
           )}
-
-          {/* Job Type */}
-          <div className="space-y-2">
-            <Label htmlFor="job_type">Job Type *</Label>
-            <Select
-              value={watchedJobType}
-              onValueChange={value =>
-                setValue(
-                  'job_type',
-                  value as 'event_manager' | 'contractor_internal'
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select job type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="event_manager">
-                  Event Manager Position
-                </SelectItem>
-                <SelectItem value="contractor_internal">
-                  Internal Contractor Role
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.job_type && (
-              <p className="text-sm text-red-600">{errors.job_type.message}</p>
-            )}
-          </div>
 
           {/* Title */}
           <div className="space-y-2">

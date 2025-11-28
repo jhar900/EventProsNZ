@@ -14,6 +14,7 @@ export interface User {
     last_name: string;
     avatar_url?: string;
     timezone: string;
+    phone?: string;
   };
   business_profile?: {
     id: string;

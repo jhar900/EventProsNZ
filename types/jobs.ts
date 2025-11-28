@@ -20,7 +20,6 @@ export type JobAnalyticsInsert =
 export interface JobFormData {
   title: string;
   description: string;
-  job_type: 'event_manager' | 'contractor_internal';
   service_category: string;
   budget_range_min?: number;
   budget_range_max?: number;
@@ -230,7 +229,7 @@ export type ApplicationStatus =
 export interface CreateJobRequest {
   title: string;
   description: string;
-  job_type: JobType;
+  job_type?: JobType; // Optional - will be set automatically based on user role
   service_category: JobServiceCategory;
   budget_range_min?: number;
   budget_range_max?: number;
