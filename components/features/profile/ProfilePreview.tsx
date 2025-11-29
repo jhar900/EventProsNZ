@@ -80,6 +80,31 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
             }));
         }
 
+        // Fetch portfolio items
+        const portfolioResponse = await fetch('/api/profile/me/portfolio', {
+          headers: {
+            'x-user-id': user.id,
+          },
+          credentials: 'include',
+        });
+
+        let portfolio: any[] = [];
+        if (portfolioResponse.ok) {
+          const portfolioData = await portfolioResponse.json();
+          // Transform portfolio items to match PortfolioItem type
+          portfolio = (portfolioData.portfolio || [])
+            .filter((p: any) => p.is_visible !== false) // Only show visible items
+            .map((p: any) => ({
+              id: p.id,
+              title: p.title || 'Untitled',
+              description: p.description || null,
+              imageUrl: p.image_url || null,
+              videoUrl: p.video_url || null,
+              eventDate: p.event_date || null,
+              createdAt: p.created_at || new Date().toISOString(),
+            }));
+        }
+
         // Fetch user profile for name and avatar
         const profileResponse = await fetch('/api/user/profile', {
           method: 'GET',
@@ -139,7 +164,7 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
           tiktokUrl: businessProfile.tiktok_url || null,
           verificationDate: businessProfile.verification_date || null,
           services: services,
-          portfolio: [], // Portfolio can be fetched separately if needed
+          portfolio: portfolio,
           testimonials: [], // Testimonials can be fetched separately if needed
           createdAt: businessProfile.created_at || new Date().toISOString(),
           updatedAt: businessProfile.updated_at || null,

@@ -105,11 +105,26 @@ export function useProfile() {
     try {
       const [profileRes, businessRes, servicesRes, portfolioRes, privacyRes] =
         await Promise.all([
-          fetch('/api/user/profile'),
-          fetch('/api/user/business-profile'),
-          fetch('/api/profile/me/services'),
-          fetch('/api/profile/me/portfolio'),
-          fetch('/api/profile/me/privacy'),
+          fetch('/api/user/profile', {
+            credentials: 'include',
+            headers: { 'x-user-id': user.id },
+          }),
+          fetch('/api/user/business-profile', {
+            credentials: 'include',
+            headers: { 'x-user-id': user.id },
+          }),
+          fetch('/api/profile/me/services', {
+            credentials: 'include',
+            headers: { 'x-user-id': user.id },
+          }),
+          fetch('/api/profile/me/portfolio', {
+            credentials: 'include',
+            headers: { 'x-user-id': user.id },
+          }),
+          fetch('/api/profile/me/privacy', {
+            credentials: 'include',
+            headers: { 'x-user-id': user.id },
+          }),
         ]);
 
       const [
@@ -190,10 +205,15 @@ export function useProfile() {
   // Update profile
   const updateProfile = useCallback(
     async (data: Partial<Profile>) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch('/api/user/profile', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -213,16 +233,21 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [refreshUser]
+    [refreshUser, user]
   );
 
   // Update business profile
   const updateBusinessProfile = useCallback(
     async (data: Partial<BusinessProfile>) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch('/api/user/business-profile', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -244,7 +269,7 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [refreshUser]
+    [refreshUser, user]
   );
 
   // Create service
@@ -252,10 +277,15 @@ export function useProfile() {
     async (
       data: Omit<Service, 'id' | 'user_id' | 'created_at' | 'updated_at'>
     ) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch('/api/profile/me/services', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -274,16 +304,21 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Update service
   const updateService = useCallback(
     async (id: string, data: Partial<Service>) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch(`/api/profile/me/services/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -302,15 +337,18 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Delete service
   const deleteService = useCallback(
     async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch(`/api/profile/me/services/${id}`, {
           method: 'DELETE',
+          credentials: 'include',
+          headers: { 'x-user-id': user.id },
         });
 
         const result = await response.json();
@@ -328,7 +366,7 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Create portfolio item
@@ -336,10 +374,15 @@ export function useProfile() {
     async (
       data: Omit<PortfolioItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>
     ) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch('/api/profile/me/portfolio', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -360,16 +403,21 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Update portfolio item
   const updatePortfolioItem = useCallback(
     async (id: string, data: Partial<PortfolioItem>) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch(`/api/profile/me/portfolio/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
           body: JSON.stringify(data),
         });
 
@@ -390,15 +438,18 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Delete portfolio item
   const deletePortfolioItem = useCallback(
     async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
       try {
         const response = await fetch(`/api/profile/me/portfolio/${id}`, {
           method: 'DELETE',
+          credentials: 'include',
+          headers: { 'x-user-id': user.id },
         });
 
         const result = await response.json();
@@ -418,40 +469,48 @@ export function useProfile() {
         throw new Error(errorMessage);
       }
     },
-    [loadProfileData]
+    [loadProfileData, user]
   );
 
   // Update privacy settings
-  const updatePrivacySettings = useCallback(async (data: PrivacySettings) => {
-    try {
-      const response = await fetch('/api/profile/me/privacy', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+  const updatePrivacySettings = useCallback(
+    async (data: PrivacySettings) => {
+      if (!user) throw new Error('User not authenticated');
+      try {
+        const response = await fetch('/api/profile/me/privacy', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
+          body: JSON.stringify(data),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update privacy settings');
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to update privacy settings');
+        }
+
+        setPrivacySettings(result.privacy_settings);
+        return result.privacy_settings;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to update privacy settings';
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
+    },
+    [user]
+  );
 
-      setPrivacySettings(result.privacy_settings);
-      return result.privacy_settings;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Failed to update privacy settings';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, []);
-
-  // Load profile data on mount
-  useEffect(() => {
-    loadProfileData();
-  }, [loadProfileData]);
+  // Don't auto-load on mount - let components load data when needed
+  // useEffect(() => {
+  //   loadProfileData();
+  // }, [loadProfileData]);
 
   return {
     profile,

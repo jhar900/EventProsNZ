@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { JobList } from '@/components/features/jobs/JobList';
 import { JobApplicationForm } from '@/components/features/jobs/JobApplicationForm';
 import { ApplicationHistory } from '@/components/features/jobs/ApplicationHistory';
@@ -16,15 +17,28 @@ import {
 } from '@heroicons/react/24/outline';
 import { FileText } from 'lucide-react';
 import { Job, JobApplicationWithDetails } from '@/types/jobs';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, User } from '@/hooks/useAuth';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { HomepageNavigation } from '@/components/features/homepage/HomepageNavigation';
 import LoginModal from '@/components/features/auth/LoginModal';
 import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
+import { EditJobModal } from '@/components/features/jobs/EditJobModal';
+import { InternalJobApplicationManager } from '@/components/features/jobs/InternalJobApplicationManager';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function JobsPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  const { status: completionStatus, isLoading: completionLoading } =
+    useProfileCompletion();
+  const prevUserRef = useRef<User | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplicationWithDetails | null>(null);
@@ -32,6 +46,64 @@ export default function JobsPage() {
   const [showApplicationHistory, setShowApplicationHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingJobForApplication, setPendingJobForApplication] =
+    useState<Job | null>(null);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [showEditJobModal, setShowEditJobModal] = useState(false);
+  const [viewingApplicationsJob, setViewingApplicationsJob] =
+    useState<Job | null>(null);
+  const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
+
+  // Check onboarding status when user logs in
+  useEffect(() => {
+    const prevUser = prevUserRef.current;
+    const userJustLoggedIn = !prevUser && user;
+
+    if (userJustLoggedIn) {
+      // User just logged in - check onboarding status
+      prevUserRef.current = user;
+    } else if (user) {
+      // Update ref if user changes
+      prevUserRef.current = user;
+    } else {
+      // User logged out
+      prevUserRef.current = null;
+    }
+
+    // Check onboarding status after user is set and completion status is loaded
+    if (
+      user &&
+      user.role !== 'admin' &&
+      !completionLoading &&
+      completionStatus &&
+      !completionStatus.isComplete
+    ) {
+      // Determine the correct onboarding route based on user role
+      let onboardingRoute = '/onboarding/event-manager';
+      if (user.role === 'contractor') {
+        onboardingRoute = '/onboarding/contractor';
+      } else if (user.role === 'event_manager') {
+        onboardingRoute = '/onboarding/event-manager';
+      }
+
+      // Redirect to onboarding
+      router.push(onboardingRoute);
+    }
+  }, [user, completionStatus, completionLoading, router]);
+
+  // When user logs in and there's a pending job, show application form
+  useEffect(() => {
+    if (
+      user &&
+      pendingJobForApplication &&
+      !isLoginModalOpen &&
+      completionStatus?.isComplete
+    ) {
+      setSelectedJob(pendingJobForApplication);
+      setShowApplicationForm(true);
+      setPendingJobForApplication(null);
+    }
+  }, [user, pendingJobForApplication, isLoginModalOpen, completionStatus]);
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -59,23 +131,72 @@ export default function JobsPage() {
     console.log('Template selected:', template);
   };
 
+  const handleJobEdit = (job: Job) => {
+    setEditingJob(job);
+    setShowEditJobModal(true);
+  };
+
+  const handleJobViewApplications = (job: Job) => {
+    setViewingApplicationsJob(job);
+    setShowApplicationsDialog(true);
+  };
+
+  const handleEditJobSuccess = () => {
+    setShowEditJobModal(false);
+    setEditingJob(null);
+    // Optionally refresh the job list here
+    window.location.reload();
+  };
+
+  const handlePublicJobApply = (job: Job) => {
+    // If user is not logged in, show login modal and store job for later
+    if (!user) {
+      setPendingJobForApplication(job);
+      setIsLoginModalOpen(true);
+    } else {
+      // User is logged in, proceed with application
+      handleJobApply(job);
+    }
+  };
+
+  // Don't show dashboard if onboarding is incomplete
+  const shouldShowDashboard =
+    user &&
+    (user.role === 'admin' ||
+      (completionStatus && completionStatus.isComplete) ||
+      (!completionStatus && !completionLoading));
+
   return (
     <div className="relative">
       {!user && <HomepageNavigation />}
       <div className={!user ? 'pt-16' : ''}>
-        {!user ? (
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <Card className="p-8 max-w-md w-full text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                Sign in to view jobs
-              </h1>
-              <p className="text-gray-600 mb-6">
-                You need to be signed in to browse and apply for jobs.
-              </p>
-              <Button onClick={() => setIsLoginModalOpen(true)}>Sign In</Button>
-            </Card>
+        {!user || !shouldShowDashboard ? (
+          <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Job Opportunities
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Browse available job opportunities. Sign in to apply for jobs.
+                </p>
+              </div>
+
+              {/* Public Job List */}
+              <JobList
+                onJobSelect={job => {
+                  // For non-logged-in users, clicking a job opens login modal
+                  setPendingJobForApplication(job);
+                  setIsLoginModalOpen(true);
+                }}
+                onJobApply={handlePublicJobApply}
+                showFilters={true}
+                showSearch={true}
+              />
+            </div>
           </div>
-        ) : (
+        ) : shouldShowDashboard ? (
           <DashboardLayout>
             <div className="min-h-screen bg-gray-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -127,6 +248,8 @@ export default function JobsPage() {
                     <JobList
                       onJobSelect={handleJobSelect}
                       onJobApply={handleJobApply}
+                      onJobEdit={handleJobEdit}
+                      onJobViewApplications={handleJobViewApplications}
                       showFilters={true}
                       showSearch={true}
                     />
@@ -238,6 +361,14 @@ export default function JobsPage() {
               </div>
             </div>
           </DashboardLayout>
+        ) : (
+          // Show loading state while checking onboarding status
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
         )}
       </div>
 
@@ -247,9 +378,37 @@ export default function JobsPage() {
       {/* Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          // Don't clear pending job - user might want to try again
+        }}
         redirectOnSuccess={false}
       />
+
+      {/* Edit Job Modal */}
+      <EditJobModal
+        open={showEditJobModal}
+        onOpenChange={setShowEditJobModal}
+        job={editingJob}
+        onSuccess={handleEditJobSuccess}
+      />
+
+      {/* View Applications Dialog */}
+      <Dialog
+        open={showApplicationsDialog}
+        onOpenChange={setShowApplicationsDialog}
+      >
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Applications for {viewingApplicationsJob?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {viewingApplicationsJob && (
+            <InternalJobApplicationManager jobId={viewingApplicationsJob.id} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

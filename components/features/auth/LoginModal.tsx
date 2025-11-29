@@ -25,7 +25,36 @@ export default function LoginModal({
   const { user, refreshUser } = useAuth();
 
   const handleSuccess = async (user: any) => {
-    // Refresh user data
+    // Verify session is established before proceeding
+    // This prevents the "need to sign in twice" issue
+    let sessionReady = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!sessionReady && attempts < maxAttempts) {
+      try {
+        const { supabase } = await import('@/lib/supabase/client');
+        const { data: sessionData } = await supabase.auth.getSession();
+
+        if (sessionData.session) {
+          sessionReady = true;
+          break;
+        }
+
+        // Wait a bit before trying again
+        await new Promise(resolve => setTimeout(resolve, 200));
+        attempts++;
+      } catch (error) {
+        console.warn(
+          `Session verification attempt ${attempts + 1} failed:`,
+          error
+        );
+        await new Promise(resolve => setTimeout(resolve, 200));
+        attempts++;
+      }
+    }
+
+    // Refresh user data and wait for it to complete
     await refreshUser();
 
     // Close the modal first

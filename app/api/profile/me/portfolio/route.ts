@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 const portfolioItemSchema = z.object({
@@ -18,22 +19,73 @@ const portfolioUpdateSchema = portfolioItemSchema.extend({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // If no header, try cookie-based auth
+    if (!userId) {
+      const { supabase } = createClient(request);
+
+      // Get current user - use getSession() first to avoid refresh token errors
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      // If no session, try getUser (but handle refresh token errors)
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        // Handle refresh token errors gracefully
+        if (authError) {
+          if (
+            authError.message?.includes('refresh_token_not_found') ||
+            authError.message?.includes('Invalid Refresh Token') ||
+            authError.message?.includes('Refresh Token Not Found')
+          ) {
+            return NextResponse.json(
+              {
+                error: 'Session expired. Please log in again.',
+                code: 'SESSION_EXPIRED',
+              },
+              { status: 401 }
+            );
+          }
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        user = getUserUser;
+      }
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
     }
 
-    // Get user's portfolio
-    const { data: portfolio, error: portfolioError } = await supabase
+    // First, verify the user exists in public.users (like business profile does)
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      // Return empty array instead of error (graceful handling)
+      return NextResponse.json({ portfolio: [] });
+    }
+
+    // Get user's portfolio using admin client (bypasses RLS)
+    const { data: portfolio, error: portfolioError } = await supabaseAdmin
       .from('portfolio')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('event_date', { ascending: false });
 
     if (portfolioError) {
@@ -54,25 +106,75 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // If no header, try cookie-based auth
+    if (!userId) {
+      const { supabase } = createClient(request);
+
+      // Get current user - use getSession() first to avoid refresh token errors
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      // If no session, try getUser (but handle refresh token errors)
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        // Handle refresh token errors gracefully
+        if (authError) {
+          if (
+            authError.message?.includes('refresh_token_not_found') ||
+            authError.message?.includes('Invalid Refresh Token') ||
+            authError.message?.includes('Refresh Token Not Found')
+          ) {
+            return NextResponse.json(
+              {
+                error: 'Session expired. Please log in again.',
+                code: 'SESSION_EXPIRED',
+              },
+              { status: 401 }
+            );
+          }
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        user = getUserUser;
+      }
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    // Verify the user exists (like business profile does)
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
     const validatedData = portfolioItemSchema.parse(body);
 
-    // Create new portfolio item
-    const { data: portfolioItem, error: createError } = await supabase
+    // Create new portfolio item using admin client (bypasses RLS)
+    const { data: portfolioItem, error: createError } = await supabaseAdmin
       .from('portfolio')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         ...validatedData,
       })
       .select()
@@ -102,15 +204,65 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // If no header, try cookie-based auth
+    if (!userId) {
+      const { supabase } = createClient(request);
+
+      // Get current user - use getSession() first to avoid refresh token errors
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      // If no session, try getUser (but handle refresh token errors)
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        // Handle refresh token errors gracefully
+        if (authError) {
+          if (
+            authError.message?.includes('refresh_token_not_found') ||
+            authError.message?.includes('Invalid Refresh Token') ||
+            authError.message?.includes('Refresh Token Not Found')
+          ) {
+            return NextResponse.json(
+              {
+                error: 'Session expired. Please log in again.',
+                code: 'SESSION_EXPIRED',
+              },
+              { status: 401 }
+            );
+          }
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        user = getUserUser;
+      }
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    // Verify the user exists (like business profile does)
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -123,8 +275,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update portfolio item
-    const { data: portfolioItem, error: updateError } = await supabase
+    // Update portfolio item using admin client (bypasses RLS)
+    const { data: portfolioItem, error: updateError } = await supabaseAdmin
       .from('portfolio')
       .update({
         title: validatedData.title,
@@ -137,7 +289,7 @@ export async function PUT(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', validatedData.id)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .select()
       .single();
 

@@ -210,9 +210,14 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      // Fetch jobs without joins to avoid relationship issues
+      // Fetch jobs - only select needed fields for better performance
       // We'll enrich the data with user/event info separately if needed
-      let query = this.supabase.from('jobs').select('*', { count: 'exact' });
+      let query = this.supabase
+        .from('jobs')
+        .select(
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          { count: 'exact' }
+        );
 
       // Apply filters
       if (job_type) {
@@ -293,9 +298,14 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      // Fetch jobs without joins to avoid relationship issues
+      // Fetch jobs - only select needed fields for better performance
       // We'll enrich the data with user/event info separately if needed
-      let query = this.supabase.from('jobs').select('*', { count: 'exact' });
+      let query = this.supabase
+        .from('jobs')
+        .select(
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          { count: 'exact' }
+        );
 
       // Apply text search
       if (q) {

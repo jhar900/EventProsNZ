@@ -105,6 +105,7 @@ interface JobFormProps {
   onSuccess?: (job: any) => void;
   onCancel?: () => void;
   isEditing?: boolean;
+  jobId?: string;
   eventData?: {
     id: string;
     title: string;
@@ -120,6 +121,7 @@ export function JobForm({
   onSuccess,
   onCancel,
   isEditing = false,
+  jobId,
   eventData,
 }: JobFormProps) {
   const { user } = useAuth();
@@ -169,7 +171,8 @@ export function JobForm({
         headers['x-user-id'] = user.id;
       }
 
-      const response = await fetch('/api/jobs', {
+      const url = isEditing && jobId ? `/api/jobs/${jobId}` : '/api/jobs';
+      const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers,
         credentials: 'include',

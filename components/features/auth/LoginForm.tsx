@@ -213,11 +213,16 @@ function GoogleSignInButton({
   const { signInWithGoogle, isLoading, isGoogleLoaded } = useGoogleAuth({
     onSuccess: async () => {
       // The hook handles the API call and stores user data
+      // Wait a moment for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Fetch the user data from localStorage
       const storedUserData = localStorage.getItem('user_data');
       if (storedUserData) {
         try {
           const userData = JSON.parse(storedUserData);
+          // Additional small delay to ensure everything is ready
+          await new Promise(resolve => setTimeout(resolve, 300));
           onSuccess?.(userData);
         } catch (err) {
           onError?.('Failed to parse user data');

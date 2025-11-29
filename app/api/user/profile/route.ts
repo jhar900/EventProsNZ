@@ -24,10 +24,35 @@ const updateProfileSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from request headers (sent by client)
-    const userId = request.headers.get('x-user-id');
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
+
+    // If no header, try cookie-based auth
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+      const { createClient: createMiddlewareClient } = await import(
+        '@/lib/supabase/middleware'
+      );
+      const { supabase } = createMiddlewareClient(request);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !getUserUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        user = getUserUser;
+      }
+
+      userId = user.id;
     }
 
     // Create Supabase client with service role for database operations
@@ -67,12 +92,37 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Get user ID from request headers (sent by client)
-    const userId = request.headers.get('x-user-id');
-    console.log('Profile API - Received user ID:', userId);
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
+    console.log('Profile API - Received user ID from header:', userId);
 
+    // If no header, try cookie-based auth
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+      const { createClient: createMiddlewareClient } = await import(
+        '@/lib/supabase/middleware'
+      );
+      const { supabase } = createMiddlewareClient(request);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !getUserUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        user = getUserUser;
+      }
+
+      userId = user.id;
+      console.log('Profile API - Got user ID from session:', userId);
     }
 
     // Create Supabase client with service role for database operations

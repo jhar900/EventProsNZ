@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Image, Video, Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -46,6 +47,7 @@ export function PortfolioManager({
   onSuccess,
   onError,
 }: PortfolioManagerProps) {
+  const { user } = useAuth();
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -54,16 +56,22 @@ export function PortfolioManager({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPortfolio();
-  }, []);
-
   const fetchPortfolio = async () => {
+    if (!user) return; // Guard clause
+
     try {
       setIsFetching(true);
       setError(null);
 
-      const response = await fetch('/api/profile/me/portfolio');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'x-user-id': user.id, // Always include if user exists
+      };
+
+      const response = await fetch('/api/profile/me/portfolio', {
+        credentials: 'include',
+        headers,
+      });
       if (response.ok) {
         const data = await response.json();
         setPortfolio(data.portfolio || []);
@@ -82,6 +90,16 @@ export function PortfolioManager({
       setIsFetching(false);
     }
   };
+
+  useEffect(() => {
+    // Only fetch portfolio if user is authenticated
+    if (!user) {
+      setIsFetching(false);
+      return;
+    }
+    fetchPortfolio();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const {
     register,
@@ -116,11 +134,17 @@ export function PortfolioManager({
       const method = editingItem ? 'PUT' : 'POST';
       const body = editingItem ? { ...data, id: editingItem.id } : data;
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify(body),
       });
 
@@ -171,8 +195,15 @@ export function PortfolioManager({
     try {
       setIsLoading(true);
 
+      const headers: HeadersInit = {};
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch(`/api/profile/me/portfolio/${itemId}`, {
         method: 'DELETE',
+        credentials: 'include',
+        headers,
       });
 
       if (response.ok) {
@@ -210,21 +241,38 @@ export function PortfolioManager({
 
     try {
       setIsUploading(true);
+      setError(null);
 
       const formData = new FormData();
       formData.append('file', file);
 
+      const headers: HeadersInit = {};
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
       const response = await fetch('/api/upload/portfolio-photo', {
         method: 'POST',
+        credentials: 'include',
+        headers,
         body: formData,
       });
 
       if (response.ok) {
         const result = await response.json();
         setValue('image_url', result.url);
+        onSuccess?.('Image uploaded successfully!');
       } else {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to upload image';
+        setError(errorMessage);
+        onError?.(errorMessage);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to upload image';
+      setError(errorMessage);
+      onError?.(errorMessage);
     } finally {
       setIsUploading(false);
     }

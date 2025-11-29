@@ -20,6 +20,7 @@ import {
   JobSearchParams,
   JobFilters as JobFiltersType,
 } from '@/types/jobs';
+import { useAuth } from '@/hooks/useAuth';
 
 interface JobListProps {
   initialJobs?: Job[];
@@ -29,6 +30,9 @@ interface JobListProps {
   className?: string;
   onJobSelect?: (job: Job) => void;
   onJobApply?: (job: Job) => void;
+  onJobEdit?: (job: Job) => void;
+  onJobViewApplications?: (job: Job) => void;
+  blurContactInfo?: boolean;
 }
 
 export function JobList({
@@ -39,9 +43,16 @@ export function JobList({
   className = '',
   onJobSelect,
   onJobApply,
+  onJobEdit,
+  onJobViewApplications,
+  blurContactInfo,
 }: JobListProps) {
+  const { user } = useAuth();
+
+  // If blurContactInfo is not explicitly set, default to blurring for non-logged-in users
+  const shouldBlur = blurContactInfo !== undefined ? blurContactInfo : !user;
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(initialJobs.length === 0); // Only show loading if no initial jobs
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<JobFiltersType>(initialFilters);
   const [searchQuery, setSearchQuery] = useState('');
@@ -299,6 +310,9 @@ export function JobList({
                   job={job}
                   onSelect={() => onJobSelect?.(job)}
                   onApply={() => onJobApply?.(job)}
+                  onEdit={() => onJobEdit?.(job)}
+                  onViewApplications={() => onJobViewApplications?.(job)}
+                  blurContactInfo={shouldBlur}
                 />
               ))}
             </div>

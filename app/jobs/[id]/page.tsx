@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,12 +27,26 @@ import {
 export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const jobId = params.id as string;
 
   const [job, setJob] = useState<JobWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+
+  // Helper function to blur email/phone
+  const blurText = (text: string): string => {
+    if (!text) return text;
+    // Show first 2 characters and last 2 characters, blur the middle
+    if (text.length <= 4) {
+      return '••••';
+    }
+    const start = text.substring(0, 2);
+    const end = text.substring(text.length - 2);
+    const middle = '•'.repeat(Math.max(3, text.length - 4));
+    return `${start}${middle}${end}`;
+  };
 
   // Fetch job details
   const fetchJob = async () => {
@@ -327,24 +342,47 @@ export default function JobDetailsPage() {
                 {job.contact_email && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-gray-500" />
-                    <a
-                      href={`mailto:${job.contact_email}`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      {job.contact_email}
-                    </a>
+                    {user ? (
+                      <a
+                        href={`mailto:${job.contact_email}`}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        {job.contact_email}
+                      </a>
+                    ) : (
+                      <span
+                        className="filter blur-sm select-none pointer-events-none text-gray-600"
+                        title="Sign in to view contact information"
+                      >
+                        {blurText(job.contact_email)}
+                      </span>
+                    )}
                   </div>
                 )}
                 {job.contact_phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-gray-500" />
-                    <a
-                      href={`tel:${job.contact_phone}`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      {job.contact_phone}
-                    </a>
+                    {user ? (
+                      <a
+                        href={`tel:${job.contact_phone}`}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        {job.contact_phone}
+                      </a>
+                    ) : (
+                      <span
+                        className="filter blur-sm select-none pointer-events-none text-gray-600"
+                        title="Sign in to view contact information"
+                      >
+                        {blurText(job.contact_phone)}
+                      </span>
+                    )}
                   </div>
+                )}
+                {!user && (
+                  <p className="text-sm text-gray-500 italic mt-2">
+                    Sign in to view full contact information
+                  </p>
                 )}
                 {job.response_preferences && (
                   <div className="text-sm text-gray-600">

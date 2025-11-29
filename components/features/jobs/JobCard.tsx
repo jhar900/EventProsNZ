@@ -18,24 +18,48 @@ import {
 import { BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
 import { Job } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
 
 interface JobCardProps {
   job: Job;
   onSelect?: () => void;
   onApply?: () => void;
+  onEdit?: () => void;
+  onViewApplications?: () => void;
   showActions?: boolean;
   className?: string;
+  blurContactInfo?: boolean;
 }
+
+// Helper function to blur email/phone
+const blurText = (text: string): string => {
+  if (!text) return text;
+  // Show first 2 characters and last 2 characters, blur the middle
+  if (text.length <= 4) {
+    return '••••';
+  }
+  const start = text.substring(0, 2);
+  const end = text.substring(text.length - 2);
+  const middle = '•'.repeat(Math.max(3, text.length - 4));
+  return `${start}${middle}${end}`;
+};
 
 export function JobCard({
   job,
   onSelect,
   onApply,
+  onEdit,
+  onViewApplications,
   showActions = true,
   className = '',
+  blurContactInfo = false,
 }: JobCardProps) {
+  const { user } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+
+  // Check if current user is the job creator
+  const isJobCreator = user?.id && job.posted_by_user_id === user.id;
 
   const handleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -123,18 +147,20 @@ export function JobCard({
               </Badge>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBookmark}
-            className="p-1"
-          >
-            {isBookmarked ? (
-              <BookmarkSolidIcon className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <BookmarkIcon className="h-5 w-5 text-gray-400" />
-            )}
-          </Button>
+          {user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBookmark}
+              className="p-1"
+            >
+              {isBookmarked ? (
+                <BookmarkSolidIcon className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <BookmarkIcon className="h-5 w-5 text-gray-400" />
+              )}
+            </Button>
+          )}
         </div>
 
         {/* Description */}
@@ -177,13 +203,39 @@ export function JobCard({
             {job.contact_email && (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <EnvelopeIcon className="h-4 w-4" />
-                <span>{job.contact_email}</span>
+                <span
+                  className={
+                    blurContactInfo
+                      ? 'filter blur-sm select-none pointer-events-none'
+                      : ''
+                  }
+                  title={
+                    blurContactInfo ? 'Sign in to view contact information' : ''
+                  }
+                >
+                  {blurContactInfo
+                    ? blurText(job.contact_email)
+                    : job.contact_email}
+                </span>
               </div>
             )}
             {job.contact_phone && (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <PhoneIcon className="h-4 w-4" />
-                <span>{job.contact_phone}</span>
+                <span
+                  className={
+                    blurContactInfo
+                      ? 'filter blur-sm select-none pointer-events-none'
+                      : ''
+                  }
+                  title={
+                    blurContactInfo ? 'Sign in to view contact information' : ''
+                  }
+                >
+                  {blurContactInfo
+                    ? blurText(job.contact_phone)
+                    : job.contact_phone}
+                </span>
               </div>
             )}
           </div>
@@ -214,25 +266,53 @@ export function JobCard({
         {/* Actions */}
         {showActions && (
           <div className="flex items-center space-x-2 pt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={e => {
-                e.stopPropagation();
-                onSelect?.();
-              }}
-              className="flex-1"
-            >
-              View Details
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleApply}
-              disabled={isApplying || job.status !== 'active'}
-              className="flex-1"
-            >
-              {isApplying ? 'Applying...' : 'Apply Now'}
-            </Button>
+            {isJobCreator ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onEdit?.();
+                  }}
+                  className="flex-1"
+                >
+                  Edit Job
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onViewApplications?.();
+                  }}
+                  className="flex-1"
+                >
+                  View Applications
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onSelect?.();
+                  }}
+                  className="flex-1"
+                >
+                  View Details
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleApply}
+                  disabled={isApplying || job.status !== 'active'}
+                  className="flex-1"
+                >
+                  {isApplying ? 'Applying...' : 'Apply Now'}
+                </Button>
+              </>
+            )}
           </div>
         )}
 

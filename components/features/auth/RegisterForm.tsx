@@ -102,18 +102,16 @@ export default function RegisterForm({
         localStorage.setItem('is_authenticated', 'true');
       }
 
-      // Refresh the Supabase session to pick up cookies set by the server
-      // The cookies are httpOnly, so we need to make a request to refresh the session
+      // Get the Supabase session to pick up cookies set by the server
+      // The cookies are httpOnly, so we need to make a request to read them
+      // Use getSession() instead of refreshSession() to avoid refresh_token_not_found errors
       try {
         const { supabase } = await import('@/lib/supabase/client');
-        // Try to refresh the session - this will read cookies from the server
-        await supabase.auth.refreshSession();
-      } catch (refreshError) {
-        console.warn(
-          'Failed to refresh session after registration:',
-          refreshError
-        );
-        // Don't fail registration if session refresh fails - cookies should still work for API routes
+        // Use getSession() - it reads from cookies without trying to refresh
+        await supabase.auth.getSession();
+      } catch (sessionError) {
+        console.warn('Failed to get session after registration:', sessionError);
+        // Don't fail registration if session check fails - cookies should still work for API routes
       }
 
       onSuccess?.(result.user);

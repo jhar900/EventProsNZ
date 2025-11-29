@@ -73,6 +73,7 @@ export function HomepageNavigation({
               <Link
                 key={link.name}
                 href={link.href}
+                prefetch={true}
                 className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
               >
                 {link.name}
@@ -127,6 +128,7 @@ export function HomepageNavigation({
                 <Link
                   key={link.name}
                   href={link.href}
+                  prefetch={true}
                   className="block py-2 text-gray-700 hover:text-orange-600 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >

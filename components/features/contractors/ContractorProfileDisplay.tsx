@@ -22,6 +22,9 @@ import {
   CalendarIcon,
   CheckBadgeIcon,
   ClockIcon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import {
@@ -62,6 +65,29 @@ export function ContractorProfileDisplay({
   >('idle');
   const [contactErrorMessage, setContactErrorMessage] = React.useState('');
   const getInTouchFormRef = useRef<HTMLDivElement>(null);
+
+  // Portfolio lightbox state
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
+  const [lightboxMediaIndex, setLightboxMediaIndex] = React.useState(0);
+
+  // Flatten all media items (images and videos) from all portfolio items
+  const allMediaItems = React.useMemo(() => {
+    if (!contractor.portfolio) return [];
+    const media: Array<{
+      type: 'image' | 'video';
+      url: string;
+      portfolioItem: PortfolioItem;
+    }> = [];
+    contractor.portfolio.forEach(item => {
+      if (item.imageUrl) {
+        media.push({ type: 'image', url: item.imageUrl, portfolioItem: item });
+      }
+      if (item.videoUrl) {
+        media.push({ type: 'video', url: item.videoUrl, portfolioItem: item });
+      }
+    });
+    return media;
+  }, [contractor.portfolio]);
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -455,6 +481,69 @@ export function ContractorProfileDisplay({
                 </div>
               )}
 
+              {/* Portfolio */}
+              {contractor.portfolio && contractor.portfolio.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Portfolio
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {contractor.portfolio.map(
+                      (item: PortfolioItem, index: number) => (
+                        <div
+                          key={item.id}
+                          className="border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                          onClick={() => {
+                            // Find the first media item for this portfolio item
+                            let mediaIndex = 0;
+                            for (let i = 0; i < index; i++) {
+                              const item = contractor.portfolio![i];
+                              if (item.imageUrl) mediaIndex++;
+                              if (item.videoUrl) mediaIndex++;
+                            }
+                            // If this item has an image, start with that; otherwise start with video
+                            if (item.imageUrl) {
+                              setLightboxMediaIndex(mediaIndex);
+                            } else if (item.videoUrl) {
+                              setLightboxMediaIndex(mediaIndex);
+                            }
+                            setLightboxOpen(true);
+                          }}
+                        >
+                          {item.imageUrl && (
+                            <div className="aspect-w-16 aspect-h-9">
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.title}
+                                width={300}
+                                height={200}
+                                className="w-full h-48 object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="p-4">
+                            <h3 className="font-medium text-gray-900 mb-1">
+                              {item.title}
+                            </h3>
+                            {item.description && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                {item.description}
+                              </p>
+                            )}
+                            {item.eventDate && (
+                              <div className="flex items-center text-sm text-gray-500">
+                                <CalendarIcon className="h-4 w-4 mr-1" />
+                                <span>{formatDate(item.eventDate)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Get In Touch Form */}
               {(!isPreview && user) || isPreview ? (
                 <div ref={getInTouchFormRef}>
@@ -594,51 +683,6 @@ export function ContractorProfileDisplay({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Portfolio */}
-          {contractor.portfolio && contractor.portfolio.length > 0 && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Portfolio
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contractor.portfolio.map((item: PortfolioItem) => (
-                  <div
-                    key={item.id}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
-                    {item.imageUrl && (
-                      <div className="aspect-w-16 aspect-h-9">
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.title}
-                          width={300}
-                          height={200}
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-1">
-                        {item.title}
-                      </h3>
-                      {item.description && (
-                        <p className="text-gray-600 text-sm mb-2">
-                          {item.description}
-                        </p>
-                      )}
-                      {item.eventDate && (
-                        <div className="flex items-center text-sm text-gray-500">
-                          <CalendarIcon className="h-4 w-4 mr-1" />
-                          <span>{formatDate(item.eventDate)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
           {/* Testimonials */}
           {contractor.testimonials && contractor.testimonials.length > 0 && (
             <Card className="p-6">
@@ -690,6 +734,30 @@ export function ContractorProfileDisplay({
         </div>
       </div>
 
+      {/* Portfolio Lightbox */}
+      {lightboxOpen &&
+        allMediaItems.length > 0 &&
+        lightboxMediaIndex >= 0 &&
+        lightboxMediaIndex < allMediaItems.length && (
+          <PortfolioLightbox
+            mediaItem={allMediaItems[lightboxMediaIndex]}
+            isOpen={lightboxOpen}
+            onClose={() => setLightboxOpen(false)}
+            onPrevious={() => {
+              if (lightboxMediaIndex > 0) {
+                setLightboxMediaIndex(lightboxMediaIndex - 1);
+              }
+            }}
+            onNext={() => {
+              if (lightboxMediaIndex < allMediaItems.length - 1) {
+                setLightboxMediaIndex(lightboxMediaIndex + 1);
+              }
+            }}
+            hasPrevious={lightboxMediaIndex > 0}
+            hasNext={lightboxMediaIndex < allMediaItems.length - 1}
+          />
+        )}
+
       {/* Login Modal */}
       {!isPreview && (
         <>
@@ -710,6 +778,236 @@ export function ContractorProfileDisplay({
           />
         </>
       )}
+    </div>
+  );
+}
+
+// Portfolio Lightbox Component
+interface MediaItem {
+  type: 'image' | 'video';
+  url: string;
+  portfolioItem: PortfolioItem;
+}
+
+interface PortfolioLightboxProps {
+  mediaItem: MediaItem;
+  isOpen: boolean;
+  onClose: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+function PortfolioLightbox({
+  mediaItem,
+  isOpen,
+  onClose,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
+}: PortfolioLightboxProps) {
+  const { type, url, portfolioItem } = mediaItem;
+
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      // Debug: Log portfolio item data
+      console.log('Portfolio lightbox opened:', {
+        type,
+        url,
+        title: portfolioItem.title,
+        hasPrevious,
+        hasNext,
+      });
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, type, url, portfolioItem, hasPrevious, hasNext]);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && hasPrevious) onPrevious();
+      if (e.key === 'ArrowRight' && hasNext) onNext();
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose, onPrevious, onNext, hasPrevious, hasNext]);
+
+  if (!isOpen) return null;
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('en-NZ', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95"
+      onClick={e => {
+        // Close if clicking on the backdrop (not the content)
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="relative max-w-6xl w-full max-h-[90vh] mx-4 bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full transition-all shadow-lg"
+          aria-label="Close"
+        >
+          <XMarkIcon className="h-6 w-6 text-gray-900" />
+        </button>
+
+        {/* Content */}
+        <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
+          {/* Media */}
+          <div
+            className="flex-1 bg-gray-100 flex items-center justify-center p-4 lg:p-8 min-h-[300px] lg:min-h-0 relative"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Navigation buttons - Positioned over the media area */}
+            {hasPrevious && (
+              <button
+                onClick={e => {
+                  console.log('Previous button clicked!');
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onPrevious();
+                }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 p-4 bg-white rounded-full transition-all shadow-lg hover:bg-gray-50 cursor-pointer opacity-100"
+                aria-label="Previous"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <ChevronLeftIcon className="h-6 w-6 text-gray-900" />
+              </button>
+            )}
+
+            {hasNext && (
+              <button
+                onClick={e => {
+                  console.log('Next button clicked!');
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onNext();
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 p-4 bg-white rounded-full transition-all shadow-lg hover:bg-gray-50 cursor-pointer opacity-100"
+                aria-label="Next"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <ChevronRightIcon className="h-6 w-6 text-gray-900" />
+              </button>
+            )}
+
+            {/* Show image or video based on media type */}
+            {type === 'image' ? (
+              <div
+                className="relative w-full max-w-4xl max-h-[70vh] flex items-center justify-center"
+                style={{ pointerEvents: 'none' }}
+              >
+                <img
+                  src={url}
+                  alt={portfolioItem.title}
+                  className="max-h-[70vh] max-w-full w-auto h-auto rounded-lg shadow-lg object-contain"
+                  style={{ maxWidth: '100%', display: 'block' }}
+                  onError={e => {
+                    console.error('Image failed to load:', url, e);
+                    // Fallback if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent && !parent.querySelector('.error-message')) {
+                      const errorDiv = document.createElement('div');
+                      errorDiv.className =
+                        'error-message w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center';
+                      errorDiv.innerHTML =
+                        '<p class="text-gray-500">Image failed to load</p>';
+                      parent.appendChild(errorDiv);
+                    }
+                  }}
+                  onLoad={() => {
+                    // Image loaded successfully
+                    console.log('Portfolio image loaded successfully:', url);
+                  }}
+                />
+              </div>
+            ) : type === 'video' ? (
+              <div
+                className="w-full max-w-4xl"
+                style={{ pointerEvents: 'none' }}
+              >
+                <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-lg">
+                  <iframe
+                    src={url}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title={portfolioItem.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    frameBorder="0"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">No media available</p>
+              </div>
+            )}
+          </div>
+
+          {/* Details Panel */}
+          <div className="w-full lg:w-96 bg-white p-6 lg:p-8 overflow-y-auto border-t lg:border-t-0 lg:border-l border-gray-200">
+            <div className="space-y-6">
+              {/* Title */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {portfolioItem.title}
+                </h3>
+                {portfolioItem.description && (
+                  <p className="text-gray-700 leading-relaxed text-base">
+                    {portfolioItem.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Event Date */}
+              {portfolioItem.eventDate && (
+                <div className="flex items-center text-gray-600 pt-4 border-t border-gray-200">
+                  <CalendarIcon className="h-5 w-5 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">
+                      Event Date
+                    </p>
+                    <p className="text-base">
+                      {formatDate(portfolioItem.eventDate)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

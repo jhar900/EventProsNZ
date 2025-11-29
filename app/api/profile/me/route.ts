@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 
 const profileUpdateSchema = z.object({
@@ -12,14 +12,45 @@ const profileUpdateSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const { supabase } = createClient(request);
 
-    // Get current user
+    // Get current user - use getSession() first to avoid refresh token errors
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    let user = session?.user;
+
+    // If no session, try getUser (but handle refresh token errors)
+    if (!user) {
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      // Handle refresh token errors gracefully
+      if (authError) {
+        if (
+          authError.message?.includes('refresh_token_not_found') ||
+          authError.message?.includes('Invalid Refresh Token') ||
+          authError.message?.includes('Refresh Token Not Found')
+        ) {
+          return NextResponse.json(
+            {
+              error: 'Session expired. Please log in again.',
+              code: 'SESSION_EXPIRED',
+            },
+            { status: 401 }
+          );
+        }
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      user = getUserUser;
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -62,14 +93,45 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const { supabase } = createClient(request);
 
-    // Get current user
+    // Get current user - use getSession() first to avoid refresh token errors
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    let user = session?.user;
+
+    // If no session, try getUser (but handle refresh token errors)
+    if (!user) {
+      const {
+        data: { user: getUserUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      // Handle refresh token errors gracefully
+      if (authError) {
+        if (
+          authError.message?.includes('refresh_token_not_found') ||
+          authError.message?.includes('Invalid Refresh Token') ||
+          authError.message?.includes('Refresh Token Not Found')
+        ) {
+          return NextResponse.json(
+            {
+              error: 'Session expired. Please log in again.',
+              code: 'SESSION_EXPIRED',
+            },
+            { status: 401 }
+          );
+        }
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      user = getUserUser;
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -96,7 +96,9 @@ export function ProfileManagement() {
       setIsLoading(true);
 
       // Fetch profile data
-      const profileResponse = await fetch('/api/profile/me');
+      const profileResponse = await fetch('/api/profile/me', {
+        credentials: 'include',
+      });
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfile(profileData.profile);
@@ -104,27 +106,33 @@ export function ProfileManagement() {
       }
 
       // Fetch services
-      const servicesResponse = await fetch('/api/profile/me/services');
+      const servicesResponse = await fetch('/api/profile/me/services', {
+        credentials: 'include',
+      });
       if (servicesResponse.ok) {
         const servicesData = await servicesResponse.json();
         setServices(servicesData.services);
       }
 
       // Fetch portfolio
-      const portfolioResponse = await fetch('/api/profile/me/portfolio');
+      const portfolioResponse = await fetch('/api/profile/me/portfolio', {
+        credentials: 'include',
+      });
       if (portfolioResponse.ok) {
         const portfolioData = await portfolioResponse.json();
         setPortfolio(portfolioData.portfolio);
       }
 
       // Fetch privacy settings
-      const privacyResponse = await fetch('/api/profile/me/privacy');
+      const privacyResponse = await fetch('/api/profile/me/privacy', {
+        credentials: 'include',
+      });
       if (privacyResponse.ok) {
         const privacyData = await privacyResponse.json();
         setPrivacySettings(privacyData.privacy_settings);
       }
     } catch (error) {
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };

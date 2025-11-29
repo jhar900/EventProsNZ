@@ -93,7 +93,14 @@ export function EventManagerJobManagement({
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/jobs?posted_by_user_id=${userId}&job_type=event_manager`
+        `/api/jobs?posted_by_user_id=${userId}&job_type=event_manager&limit=100`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Include cookies for better auth handling
+        }
       );
       const result = await response.json();
 

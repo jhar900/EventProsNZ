@@ -23,20 +23,38 @@ export async function GET(request: NextRequest) {
       const status = await completionService.getProfileCompletionStatus(
         user.id
       );
-      return NextResponse.json({
+
+      // Add cache headers to reduce unnecessary requests
+      const response = NextResponse.json({
         success: true,
         status,
       });
+
+      response.headers.set(
+        'Cache-Control',
+        'private, max-age=120, stale-while-revalidate=60'
+      );
+
+      return response;
     }
 
     // Use service role client to ensure we can access contractor_onboarding_status
     const completionService = new ProfileCompletionService(supabaseAdmin);
     const status = await completionService.getProfileCompletionStatus(userId);
 
-    return NextResponse.json({
+    // Add cache headers to reduce unnecessary requests
+    // Cache for 2 minutes on client, but allow revalidation
+    const response = NextResponse.json({
       success: true,
       status,
     });
+
+    response.headers.set(
+      'Cache-Control',
+      'private, max-age=120, stale-while-revalidate=60'
+    );
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

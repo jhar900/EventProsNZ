@@ -134,16 +134,19 @@ export function JobFilters({
           <div className="space-y-2">
             <Label htmlFor="job_type">Job Type</Label>
             <Select
-              value={localFilters.job_type || ''}
+              value={localFilters.job_type || 'all'}
               onValueChange={value =>
-                handleFilterChange('job_type', value || undefined)
+                handleFilterChange(
+                  'job_type',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All job types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All job types</SelectItem>
+                <SelectItem value="all">All job types</SelectItem>
                 <SelectItem value="event_manager">Event Manager</SelectItem>
                 <SelectItem value="contractor_internal">
                   Contractor Internal
@@ -156,16 +159,19 @@ export function JobFilters({
           <div className="space-y-2">
             <Label htmlFor="service_category">Service Category</Label>
             <Select
-              value={localFilters.service_category || ''}
+              value={localFilters.service_category || 'all'}
               onValueChange={value =>
-                handleFilterChange('service_category', value || undefined)
+                handleFilterChange(
+                  'service_category',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {Object.entries(JOB_SERVICE_CATEGORIES).map(([key, value]) => (
                   <SelectItem key={key} value={value}>
                     {value.replace('_', ' ').toUpperCase()}
@@ -179,16 +185,19 @@ export function JobFilters({
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
             <Select
-              value={localFilters.location || ''}
+              value={localFilters.location || 'all'}
               onValueChange={value =>
-                handleFilterChange('location', value || undefined)
+                handleFilterChange(
+                  'location',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All locations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All locations</SelectItem>
+                <SelectItem value="all">All locations</SelectItem>
                 {LOCATIONS.map(location => (
                   <SelectItem key={location} value={location}>
                     {location}
@@ -221,16 +230,19 @@ export function JobFilters({
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <Select
-              value={localFilters.status || ''}
+              value={localFilters.status || 'all'}
               onValueChange={value =>
-                handleFilterChange('status', value || undefined)
+                handleFilterChange(
+                  'status',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="filled">Filled</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>

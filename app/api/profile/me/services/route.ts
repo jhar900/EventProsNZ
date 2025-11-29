@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
 
 const serviceSchema = z.object({
@@ -18,10 +19,32 @@ const serviceUpdateSchema = serviceSchema.extend({
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from request headers (sent by client)
-    const userId = request.headers.get('x-user-id');
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
+
+    // If no header, try cookie-based auth
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !getUserUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        user = getUserUser;
+      }
+
+      userId = user.id;
     }
 
     // Get business profile ID for this user
@@ -79,10 +102,32 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user ID from request headers (sent by client)
-    const userId = request.headers.get('x-user-id');
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
+
+    // If no header, try cookie-based auth
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !getUserUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        user = getUserUser;
+      }
+
+      userId = user.id;
     }
 
     const body = await request.json();
@@ -190,10 +235,32 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Get user ID from request headers (sent by client)
-    const userId = request.headers.get('x-user-id');
+    // Try to get user ID from header first
+    let userId = request.headers.get('x-user-id');
+
+    // If no header, try cookie-based auth
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      let user = session?.user;
+
+      if (!user) {
+        const {
+          data: { user: getUserUser },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !getUserUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        user = getUserUser;
+      }
+
+      userId = user.id;
     }
 
     const body = await request.json();

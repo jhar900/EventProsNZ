@@ -104,11 +104,15 @@ export function PrivacySettings({ settings, onUpdate }: PrivacySettingsProps) {
     try {
       setIsLoading(true);
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      // Note: PrivacySettings doesn't have access to user, but API will use cookie-based auth
+
       const response = await fetch('/api/profile/me/privacy', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -118,9 +122,9 @@ export function PrivacySettings({ settings, onUpdate }: PrivacySettingsProps) {
         reset(data);
       } else {
         const error = await response.json();
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };

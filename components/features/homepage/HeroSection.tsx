@@ -88,7 +88,7 @@ export function HeroSection({
             </Link>
           )}
 
-          <Link href="/contractors">
+          <Link href="/contractors" prefetch={true}>
             <Button
               variant="outline"
               size="lg"

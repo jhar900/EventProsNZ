@@ -69,6 +69,7 @@ export function PersonalInfoEditor({
 
       const response = await fetch('/api/profile/me', {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -81,9 +82,9 @@ export function PersonalInfoEditor({
         reset(data);
       } else {
         const error = await response.json();
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -102,6 +103,7 @@ export function PersonalInfoEditor({
 
       const response = await fetch('/api/upload/profile-photo', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
 
@@ -111,9 +113,9 @@ export function PersonalInfoEditor({
         const updatedProfile = { ...profile, profile_photo_url: result.url };
         onUpdate(updatedProfile);
       } else {
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setIsUploading(false);
     }
   };

@@ -48,13 +48,13 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface InternalJobApplicationManagerProps {
   jobId: string;
-  applications: JobApplicationWithDetails[];
-  onApplicationUpdate: (
+  applications?: JobApplicationWithDetails[];
+  onApplicationUpdate?: (
     applicationId: string,
     status: string,
     notes?: string
   ) => Promise<void>;
-  onApplicationMessage: (
+  onApplicationMessage?: (
     applicationId: string,
     message: string
   ) => Promise<void>;
@@ -69,11 +69,14 @@ interface ApplicationFilters {
 
 export function InternalJobApplicationManager({
   jobId,
-  applications,
-  onApplicationUpdate,
-  onApplicationMessage,
+  applications: propApplications,
+  onApplicationUpdate: propOnApplicationUpdate,
+  onApplicationMessage: propOnApplicationMessage,
   className = '',
 }: InternalJobApplicationManagerProps) {
+  const [applications, setApplications] = useState<JobApplicationWithDetails[]>(
+    propApplications || []
+  );
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplicationWithDetails | null>(null);
   const [filters, setFilters] = useState<ApplicationFilters>({
@@ -83,6 +86,35 @@ export function InternalJobApplicationManager({
   });
   const [messageText, setMessageText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
+
+  // Fetch applications if not provided as prop
+  useEffect(() => {
+    if (!propApplications && jobId) {
+      fetchApplications();
+    } else if (propApplications) {
+      setApplications(propApplications);
+    }
+  }, [jobId, propApplications]);
+
+  const fetchApplications = async () => {
+    try {
+      setIsLoadingApplications(true);
+      const response = await fetch(`/api/jobs/${jobId}/applications`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch applications');
+      }
+
+      setApplications(result.applications || []);
+    } catch (error) {
+      console.error('Fetch applications error:', error);
+      setApplications([]);
+    } finally {
+      setIsLoadingApplications(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,7 +161,7 @@ export function InternalJobApplicationManager({
     }
   };
 
-  const filteredApplications = applications.filter(application => {
+  const filteredApplications = (applications || []).filter(application => {
     if (filters.status !== 'all' && application.status !== filters.status) {
       return false;
     }
@@ -152,7 +184,27 @@ export function InternalJobApplicationManager({
   ) => {
     try {
       setIsLoading(true);
-      await onApplicationUpdate(applicationId, newStatus);
+      if (propOnApplicationUpdate) {
+        await propOnApplicationUpdate(applicationId, newStatus);
+      } else {
+        // Default implementation if no handler provided
+        const response = await fetch(`/api/applications/${applicationId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Failed to update application');
+        }
+
+        // Refresh applications
+        await fetchApplications();
+      }
     } catch (error) {
       // Log error for debugging
       if (process.env.NODE_ENV === 'development') {
@@ -168,7 +220,16 @@ export function InternalJobApplicationManager({
 
     try {
       setIsLoading(true);
-      await onApplicationMessage(selectedApplication.id, messageText);
+      if (propOnApplicationMessage) {
+        await propOnApplicationMessage(selectedApplication.id, messageText);
+      } else {
+        // Default implementation - could send via API if needed
+        console.log(
+          'Sending message to application:',
+          selectedApplication.id,
+          messageText
+        );
+      }
       setMessageText('');
     } catch (error) {
       // Log error for debugging
@@ -192,6 +253,18 @@ export function InternalJobApplicationManager({
     accepted: applications.filter(app => app.status === 'accepted').length,
     rejected: applications.filter(app => app.status === 'rejected').length,
   };
+
+  // Show loading state while fetching applications
+  if (isLoadingApplications && applications.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading applications...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>

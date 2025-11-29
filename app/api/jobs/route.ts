@@ -93,12 +93,14 @@ const getJobsSchema = z.object({
 // GET /api/jobs - Get jobs with filtering and search
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Use middleware client for better cookie handling (non-blocking auth check)
+    const { createClient } = await import('@/lib/supabase/middleware');
+    const { supabase } = createClient(request);
 
-    // Get current user (optional for public job listings)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Get current user (optional for public job listings) - don't block on this
+    const userPromise = supabase.auth
+      .getUser()
+      .catch(() => ({ data: { user: null }, error: null }));
 
     const { searchParams } = new URL(request.url);
     const params = Object.fromEntries(searchParams.entries());
@@ -113,18 +115,37 @@ export async function GET(request: NextRequest) {
       is_remote: params.is_remote ? params.is_remote === 'true' : undefined,
     });
 
-    // If there's a search query, use searchJobs, otherwise use getJobs
-    let result;
-    if (parsedParams.q) {
-      result = await jobService.searchJobs(parsedParams);
-    } else {
-      result = await jobService.getJobs(parsedParams);
-    }
+    // Fetch jobs in parallel with auth check (don't wait for auth)
+    const [result] = await Promise.all([
+      parsedParams.q
+        ? jobService.searchJobs(parsedParams)
+        : jobService.getJobs(parsedParams),
+      userPromise, // Resolve auth check but don't block
+    ]);
 
-    return NextResponse.json({
+    // Add cache headers - jobs list can be cached for a short time
+    const response = NextResponse.json({
       success: true,
       ...result,
     });
+
+    // For user's own jobs (posted_by_user_id), use shorter cache since they change more frequently
+    // For public job listings, use longer cache
+    if (parsedParams.posted_by_user_id) {
+      // User's own jobs - cache for 15 seconds, stale-while-revalidate for 10 seconds
+      response.headers.set(
+        'Cache-Control',
+        'private, max-age=15, stale-while-revalidate=10'
+      );
+    } else {
+      // Public jobs - cache for 30 seconds, stale-while-revalidate for 15 seconds
+      response.headers.set(
+        'Cache-Control',
+        'public, max-age=30, stale-while-revalidate=15'
+      );
+    }
+
+    return response;
   } catch (error) {
     console.error('GET /api/jobs error:', error);
 

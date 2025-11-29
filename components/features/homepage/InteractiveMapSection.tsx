@@ -236,15 +236,9 @@ export function InteractiveMapSection({
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Find Contractors Across New Zealand
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-4">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Discover qualified contractors in your area with our interactive map
           </p>
-          <Link
-            href="/maps-demo"
-            className="inline-block text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Test Mapbox API →
-          </Link>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">

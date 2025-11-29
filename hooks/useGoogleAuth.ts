@@ -165,18 +165,43 @@ export function useGoogleAuth({
               localStorage.setItem('is_authenticated', 'true');
             }
 
-            // Refresh the Supabase session to pick up cookies set by the server
-            // The cookies are httpOnly, so we need to make a request to refresh the session
-            try {
-              const { supabase } = await import('@/lib/supabase/client');
-              // Try to refresh the session - this will read cookies from the server
-              await supabase.auth.refreshSession();
-            } catch (refreshError) {
+            // Wait for cookies to be set by the server and verify session is established
+            // The cookies are httpOnly, so we need to make a request to read them
+            // Use getSession() which reads from cookies without trying to refresh
+            let sessionEstablished = false;
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            while (!sessionEstablished && attempts < maxAttempts) {
+              try {
+                const { supabase } = await import('@/lib/supabase/client');
+
+                // Use getSession() - it reads from cookies without auto-refreshing
+                const { data: sessionData, error: sessionError } =
+                  await supabase.auth.getSession();
+
+                if (sessionData.session && !sessionError) {
+                  sessionEstablished = true;
+                  break;
+                }
+
+                // Wait a bit for cookies to propagate
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+              } catch (error) {
+                console.warn(
+                  `Session check attempt ${attempts + 1} failed:`,
+                  error
+                );
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+              }
+            }
+
+            if (!sessionEstablished) {
               console.warn(
-                'Failed to refresh session after Google login:',
-                refreshError
+                'Session not fully established after Google login, but proceeding'
               );
-              // Don't fail the login if session refresh fails - cookies should still work for API routes
             }
 
             // Call success callback with ID token and user data

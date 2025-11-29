@@ -29,10 +29,15 @@ export async function middleware(request: NextRequest) {
   // Handle Supabase Auth for other routes
   const { supabase, response } = createClient(request);
 
-  // Refresh session if expired - required for Server Components
-  // Don't await - let it happen in background to avoid blocking navigation
-  supabase.auth.getUser().catch(() => {
-    // Silently fail - session refresh is not critical for navigation
+  // Check session without auto-refreshing to avoid refresh_token_not_found errors
+  // getSession() doesn't auto-refresh, so it won't throw errors for missing refresh tokens
+  // This is sufficient for middleware - we just need to ensure cookies are handled properly
+  // The actual auth check happens in API routes and components that need it
+  // We don't await this - it's fire-and-forget to avoid blocking the request
+  supabase.auth.getSession().catch(() => {
+    // Silently fail - session check is not critical for navigation
+    // This won't throw refresh_token_not_found errors since getSession doesn't auto-refresh
+    // Errors are caught to prevent them from appearing in server logs
   });
 
   return response;

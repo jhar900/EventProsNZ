@@ -31,6 +31,7 @@ export function SuspensionNotice() {
       try {
         const response = await fetch('/api/user/suspension-status', {
           credentials: 'include', // Include cookies for authentication
+          headers: { 'x-user-id': user.id },
         });
 
         if (response.ok) {

@@ -46,30 +46,51 @@ export class ProfileCompletionService {
     userId: string
   ): Promise<ProfileCompletionStatus> {
     try {
-      // Get user profile
-      const { data: profile, error: profileError } = await this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      // Fetch all data in parallel for better performance
+      const [
+        profileResult,
+        businessProfileResult,
+        userResult,
+        onboardingResult,
+      ] = await Promise.all([
+        // Get user profile - only select needed fields
+        this.supabase
+          .from('profiles')
+          .select(
+            'first_name, last_name, phone, address, avatar_url, preferences'
+          )
+          .eq('user_id', userId)
+          .single(),
+        // Get business profile if exists - only select needed fields
+        this.supabase
+          .from('business_profiles')
+          .select('company_name, location, description, service_categories')
+          .eq('user_id', userId)
+          .maybeSingle(), // Use maybeSingle to avoid error if doesn't exist
+        // Get user data - only select needed fields
+        this.supabase
+          .from('users')
+          .select('email, role')
+          .eq('id', userId)
+          .single(),
+        // Get contractor onboarding status if exists
+        this.supabase
+          .from('contractor_onboarding_status')
+          .select('is_submitted')
+          .eq('user_id', userId)
+          .maybeSingle(), // Use maybeSingle to avoid error if doesn't exist
+      ]);
+
+      const profile = profileResult.data;
+      const profileError = profileResult.error;
+      const businessProfile = businessProfileResult.data;
+      const user = userResult.data;
+      const userError = userResult.error;
+      const onboardingStatus = onboardingResult.data;
 
       if (profileError) {
         throw new Error('Failed to fetch profile');
       }
-
-      // Get business profile if exists
-      const { data: businessProfile } = await this.supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      // Get user data
-      const { data: user, error: userError } = await this.supabase
-        .from('users')
-        .select('email, role')
-        .eq('id', userId)
-        .single();
 
       if (userError) {
         throw new Error('Failed to fetch user data');
@@ -77,27 +98,19 @@ export class ProfileCompletionService {
 
       // For contractors, check if onboarding is submitted
       // If submitted, mark as complete regardless of field completion
-      if (user.role === 'contractor') {
-        const { data: onboardingStatus } = await this.supabase
-          .from('contractor_onboarding_status')
-          .select('is_submitted')
-          .eq('user_id', userId)
-          .single();
-
-        if (onboardingStatus?.is_submitted) {
-          // Onboarding is submitted, mark as complete
-          return {
-            isComplete: true,
-            completionPercentage: 100,
-            missingFields: [],
-            requirements: {
-              personalInfo: true,
-              contactInfo: true,
-              businessInfo: true,
-              profilePhoto: true,
-            },
-          };
-        }
+      if (user.role === 'contractor' && onboardingStatus?.is_submitted) {
+        // Onboarding is submitted, mark as complete
+        return {
+          isComplete: true,
+          completionPercentage: 100,
+          missingFields: [],
+          requirements: {
+            personalInfo: true,
+            contactInfo: true,
+            businessInfo: true,
+            profilePhoto: true,
+          },
+        };
       }
 
       // For event managers, check if onboarding is completed

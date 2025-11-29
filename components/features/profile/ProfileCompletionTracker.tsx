@@ -10,7 +10,12 @@ interface ProfileCompletionTrackerProps {
 export default function ProfileCompletionTracker({
   className = '',
 }: ProfileCompletionTrackerProps) {
-  const { completionStatus, isLoading } = useProfile();
+  const { completionStatus, isLoading, loadProfileData } = useProfile();
+
+  // Load profile data when component mounts to calculate completion status
+  React.useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
 
   if (isLoading || !completionStatus) {
     return null; // Don't show anything while loading

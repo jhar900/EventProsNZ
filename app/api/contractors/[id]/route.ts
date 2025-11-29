@@ -115,41 +115,91 @@ export async function GET(
 
     // businessProfile was already extracted above for the is_published check
 
-    // Fetch services for this contractor
-    let services: any[] = [];
-    if (businessProfile?.id) {
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select(
+    // Fetch services and portfolio in parallel for better performance
+    const servicesPromise = businessProfile?.id
+      ? supabase
+          .from('services')
+          .select(
+            `
+            id,
+            name,
+            service_name,
+            category,
+            description,
+            price_range_min,
+            price_range_max,
+            availability,
+            created_at,
+            updated_at
           `
-          id,
-          name,
-          service_name,
-          category,
-          description,
-          price_range_min,
-          price_range_max,
-          availability,
-          created_at,
-          updated_at
-        `
-        )
-        .eq('business_profile_id', businessProfile.id)
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
+          )
+          .eq('business_profile_id', businessProfile.id)
+          .eq('is_available', true)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: null, error: null });
 
-      if (servicesData) {
-        services = servicesData.map((s: any) => ({
-          id: s.id,
-          serviceType: s.service_name || s.name || s.category || '',
-          description: s.description || null,
-          priceRangeMin: s.price_range_min || null,
-          priceRangeMax: s.price_range_max || null,
-          availability: s.availability || null,
-          createdAt: s.created_at || new Date().toISOString(),
-          updatedAt: s.updated_at || null,
-        }));
-      }
+    const portfolioPromise = supabase
+      .from('portfolio')
+      .select(
+        'id, title, description, image_url, video_url, event_date, created_at'
+      )
+      .eq('user_id', contractorId)
+      .eq('is_visible', true)
+      .order('event_date', { ascending: false });
+
+    // Execute both queries in parallel
+    const [servicesResult, portfolioResult] = await Promise.all([
+      servicesPromise,
+      portfolioPromise,
+    ]);
+
+    // Transform services
+    let services: any[] = [];
+    if (servicesResult.data) {
+      services = servicesResult.data.map((s: any) => ({
+        id: s.id,
+        serviceType: s.service_name || s.name || s.category || '',
+        description: s.description || null,
+        priceRangeMin: s.price_range_min || null,
+        priceRangeMax: s.price_range_max || null,
+        availability: s.availability || null,
+        createdAt: s.created_at || new Date().toISOString(),
+        updatedAt: s.updated_at || null,
+      }));
+    }
+
+    // Transform portfolio items
+    let portfolio: any[] = [];
+    if (portfolioResult.data) {
+      portfolio = portfolioResult.data.map((p: any) => {
+        // Handle video URLs - convert YouTube/Vimeo URLs to embed format if needed
+        let videoUrl = p.video_url || null;
+        if (videoUrl) {
+          // Check if it's a YouTube URL and convert to embed format
+          const youtubeRegex =
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/;
+          const youtubeMatch = videoUrl.match(youtubeRegex);
+          if (youtubeMatch) {
+            videoUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+          }
+          // Check if it's a Vimeo URL and convert to embed format
+          const vimeoRegex = /vimeo\.com\/(\d+)/;
+          const vimeoMatch = videoUrl.match(vimeoRegex);
+          if (vimeoMatch) {
+            videoUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+          }
+        }
+
+        return {
+          id: p.id,
+          title: p.title || 'Untitled',
+          description: p.description || null,
+          imageUrl: p.image_url || null,
+          videoUrl: videoUrl,
+          eventDate: p.event_date || null,
+          createdAt: p.created_at || new Date().toISOString(),
+        };
+      });
     }
 
     const contractor = {
@@ -183,14 +233,23 @@ export async function GET(
       tiktokUrl: businessProfile?.tiktok_url || null,
       verificationDate: null,
       services: services,
-      portfolio: [],
+      portfolio: portfolio,
       testimonials: [],
       createdAt: contractorData.created_at,
       isPremium: businessProfile?.subscription_tier !== 'essential',
       isFeatured: false,
     };
 
-    return NextResponse.json({ contractor });
+    const response = NextResponse.json({ contractor });
+
+    // Add caching headers for public contractor profiles
+    // Cache for 1 minute, but allow stale-while-revalidate for 30 seconds
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=60, stale-while-revalidate=30'
+    );
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch contractor' },

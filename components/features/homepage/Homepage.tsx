@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { HeroSection } from './HeroSection';
 import { TestimonialsSection } from './TestimonialsSection';
 import { InteractiveMapSection } from './InteractiveMapSection';
@@ -23,6 +24,25 @@ function HeroSectionWithModal() {
 }
 
 export function Homepage({ className = '' }: HomepageProps) {
+  const router = useRouter();
+
+  // Prefetch the jobs page when homepage loads for faster navigation
+  useEffect(() => {
+    // Prefetch the jobs page route
+    router.prefetch('/jobs');
+
+    // Prefetch the jobs API endpoint to warm up the cache
+    fetch('/api/jobs?limit=12', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    }).catch(() => {
+      // Silently fail - prefetch is best effort
+    });
+  }, [router]);
+
   return (
     <HomepageLayout className={`min-h-screen ${className}`}>
       {/* Main content with top padding to account for fixed navigation */}
