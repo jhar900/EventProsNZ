@@ -34,6 +34,7 @@ export function ContractorDirectory({
     error,
     fetchContractors,
     searchContractors,
+    fetchFeaturedContractors,
     setViewMode,
     updateFilters,
     loadMore,
@@ -43,9 +44,19 @@ export function ContractorDirectory({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // Load contractors on mount
+  // Load contractors and featured contractors in parallel on mount
   useEffect(() => {
-    fetchContractors(initialFilters);
+    if (showFeatured) {
+      // Load both in parallel
+      Promise.all([
+        fetchContractors(initialFilters),
+        fetchFeaturedContractors(),
+      ]).catch(error => {
+        console.error('Error loading contractors:', error);
+      });
+    } else {
+      fetchContractors(initialFilters);
+    }
   }, []); // Remove dependencies to prevent infinite loops
 
   const handleSearch = async (query: string) => {

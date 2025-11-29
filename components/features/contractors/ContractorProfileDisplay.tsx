@@ -388,6 +388,20 @@ export function ContractorProfileDisplay({
                     )}
                   </div>
 
+                  {/* Rating */}
+                  {contractor.reviewCount > 0 && (
+                    <div className="flex items-center mb-3">
+                      <div className="flex items-center mr-2">
+                        {renderStars(contractor.averageRating)}
+                      </div>
+                      <span className="text-gray-600">
+                        {contractor.averageRating.toFixed(1)} (
+                        {contractor.reviewCount} review
+                        {contractor.reviewCount !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                  )}
+
                   {/* Location */}
                   <div className="flex items-center text-gray-600">
                     <MapPinIcon className="h-5 w-5 mr-2" />
@@ -544,12 +558,49 @@ export function ContractorProfileDisplay({
                 </div>
               )}
 
+              {/* Personal Bio */}
+              {contractor.bio && (
+                <div className="mb-6">
+                  <div className="flex items-start gap-4">
+                    {/* Profile Picture */}
+                    <div className="flex-shrink-0">
+                      <div className="relative w-16 h-16">
+                        {contractor.avatarUrl ? (
+                          <Image
+                            src={contractor.avatarUrl}
+                            alt={contractor.name}
+                            fill
+                            className="rounded-full object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border border-gray-200">
+                            <span className="text-gray-500 font-semibold text-xl">
+                              {contractor.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {/* Bio Content */}
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                        Main Contact - {contractor.name}
+                      </h2>
+                      <p
+                        className="text-gray-600 leading-relaxed whitespace-pre-line"
+                        style={{ whiteSpace: 'pre-line' }}
+                      >
+                        {contractor.bio}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Get In Touch Form */}
               {(!isPreview && user) || isPreview ? (
                 <div ref={getInTouchFormRef}>
-                  <Card
-                    className={`p-6 ${contractor.reviewCount > 0 || contractor.bio ? 'mb-6' : 'mb-0'}`}
-                  >
+                  <Card className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Get In Touch
                     </h3>
@@ -645,35 +696,6 @@ export function ContractorProfileDisplay({
                   </Card>
                 </div>
               ) : null}
-
-              {/* Rating */}
-              {contractor.reviewCount > 0 && (
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center mr-2">
-                    {renderStars(contractor.averageRating)}
-                  </div>
-                  <span className="text-gray-600">
-                    {contractor.averageRating.toFixed(1)} (
-                    {contractor.reviewCount} review
-                    {contractor.reviewCount !== 1 ? 's' : ''})
-                  </span>
-                </div>
-              )}
-
-              {/* Personal Bio */}
-              {contractor.bio && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                    About {contractor.name}
-                  </h2>
-                  <p
-                    className="text-gray-600 leading-relaxed whitespace-pre-line"
-                    style={{ whiteSpace: 'pre-line' }}
-                  >
-                    {contractor.bio}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>

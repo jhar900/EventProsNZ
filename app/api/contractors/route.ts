@@ -17,112 +17,119 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // First, get contractors with profiles
+    // Query business_profiles directly (more efficient) with joins
+    // This ensures we only get published contractors and can filter/sort efficiently
     let query = supabase
-      .from('users')
+      .from('business_profiles')
       .select(
         `
-        id,
-        email,
-        created_at,
-        status,
-        profiles!inner(
-          first_name,
-          last_name,
-          avatar_url,
-          location,
-          bio
+        user_id,
+        company_name,
+        description,
+        location,
+        service_categories,
+        average_rating,
+        review_count,
+        is_verified,
+        subscription_tier,
+        logo_url,
+        users!inner(
+          id,
+          email,
+          created_at,
+          status,
+          role,
+          profiles!inner(
+            first_name,
+            last_name,
+            avatar_url,
+            location,
+            bio
+          )
         )
       `,
         { count: 'exact' }
       )
-      .eq('role', 'contractor')
-      .neq('status', 'suspended');
+      .eq('is_published', true)
+      .eq('users.role', 'contractor')
+      .neq('users.status', 'suspended');
 
     // Apply sorting
     switch (sort) {
       case 'newest':
-        query = query.order('created_at', { ascending: false });
+        query = query.order('users.created_at', { ascending: false });
         break;
       case 'oldest':
-        query = query.order('created_at', { ascending: true });
+        query = query.order('users.created_at', { ascending: true });
+        break;
+      case 'premium_first':
+        // Sort by subscription tier (spotlight > showcase > essential), then rating
+        query = query
+          .order('subscription_tier', { ascending: false })
+          .order('average_rating', { ascending: false });
         break;
       default:
-        query = query.order('created_at', { ascending: false });
+        query = query.order('users.created_at', { ascending: false });
     }
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
 
-    const { data: contractors, error: contractorsError, count } = await query;
+    const {
+      data: businessProfiles,
+      error: businessProfilesError,
+      count,
+    } = await query;
 
-    if (contractorsError) {
+    if (businessProfilesError) {
+      console.error('Error fetching contractors:', businessProfilesError);
       return NextResponse.json(
-        { error: 'Failed to fetch contractors' },
+        {
+          error: 'Failed to fetch contractors',
+          details: businessProfilesError.message,
+        },
         { status: 500 }
       );
     }
 
-    // Get business profiles for the contractors
-    const contractorIds = contractors?.map(c => c.id) || [];
-    let businessProfiles = [];
-
-    if (contractorIds.length > 0) {
-      const { data: businessData, error: businessError } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .in('user_id', contractorIds)
-        .eq('is_published', true);
-
-      if (!businessError) {
-        businessProfiles = businessData || [];
-      }
-    }
-
     // Transform the data to match the expected format
-    // Only include contractors that have a published business profile
     const transformedContractors =
-      contractors
-        ?.map(contractor => {
-          const businessProfile = businessProfiles.find(
-            bp => bp.user_id === contractor.id
-          );
+      businessProfiles
+        ?.map(bp => {
+          const user = Array.isArray(bp.users) ? bp.users[0] : bp.users;
+          const profile = Array.isArray(user?.profiles)
+            ? user.profiles[0]
+            : user?.profiles;
 
-          // Skip contractors without a published business profile
-          if (!businessProfile) {
+          if (!user || !profile) {
             return null;
           }
 
-          // Handle profiles array (it should be an array from the join)
-          const profile = Array.isArray(contractor.profiles)
-            ? contractor.profiles[0]
-            : contractor.profiles;
-
           return {
-            id: contractor.id,
-            email: contractor.email,
-            name: profile
-              ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
-              : 'Unknown User',
-            companyName: businessProfile.company_name || 'No Company Name',
-            description: businessProfile.description || '',
-            location: businessProfile.location || profile?.location,
-            avatarUrl: profile?.avatar_url,
-            logoUrl: businessProfile.logo_url,
-            bio: profile?.bio,
-            serviceCategories: businessProfile.service_categories || [],
-            averageRating: businessProfile.average_rating || 0,
-            reviewCount: businessProfile.review_count || 0,
-            isVerified: businessProfile.is_verified || false,
-            subscriptionTier: businessProfile.subscription_tier || 'essential',
-            businessAddress: businessProfile.location || profile?.location,
-            serviceAreas: businessProfile.service_categories || [],
+            id: user.id,
+            email: user.email,
+            name:
+              `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
+              'Unknown User',
+            companyName: bp.company_name || 'No Company Name',
+            description: bp.description || '',
+            location: bp.location || profile.location,
+            avatarUrl: profile.avatar_url,
+            logoUrl: bp.logo_url,
+            bio: profile.bio,
+            serviceCategories: bp.service_categories || [],
+            averageRating: bp.average_rating || 0,
+            reviewCount: bp.review_count || 0,
+            isVerified: bp.is_verified || false,
+            subscriptionTier: bp.subscription_tier || 'essential',
+            businessAddress: bp.location || profile.location,
+            serviceAreas: bp.service_categories || [],
             socialLinks: null,
             verificationDate: null,
             services: [], // Services will be fetched separately if needed
-            createdAt: contractor.created_at,
-            isPremium: ['professional', 'enterprise'].includes(
-              businessProfile.subscription_tier || 'essential'
+            createdAt: user.created_at,
+            isPremium: ['showcase', 'spotlight'].includes(
+              bp.subscription_tier || 'essential'
             ),
           };
         })
@@ -131,20 +138,23 @@ export async function GET(request: NextRequest) {
             contractor !== null
         ) || [];
 
-    // If no contractors found, return empty array instead of error
-    if (transformedContractors.length === 0) {
-    }
+    // Use the count from the query if available, otherwise use transformed length
+    const totalCount = count ?? transformedContractors.length;
 
-    // Count should reflect only published contractors
-    const publishedCount = transformedContractors.length;
-
-    return NextResponse.json({
-      contractors: transformedContractors,
-      total: publishedCount,
-      page,
-      limit,
-      totalPages: Math.ceil(publishedCount / limit),
-    });
+    return NextResponse.json(
+      {
+        contractors: transformedContractors,
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=30, stale-while-revalidate=15',
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: 'Internal server error' },
