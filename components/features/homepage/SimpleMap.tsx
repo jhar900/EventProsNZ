@@ -446,31 +446,195 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
         return div.innerHTML;
       };
 
-      // Convert contractors to GeoJSON format
+      // Helper function to create a default orange circle image
+      const createDefaultMarker = (): HTMLImageElement => {
+        const size = 32; // Marker size in pixels
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        if (ctx) {
+          // Draw white border circle
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+
+          // Draw orange circle
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#f18d30';
+          ctx.fill();
+        }
+
+        const img = new Image();
+        img.src = canvas.toDataURL();
+        return img;
+      };
+
+      // Helper function to load and add logo image to map
+      const loadLogoImage = async (
+        logoUrl: string,
+        imageId: string
+      ): Promise<boolean> => {
+        try {
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+          const response = await fetch(logoUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (!response.ok) return false;
+
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
+          const image = await new Promise<HTMLImageElement>(
+            (resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                URL.revokeObjectURL(blobUrl); // Clean up blob URL after loading
+                resolve(img);
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(blobUrl); // Clean up on error
+                reject(new Error('Failed to load image'));
+              };
+              img.src = blobUrl;
+            }
+          );
+
+          // Create a circular version of the logo
+          const size = 32;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            // Draw orange border circle (thinner border - 1 pixel)
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+            ctx.fillStyle = '#f18d30'; // Orange border
+            ctx.fill();
+
+            // Clip to circle
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Draw the logo image
+            ctx.drawImage(image, 0, 0, size, size);
+          }
+
+          const circularImage = new Image();
+          circularImage.src = canvas.toDataURL();
+
+          await new Promise<void>((resolve, reject) => {
+            circularImage.onload = () => {
+              map.addImage(imageId, circularImage);
+              resolve();
+            };
+            circularImage.onerror = reject;
+          });
+
+          return true;
+        } catch (error) {
+          console.warn(`Failed to load logo image ${logoUrl}:`, error);
+          return false;
+        }
+      };
+
+      // Convert contractors to GeoJSON format and prepare logo loading
+      const contractorsWithLocation = contractors.filter(
+        contractor =>
+          contractor.location &&
+          contractor.location.lat &&
+          contractor.location.lng
+      );
+
+      // Create mapping of contractor IDs to image IDs
+      const contractorImageMap = new Map<string, string>();
+      const uniqueLogos = new Set<string>();
+
+      contractorsWithLocation.forEach(contractor => {
+        if (contractor.logo_url) {
+          uniqueLogos.add(contractor.logo_url);
+        }
+      });
+
+      // Load default orange circle marker
+      const defaultMarker = createDefaultMarker();
+      await new Promise<void>(resolve => {
+        defaultMarker.onload = () => {
+          map.addImage('default-marker', defaultMarker);
+          resolve();
+        };
+        if (defaultMarker.complete) {
+          map.addImage('default-marker', defaultMarker);
+          resolve();
+        }
+      });
+
+      // Load all unique logo images
+      const logoLoadPromises = Array.from(uniqueLogos).map(
+        async (logoUrl, index) => {
+          // Create a safe, unique image ID from the logo URL
+          // Use a simple hash-like approach to ensure uniqueness
+          const urlHash = logoUrl
+            .split('')
+            .reduce(
+              (acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0,
+              0
+            )
+            .toString(36);
+          const imageId = `logo-${urlHash}-${index}`;
+          const success = await loadLogoImage(logoUrl, imageId);
+          return { logoUrl, imageId, success };
+        }
+      );
+
+      const logoResults = await Promise.all(logoLoadPromises);
+      const logoMap = new Map<string, string>();
+      logoResults.forEach(({ logoUrl, imageId, success }) => {
+        if (success) {
+          logoMap.set(logoUrl, imageId);
+        }
+      });
+
+      // Create image ID mapping for each contractor
+      contractorsWithLocation.forEach(contractor => {
+        if (contractor.logo_url && logoMap.has(contractor.logo_url)) {
+          contractorImageMap.set(
+            contractor.id,
+            logoMap.get(contractor.logo_url)!
+          );
+        } else {
+          contractorImageMap.set(contractor.id, 'default-marker');
+        }
+      });
+
+      // Convert to GeoJSON format with icon property
       const geojson: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: contractors
-          .filter(
-            contractor =>
-              contractor.location &&
-              contractor.location.lat &&
-              contractor.location.lng
-          )
-          .map(contractor => ({
-            type: 'Feature' as const,
-            geometry: {
-              type: 'Point' as const,
-              coordinates: [contractor.location.lng, contractor.location.lat],
-            },
-            properties: {
-              id: contractor.id,
-              company_name: contractor.company_name || 'Unnamed',
-              description: contractor.description || '',
-              business_address: contractor.business_address || '',
-              service_type: contractor.service_type || 'other',
-              logo_url: contractor.logo_url || null,
-            },
-          })),
+        features: contractorsWithLocation.map(contractor => ({
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [contractor.location.lng, contractor.location.lat],
+          },
+          properties: {
+            id: contractor.id,
+            company_name: contractor.company_name || 'Unnamed',
+            description: contractor.description || '',
+            business_address: contractor.business_address || '',
+            service_type: contractor.service_type || 'other',
+            logo_url: contractor.logo_url || null,
+            icon: contractorImageMap.get(contractor.id) || 'default-marker',
+          },
+        })),
       };
 
       // Check if source already exists and remove it
@@ -500,11 +664,11 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
           'circle-color': [
             'step',
             ['get', 'point_count'],
-            '#f97316', // Orange for small clusters
+            '#f18d30', // Orange for small clusters
             10,
-            '#fb923c', // Lighter orange for medium clusters
+            '#f4a85a', // Lighter orange for medium clusters
             50,
-            '#fdba74', // Even lighter for large clusters
+            '#f7c384', // Even lighter for large clusters
           ],
           'circle-radius': [
             'step',
@@ -536,17 +700,17 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
         },
       });
 
-      // Add unclustered points (individual contractors)
+      // Add unclustered points (individual contractors) using logo images
       map.addLayer({
         id: 'unclustered-point',
-        type: 'circle',
+        type: 'symbol',
         source: 'contractors',
         filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': '#f97316',
-          'circle-radius': 8,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff',
+        layout: {
+          'icon-image': ['get', 'icon'],
+          'icon-size': 1,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
         },
       });
 
@@ -706,7 +870,7 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
 
     addClusteredMarkers();
 
-    // Cleanup function - remove layers and source when component unmounts or dependencies change
+    // Cleanup function - remove layers, source, and images when component unmounts or dependencies change
     return () => {
       isMounted = false;
       if (!map) return;
@@ -737,6 +901,19 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
           }
           // Remove source
           map.removeSource('contractors');
+        }
+
+        // Remove loaded images
+        try {
+          // Remove default marker
+          if (map.hasImage('default-marker')) {
+            map.removeImage('default-marker');
+          }
+          // Remove logo images (they have IDs starting with 'logo-')
+          // Note: Mapbox doesn't provide a way to list all images, so we'll
+          // rely on garbage collection when the map is removed
+        } catch (e) {
+          // Ignore image removal errors
         }
       } catch (e) {
         // Map might be in an invalid state, ignore cleanup errors

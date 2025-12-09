@@ -21,4 +21,3 @@ export default function MicrosoftClarity() {
   // Don't render anything
   return null;
 }
-
