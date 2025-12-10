@@ -8,15 +8,12 @@ import { StripeService } from '@/lib/payments/stripe-service';
 import { PaymentService } from '@/lib/payments/payment-service';
 import { FailedPaymentService } from '@/lib/payments/failed-payment-service';
 import { NotificationService } from '@/lib/payments/notification-service';
-import { SubscriptionService } from '@/lib/subscriptions/subscription-service';
-import { StripeService as SubscriptionStripeService } from '@/lib/subscriptions/stripe-service';
 import {
   syncSubscriptionFromStripe,
   syncInvoicePaymentSucceeded,
   syncInvoicePaymentFailed,
   syncCustomerToUser,
 } from '@/lib/subscriptions/webhook-sync';
-import { rateLimit, paymentRateLimiter } from '@/lib/rate-limiting';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
 
@@ -25,8 +22,6 @@ let stripeService: StripeService;
 let paymentService: PaymentService;
 let failedPaymentService: FailedPaymentService;
 let notificationService: NotificationService;
-let subscriptionService: SubscriptionService;
-let subscriptionStripeService: SubscriptionStripeService;
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +31,6 @@ export async function POST(request: NextRequest) {
       paymentService = new PaymentService();
       failedPaymentService = new FailedPaymentService();
       notificationService = new NotificationService();
-      subscriptionService = new SubscriptionService();
-      subscriptionStripeService = new SubscriptionStripeService();
     }
 
     // In test environment, use the mocked instance
@@ -48,19 +41,9 @@ export async function POST(request: NextRequest) {
       stripeService = new MockedStripeService();
     }
 
-    // Apply rate limiting (skip in development for testing)
-    if (process.env.NODE_ENV === 'production') {
-      const rateLimitResult = rateLimit(request, paymentRateLimiter);
-      if (!rateLimitResult.allowed) {
-        return NextResponse.json(
-          { error: 'Rate limit exceeded' },
-          {
-            status: 429,
-            headers: rateLimitResult.headers,
-          }
-        );
-      }
-    }
+    // Skip rate limiting for webhooks - Stripe controls the delivery rate
+    // and signature verification provides security. Stripe will retry failed
+    // webhooks automatically, so rate limiting here can cause issues.
 
     const body = await request.text();
     const signature = headers().get('stripe-signature');
@@ -239,10 +222,11 @@ async function handlePaymentIntentFailed(paymentIntent: any) {
       );
 
       // Create failed payment record
-      await failedPaymentService.createFailedPayment({
-        payment_id: payment.id,
-        grace_period_days: 7,
-      });
+      await failedPaymentService.createFailedPayment(
+        payment.id,
+        paymentIntent.last_payment_error?.message || 'Payment failed',
+        7
+      );
 
       // Send failure notification
       await notificationService.sendPaymentNotification(
@@ -363,10 +347,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
     if (result.success && result.subscriptionId) {
       // Create failed payment record for grace period tracking
-      await failedPaymentService.createFailedPayment({
-        payment_id: result.subscriptionId, // Using subscription ID as payment reference
-        grace_period_days: 7,
-      });
+      await failedPaymentService.createFailedPayment(
+        result.subscriptionId, // Using subscription ID as payment reference
+        'Invoice payment failed',
+        7
+      );
 
       // Send failure notification
       await notificationService.sendPaymentNotification(
