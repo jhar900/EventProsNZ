@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Camera,
   Utensils,
@@ -14,7 +15,19 @@ import {
   Users,
   Calendar,
   Star,
+  HelpCircle,
+  Building,
+  Shield,
 } from 'lucide-react';
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  contractor_count: number;
+  popular: boolean;
+}
 
 interface ServiceCategory {
   id: string;
@@ -30,6 +43,70 @@ interface ServiceCategoriesSectionProps {
   categories?: ServiceCategory[];
   className?: string;
 }
+
+// Icon mapping from string names to components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Camera,
+  Utensils,
+  Music,
+  Flower2,
+  Car,
+  Palette,
+  Video,
+  Mic,
+  Sparkles,
+  Users,
+  Calendar,
+  Star,
+  HelpCircle,
+  Building,
+  Shield,
+};
+
+// Icon mapping based on category name
+const getIconForCategory = (
+  name: string
+): React.ComponentType<{ className?: string }> => {
+  const iconNameMap: Record<string, string> = {
+    Photography: 'Camera',
+    Catering: 'Utensils',
+    Entertainment: 'Music',
+    'Floral Design': 'Flower2',
+    Flowers: 'Flower2',
+    Transportation: 'Car',
+    'Decor & Styling': 'Palette',
+    Decorations: 'Palette',
+    Videography: 'Video',
+    'Audio/Visual': 'Mic',
+    Lighting: 'Sparkles',
+    Security: 'Shield',
+    Planning: 'Calendar',
+    Venue: 'Building',
+  };
+  const iconName = iconNameMap[name] || 'HelpCircle';
+  return iconMap[iconName] || HelpCircle;
+};
+
+// Color mapping based on category name
+const getColorForCategory = (name: string): string => {
+  const colorMap: Record<string, string> = {
+    Photography: 'blue',
+    Catering: 'green',
+    Entertainment: 'purple',
+    'Floral Design': 'pink',
+    Flowers: 'pink',
+    Transportation: 'gray',
+    'Decor & Styling': 'orange',
+    Decorations: 'orange',
+    Videography: 'red',
+    'Audio/Visual': 'indigo',
+    Lighting: 'yellow',
+    Security: 'red',
+    Planning: 'blue',
+    Venue: 'gray',
+  };
+  return colorMap[name] || 'blue';
+};
 
 const defaultCategories: ServiceCategory[] = [
   {
@@ -118,9 +195,89 @@ const colorClasses = {
 };
 
 export function ServiceCategoriesSection({
-  categories = defaultCategories,
+  categories: propCategories,
   className = '',
 }: ServiceCategoriesSectionProps) {
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If categories are provided as props, use them
+    if (propCategories && propCategories.length > 0) {
+      setCategories(propCategories);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise, fetch from API
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/homepage/categories');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+
+        const data = await response.json();
+
+        // Transform API data to component format
+        const transformedCategories: ServiceCategory[] = data.categories.map(
+          (cat: ApiCategory) => {
+            // Map category name to icon component
+            const IconComponent = getIconForCategory(cat.name);
+            return {
+              id: cat.id,
+              name: cat.name,
+              description: cat.description || '',
+              icon: IconComponent,
+              contractor_count: cat.contractor_count || 0,
+              color: getColorForCategory(cat.name),
+              popular: cat.popular || false,
+            };
+          }
+        );
+
+        setCategories(transformedCategories);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load categories');
+        // Fallback to default categories on error
+        setCategories(defaultCategories);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [propCategories]);
+
+  if (loading) {
+    return (
+      <section className={`py-20 bg-gray-50 ${className}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-gray-600">Loading categories...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error && categories.length === 0) {
+    return (
+      <section className={`py-20 bg-gray-50 ${className}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-red-600">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={`py-20 bg-gray-50 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,11 +297,18 @@ export function ServiceCategoriesSection({
             const IconComponent = category.icon;
             const colorClass =
               colorClasses[category.color as keyof typeof colorClasses];
+            const hasContractors = category.contractor_count > 0;
+            const contractorsUrl = hasContractors
+              ? `/contractors?service_types=${encodeURIComponent(category.name)}`
+              : '#';
 
-            return (
+            const CardContent = (
               <div
-                key={category.id}
-                className="group relative bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+                className={`group relative bg-white rounded-xl p-6 shadow-lg transition-all duration-300 ${
+                  hasContractors
+                    ? 'hover:shadow-xl transform hover:scale-105 cursor-pointer'
+                    : 'cursor-default'
+                }`}
               >
                 {/* Popular badge */}
                 {category.popular && (
@@ -173,64 +337,44 @@ export function ServiceCategoriesSection({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Users className="w-4 h-4" />
-                    <span>{category.contractor_count} contractors</span>
+                    <span>
+                      {category.contractor_count === 0
+                        ? 'Coming Soon'
+                        : `${category.contractor_count} ${
+                            category.contractor_count === 1
+                              ? 'contractor'
+                              : 'contractors'
+                          }`}
+                    </span>
                   </div>
-                  <div className="text-blue-600 font-semibold text-sm group-hover:text-blue-700">
-                    Explore →
-                  </div>
+                  {hasContractors && (
+                    <div className="text-blue-600 font-semibold text-sm group-hover:text-blue-700">
+                      Explore →
+                    </div>
+                  )}
                 </div>
               </div>
             );
+
+            if (hasContractors) {
+              return (
+                <Link key={category.id} href={contractorsUrl}>
+                  {CardContent}
+                </Link>
+              );
+            }
+
+            return <div key={category.id}>{CardContent}</div>;
           })}
-        </div>
-
-        {/* Featured categories */}
-        <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Most Popular Services
-            </h3>
-            <p className="text-gray-600">These categories are in high demand</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {categories
-              .filter(cat => cat.popular)
-              .map(category => {
-                const IconComponent = category.icon;
-                const colorClass =
-                  colorClasses[category.color as keyof typeof colorClasses];
-
-                return (
-                  <div
-                    key={category.id}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div
-                      className={`w-12 h-12 ${colorClass} rounded-lg flex items-center justify-center`}
-                    >
-                      <IconComponent className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">
-                        {category.name}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        {category.contractor_count} contractors available
-                      </p>
-                    </div>
-                    <div className="text-blue-600 font-semibold">→</div>
-                  </div>
-                );
-              })}
-          </div>
         </div>
 
         {/* CTA */}
         <div className="text-center mt-12">
-          <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-300 transform hover:scale-105">
-            Browse All Categories
-          </button>
+          <Link href="/contractors">
+            <button className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-300 transform hover:scale-105">
+              Browse All Categories
+            </button>
+          </Link>
         </div>
       </div>
     </section>

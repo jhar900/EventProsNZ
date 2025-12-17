@@ -4,9 +4,40 @@ import { useAuth } from '@/hooks/useAuth';
 import { ContractorDirectory } from '@/components/features/contractors/ContractorDirectory';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
+import { useSearchParams } from 'next/navigation';
+import { ContractorFilters } from '@/types/contractors';
+import { useMemo } from 'react';
 
 export default function ContractorsPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+
+  // Parse URL parameters and convert to initialFilters
+  const initialFilters = useMemo<ContractorFilters>(() => {
+    const filters: ContractorFilters = {};
+
+    // Parse service_types from URL (comma-separated)
+    const serviceTypesParam = searchParams.get('service_types');
+    if (serviceTypesParam) {
+      filters.serviceTypes = serviceTypesParam
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    // Parse other potential filters
+    const location = searchParams.get('location');
+    if (location) {
+      filters.location = location;
+    }
+
+    const q = searchParams.get('q');
+    if (q) {
+      filters.q = q;
+    }
+
+    return filters;
+  }, [searchParams]);
 
   // If user is logged in, use DashboardLayout with sidenav
   if (user) {
@@ -14,7 +45,11 @@ export default function ContractorsPage() {
       <DashboardLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="py-6">
-            <ContractorDirectory showFilters={true} showFeatured={true} />
+            <ContractorDirectory
+              initialFilters={initialFilters}
+              showFilters={true}
+              showFeatured={true}
+            />
           </div>
         </div>
       </DashboardLayout>
@@ -27,7 +62,11 @@ export default function ContractorsPage() {
       {/* Content with top padding to account for fixed navigation */}
       <div className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <ContractorDirectory showFilters={true} showFeatured={true} />
+          <ContractorDirectory
+            initialFilters={initialFilters}
+            showFilters={true}
+            showFeatured={true}
+          />
         </div>
       </div>
     </HomepageLayout>

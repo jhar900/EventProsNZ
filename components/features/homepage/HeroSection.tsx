@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Star, Users, MapPin, Calendar } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, Lock, Globe } from 'lucide-react';
 
 interface HeroSectionProps {
   className?: string;
@@ -45,23 +45,23 @@ export function HeroSection({
           grow your business in New Zealand&apos;s thriving event industry.
         </p>
 
-        {/* Key benefits */}
+        {/* Value propositions */}
         <div className="flex flex-wrap justify-center gap-6 mb-12 text-sm sm:text-base">
           <div className="flex items-center gap-2 text-gray-700">
-            <Star className="w-5 h-5 text-yellow-500" />
-            <span>5-Star Rated Contractors</span>
+            <ShieldCheck className="w-5 h-5 text-orange-600" />
+            <span>Verified Professionals</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
-            <Users className="w-5 h-5 text-orange-500" />
-            <span>Trusted by 1000+ Event Managers</span>
+            <Zap className="w-5 h-5 text-amber-600" />
+            <span>Easy Matching</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
-            <MapPin className="w-5 h-5 text-amber-500" />
-            <span>Nationwide Coverage</span>
+            <Lock className="w-5 h-5 text-orange-500" />
+            <span>Secure Platform</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
-            <Calendar className="w-5 h-5 text-orange-600" />
-            <span>Events Planned Daily</span>
+            <Globe className="w-5 h-5 text-orange-600" />
+            <span>NZ-Wide Coverage</span>
           </div>
         </div>
 
@@ -97,34 +97,6 @@ export function HeroSection({
               Browse Contractors
             </Button>
           </Link>
-        </div>
-
-        {/* Trust indicators */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">
-              500+
-            </div>
-            <div className="text-sm text-gray-600">Verified Contractors</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-amber-600 mb-2">
-              1000+
-            </div>
-            <div className="text-sm text-gray-600">Events Planned</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2">
-              98%
-            </div>
-            <div className="text-sm text-gray-600">Success Rate</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">
-              24/7
-            </div>
-            <div className="text-sm text-gray-600">Support Available</div>
-          </div>
         </div>
       </div>
 

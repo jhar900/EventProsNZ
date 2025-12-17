@@ -50,8 +50,8 @@ export function Homepage({ className = '' }: HomepageProps) {
         {/* Hero Section */}
         <HeroSectionWithModal />
 
-        {/* Testimonials Section */}
-        <TestimonialsSection />
+        {/* Testimonials Section - Hidden */}
+        {/* <TestimonialsSection /> */}
 
         {/* Interactive Map Section */}
         <InteractiveMapSection />
@@ -62,11 +62,11 @@ export function Homepage({ className = '' }: HomepageProps) {
         {/* How It Works Section */}
         <HowItWorksSection />
 
-        {/* Featured Contractors Section */}
-        <FeaturedContractorsSection />
+        {/* Featured Contractors Section - Hidden */}
+        {/* <FeaturedContractorsSection /> */}
 
-        {/* Statistics Section */}
-        <StatisticsSection />
+        {/* Statistics Section - Hidden */}
+        {/* <StatisticsSection /> */}
 
         {/* New Zealand Pride Section */}
         <NZPrideSection />

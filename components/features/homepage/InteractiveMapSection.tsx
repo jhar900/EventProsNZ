@@ -137,7 +137,7 @@ function ContractorList() {
                   />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center border-2 border-gray-200">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center border-2 border-gray-200">
                   <span className="text-white font-semibold text-xl">
                     {(contractor.company_name || 'C').charAt(0).toUpperCase()}
                   </span>

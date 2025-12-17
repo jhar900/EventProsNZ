@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useContractors } from '@/hooks/useContractors';
 import { ContractorFilters, ViewMode } from '@/types/contractors';
 import { ContractorGrid } from './ContractorGrid';
@@ -24,6 +24,8 @@ export function ContractorDirectory({
   showFeatured = true,
   className = '',
 }: ContractorDirectoryProps) {
+  const hasInitialFilters = Object.keys(initialFilters).length > 0;
+
   const {
     contractors,
     featuredContractors,
@@ -39,25 +41,76 @@ export function ContractorDirectory({
     updateFilters,
     loadMore,
     clearError,
-  } = useContractors();
+    reset,
+  } = useContractors(hasInitialFilters); // Skip auto-fetch if we have initialFilters
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  const initialFiltersRef = useRef<string>('');
 
-  // Load contractors and featured contractors in parallel on mount
+  // Check if current filters match initialFilters
+  // If we have initialFilters but current filters don't match, we should hide contractors
+  const filtersMatch = (() => {
+    if (!hasInitialFilters) return true;
+    const currentFiltersKey = JSON.stringify(filters);
+    const initialFiltersKey = JSON.stringify(initialFilters);
+    return currentFiltersKey === initialFiltersKey;
+  })();
+
+  // Hide contractors if we have initialFilters but they haven't been applied yet
+  const shouldHideContractors =
+    hasInitialFilters && (!filtersApplied || !filtersMatch);
+
+  // Initialize filters and load contractors on mount or when initialFilters change
   useEffect(() => {
-    if (showFeatured) {
-      // Load both in parallel
-      Promise.all([
-        fetchContractors(initialFilters),
-        fetchFeaturedContractors(),
-      ]).catch(error => {
-        console.error('Error loading contractors:', error);
-      });
+    // Create a stable key from initialFilters to detect changes
+    const filtersKey = JSON.stringify(initialFilters);
+
+    // Only fetch if this is the first load or if initialFilters have changed
+    if (initialFiltersRef.current !== filtersKey) {
+      // If we have initialFilters, set initializing flag and clear contractors immediately
+      if (hasInitialFilters) {
+        setIsInitializing(true);
+        // Reset to clear any existing contractors before fetching with filters
+        reset();
+      }
+
+      // Update filters state
+      updateFilters(initialFilters);
+
+      // Fetch contractors with initialFilters immediately
+      const fetchPromise = showFeatured
+        ? Promise.all([
+            fetchContractors(initialFilters),
+            fetchFeaturedContractors(),
+          ])
+        : fetchContractors(initialFilters);
+
+      fetchPromise
+        .then(() => {
+          setIsInitializing(false);
+          setFiltersApplied(true);
+        })
+        .catch(error => {
+          console.error('Error loading contractors:', error);
+          setIsInitializing(false);
+          setFiltersApplied(true);
+        });
+
+      // Mark this filters combination as loaded
+      initialFiltersRef.current = filtersKey;
     } else {
-      fetchContractors(initialFilters);
+      // If filters haven't changed, we're not initializing
+      setIsInitializing(false);
+      // If we don't have initialFilters, mark as applied
+      if (!hasInitialFilters) {
+        setFiltersApplied(true);
+      }
     }
-  }, []); // Remove dependencies to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFilters]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -248,7 +301,7 @@ export function ContractorDirectory({
         </div>
 
         {/* Loading State */}
-        {isLoading && contractors.length === 0 && (
+        {(isLoading || isInitializing || shouldHideContractors) && (
           <div
             className="flex justify-center py-12"
             role="status"
@@ -258,64 +311,69 @@ export function ContractorDirectory({
           </div>
         )}
 
-        {/* Contractors List */}
-        {contractors.length > 0 && (
-          <>
-            {viewMode === 'grid' ? (
-              <ContractorGrid
-                contractors={contractors}
-                viewMode={viewMode}
-                onLoadMore={handleLoadMore}
-                hasMore={pagination.page < pagination.totalPages}
-                isLoading={isLoading}
-              />
-            ) : (
-              <ContractorList
-                contractors={contractors}
-                viewMode={viewMode}
-                onLoadMore={handleLoadMore}
-                hasMore={pagination.page < pagination.totalPages}
-                isLoading={isLoading}
-              />
-            )}
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-8">
-                <PaginationControls
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
+        {/* Contractors List - Don't show if we're initializing with filters or filters don't match */}
+        {!isInitializing &&
+          !shouldHideContractors &&
+          contractors.length > 0 && (
+            <>
+              {viewMode === 'grid' ? (
+                <ContractorGrid
+                  contractors={contractors}
+                  viewMode={viewMode}
+                  onLoadMore={handleLoadMore}
+                  hasMore={pagination.page < pagination.totalPages}
                   isLoading={isLoading}
                 />
-              </div>
-            )}
-          </>
-        )}
+              ) : (
+                <ContractorList
+                  contractors={contractors}
+                  viewMode={viewMode}
+                  onLoadMore={handleLoadMore}
+                  hasMore={pagination.page < pagination.totalPages}
+                  isLoading={isLoading}
+                />
+              )}
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-8">
+                  <PaginationControls
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                    isLoading={isLoading}
+                  />
+                </div>
+              )}
+            </>
+          )}
 
         {/* Empty State */}
-        {!isLoading && contractors.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500">
-              <h3 className="text-lg font-semibold mb-2">
-                No contractors found
-              </h3>
-              <p className="mb-4">
-                Try adjusting your search criteria or filters
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  updateFilters({});
-                  fetchContractors();
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Clear Filters
-              </button>
+        {!isLoading &&
+          !isInitializing &&
+          !shouldHideContractors &&
+          contractors.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-500">
+                <h3 className="text-lg font-semibold mb-2">
+                  No contractors found
+                </h3>
+                <p className="mb-4">
+                  Try adjusting your search criteria or filters
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    updateFilters({});
+                    fetchContractors();
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </ErrorBoundary>
   );

@@ -37,7 +37,9 @@ interface UseContractorsActions {
   reset: () => void;
 }
 
-export function useContractors(): UseContractorsState & UseContractorsActions {
+export function useContractors(
+  skipAutoFetch: boolean = false
+): UseContractorsState & UseContractorsActions {
   const [state, setState] = useState<UseContractorsState>({
     contractors: [],
     featuredContractors: [],
@@ -233,11 +235,14 @@ export function useContractors(): UseContractorsState & UseContractorsActions {
     }));
   }, []);
 
-  // Load contractors and featured contractors on mount
+  // Load contractors and featured contractors on mount (unless skipAutoFetch is true)
   useEffect(() => {
-    fetchContractors();
-    fetchFeaturedContractors();
-  }, []); // Remove dependencies to prevent infinite loops
+    if (!skipAutoFetch) {
+      fetchContractors();
+      fetchFeaturedContractors();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - skipAutoFetch is checked once
 
   return {
     ...state,

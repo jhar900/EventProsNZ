@@ -128,7 +128,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
               onClick={() => setActiveTab('event-managers')}
               className={`px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
                 activeTab === 'event-managers'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -141,7 +141,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
               onClick={() => setActiveTab('contractors')}
               className={`px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
                 activeTab === 'contractors'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -170,18 +170,18 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
                     : contractorSteps
                   ).length -
                     1 && (
-                  <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-blue-200 to-green-200 transform translate-x-4 z-0"></div>
+                  <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-orange-200 to-amber-200 transform translate-x-4 z-0"></div>
                 )}
 
                 <div className="relative z-10 bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                   {/* Step number */}
-                  <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
                     {index + 1}
                   </div>
 
                   {/* Icon */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-green-100 rounded-xl flex items-center justify-center mb-6">
-                    <IconComponent className="w-8 h-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl flex items-center justify-center mb-6">
+                    <IconComponent className="w-8 h-8 text-orange-600" />
                   </div>
 
                   {/* Content */}
@@ -197,7 +197,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
                         key={detailIndex}
                         className="flex items-center gap-2 text-sm text-gray-600"
                       >
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
                         <span>{detail}</span>
                       </li>
                     ))}
@@ -209,7 +209,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
         </div>
 
         {/* Benefits section */}
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-8">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-8">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
               Why Choose Event Pros NZ?
@@ -221,8 +221,8 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-orange-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Verified Contractors
@@ -233,8 +233,8 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-8 h-8 text-amber-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Direct Communication
@@ -245,8 +245,8 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="w-8 h-8 text-purple-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-orange-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Quality Guaranteed
@@ -261,11 +261,11 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
         {/* CTA */}
         <div className="text-center mt-12">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+            <button className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
               Get Started as Event Manager
               <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-300 flex items-center gap-2">
+            <button className="border-2 border-orange-600 text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all duration-300 flex items-center gap-2">
               Join as Contractor
               <Users className="w-5 h-5" />
             </button>
