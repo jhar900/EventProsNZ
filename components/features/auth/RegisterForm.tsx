@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,12 +34,14 @@ interface RegisterFormProps {
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
   onSignInClick?: () => void;
+  initialRole?: 'event_manager' | 'contractor';
 }
 
 export default function RegisterForm({
   onSuccess,
   onError,
   onSignInClick,
+  initialRole,
 }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +51,20 @@ export default function RegisterForm({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: initialRole || undefined,
+    },
   });
+
+  // Set the role when initialRole changes
+  useEffect(() => {
+    if (initialRole) {
+      setValue('role', initialRole);
+    }
+  }, [initialRole, setValue]);
 
   const selectedRole = watch('role');
 
@@ -333,6 +346,7 @@ export default function RegisterForm({
             <GoogleSignInButton
               onSuccess={onSuccess || (() => {})}
               onError={onError || (() => {})}
+              initialRole={initialRole}
             />
           </div>
         </div>
@@ -367,15 +381,24 @@ export default function RegisterForm({
 function GoogleSignInButton({
   onSuccess,
   onError,
+  initialRole,
 }: {
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
+  initialRole?: 'event_manager' | 'contractor';
 }) {
   // Get role from form context or default to event_manager
   // For registration, we might want to show a role selector first
   const [selectedRole, setSelectedRole] = useState<
     'event_manager' | 'contractor'
-  >('event_manager');
+  >(initialRole || 'event_manager');
+
+  // Update selectedRole when initialRole changes
+  useEffect(() => {
+    if (initialRole) {
+      setSelectedRole(initialRole);
+    }
+  }, [initialRole]);
 
   const { signInWithGoogle, isLoading, isGoogleLoaded } = useGoogleAuth({
     onSuccess: async () => {

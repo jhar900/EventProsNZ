@@ -18,6 +18,8 @@ import {
   HelpCircle,
   Building,
   Shield,
+  Laptop,
+  Trash2,
 } from 'lucide-react';
 
 interface ApiCategory {
@@ -61,6 +63,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   HelpCircle,
   Building,
   Shield,
+  Laptop,
+  Trash2,
 };
 
 // Icon mapping based on category name
@@ -82,6 +86,10 @@ const getIconForCategory = (
     Security: 'Shield',
     Planning: 'Calendar',
     Venue: 'Building',
+    Technology: 'Laptop',
+    Tech: 'Laptop',
+    'Waste Management': 'Trash2',
+    Waste: 'Trash2',
   };
   const iconName = iconNameMap[name] || 'HelpCircle';
   return iconMap[iconName] || HelpCircle;

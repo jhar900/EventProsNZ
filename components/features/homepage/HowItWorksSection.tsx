@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Search,
   MessageCircle,
@@ -12,6 +12,7 @@ import {
   User,
   Briefcase,
 } from 'lucide-react';
+import { HomepageModalContext } from './HomepageLayout';
 
 interface Step {
   id: string;
@@ -107,6 +108,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
   const [activeTab, setActiveTab] = useState<'event-managers' | 'contractors'>(
     'event-managers'
   );
+  const modalContext = useContext(HomepageModalContext);
 
   return (
     <section className={`py-20 bg-white ${className}`}>
@@ -261,11 +263,17 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
         {/* CTA */}
         <div className="text-center mt-12">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+            <button
+              onClick={() => modalContext?.onRegisterClick('event_manager')}
+              className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
+            >
               Get Started as Event Manager
               <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="border-2 border-orange-600 text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all duration-300 flex items-center gap-2">
+            <button
+              onClick={() => modalContext?.onRegisterClick('contractor')}
+              className="border-2 border-orange-600 text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all duration-300 flex items-center gap-2"
+            >
               Join as Contractor
               <Users className="w-5 h-5" />
             </button>

@@ -7,7 +7,6 @@ import {
   MapPin,
   Mail,
   Facebook,
-  Twitter,
   Instagram,
   Linkedin,
   Heart,
@@ -28,7 +27,6 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
 
   const footerLinks = {
     platform: [
-      { name: 'How It Works', href: '/how-it-works' },
       { name: 'For Event Managers', href: '/event-managers' },
       { name: 'For Contractors', href: '/contractors' },
       { name: 'Pricing', href: '/pricing' },
@@ -58,10 +56,21 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
   };
 
   const socialLinks = [
-    { name: 'Facebook', href: '#', icon: Facebook },
-    { name: 'Twitter', href: '#', icon: Twitter },
-    { name: 'Instagram', href: '#', icon: Instagram },
-    { name: 'LinkedIn', href: '#', icon: Linkedin },
+    {
+      name: 'Facebook',
+      href: 'https://www.facebook.com/groups/eventprosnz',
+      icon: Facebook,
+    },
+    {
+      name: 'Instagram',
+      href: 'https://www.instagram.com/eventprosnz/',
+      icon: Instagram,
+    },
+    {
+      name: 'LinkedIn',
+      href: 'https://www.linkedin.com/company/event-pros-nz',
+      icon: Linkedin,
+    },
   ];
 
   return (
@@ -103,7 +112,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
               </div>
               <div className="flex items-center gap-3 text-gray-300">
                 <Mail className="w-4 h-4 text-blue-400" />
-                <span>hello@eventpros.co.nz</span>
+                <span>jason@eventpros.co.nz</span>
               </div>
             </div>
 
@@ -115,6 +124,8 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
                   <a
                     key={social.name}
                     href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
                     aria-label={social.name}
                   >

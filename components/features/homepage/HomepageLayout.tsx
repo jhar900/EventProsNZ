@@ -7,7 +7,7 @@ import RegisterModal from '@/components/features/auth/RegisterModal';
 import ForgotPasswordModal from '@/components/features/auth/ForgotPasswordModal';
 
 interface HomepageModalContextType {
-  onRegisterClick: () => void;
+  onRegisterClick: (role?: 'event_manager' | 'contractor') => void;
   onLoginClick: () => void;
 }
 
@@ -27,9 +27,22 @@ export function HomepageLayout({
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
     useState(false);
+  const [registerModalRole, setRegisterModalRole] = useState<
+    'event_manager' | 'contractor' | undefined
+  >(undefined);
+
+  const handleRegisterClick = (role?: 'event_manager' | 'contractor') => {
+    setRegisterModalRole(role);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleRegisterModalClose = () => {
+    setIsRegisterModalOpen(false);
+    setRegisterModalRole(undefined);
+  };
 
   const modalContextValue: HomepageModalContextType = {
-    onRegisterClick: () => setIsRegisterModalOpen(true),
+    onRegisterClick: handleRegisterClick,
     onLoginClick: () => setIsLoginModalOpen(true),
   };
 
@@ -58,11 +71,12 @@ export function HomepageLayout({
         {/* Register Modal - rendered outside of navigation */}
         <RegisterModal
           isOpen={isRegisterModalOpen}
-          onClose={() => setIsRegisterModalOpen(false)}
+          onClose={handleRegisterModalClose}
           onSignInClick={() => {
             setIsRegisterModalOpen(false);
             setIsLoginModalOpen(true);
           }}
+          initialRole={registerModalRole}
         />
 
         {/* Forgot Password Modal - rendered outside of navigation */}

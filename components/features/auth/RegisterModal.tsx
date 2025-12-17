@@ -10,12 +10,14 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSignInClick?: () => void;
+  initialRole?: 'event_manager' | 'contractor';
 }
 
 export default function RegisterModal({
   isOpen,
   onClose,
   onSignInClick,
+  initialRole,
 }: RegisterModalProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -77,6 +79,7 @@ export default function RegisterModal({
               onSuccess={handleSuccess}
               onError={handleError}
               onSignInClick={onSignInClick}
+              initialRole={initialRole}
             />
           </div>
         </div>
