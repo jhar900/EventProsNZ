@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "Event Pros NZ - New Zealand's Event Ecosystem",
   description:
     'Connect event managers with qualified contractors. The complete event planning platform for New Zealand.',
+  openGraph: {
+    title: 'Event Pros NZ',
+    description:
+      "New Zealand's Premier Event Ecosystem: Connect with qualified contractors, plan unforgettable events, and grow your business in New Zealand's thriving event industry.",
+    type: 'website',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
