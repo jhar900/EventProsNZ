@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Upload file to Supabase Storage
     console.log('Uploading file to path:', filePath);
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('portfolio-photos')
+      .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('portfolio-photos').getPublicUrl(filePath);
+    } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
     // Update profile with new avatar URL
     console.log('Updating profile with avatar URL:', publicUrl);
@@ -125,8 +125,10 @@ export async function POST(request: NextRequest) {
     console.log('Profile updated successfully');
 
     return NextResponse.json({
-      message: 'Avatar uploaded successfully',
+      success: true,
       avatar_url: publicUrl,
+      url: publicUrl, // Also include 'url' for compatibility
+      message: 'Avatar uploaded successfully',
     });
   } catch (error) {
     return NextResponse.json(
@@ -192,7 +194,7 @@ export async function DELETE(request: NextRequest) {
 
     // Delete file from storage
     const { error: deleteError } = await supabase.storage
-      .from('portfolio-photos')
+      .from('avatars')
       .remove([filePath]);
 
     if (deleteError) {

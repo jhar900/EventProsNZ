@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { ContractorDetailsPanel } from './ContractorDetailsPanel';
 // Mapbox CSS will be loaded dynamically
 // DO NOT import mapbox-gl synchronously - it's large and blocks page load
 
@@ -15,9 +16,25 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [contractors, setContractors] = useState<any[]>([]);
   const [isInViewport, setIsInViewport] = useState(false);
+  const [selectedContractor, setSelectedContractor] = useState<any>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+  // Detect desktop vs mobile
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024); // lg breakpoint
+    };
+
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+
+    return () => {
+      window.removeEventListener('resize', checkIsDesktop);
+    };
+  }, []);
 
   // Lazy load map when it comes into viewport using Intersection Observer
   useEffect(() => {
@@ -814,7 +831,7 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
         });
       });
 
-      // Handle clicks on unclustered points - show popup
+      // Handle clicks on unclustered points - show popup or panel
       map.on('click', 'unclustered-point', e => {
         const coordinates = (
           (e.features?.[0].geometry as GeoJSON.Point)?.coordinates || []
@@ -823,34 +840,53 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
 
         if (!properties) return;
 
-        // Close any existing popup
-        if (currentPopup) {
-          currentPopup.remove();
-        }
-
         // Find the full contractor data
         const contractor = contractors.find(c => c.id === properties.id);
         if (!contractor) return;
 
-        // Create and show popup
-        const popupHTML = createPopupHTML(contractor);
-        const popup = new mapboxgl.Popup({
-          offset: 25,
-          closeButton: true,
-          closeOnClick: false,
-          className: 'mapbox-popup-enhanced',
-        })
-          .setLngLat(coordinates)
-          .setHTML(popupHTML)
-          .addTo(map);
+        // On desktop: center map and show left panel
+        if (window.innerWidth >= 1024) {
+          // Center the map on the contractor (keep current zoom level)
+          map.easeTo({
+            center: coordinates,
+            duration: 500,
+          });
 
-        currentPopup = popup;
+          // Set selected contractor to show panel
+          setSelectedContractor(contractor);
 
-        popup.on('close', () => {
-          if (currentPopup === popup) {
+          // Close any existing popup
+          if (currentPopup) {
+            currentPopup.remove();
             currentPopup = null;
           }
-        });
+        } else {
+          // On mobile: show traditional popup
+          // Close any existing popup
+          if (currentPopup) {
+            currentPopup.remove();
+          }
+
+          // Create and show popup
+          const popupHTML = createPopupHTML(contractor);
+          const popup = new mapboxgl.Popup({
+            offset: 25,
+            closeButton: true,
+            closeOnClick: false,
+            className: 'mapbox-popup-enhanced',
+          })
+            .setLngLat(coordinates)
+            .setHTML(popupHTML)
+            .addTo(map);
+
+          currentPopup = popup;
+
+          popup.on('close', () => {
+            if (currentPopup === popup) {
+              currentPopup = null;
+            }
+          });
+        }
       });
 
       // Change cursor on hover
@@ -922,6 +958,32 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
     };
   }, [map, mapLoaded, contractors]);
 
+  // Handle map background clicks to close panel on desktop
+  useEffect(() => {
+    if (!map || !isDesktop || !mapLoaded) return;
+
+    const handleBackgroundClick = (e: any) => {
+      // Use a small delay to allow marker click handlers to run first
+      setTimeout(() => {
+        // Check if click was on a feature (marker or cluster)
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ['clusters', 'unclustered-point'],
+        });
+
+        // If no features were clicked, close the panel
+        if (features.length === 0) {
+          setSelectedContractor(null);
+        }
+      }, 50);
+    };
+
+    map.on('click', handleBackgroundClick);
+
+    return () => {
+      map.off('click', handleBackgroundClick);
+    };
+  }, [map, isDesktop, mapLoaded]);
+
   return (
     <div
       ref={wrapperRef}
@@ -972,6 +1034,14 @@ export function SimpleMap({ className = '' }: SimpleMapProps) {
                 Map will load when visible
               </div>
             </div>
+          )}
+
+          {/* Desktop: Show left-side panel when contractor is selected */}
+          {isDesktop && selectedContractor && (
+            <ContractorDetailsPanel
+              contractor={selectedContractor}
+              onClose={() => setSelectedContractor(null)}
+            />
           )}
         </>
       )}
