@@ -121,21 +121,12 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+      console.log('Profile updated successfully');
     } else {
       console.log(
         'Profile does not exist yet - photo will be saved when profile is created'
       );
     }
-
-    if (updateError) {
-      console.error('Profile update error:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update profile', details: updateError.message },
-        { status: 500 }
-      );
-    }
-
-    console.log('Profile updated successfully');
 
     return NextResponse.json({
       success: true,
