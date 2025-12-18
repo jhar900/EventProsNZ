@@ -53,6 +53,47 @@ export function PersonalInfoForm({
     setValue('address', newAddress, { shouldValidate: true });
   };
 
+  // Handle phone number input - only allow numbers, brackets, +, and spaces
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow: backspace, delete, tab, escape, enter, home, end, left, right arrows
+    if (
+      [
+        'Backspace',
+        'Delete',
+        'Tab',
+        'Escape',
+        'Enter',
+        'Home',
+        'End',
+        'ArrowLeft',
+        'ArrowRight',
+      ].includes(e.key)
+    ) {
+      return;
+    }
+
+    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if (e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+      return;
+    }
+
+    // Allow: numbers, brackets, +, and space
+    const allowedChars = /[0-9()+ ]/;
+    if (!allowedChars.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  // Handle paste - filter out letters
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Remove any letters (keep only numbers, brackets, +, spaces, and hyphens)
+    const filtered = value.replace(/[^0-9()+ -]/g, '');
+    if (filtered !== value) {
+      setValue('phone', filtered, { shouldValidate: true });
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -122,6 +163,8 @@ export function PersonalInfoForm({
             id="phone"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             placeholder="Enter your phone number"
+            onKeyDown={handlePhoneKeyDown}
+            onInput={handlePhoneInput}
           />
           {errors.phone && (
             <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
