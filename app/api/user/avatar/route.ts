@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,47 +11,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Received user ID:', userId);
 
-    // Create Supabase client with service role for storage operations
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-        },
-      }
-    );
-
-    // Try to get user from profiles table instead (more likely to exist)
-    const { data: profileData, error: profileError } = await supabase
+    // Use supabaseAdmin which bypasses RLS and has full access
+    // Verify user exists in profiles table (optional check - profile might not exist yet during onboarding)
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('user_id, first_name, last_name')
+      .select('user_id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profileData) {
+    if (profileError && profileError.code !== 'PGRST116') {
+      // PGRST116 is "not found" which is OK during onboarding
       console.error('Profile verification error:', profileError);
-      // If profile doesn't exist, try to create it
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: userId,
-          first_name: 'User',
-          last_name: 'Name',
-          timezone: 'Pacific/Auckland',
-        })
-        .select()
-        .single();
-
-      if (createError || !newProfile) {
-        console.error('Failed to create profile:', createError);
-        return NextResponse.json(
-          { error: 'User not found and could not create profile' },
-          { status: 401 }
-        );
-      }
+      return NextResponse.json(
+        { error: 'User verification failed', details: profileError.message },
+        { status: 401 }
+      );
     }
 
     const formData = await request.formData();
@@ -80,11 +54,14 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const filePath = `profile-photos/${fileName}`;
 
-    // Upload file to Supabase Storage
+    // Upload file to Supabase Storage using admin client (bypasses RLS)
     console.log('Uploading file to path:', filePath);
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    console.log('File size:', file.size, 'bytes');
+    console.log('File type:', file.type);
+
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -93,9 +70,21 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      console.error('Upload error details:', {
+        message: uploadError.message,
+        statusCode: uploadError.statusCode,
+        error: uploadError,
+      });
       return NextResponse.json(
-        { error: 'Failed to upload file', details: uploadError.message },
+        {
+          error: 'Failed to upload file',
+          details: uploadError.message,
+          // Include more details in development
+          ...(process.env.NODE_ENV === 'development' && {
+            errorCode: uploadError.statusCode,
+            fullError: JSON.stringify(uploadError, null, 2),
+          }),
+        },
         { status: 500 }
       );
     }
@@ -105,14 +94,38 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    } = supabaseAdmin.storage.from('avatars').getPublicUrl(filePath);
 
-    // Update profile with new avatar URL
-    console.log('Updating profile with avatar URL:', publicUrl);
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('user_id', userId);
+    // Update user profile with new avatar URL (if profile exists)
+    // If profile doesn't exist yet, it will be created in step 1 of onboarding
+    if (profileData) {
+      console.log('Updating profile with avatar URL:', publicUrl);
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        // If profile update fails, clean up the uploaded file
+        await supabaseAdmin.storage.from('avatars').remove([filePath]);
+
+        return NextResponse.json(
+          {
+            error: 'Failed to update profile with new photo',
+            details: updateError.message,
+          },
+          { status: 500 }
+        );
+      }
+    } else {
+      console.log(
+        'Profile does not exist yet - photo will be saved when profile is created'
+      );
+    }
 
     if (updateError) {
       console.error('Profile update error:', updateError);
@@ -131,8 +144,18 @@ export async function POST(request: NextRequest) {
       message: 'Avatar uploaded successfully',
     });
   } catch (error) {
+    console.error('Avatar upload error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: errorMessage,
+        // Include stack trace in development
+        ...(process.env.NODE_ENV === 'development' && { stack: errorStack }),
+      },
       { status: 500 }
     );
   }
@@ -146,65 +169,43 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 401 });
     }
 
-    // Create Supabase client with service role for storage operations
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-        },
-      }
-    );
-
-    // Try to get user from profiles table instead (more likely to exist)
-    const { data: profileData, error: deleteProfileError } = await supabase
-      .from('profiles')
-      .select('user_id, first_name, last_name')
-      .eq('user_id', userId)
-      .single();
-
-    if (deleteProfileError || !profileData) {
-      console.error('Profile verification error:', deleteProfileError);
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 401 }
-      );
-    }
-
-    // Get current avatar URL
-    const { data: profile, error: currentProfileError } = await supabase
+    // Use supabaseAdmin which bypasses RLS and has full access
+    // Get current profile
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('avatar_url')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (currentProfileError || !profile?.avatar_url) {
+    if (profileError || !profile?.avatar_url) {
       return NextResponse.json(
-        { error: 'No avatar to delete' },
+        { error: 'No profile photo found' },
         { status: 404 }
       );
     }
 
     // Extract file path from URL
-    const url = new URL(profile.avatar_url);
-    const filePath = url.pathname.split('/').slice(-2).join('/');
+    const urlParts = profile.avatar_url.split('/');
+    const fileName = urlParts[urlParts.length - 1];
+    const filePath = `profile-photos/${fileName}`;
 
     // Delete file from storage
-    const { error: deleteError } = await supabase.storage
+    const { error: deleteError } = await supabaseAdmin.storage
       .from('avatars')
       .remove([filePath]);
 
     if (deleteError) {
       // Continue with profile update even if file deletion fails
+      console.warn('Failed to delete file from storage:', deleteError);
     }
 
     // Update profile to remove avatar URL
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
-      .update({ avatar_url: null })
+      .update({
+        avatar_url: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq('user_id', userId);
 
     if (updateError) {
@@ -215,11 +216,22 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({
+      success: true,
       message: 'Avatar deleted successfully',
     });
   } catch (error) {
+    console.error('Avatar delete error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: errorMessage,
+        // Include stack trace in development
+        ...(process.env.NODE_ENV === 'development' && { stack: errorStack }),
+      },
       { status: 500 }
     );
   }
