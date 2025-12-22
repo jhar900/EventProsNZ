@@ -10,10 +10,28 @@ export async function validateAdminAccess(request: NextRequest) {
   try {
     console.log('[Admin Auth] Starting validation for:', request.url);
 
+    // Log all headers for debugging
+    const allHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      allHeaders[key] = value;
+    });
+    console.log('[Admin Auth] Request headers:', {
+      hasXAdminToken: request.headers.has('x-admin-token'),
+      xAdminToken: request.headers.get('x-admin-token'),
+      allHeaderKeys: Object.keys(allHeaders),
+    });
+
     // Check for admin token header first (same as dashboard)
     const adminToken = request.headers.get('x-admin-token');
     const expectedToken =
       process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
+
+    console.log('[Admin Auth] Token comparison:', {
+      receivedToken: adminToken,
+      expectedToken: expectedToken,
+      tokensMatch: adminToken === expectedToken,
+      hasAdminToken: !!adminToken,
+    });
 
     if (adminToken === expectedToken) {
       console.log(

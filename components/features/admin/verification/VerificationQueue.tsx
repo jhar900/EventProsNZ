@@ -87,10 +87,17 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
           .map(c => c.split('=')[0].trim()),
       });
 
+      const adminToken = 'admin-secure-token-2024-eventpros';
+      console.log('[VerificationQueue] Making request with token:', {
+        url: `/api/admin/verification/queue?${params}`,
+        hasToken: !!adminToken,
+        tokenLength: adminToken.length,
+      });
+
       const response = await fetch(`/api/admin/verification/queue?${params}`, {
         credentials: 'include', // Include cookies for authentication
         headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
+          'x-admin-token': adminToken,
         },
       });
 
