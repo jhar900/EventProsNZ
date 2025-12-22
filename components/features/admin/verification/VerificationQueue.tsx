@@ -76,7 +76,9 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
         params.append('status', statusFilter);
       }
 
-      const response = await fetch(`/api/admin/verification/queue?${params}`);
+      const response = await fetch(`/api/admin/verification/queue?${params}`, {
+        credentials: 'include', // Include cookies for authentication
+      });
 
       if (response.ok) {
         const data = await response.json();

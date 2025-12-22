@@ -48,15 +48,17 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/verification/notifications');
+      const response = await fetch('/api/admin/verification/notifications', {
+        credentials: 'include', // Include cookies for authentication
+      });
       const data = await response.json();
 
       if (response.ok) {
         setNotifications(data.notifications);
       } else {
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -75,6 +77,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notification_ids: notificationIds }),
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (response.ok) {
@@ -90,8 +93,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           )
         );
       }
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const markAllAsRead = async () => {

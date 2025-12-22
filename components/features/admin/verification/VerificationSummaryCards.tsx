@@ -37,10 +37,18 @@ export function VerificationSummaryCards({
       // Fetch counts for each status in parallel
       const [onboardingRes, pendingRes, approvedRes, rejectedRes] =
         await Promise.all([
-          fetch('/api/admin/verification/queue?status=onboarding&limit=1'),
-          fetch('/api/admin/verification/queue?status=pending&limit=1'),
-          fetch('/api/admin/verification/queue?status=approved&limit=1'),
-          fetch('/api/admin/verification/queue?status=rejected&limit=1'),
+          fetch('/api/admin/verification/queue?status=onboarding&limit=1', {
+            credentials: 'include', // Include cookies for authentication
+          }),
+          fetch('/api/admin/verification/queue?status=pending&limit=1', {
+            credentials: 'include', // Include cookies for authentication
+          }),
+          fetch('/api/admin/verification/queue?status=approved&limit=1', {
+            credentials: 'include', // Include cookies for authentication
+          }),
+          fetch('/api/admin/verification/queue?status=rejected&limit=1', {
+            credentials: 'include', // Include cookies for authentication
+          }),
         ]);
 
       const [onboardingData, pendingData, approvedData, rejectedData] =

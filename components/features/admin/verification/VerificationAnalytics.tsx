@@ -53,7 +53,10 @@ export function VerificationAnalytics({
       setError(null);
 
       const response = await fetch(
-        `/api/admin/verification/analytics?period=${period}`
+        `/api/admin/verification/analytics?period=${period}`,
+        {
+          credentials: 'include', // Include cookies for authentication
+        }
       );
 
       if (response.ok) {

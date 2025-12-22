@@ -99,6 +99,7 @@ export function VerificationGuidelines({
           id: editingId,
           ...formData,
         }),
+        credentials: 'include', // Include cookies for authentication
       });
 
       const data = await response.json();
@@ -111,9 +112,9 @@ export function VerificationGuidelines({
         }
         handleCancel();
       } else {
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -125,14 +126,15 @@ export function VerificationGuidelines({
     try {
       const response = await fetch(`/api/admin/verification/criteria/${id}`, {
         method: 'DELETE',
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (response.ok) {
         setCriteria(prev => prev.filter(c => c.id !== id));
       } else {
-        }
+      }
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };

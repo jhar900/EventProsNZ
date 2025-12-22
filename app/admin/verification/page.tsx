@@ -65,7 +65,9 @@ export default function VerificationPage() {
     setVerificationLog([]);
 
     try {
-      const response = await fetch(`/api/admin/verification/${user.id}`);
+      const response = await fetch(`/api/admin/verification/${user.id}`, {
+        credentials: 'include', // Include cookies for authentication
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.user) {
@@ -106,6 +108,7 @@ export default function VerificationPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ reason }),
+          credentials: 'include', // Include cookies for authentication
         }
       );
 
@@ -138,6 +141,7 @@ export default function VerificationPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ reason, feedback }),
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (response.ok) {
@@ -166,6 +170,7 @@ export default function VerificationPage() {
         `/api/admin/verification/${userId}/resubmit`,
         {
           method: 'POST',
+          credentials: 'include', // Include cookies for authentication
         }
       );
 
@@ -196,6 +201,7 @@ export default function VerificationPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ reason }),
+          credentials: 'include', // Include cookies for authentication
         }
       );
 
