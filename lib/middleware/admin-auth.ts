@@ -8,9 +8,24 @@ import { supabaseAdmin } from '@/lib/supabase/server';
  */
 export async function validateAdminAccess(request: NextRequest) {
   try {
+    console.log('[Admin Auth] Starting validation for:', request.url);
+
     // Use the middleware client helper which properly handles cookies in API routes
     // This is the same pattern used by other API routes in the codebase
     const { supabase } = createClient(request);
+
+    // Log cookie information
+    const allCookies = request.cookies.getAll();
+    console.log('[Admin Auth] Cookies received:', {
+      count: allCookies.length,
+      names: allCookies.map(c => c.name),
+      hasAuthToken: allCookies.some(c => c.name.includes('auth-token')),
+      cookieDetails: allCookies.map(c => ({
+        name: c.name,
+        hasValue: !!c.value,
+        valueLength: c.value?.length || 0,
+      })),
+    });
 
     // For development: Simple bypass - just return success
     // This allows access to admin endpoints without authentication
@@ -19,7 +34,15 @@ export async function validateAdminAccess(request: NextRequest) {
       process.env.VERCEL_ENV === 'development' ||
       request.url.includes('localhost');
 
+    console.log('[Admin Auth] Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      isDevelopment,
+      url: request.url,
+    });
+
     if (isDevelopment) {
+      console.log('[Admin Auth] Development mode - bypassing auth');
       return {
         success: true,
         user: {
@@ -38,32 +61,59 @@ export async function validateAdminAccess(request: NextRequest) {
     let user = null;
     let session = null;
 
+    console.log('[Admin Auth] Attempting getSession()...');
     // Method 1: Try getSession (preferred for cookie-based auth)
     const {
       data: { session: sessionData },
       error: sessionError,
     } = await supabase.auth.getSession();
 
+    console.log('[Admin Auth] getSession result:', {
+      hasSession: !!sessionData,
+      hasUser: !!sessionData?.user,
+      userId: sessionData?.user?.id,
+      sessionError: sessionError?.message,
+      sessionErrorCode: sessionError?.status,
+    });
+
     if (sessionData?.user) {
+      console.log('[Admin Auth] Session found, user ID:', sessionData.user.id);
       user = sessionData.user;
       session = sessionData;
     } else if (sessionError) {
+      console.log(
+        '[Admin Auth] getSession failed, trying getUser() as fallback...'
+      );
       // If getSession fails, try getUser as fallback
       const {
         data: { user: userData },
         error: userError,
       } = await supabase.auth.getUser();
 
+      console.log('[Admin Auth] getUser result:', {
+        hasUser: !!userData,
+        userId: userData?.id,
+        userError: userError?.message,
+        userErrorCode: userError?.status,
+      });
+
       if (userData && !userError) {
         user = userData;
+        console.log('[Admin Auth] User found via getUser:', user.id);
       } else {
         // Log the error for debugging (but don't expose to client)
-        console.error('Admin auth failed:', {
-          sessionError: sessionError?.message,
-          userError: userError?.message,
-          hasCookies: request.cookies.getAll().length > 0,
-          cookieNames: request.cookies.getAll().map(c => c.name),
-        });
+        console.error(
+          '[Admin Auth] Authentication failed - both methods failed:',
+          {
+            sessionError: sessionError?.message,
+            sessionErrorCode: sessionError?.status,
+            userError: userError?.message,
+            userErrorCode: userError?.status,
+            hasCookies: request.cookies.getAll().length > 0,
+            cookieNames: request.cookies.getAll().map(c => c.name),
+            url: request.url,
+          }
+        );
 
         return {
           success: false,
@@ -75,6 +125,9 @@ export async function validateAdminAccess(request: NextRequest) {
       }
     } else {
       // No session and no error - user is not authenticated
+      console.log(
+        '[Admin Auth] No session and no error - user not authenticated'
+      );
       return {
         success: false,
         response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
@@ -82,11 +135,17 @@ export async function validateAdminAccess(request: NextRequest) {
     }
 
     if (!user) {
+      console.log('[Admin Auth] No user found after authentication attempts');
       return {
         success: false,
         response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
       };
     }
+
+    console.log(
+      '[Admin Auth] User authenticated, checking role for user:',
+      user.id
+    );
 
     // Get user role with additional security checks
     const { data: userData, error: userError } = await supabase
@@ -95,7 +154,19 @@ export async function validateAdminAccess(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
+    console.log('[Admin Auth] User data query result:', {
+      hasUserData: !!userData,
+      role: userData?.role,
+      status: userData?.status,
+      userError: userError?.message,
+      userErrorCode: userError?.code,
+    });
+
     if (userError || !userData) {
+      console.error('[Admin Auth] User not found in database:', {
+        userId: user.id,
+        error: userError?.message,
+      });
       return {
         success: false,
         response: NextResponse.json(
@@ -107,6 +178,7 @@ export async function validateAdminAccess(request: NextRequest) {
 
     // Comprehensive admin validation
     if (userData.role !== 'admin') {
+      console.log('[Admin Auth] User is not admin, role:', userData.role);
       // Log unauthorized access attempt
       await supabase.from('activity_logs').insert({
         user_id: user.id,
@@ -156,6 +228,7 @@ export async function validateAdminAccess(request: NextRequest) {
       };
     }
 
+    console.log('[Admin Auth] Admin access granted for user:', user.id);
     return {
       success: true,
       user: {
@@ -169,6 +242,11 @@ export async function validateAdminAccess(request: NextRequest) {
     };
   } catch (error) {
     // Log error for debugging but don't expose details to client
+    console.error('[Admin Auth] Unexpected error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      url: request.url,
+    });
     return {
       success: false,
       response: NextResponse.json(

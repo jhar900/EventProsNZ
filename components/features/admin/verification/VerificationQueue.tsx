@@ -76,15 +76,37 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
         params.append('status', statusFilter);
       }
 
+      console.log(
+        '[VerificationQueue] Fetching users with params:',
+        params.toString()
+      );
+      console.log('[VerificationQueue] Cookies available:', {
+        cookieCount: document.cookie.split(';').length,
+        cookieNames: document.cookie
+          .split(';')
+          .map(c => c.split('=')[0].trim()),
+      });
+
       const response = await fetch(`/api/admin/verification/queue?${params}`, {
         credentials: 'include', // Include cookies for authentication
       });
 
+      console.log('[VerificationQueue] Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[VerificationQueue] Successfully fetched users:', {
+          count: data.verifications?.length || 0,
+          total: data.total,
+        });
         // Debug: log first user's profile structure
         if (data.verifications && data.verifications.length > 0) {
-          console.log('First user from API:', {
+          console.log('[VerificationQueue] First user from API:', {
             id: data.verifications[0].id,
             profiles: data.verifications[0].profiles,
             avatar_url: data.verifications[0].profiles?.avatar_url,
@@ -93,10 +115,18 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
         setUsers(data.verifications);
         setTotalCount(data.total);
       } else {
-        const errorData = await response.json();
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: 'Unknown error' }));
+        console.error('[VerificationQueue] API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+        });
         setError(errorData.error || 'Failed to fetch users');
       }
     } catch (error) {
+      console.error('[VerificationQueue] Fetch error:', error);
       setError('Failed to fetch users');
     } finally {
       setIsLoading(false);

@@ -34,30 +34,97 @@ export function VerificationSummaryCards({
     try {
       setIsLoading(true);
 
+      console.log('[VerificationSummaryCards] Fetching counts...');
+      console.log('[VerificationSummaryCards] Cookies available:', {
+        cookieCount: document.cookie.split(';').length,
+        cookieNames: document.cookie
+          .split(';')
+          .map(c => c.split('=')[0].trim()),
+      });
+
       // Fetch counts for each status in parallel
       const [onboardingRes, pendingRes, approvedRes, rejectedRes] =
         await Promise.all([
           fetch('/api/admin/verification/queue?status=onboarding&limit=1', {
             credentials: 'include', // Include cookies for authentication
+          }).then(res => {
+            console.log('[VerificationSummaryCards] Onboarding response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok,
+            });
+            return res;
           }),
           fetch('/api/admin/verification/queue?status=pending&limit=1', {
             credentials: 'include', // Include cookies for authentication
+          }).then(res => {
+            console.log('[VerificationSummaryCards] Pending response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok,
+            });
+            return res;
           }),
           fetch('/api/admin/verification/queue?status=approved&limit=1', {
             credentials: 'include', // Include cookies for authentication
+          }).then(res => {
+            console.log('[VerificationSummaryCards] Approved response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok,
+            });
+            return res;
           }),
           fetch('/api/admin/verification/queue?status=rejected&limit=1', {
             credentials: 'include', // Include cookies for authentication
+          }).then(res => {
+            console.log('[VerificationSummaryCards] Rejected response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok,
+            });
+            return res;
           }),
         ]);
 
       const [onboardingData, pendingData, approvedData, rejectedData] =
         await Promise.all([
-          onboardingRes.json(),
-          pendingRes.json(),
-          approvedRes.json(),
-          rejectedRes.json(),
+          onboardingRes.json().catch(err => {
+            console.error(
+              '[VerificationSummaryCards] Onboarding JSON parse error:',
+              err
+            );
+            return { error: 'Failed to parse', total: 0 };
+          }),
+          pendingRes.json().catch(err => {
+            console.error(
+              '[VerificationSummaryCards] Pending JSON parse error:',
+              err
+            );
+            return { error: 'Failed to parse', total: 0 };
+          }),
+          approvedRes.json().catch(err => {
+            console.error(
+              '[VerificationSummaryCards] Approved JSON parse error:',
+              err
+            );
+            return { error: 'Failed to parse', total: 0 };
+          }),
+          rejectedRes.json().catch(err => {
+            console.error(
+              '[VerificationSummaryCards] Rejected JSON parse error:',
+              err
+            );
+            return { error: 'Failed to parse', total: 0 };
+          }),
         ]);
+
+      console.log('[VerificationSummaryCards] Parsed data:', {
+        onboarding: onboardingData,
+        pending: pendingData,
+        approved: approvedData,
+        rejected: rejectedData,
+      });
 
       setCounts({
         onboarding: onboardingData.total || 0,
@@ -66,7 +133,10 @@ export function VerificationSummaryCards({
         rejected: rejectedData.total || 0,
       });
     } catch (error) {
-      console.error('Error fetching verification counts:', error);
+      console.error(
+        '[VerificationSummaryCards] Error fetching verification counts:',
+        error
+      );
     } finally {
       setIsLoading(false);
     }
