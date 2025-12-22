@@ -72,6 +72,11 @@ export class CSRFProtection {
   }
 
   getTokenFromRequest(req: NextRequest): string | null {
+    // Handle build-time when headers/cookies might be undefined
+    if (!req || !req.headers || !req.cookies) {
+      return null;
+    }
+
     // Try to get token from header first
     const headerToken = req.headers.get(this.config.headerName);
     if (headerToken) {

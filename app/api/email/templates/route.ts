@@ -5,6 +5,8 @@ import { rateLimit } from '@/lib/rate-limiting';
 import { withCSRFProtection } from '@/lib/security/csrf-protection';
 import { DataSanitizer } from '@/lib/security/data-sanitizer';
 
+export const dynamic = 'force-dynamic';
+
 // Rate limiting configuration
 const templateRateLimiter = {
   windowMs: 15 * 60 * 1000, // 15 minutes

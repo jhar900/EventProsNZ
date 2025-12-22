@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { withRateLimit, analyticsRateLimit } from '@/lib/rate-limiting';
 
+export const dynamic = 'force-dynamic';
+
 const QueryParamsSchema = z.object({
   period: z.enum(['day', 'week', 'month', 'year']).optional().default('week'),
   date_from: z.string().optional(),

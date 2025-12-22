@@ -6,6 +6,8 @@ import { withCSRFProtection } from '@/lib/security/csrf-protection';
 import { DataSanitizer } from '@/lib/security/data-sanitizer';
 import { AuditLogger } from '@/lib/security/audit-logger';
 
+export const dynamic = 'force-dynamic';
+
 // Rate limiting configuration for trial emails
 const trialEmailRateLimiter = {
   windowMs: 15 * 60 * 1000, // 15 minutes
