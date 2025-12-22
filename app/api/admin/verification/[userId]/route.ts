@@ -16,8 +16,9 @@ export async function GET(
       );
     }
 
-    // Use admin client to bypass RLS
-    const adminSupabase = authResult.supabase || supabaseAdmin;
+    // Always use admin client to bypass RLS for data queries
+    // The validateAdminAccess only checks authorization, but we need admin client for queries
+    const adminSupabase = supabaseAdmin;
 
     const userId = params.userId;
 
