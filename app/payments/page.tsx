@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ interface Subscription {
   status: string;
 }
 
-export default function PaymentsPage() {
+function PaymentsContent() {
   const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
@@ -332,5 +332,19 @@ export default function PaymentsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <PaymentsContent />
+    </Suspense>
   );
 }

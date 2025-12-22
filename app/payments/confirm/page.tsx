@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { PaymentConfirmation } from '@/components/features/payments/PaymentConfirmation';
 
-export default function PaymentConfirmPage() {
+function PaymentConfirmContent() {
   const searchParams = useSearchParams();
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,5 +90,19 @@ export default function PaymentConfirmPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function PaymentConfirmPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <PaymentConfirmContent />
+    </Suspense>
   );
 }

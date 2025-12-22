@@ -6,9 +6,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
 import { useSearchParams } from 'next/navigation';
 import { ContractorFilters } from '@/types/contractors';
-import { useMemo } from 'react';
+import { useMemo, Suspense } from 'react';
 
-export default function ContractorsPage() {
+function ContractorsContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
 
@@ -70,5 +70,19 @@ export default function ContractorsPage() {
         </div>
       </div>
     </HomepageLayout>
+  );
+}
+
+export default function ContractorsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <ContractorsContent />
+    </Suspense>
   );
 }

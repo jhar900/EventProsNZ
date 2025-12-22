@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/client';
 import { createRateLimit } from '@/lib/rate-limiting';
 
+export const dynamic = 'force-dynamic';
+
 // Create rate limiter for pricing API
 const pricingRateLimit = createRateLimit({
   windowMs: 60 * 1000, // 1 minute

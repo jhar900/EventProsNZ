@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const updateSettingsSchema = z.object({
   email_notifications: z.boolean().optional(),
   sms_notifications: z.boolean().optional(),

@@ -4,6 +4,8 @@ import { IncidentResponseService } from '@/lib/security/incident-response-servic
 import { APISecurityService } from '@/lib/security/api-security-service';
 import { withSecurity } from '@/lib/security/security-middleware';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   return withSecurity(req, async () => {
     try {

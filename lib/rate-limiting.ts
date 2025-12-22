@@ -99,6 +99,11 @@ export function createRateLimit(config: Partial<RateLimitConfig> = {}) {
 }
 
 function getClientIP(request: NextRequest): string {
+  // Handle undefined headers during build time
+  if (!request.headers) {
+    return 'build-time';
+  }
+
   // Try various headers that might contain the real IP
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');

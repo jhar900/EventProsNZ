@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { checkUserSuspension } from '@/lib/security/suspension-check';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Try to get user ID from header first (like business profile does)

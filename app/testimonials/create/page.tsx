@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ interface EligibilityCheck {
   reason?: string;
 }
 
-export default function CreateTestimonialPage() {
+function CreateTestimonialContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const contractorId = searchParams.get('contractor_id');
@@ -185,5 +185,19 @@ export default function CreateTestimonialPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function CreateTestimonialPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <CreateTestimonialContent />
+    </Suspense>
   );
 }
