@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
 /**
@@ -8,7 +8,26 @@ import { supabaseAdmin } from '@/lib/supabase/server';
  */
 export async function validateAdminAccess(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
+    // Create a server client that can read cookies from the request
+    // This works better in API routes than the middleware client
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            // In API routes, we can't set cookies on the response here
+            // But we don't need to for authentication checks
+          },
+          remove(name: string, options: any) {
+            // In API routes, we can't remove cookies on the response here
+          },
+        },
+      }
+    );
 
     // For development: Simple bypass - just return success
     // This allows access to admin endpoints without authentication
@@ -32,18 +51,20 @@ export async function validateAdminAccess(request: NextRequest) {
     }
 
     // Production: Standard authentication flow
-    // Get authenticated user
+    // Get session first (reads from cookies), then get user
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    if (authError || !user) {
+    if (sessionError || !session?.user) {
       return {
         success: false,
         response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
       };
     }
+
+    const user = session.user;
 
     // Get user role with additional security checks
     const { data: userData, error: userError } = await supabase
