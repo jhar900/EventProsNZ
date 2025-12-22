@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
 /**
@@ -10,9 +10,26 @@ export async function validateAdminAccess(request: NextRequest) {
   try {
     console.log('[Admin Auth] Starting validation for:', request.url);
 
-    // Use the middleware client helper which properly handles cookies in API routes
-    // This is the same pattern used by other API routes in the codebase
-    const { supabase } = createClient(request);
+    // Create a server client that can read cookies from the request
+    // This is the correct approach for API routes (not middleware)
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            // In API routes, we can't set cookies on the response here
+            // But we don't need to for authentication checks
+          },
+          remove(name: string, options: any) {
+            // In API routes, we can't remove cookies on the response here
+          },
+        },
+      }
+    );
 
     // Log cookie information
     const allCookies = request.cookies.getAll();
