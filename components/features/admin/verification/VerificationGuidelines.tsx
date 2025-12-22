@@ -94,7 +94,10 @@ export function VerificationGuidelines({
     try {
       const response = await fetch('/api/admin/verification/criteria', {
         method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
         body: JSON.stringify({
           id: editingId,
           ...formData,
@@ -126,6 +129,9 @@ export function VerificationGuidelines({
     try {
       const response = await fetch(`/api/admin/verification/criteria/${id}`, {
         method: 'DELETE',
+        headers: {
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
         credentials: 'include', // Include cookies for authentication
       });
 

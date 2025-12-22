@@ -47,6 +47,9 @@ export function VerificationSummaryCards({
         await Promise.all([
           fetch('/api/admin/verification/queue?status=onboarding&limit=1', {
             credentials: 'include', // Include cookies for authentication
+            headers: {
+              'x-admin-token': 'admin-secure-token-2024-eventpros',
+            },
           }).then(res => {
             console.log('[VerificationSummaryCards] Onboarding response:', {
               status: res.status,
@@ -57,6 +60,9 @@ export function VerificationSummaryCards({
           }),
           fetch('/api/admin/verification/queue?status=pending&limit=1', {
             credentials: 'include', // Include cookies for authentication
+            headers: {
+              'x-admin-token': 'admin-secure-token-2024-eventpros',
+            },
           }).then(res => {
             console.log('[VerificationSummaryCards] Pending response:', {
               status: res.status,
@@ -67,6 +73,9 @@ export function VerificationSummaryCards({
           }),
           fetch('/api/admin/verification/queue?status=approved&limit=1', {
             credentials: 'include', // Include cookies for authentication
+            headers: {
+              'x-admin-token': 'admin-secure-token-2024-eventpros',
+            },
           }).then(res => {
             console.log('[VerificationSummaryCards] Approved response:', {
               status: res.status,
@@ -77,6 +86,9 @@ export function VerificationSummaryCards({
           }),
           fetch('/api/admin/verification/queue?status=rejected&limit=1', {
             credentials: 'include', // Include cookies for authentication
+            headers: {
+              'x-admin-token': 'admin-secure-token-2024-eventpros',
+            },
           }).then(res => {
             console.log('[VerificationSummaryCards] Rejected response:', {
               status: res.status,

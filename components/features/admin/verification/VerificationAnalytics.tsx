@@ -56,6 +56,9 @@ export function VerificationAnalytics({
         `/api/admin/verification/analytics?period=${period}`,
         {
           credentials: 'include', // Include cookies for authentication
+          headers: {
+            'x-admin-token': 'admin-secure-token-2024-eventpros',
+          },
         }
       );
 

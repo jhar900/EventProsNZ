@@ -67,6 +67,9 @@ export default function VerificationPage() {
     try {
       const response = await fetch(`/api/admin/verification/${user.id}`, {
         credentials: 'include', // Include cookies for authentication
+        headers: {
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
       });
       if (response.ok) {
         const data = await response.json();
@@ -106,6 +109,7 @@ export default function VerificationPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-admin-token': 'admin-secure-token-2024-eventpros',
           },
           body: JSON.stringify({ reason }),
           credentials: 'include', // Include cookies for authentication
@@ -139,6 +143,7 @@ export default function VerificationPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
         body: JSON.stringify({ reason, feedback }),
         credentials: 'include', // Include cookies for authentication
@@ -170,6 +175,9 @@ export default function VerificationPage() {
         `/api/admin/verification/${userId}/resubmit`,
         {
           method: 'POST',
+          headers: {
+            'x-admin-token': 'admin-secure-token-2024-eventpros',
+          },
           credentials: 'include', // Include cookies for authentication
         }
       );
@@ -199,6 +207,7 @@ export default function VerificationPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-admin-token': 'admin-secure-token-2024-eventpros',
           },
           body: JSON.stringify({ reason }),
           credentials: 'include', // Include cookies for authentication

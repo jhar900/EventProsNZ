@@ -89,6 +89,9 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
 
       const response = await fetch(`/api/admin/verification/queue?${params}`, {
         credentials: 'include', // Include cookies for authentication
+        headers: {
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
       });
 
       console.log('[VerificationQueue] Response:', {

@@ -50,6 +50,9 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     try {
       const response = await fetch('/api/admin/verification/notifications', {
         credentials: 'include', // Include cookies for authentication
+        headers: {
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
       });
       const data = await response.json();
 
@@ -75,7 +78,10 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     try {
       const response = await fetch('/api/admin/verification/notifications', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': 'admin-secure-token-2024-eventpros',
+        },
         body: JSON.stringify({ notification_ids: notificationIds }),
         credentials: 'include', // Include cookies for authentication
       });

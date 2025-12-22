@@ -10,6 +10,57 @@ export async function validateAdminAccess(request: NextRequest) {
   try {
     console.log('[Admin Auth] Starting validation for:', request.url);
 
+    // Check for admin token header first (same as dashboard)
+    const adminToken = request.headers.get('x-admin-token');
+    const expectedToken =
+      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
+
+    if (adminToken === expectedToken) {
+      console.log(
+        '[Admin Auth] Valid admin token provided, checking for admin user...'
+      );
+      // Valid admin token - check if admin users exist
+      const { data: adminUsers, error: adminError } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role, is_verified, status, last_login')
+        .eq('role', 'admin')
+        .limit(1);
+
+      if (adminUsers && adminUsers.length > 0 && !adminError) {
+        console.log(
+          '[Admin Auth] Admin access granted via token for user:',
+          adminUsers[0].id
+        );
+        return {
+          success: true,
+          user: {
+            id: adminUsers[0].id,
+            role: adminUsers[0].role,
+            status: adminUsers[0].status || 'active',
+            is_verified: adminUsers[0].is_verified,
+            last_login: adminUsers[0].last_login,
+          },
+          supabase: supabaseAdmin,
+        };
+      } else {
+        console.error(
+          '[Admin Auth] Admin token valid but no admin users found'
+        );
+        return {
+          success: false,
+          response: NextResponse.json(
+            { error: 'Unauthorized - No admin users found' },
+            { status: 401 }
+          ),
+        };
+      }
+    }
+
+    // Fallback to cookie-based authentication
+    console.log(
+      '[Admin Auth] No admin token, trying cookie-based authentication...'
+    );
+
     // Create a server client that can read cookies from the request
     // This is the correct approach for API routes (not middleware)
     const supabase = createServerClient(
@@ -18,7 +69,14 @@ export async function validateAdminAccess(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return request.cookies.get(name)?.value;
+            const cookie = request.cookies.get(name);
+            const value = cookie?.value;
+            if (value) {
+              console.log(
+                `[Admin Auth] Cookie found: ${name} (length: ${value.length})`
+              );
+            }
+            return value;
           },
           set(name: string, value: string, options: any) {
             // In API routes, we can't set cookies on the response here
