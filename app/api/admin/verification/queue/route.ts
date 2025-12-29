@@ -38,84 +38,164 @@ export async function GET(request: NextRequest) {
     const limit = query.limit ? parseInt(query.limit) : 20;
     const offset = query.offset ? parseInt(query.offset) : 0;
 
-    // For status filters, use verification_logs, users.is_verified, and onboarding status
+    // For status filters, use verification_logs, business_profiles.is_verified, and onboarding status
     let userIds: string[] | null = null;
     if (query.status === 'onboarding') {
-      // Get contractors who haven't completed onboarding
+      // Get contractors and event managers who haven't completed onboarding
       // This includes:
       // 1. Contractors with is_submitted = false
       // 2. Contractors without an onboarding status record (haven't started/completed)
+      // 3. Event managers without onboarding_completed = true
       // Excludes:
-      // - contractors who are verified
+      // - users who are verified (business_profiles.is_verified = true)
       // - contractors who have completed onboarding (is_submitted = true)
-      // - contractors who have been rejected
+      // - event managers who have completed onboarding (onboarding_completed = true)
+      // - users who have been rejected
 
-      // Get all contractors who are not verified
-      const { data: allContractors, error: contractorsError } =
+      // Get all users with unverified business profiles
+      const { data: unverifiedBusinessProfiles, error: bpError } =
         await adminSupabase
-          .from('users')
-          .select('id')
-          .eq('role', 'contractor')
+          .from('business_profiles')
+          .select('user_id')
           .eq('is_verified', false);
 
-      if (contractorsError) {
-        console.error('Error fetching contractors:', contractorsError);
+      if (bpError) {
+        console.error('Error fetching business profiles:', bpError);
         userIds = [];
       } else {
-        const allContractorIds = new Set(
-          (allContractors || []).map((u: any) => u.id)
+        // Get user IDs for contractors and event managers
+        const unverifiedUserIds = (unverifiedBusinessProfiles || []).map(
+          (bp: any) => bp.user_id
         );
 
-        // Get contractors who have completed onboarding (is_submitted = true) - exclude these
-        const { data: completedOnboarding, error: completedError } =
-          await adminSupabase
-            .from('contractor_onboarding_status')
-            .select('user_id')
-            .eq('is_submitted', true);
+        // If no unverified business profiles, return empty result
+        if (unverifiedUserIds.length === 0) {
+          userIds = [];
+        } else {
+          const { data: users, error: usersError } = await adminSupabase
+            .from('users')
+            .select('id, role')
+            .in('id', unverifiedUserIds)
+            .in('role', ['contractor', 'event_manager']);
 
-        const completedOnboardingIds = new Set(
-          (completedOnboarding || []).map((status: any) => status.user_id)
-        );
+          if (usersError) {
+            console.error('Error fetching users:', usersError);
+            userIds = [];
+          } else {
+            const contractorIds = new Set(
+              (users || [])
+                .filter((u: any) => u.role === 'contractor')
+                .map((u: any) => u.id)
+            );
+            const eventManagerIds = new Set(
+              (users || [])
+                .filter((u: any) => u.role === 'event_manager')
+                .map((u: any) => u.id)
+            );
+            const allUserIds = new Set([...contractorIds, ...eventManagerIds]);
 
-        // Get contractors with is_submitted = false (explicitly in onboarding)
-        const { data: incompleteOnboarding, error: incompleteError } =
-          await adminSupabase
-            .from('contractor_onboarding_status')
-            .select('user_id')
-            .eq('is_submitted', false);
+            // Get contractors who have completed onboarding (is_submitted = true) - exclude these
+            const { data: completedOnboarding, error: completedError } =
+              await adminSupabase
+                .from('contractor_onboarding_status')
+                .select('user_id')
+                .eq('is_submitted', true);
 
-        const incompleteOnboardingIds = new Set(
-          (incompleteOnboarding || []).map((status: any) => status.user_id)
-        );
+            const completedOnboardingIds = new Set(
+              (completedOnboarding || []).map((status: any) => status.user_id)
+            );
 
-        // Get rejected users - exclude these from onboarding
-        const { data: rejectedLogs, error: rejectedError } = await adminSupabase
-          .from('verification_logs')
-          .select('user_id')
-          .or('action.eq.reject,status.eq.rejected');
+            // Get contractors with is_submitted = false (explicitly in onboarding)
+            const { data: incompleteOnboarding, error: incompleteError } =
+              await adminSupabase
+                .from('contractor_onboarding_status')
+                .select('user_id')
+                .eq('is_submitted', false);
 
-        const rejectedUserIds = new Set(
-          (rejectedLogs || []).map((log: any) => log.user_id)
-        );
+            const incompleteOnboardingIds = new Set(
+              (incompleteOnboarding || []).map((status: any) => status.user_id)
+            );
 
-        // Onboarding users are:
-        // - Contractors who are not verified AND
-        // - (Have is_submitted = false OR don't have an onboarding record)
-        // - Exclude those who have completed onboarding (is_submitted = true)
-        // - Exclude those who have been rejected
-        userIds = Array.from(allContractorIds).filter(id => {
-          // Exclude if they've been rejected
-          if (rejectedUserIds.has(id)) return false;
-          // Exclude if they've completed onboarding
-          if (completedOnboardingIds.has(id)) return false;
-          // Include if they're explicitly in onboarding (is_submitted = false)
-          if (incompleteOnboardingIds.has(id)) return true;
-          // Include if they don't have a record (haven't started/completed onboarding)
-          return true; // No record means they're still in onboarding
-        });
+            // Get rejected users - exclude these from onboarding
+            const { data: rejectedLogs, error: rejectedError } =
+              await adminSupabase
+                .from('verification_logs')
+                .select('user_id')
+                .or('action.eq.reject,status.eq.rejected');
+
+            const rejectedUserIds = new Set(
+              (rejectedLogs || []).map((log: any) => log.user_id)
+            );
+
+            // Get previously approved users - exclude these from onboarding (they should be pending)
+            const { data: approvedLogs } = await adminSupabase
+              .from('verification_logs')
+              .select('user_id')
+              .or('action.eq.approve,status.eq.approved');
+
+            const previouslyApprovedUserIds = new Set(
+              (approvedLogs || []).map((log: any) => log.user_id)
+            );
+
+            // Get event managers who have completed onboarding (to exclude them)
+            let completedEventManagerIds = new Set<string>();
+            if (eventManagerIds.size > 0) {
+              const { data: eventManagerProfiles } = await adminSupabase
+                .from('profiles')
+                .select('user_id, preferences')
+                .in('user_id', Array.from(eventManagerIds));
+
+              if (eventManagerProfiles) {
+                completedEventManagerIds = new Set(
+                  eventManagerProfiles
+                    .filter(
+                      (p: any) =>
+                        (p.preferences as any)?.onboarding_completed === true
+                    )
+                    .map((p: any) => p.user_id)
+                );
+              }
+            }
+
+            // Onboarding users are:
+            // - Contractors who are not verified AND
+            //   (Have is_submitted = false OR don't have an onboarding record)
+            // - Event managers who are not verified AND
+            //   (Have onboarding_completed = false or null)
+            // - Exclude those who have completed onboarding
+            // - Exclude those who have been rejected
+            // - Exclude those who were previously approved (they should be pending, not onboarding)
+            userIds = Array.from(allUserIds).filter(id => {
+              // Exclude if they've been rejected
+              if (rejectedUserIds.has(id)) return false;
+              // Exclude if they were previously approved (they should be pending, not onboarding)
+              if (previouslyApprovedUserIds.has(id)) return false;
+
+              // Handle contractors
+              if (contractorIds.has(id)) {
+                // Exclude if they've completed onboarding
+                if (completedOnboardingIds.has(id)) return false;
+                // Include if they're explicitly in onboarding (is_submitted = false)
+                if (incompleteOnboardingIds.has(id)) return true;
+                // Include if they don't have a record (haven't started/completed onboarding)
+                return true; // No record means they're still in onboarding
+              }
+
+              // Handle event managers
+              if (eventManagerIds.has(id)) {
+                // Exclude if they've completed onboarding
+                if (completedEventManagerIds.has(id)) return false;
+                // Include if they haven't completed onboarding
+                return true;
+              }
+
+              return false;
+            });
+          }
+        }
       }
 
-      if (userIds.length === 0) {
+      if (!userIds || userIds.length === 0) {
         return NextResponse.json({
           verifications: [],
           total: 0,
@@ -148,20 +228,47 @@ export async function GET(request: NextRequest) {
         });
       }
     } else if (query.status === 'approved') {
-      // Approved users are those with is_verified = true
-      // No need to filter by userIds, we'll use is_verified filter directly
+      // Approved users are those with business_profiles.is_verified = true
+      // No need to filter by userIds, we'll use business_profiles.is_verified filter directly
       userIds = null;
     } else if (query.status === 'pending') {
       // For pending, get users who:
-      // 1. Are not verified (is_verified = false)
+      // 1. Have unverified business profiles (business_profiles.is_verified = false)
       // 2. Have NOT been rejected
       // 3. Have completed onboarding (for contractors: is_submitted = true)
       // 4. Are not contractors OR are contractors with completed onboarding
 
+      // Get all users with unverified business profiles
+      const { data: unverifiedBusinessProfiles, error: bpError } =
+        await adminSupabase
+          .from('business_profiles')
+          .select('user_id')
+          .eq('is_verified', false);
+
+      if (bpError) {
+        return NextResponse.json(
+          { error: 'Failed to fetch business profiles' },
+          { status: 400 }
+        );
+      }
+
+      const unverifiedUserIds = (unverifiedBusinessProfiles || []).map(
+        (bp: any) => bp.user_id
+      );
+
+      // If no unverified business profiles, return empty result
+      if (unverifiedUserIds.length === 0) {
+        return NextResponse.json({
+          verifications: [],
+          total: 0,
+        });
+      }
+
+      // Get user details for these IDs
       const { data: allUsers, error: allUsersError } = await adminSupabase
         .from('users')
         .select('id, role')
-        .eq('is_verified', false);
+        .in('id', unverifiedUserIds);
 
       if (allUsersError) {
         return NextResponse.json(
@@ -232,7 +339,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get verification queue
+    // Get verification queue - join with business_profiles to filter by its is_verified
     let queryBuilder = adminSupabase
       .from('users')
       .select(
@@ -240,7 +347,6 @@ export async function GET(request: NextRequest) {
         id,
         email,
         role,
-        is_verified,
         created_at,
         profiles!inner(
           first_name,
@@ -249,7 +355,7 @@ export async function GET(request: NextRequest) {
           address,
           avatar_url
         ),
-        business_profiles(
+        business_profiles!inner(
           company_name,
           business_address,
           nzbn,
@@ -268,7 +374,8 @@ export async function GET(request: NextRequest) {
     } else if (query.status === 'pending' && userIds && userIds.length > 0) {
       queryBuilder = queryBuilder.in('id', userIds);
     } else if (query.status === 'approved') {
-      queryBuilder = queryBuilder.eq('is_verified', true);
+      // Filter by business_profiles.is_verified = true
+      queryBuilder = queryBuilder.eq('business_profiles.is_verified', true);
     } else if (query.status === 'rejected' && userIds && userIds.length > 0) {
       queryBuilder = queryBuilder.in('id', userIds);
     }
@@ -295,6 +402,16 @@ export async function GET(request: NextRequest) {
 
     const rejectedUserIds = new Set(
       (rejectedLogs || []).map((log: any) => log.user_id)
+    );
+
+    // Get all previously approved user IDs to determine if they should be pending (not onboarding) when unapproved
+    const { data: approvedLogs } = await adminSupabase
+      .from('verification_logs')
+      .select('user_id')
+      .or('action.eq.approve,status.eq.approved');
+
+    const previouslyApprovedUserIds = new Set(
+      (approvedLogs || []).map((log: any) => log.user_id)
     );
 
     // Get onboarding status for all contractors in the result set
@@ -326,8 +443,14 @@ export async function GET(request: NextRequest) {
         ? user.profiles[0]
         : user.profiles;
 
+      // Get business profile is_verified status
+      const businessProfile = Array.isArray(user.business_profiles)
+        ? user.business_profiles[0]
+        : user.business_profiles;
+      const isBusinessVerified = businessProfile?.is_verified || false;
+
       // Determine verification status with correct priority:
-      // 1. Approved (is_verified = true) - highest priority
+      // 1. Approved (business_profiles.is_verified = true) - highest priority
       // 2. Rejected (has rejection log) - second priority
       // 3. Onboarding (contractor with is_submitted = false or no onboarding record) - third priority
       // 4. Pending (default for unverified users who completed onboarding) - lowest priority
@@ -338,26 +461,51 @@ export async function GET(request: NextRequest) {
         | 'onboarding' = 'pending';
 
       // Priority 1: Approved
-      if (user.is_verified) {
+      if (isBusinessVerified) {
         verification_status = 'approved';
       }
       // Priority 2: Rejected (check after approved, but before onboarding)
       else if (rejectedUserIds.has(user.id)) {
         verification_status = 'rejected';
       }
-      // Priority 3: Onboarding (only for contractors)
+      // Priority 3: Onboarding (for contractors and event managers)
       else if (user.role === 'contractor') {
         const isSubmitted = onboardingStatusMap.get(user.id);
+        // If they were previously approved, they should be pending (not onboarding) when unapproved
+        if (previouslyApprovedUserIds.has(user.id) && !isBusinessVerified) {
+          verification_status = 'pending';
+        }
         // If explicitly false or undefined (no record), they're in onboarding
-        if (isSubmitted === false || isSubmitted === undefined) {
+        else if (isSubmitted === false || isSubmitted === undefined) {
           verification_status = 'onboarding';
         }
         // If submitted but not verified, they're pending
-        else if (isSubmitted === true && !user.is_verified) {
+        else if (isSubmitted === true && !isBusinessVerified) {
           verification_status = 'pending';
         }
       }
-      // Priority 4: Pending (default for non-contractors or contractors who completed onboarding)
+      // Event managers: check if they've completed onboarding
+      else if (user.role === 'event_manager') {
+        const profile = Array.isArray(user.profiles)
+          ? user.profiles[0]
+          : user.profiles;
+        const onboardingCompleted = (profile?.preferences as any)
+          ?.onboarding_completed;
+
+        // If they were previously approved, they should be pending (not onboarding) when unapproved
+        if (previouslyApprovedUserIds.has(user.id) && !isBusinessVerified) {
+          verification_status = 'pending';
+        }
+        // If they haven't completed onboarding, they're in onboarding
+        else if (!onboardingCompleted) {
+          verification_status = 'onboarding';
+        }
+        // If they've completed onboarding but business is not verified, they're pending
+        else if (onboardingCompleted && !isBusinessVerified) {
+          verification_status = 'pending';
+        }
+      }
+      // Priority 4: Pending (default for other roles or contractors who completed onboarding)
       else {
         verification_status = 'pending';
       }
@@ -365,26 +513,57 @@ export async function GET(request: NextRequest) {
       return {
         ...user,
         profiles: profile || null,
+        business_profiles: businessProfile || null,
+        is_verified: isBusinessVerified, // Add for backward compatibility
         verification_status, // Add explicit status field
       };
     });
 
     // Get total count with same filters
-    let countQuery = adminSupabase
-      .from('users')
-      .select('id', { count: 'exact', head: true });
+    // For counts, we need to query business_profiles and count distinct user_ids
+    let count: number | null = 0;
+    let countError: any = null;
 
     if (query.status === 'onboarding' && userIds && userIds.length > 0) {
-      countQuery = countQuery.in('id', userIds);
+      // Count only users who have business_profiles (matching the main query filter)
+      const { count: onboardingCount, error: err } = await adminSupabase
+        .from('business_profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .in('user_id', userIds);
+      count = onboardingCount;
+      countError = err;
     } else if (query.status === 'pending' && userIds && userIds.length > 0) {
-      countQuery = countQuery.in('id', userIds);
+      // Count only users who have business_profiles (matching the main query filter)
+      const { count: pendingCount, error: err } = await adminSupabase
+        .from('business_profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .in('user_id', userIds);
+      count = pendingCount;
+      countError = err;
     } else if (query.status === 'approved') {
-      countQuery = countQuery.eq('is_verified', true);
+      // Count users with verified business profiles
+      const { count: approvedCount, error: err } = await adminSupabase
+        .from('business_profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('is_verified', true);
+      count = approvedCount;
+      countError = err;
     } else if (query.status === 'rejected' && userIds && userIds.length > 0) {
-      countQuery = countQuery.in('id', userIds);
+      // Count only rejected users who have business_profiles (matching the main query filter)
+      const { count: rejectedCount, error: err } = await adminSupabase
+        .from('business_profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .in('user_id', userIds);
+      count = rejectedCount;
+      countError = err;
+    } else {
+      // For 'all' or no filter, count all users with business profiles
+      const { count: allCount, error: err } = await adminSupabase
+        .from('business_profiles')
+        .select('user_id', { count: 'exact', head: true });
+      count = allCount;
+      countError = err;
     }
-
-    const { count, error: countError } = await countQuery;
 
     if (countError) {
       return NextResponse.json(

@@ -31,23 +31,8 @@ export async function POST(
     const body = await request.json();
     const { reason, feedback } = rejectSchema.parse(body);
 
-    // Update user verification status
-    const { error: updateError } = await adminSupabase
-      .from('users')
-      .update({
-        is_verified: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: 'Failed to reject user' },
-        { status: 400 }
-      );
-    }
-
-    // Update business profile verification if exists
+    // Update business profile verification (ONLY update business_profiles, not users)
+    // users.is_verified is set automatically after onboarding and should not be changed here
     const { error: businessUpdateError } = await adminSupabase
       .from('business_profiles')
       .update({
@@ -57,6 +42,10 @@ export async function POST(
       .eq('user_id', userId);
 
     if (businessUpdateError) {
+      return NextResponse.json(
+        { error: 'Failed to reject business profile' },
+        { status: 400 }
+      );
     }
 
     // Log verification action - CRITICAL: This must succeed for rejected filter to work

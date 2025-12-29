@@ -41,7 +41,9 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .maybeSingle();
 
-    // Verify user as event manager (automatic approval)
+    // Verify user as event manager (automatic approval for account)
+    // If they don't have a business profile, they're fully approved (no business to verify)
+    // If they have a business profile, only the user account is approved, business needs admin verification
     const { error: verifyError } = await supabase
       .from('users')
       .update({
@@ -56,6 +58,11 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // If event manager doesn't have a business profile, they're automatically approved
+    // (No business to verify, so they're fully approved)
+    // If they have a business profile, business_profiles.is_verified remains false
+    // and will need admin verification
 
     // Update profile completion status
     const { error: updateError } = await supabase

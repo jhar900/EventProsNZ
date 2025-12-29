@@ -62,7 +62,9 @@ export async function GET(
       // Get onboarding status for contractors
       supabaseAdmin
         .from('contractor_onboarding_status')
-        .select('is_submitted')
+        .select(
+          'is_submitted, step1_completed, step2_completed, step3_completed, step4_completed'
+        )
         .eq('user_id', userId)
         .maybeSingle(),
     ]);
@@ -137,25 +139,22 @@ export async function GET(
       }
     }
 
-    // Determine verification status based on logs and onboarding
-    // Priority: is_verified > onboarding status > most recent log action > check for rejection history
+    // Determine verification status based on business_profiles.is_verified, logs, and onboarding
+    // Priority: business_profiles.is_verified > rejected (has rejection log) > onboarding status > pending
+    const isBusinessVerified = businessProfileData?.is_verified || false;
+
     let verification_status:
       | 'pending'
       | 'approved'
       | 'rejected'
       | 'onboarding' = 'pending';
 
-    // Check if user is a contractor who hasn't completed onboarding
-    if (
-      userData.role === 'contractor' &&
-      onboardingStatus &&
-      !onboardingStatus.is_submitted
-    ) {
-      verification_status = 'onboarding';
-    } else if (userData.is_verified) {
+    // Priority 1: Approved (business_profiles.is_verified = true)
+    if (isBusinessVerified) {
       verification_status = 'approved';
-    } else if (verificationLog && verificationLog.length > 0) {
-      // Find the most recent rejection and approval to determine current status
+    }
+    // Priority 2: Rejected (check for rejection log)
+    else if (verificationLog && verificationLog.length > 0) {
       const mostRecentRejection = verificationLog.find(
         (log: any) => log.action === 'reject' || log.status === 'rejected'
       );
@@ -163,31 +162,71 @@ export async function GET(
         (log: any) => log.action === 'approve' || log.status === 'approved'
       );
 
-      // If there's an approval after the most recent rejection, status is approved
       // If there's a rejection and no approval after it, status is rejected
-      // Otherwise, status is pending
-      if (mostRecentApproval) {
-        // Check if approval came after rejection
+      if (mostRecentRejection) {
         if (
-          !mostRecentRejection ||
-          new Date(mostRecentApproval.created_at) >
-            new Date(mostRecentRejection.created_at)
+          !mostRecentApproval ||
+          new Date(mostRecentRejection.created_at) >
+            new Date(mostRecentApproval.created_at)
         ) {
-          verification_status = 'approved';
-        } else {
           verification_status = 'rejected';
         }
-      } else if (mostRecentRejection) {
-        verification_status = 'rejected';
-      } else {
-        verification_status = 'pending';
       }
+    }
+
+    // Priority 3: Onboarding (for contractors and event managers who haven't completed onboarding)
+    // Check if they were previously approved - if so, they should be pending, not onboarding
+    const { data: approvedLogs } = await supabaseAdmin
+      .from('verification_logs')
+      .select('user_id')
+      .eq('user_id', userId)
+      .or('action.eq.approve,status.eq.approved')
+      .limit(1);
+
+    const wasPreviouslyApproved = approvedLogs && approvedLogs.length > 0;
+
+    if (
+      verification_status !== 'approved' &&
+      verification_status !== 'rejected' &&
+      !wasPreviouslyApproved
+    ) {
+      // Handle contractors
+      if (userData.role === 'contractor') {
+        // If they have an onboarding record and is_submitted is false, they're in onboarding
+        // If they don't have an onboarding record at all, they're also in onboarding (haven't started)
+        if (!onboardingStatus || !onboardingStatus.is_submitted) {
+          verification_status = 'onboarding';
+        }
+      }
+      // Handle event managers
+      else if (userData.role === 'event_manager') {
+        // Get profile to check onboarding completion status
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('preferences')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const onboardingCompleted = (profile?.preferences as any)
+          ?.onboarding_completed;
+
+        // If they haven't completed onboarding, they're in onboarding
+        if (!onboardingCompleted) {
+          verification_status = 'onboarding';
+        }
+      }
+    }
+
+    // Priority 4: Pending (default for unverified users who completed onboarding)
+    if (verification_status === 'pending' && !isBusinessVerified) {
+      verification_status = 'pending';
     }
 
     return NextResponse.json({
       user: {
         ...transformedUserData,
         verification_status, // Add explicit status field
+        contractor_onboarding_status: onboardingStatus, // Include onboarding step data
       },
       verification_log: logsWithProfiles,
     });

@@ -47,6 +47,13 @@ interface User {
     verification_date?: string;
     logo_url?: string;
   };
+  contractor_onboarding_status?: {
+    step1_completed: boolean;
+    step2_completed: boolean;
+    step3_completed: boolean;
+    step4_completed: boolean;
+    is_submitted: boolean;
+  };
 }
 
 interface VerificationLog {
@@ -144,6 +151,62 @@ export function UserVerificationCard({
     }
   };
 
+  const getBusinessStatusBadge = () => {
+    // Use explicit verification_status if available, otherwise use business_profiles.is_verified
+    const status =
+      user.verification_status ||
+      (user.business_profiles?.is_verified ? 'approved' : 'pending');
+
+    if (status === 'approved') {
+      return (
+        <Badge className="bg-green-100 text-green-800 text-xs">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Approved
+        </Badge>
+      );
+    } else if (status === 'rejected') {
+      return (
+        <Badge className="bg-red-100 text-red-800 text-xs">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejected
+        </Badge>
+      );
+    } else if (status === 'onboarding') {
+      // Calculate which step they're on
+      const onboardingStatus = user.contractor_onboarding_status;
+      let stepText = 'Onboarding';
+
+      if (onboardingStatus) {
+        const completedSteps = [
+          onboardingStatus.step1_completed,
+          onboardingStatus.step2_completed,
+          onboardingStatus.step3_completed,
+          onboardingStatus.step4_completed,
+        ].filter(Boolean).length;
+
+        if (completedSteps > 0 && completedSteps < 4) {
+          stepText = `Onboarding - Step ${completedSteps + 1}/4`;
+        } else if (completedSteps === 0) {
+          stepText = 'Onboarding - Step 1/4';
+        }
+      }
+
+      return (
+        <Badge className="bg-blue-100 text-blue-800 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          {stepText}
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          Pending
+        </Badge>
+      );
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const roleColors = {
       event_manager: 'bg-blue-100 text-blue-800',
@@ -198,7 +261,6 @@ export function UserVerificationCard({
                       ? `${user.profiles.first_name || ''} ${user.profiles.last_name || ''}`.trim()
                       : user.email}
                   </h2>
-                  {getStatusBadge()}
                   {getRoleBadge(user.role)}
                 </div>
                 <p className="text-gray-600">{user.email}</p>
@@ -245,14 +307,6 @@ export function UserVerificationCard({
                     <p className="text-gray-600">{user.profiles.bio}</p>
                   </div>
                 )}
-                {user.profiles.first_name && (
-                  <div className="md:col-span-2">
-                    <p className="text-gray-600">
-                      <span className="font-medium">Name: </span>
-                      {user.profiles.first_name} {user.profiles.last_name}
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
               <p className="text-gray-500 text-sm">
@@ -267,11 +321,7 @@ export function UserVerificationCard({
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 <Building className="h-4 w-4" />
                 Business Information
-                {user.business_profiles.is_verified && (
-                  <Badge className="bg-green-100 text-green-800 text-xs">
-                    Verified Business
-                  </Badge>
-                )}
+                {getBusinessStatusBadge()}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-3">
@@ -360,80 +410,81 @@ export function UserVerificationCard({
 
           {/* Action Buttons */}
           <div className="border-t pt-4">
-            {!user.is_verified ? (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Approval reason (optional)"
-                    value={approveReason}
-                    onChange={e => setApproveReason(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <Button
-                  onClick={handleApprove}
-                  disabled={isLoading}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Approve
-                </Button>
-                <Button
-                  onClick={() => setShowRejectForm(!showRejectForm)}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-                <Button
-                  onClick={() => onResubmit(user.id)}
-                  disabled={isLoading}
-                  variant="outline"
-                >
-                  Request Resubmission
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Unapproval reason (optional)"
-                    value={unapproveReason}
-                    onChange={e => setUnapproveReason(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                {onUnapprove && (
+            <h3 className="font-semibold mb-3">Business Verification Update</h3>
+            {!user.business_profiles?.is_verified ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Approval reason (optional)"
+                  value={approveReason}
+                  onChange={e => setApproveReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button
-                    onClick={handleUnapprove}
+                    onClick={handleApprove}
+                    disabled={isLoading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={() => setShowRejectForm(!showRejectForm)}
                     disabled={isLoading}
                     variant="outline"
-                    className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                    className="text-red-600 border-red-600 hover:bg-red-50"
                   >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    Unapprove
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
                   </Button>
-                )}
-                <Button
-                  onClick={() => setShowRejectForm(!showRejectForm)}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-                <Button
-                  onClick={() => onResubmit(user.id)}
-                  disabled={isLoading}
-                  variant="outline"
-                >
-                  Request Resubmission
-                </Button>
+                  <Button
+                    onClick={() => onResubmit(user.id)}
+                    disabled={isLoading}
+                    variant="outline"
+                  >
+                    Request Resubmission
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Unapproval reason (optional)"
+                  value={unapproveReason}
+                  onChange={e => setUnapproveReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {onUnapprove && (
+                    <Button
+                      onClick={handleUnapprove}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Unapprove
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => setShowRejectForm(!showRejectForm)}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                  <Button
+                    onClick={() => onResubmit(user.id)}
+                    disabled={isLoading}
+                    variant="outline"
+                  >
+                    Request Resubmission
+                  </Button>
+                </div>
               </div>
             )}
 

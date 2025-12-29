@@ -291,7 +291,7 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
                   className="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => onUserSelect(user)}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
                         {(() => {
@@ -317,10 +317,10 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
                         })()}
                       </div>
                       <div>
+                        <h3 className="font-semibold mb-1">
+                          {user.profiles.first_name} {user.profiles.last_name}
+                        </h3>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">
-                            {user.profiles.first_name} {user.profiles.last_name}
-                          </h3>
                           {getStatusBadge(user)}
                           {getRoleBadge(user.role)}
                         </div>
@@ -335,17 +335,17 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end gap-2">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        Review
+                      </Button>
                       <div className="text-right text-sm text-gray-500">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {formatDate(user.created_at)}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
                     </div>
                   </div>
                 </div>

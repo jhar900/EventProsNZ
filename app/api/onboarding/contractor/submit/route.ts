@@ -73,6 +73,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Automatically set user as verified after onboarding completion
+    const { error: verifyError } = await supabase
+      .from('users')
+      .update({
+        is_verified: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    if (verifyError) {
+      // Log but don't fail - user account is verified even if update fails
+      console.error('Failed to set user as verified:', verifyError);
+    }
+
     // Automatically enable publication settings when onboarding is completed
     // Get current profile preferences
     const { data: profile, error: profileError } = await supabase

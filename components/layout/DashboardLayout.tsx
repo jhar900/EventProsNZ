@@ -22,6 +22,9 @@ import {
   Lightbulb,
   Globe,
   Briefcase,
+  ChevronDown,
+  ChevronRight,
+  UserCheck,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -35,6 +38,7 @@ interface SidebarItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
+  children?: SidebarItem[];
 }
 
 export default function DashboardLayout({
@@ -45,6 +49,10 @@ export default function DashboardLayout({
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [submittedCount, setSubmittedCount] = useState<number | null>(null);
+  const [pendingVerificationCount, setPendingVerificationCount] = useState<
+    number | null
+  >(null);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
 
   // Fetch count of submitted feature requests for admin
@@ -81,6 +89,46 @@ export default function DashboardLayout({
     }
   }, [user?.role]);
 
+  // Fetch count of pending verifications for admin
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      const fetchPendingVerificationCount = async () => {
+        try {
+          const response = await fetch(
+            '/api/admin/verification/queue?status=pending&limit=1',
+            {
+              credentials: 'include',
+              headers: {
+                'x-admin-token': 'admin-secure-token-2024-eventpros',
+              },
+            }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setPendingVerificationCount(data.total || 0);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error(
+              'Error fetching pending verification count:',
+              response.status,
+              errorData
+            );
+            setPendingVerificationCount(0);
+          }
+        } catch (error) {
+          console.error('Error fetching pending verification count:', error);
+        }
+      };
+
+      fetchPendingVerificationCount();
+      // Refresh count every 30 seconds
+      const interval = setInterval(fetchPendingVerificationCount, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setPendingVerificationCount(null);
+    }
+  }, [user?.role]);
+
   const getSidebarItems = (): SidebarItem[] => {
     if (!user) return [];
 
@@ -96,7 +144,19 @@ export default function DashboardLayout({
       case 'admin':
         return [
           ...baseItems,
-          { href: '/admin/users', label: 'Users', icon: Users },
+          {
+            href: '/admin/users',
+            label: 'Users',
+            icon: Users,
+            children: [
+              { href: '/admin/users', label: 'Users Settings', icon: Settings },
+              {
+                href: '/admin/verification',
+                label: 'Business Verification',
+                icon: UserCheck,
+              },
+            ],
+          },
           { href: '/admin/events', label: 'Events', icon: Calendar },
           { href: '/admin/inquiries', label: 'Inquiries', icon: MessageSquare },
           { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
@@ -228,20 +288,31 @@ export default function DashboardLayout({
             <ul className="space-y-2">
               {sidebarItems.map(item => {
                 const Icon = item.icon;
-                // Check if current path matches this nav item
-                // Handle exact matches and nested routes
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedItems.has(item.href);
+                // Check if current path matches this nav item or any of its children
                 const isActive =
                   pathname === item.href ||
                   (item.href !== '/' &&
                     pathname.startsWith(item.href + '/') &&
                     // Don't match if there's a more specific route that should be active
-                    // e.g., if we're on /events/create, don't highlight /events if /events/create exists as a separate item
                     !sidebarItems.some(
                       otherItem =>
                         otherItem.href !== item.href &&
                         pathname.startsWith(otherItem.href + '/') &&
                         otherItem.href.startsWith(item.href + '/')
+                    )) ||
+                  (hasChildren &&
+                    item.children?.some(
+                      child =>
+                        pathname === child.href ||
+                        pathname.startsWith(child.href + '/')
                     ));
+
+                // Auto-expand if any child is active
+                if (hasChildren && isActive && !isExpanded) {
+                  setExpandedItems(prev => new Set(prev).add(item.href));
+                }
 
                 if (disableNavigation) {
                   return (
@@ -266,37 +337,112 @@ export default function DashboardLayout({
 
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      prefetch={true}
-                      className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground font-medium'
-                          : 'text-gray-700 hover:text-primary hover:bg-gray-100'
-                      }`}
-                      onClick={() => {
-                        setSidebarOpen(false);
-                        // Optimistically show content immediately
-                        // Next.js will handle the actual navigation
-                      }}
-                    >
-                      <div className="flex items-center space-x-3 flex-1">
-                        <Icon className="h-5 w-5" />
-                        <span>{item.label}</span>
+                    <div>
+                      <div
+                        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors duration-200 ${
+                          isActive && !hasChildren
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                        } ${hasChildren ? 'cursor-pointer' : ''}`}
+                        onClick={() => {
+                          if (hasChildren) {
+                            setExpandedItems(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(item.href)) {
+                                newSet.delete(item.href);
+                              } else {
+                                newSet.add(item.href);
+                              }
+                              return newSet;
+                            });
+                          }
+                        }}
+                      >
+                        {hasChildren ? (
+                          <div className="flex items-center space-x-3 flex-1">
+                            <Icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </div>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            prefetch={true}
+                            className="flex items-center space-x-3 flex-1"
+                            onClick={() => {
+                              setSidebarOpen(false);
+                            }}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span>{item.label}</span>
+                          </Link>
+                        )}
+                        <div className="flex items-center gap-2">
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className={`h-5 min-w-5 flex items-center justify-center rounded-full px-1.5 text-xs font-semibold flex-shrink-0 ${
+                                isActive && !hasChildren
+                                  ? 'bg-white text-primary'
+                                  : 'bg-red-500 text-white'
+                              }`}
+                            >
+                              {item.badge > 99 ? '99+' : item.badge}
+                            </Badge>
+                          )}
+                          {hasChildren && (
+                            <span className="text-gray-400">
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <Badge
-                          variant="destructive"
-                          className={`h-5 min-w-5 flex items-center justify-center rounded-full px-1.5 text-xs font-semibold flex-shrink-0 ${
-                            isActive
-                              ? 'bg-white text-primary'
-                              : 'bg-red-500 text-white'
-                          }`}
-                        >
-                          {item.badge > 99 ? '99+' : item.badge}
-                        </Badge>
+                      {hasChildren && isExpanded && (
+                        <ul className="ml-6 mt-1 space-y-1">
+                          {item.children?.map(child => {
+                            const ChildIcon = child.icon;
+                            const isChildActive =
+                              pathname === child.href ||
+                              (child.href !== '/' &&
+                                pathname.startsWith(child.href + '/'));
+                            // Show red dot for Business Verification if there are pending verifications
+                            const showPendingDot =
+                              child.href === '/admin/verification' &&
+                              pendingVerificationCount !== null &&
+                              pendingVerificationCount > 0;
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  prefetch={true}
+                                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors duration-200 ${
+                                    isChildActive
+                                      ? 'bg-primary text-primary-foreground font-medium'
+                                      : 'text-gray-600 hover:text-primary hover:bg-gray-100'
+                                  }`}
+                                  onClick={() => {
+                                    setSidebarOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <ChildIcon className="h-4 w-4" />
+                                    <span className="text-sm">
+                                      {child.label}
+                                    </span>
+                                  </div>
+                                  {showPendingDot && (
+                                    <span className="h-2 w-2 bg-red-500 rounded-full"></span>
+                                  )}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       )}
-                    </Link>
+                    </div>
                   </li>
                 );
               })}
