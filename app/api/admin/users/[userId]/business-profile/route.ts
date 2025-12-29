@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
 const updateBusinessProfileSchema = z.object({
@@ -13,43 +14,80 @@ const updateBusinessProfileSchema = z.object({
   is_verified: z.boolean().optional(),
 });
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
+    }
+
+    const { userId } = params;
+    const adminSupabase = authResult.supabase || supabaseAdmin;
+
+    // Get business profile for this user
+    const { data: businessProfile, error: businessProfileError } =
+      await adminSupabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (businessProfileError) {
+      console.error('Error fetching business profile:', businessProfileError);
+      return NextResponse.json(
+        {
+          error: 'Failed to fetch business profile',
+          details: businessProfileError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!businessProfile) {
+      return NextResponse.json({ businessProfile: null });
+    }
+
+    return NextResponse.json({ businessProfile });
+  } catch (error) {
+    console.error(
+      'Error in GET /api/admin/users/[userId]/business-profile:',
+      error
+    );
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 
     const { userId } = params;
+    const adminSupabase = authResult.supabase || supabaseAdmin;
     const body = await request.json();
 
     const validatedData = updateBusinessProfileSchema.parse(body);
 
     // Use admin client to update business profile
     const { data: businessProfile, error: businessProfileError } =
-      await supabaseAdmin
+      await adminSupabase
         .from('business_profiles')
         .update(validatedData)
         .eq('user_id', userId)
@@ -60,7 +98,7 @@ export async function PUT(
       // If business profile doesn't exist, create it
       if (businessProfileError.code === 'PGRST116') {
         const { data: newBusinessProfile, error: createError } =
-          await supabaseAdmin
+          await adminSupabase
             .from('business_profiles')
             .insert({
               user_id: userId,

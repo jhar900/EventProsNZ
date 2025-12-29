@@ -78,15 +78,19 @@ const businessProfileSchema = z.object({
 type BusinessProfileFormData = z.infer<typeof businessProfileSchema>;
 
 interface BusinessProfileFormProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (businessProfile: any) => void;
   onError?: (error: string) => void;
 }
 
 export default function BusinessProfileForm({
+  userId: propUserId,
   onSuccess,
   onError,
 }: BusinessProfileFormProps) {
   const { user, refreshUser } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -163,53 +167,177 @@ export default function BusinessProfileForm({
 
   // Load existing business profile data
   useEffect(() => {
-    console.log('BusinessProfileForm useEffect - user:', user);
-    console.log(
-      'BusinessProfileForm useEffect - user.business_profile:',
-      user?.business_profile
-    );
+    const loadBusinessProfile = async () => {
+      // If viewing another user (admin), fetch their business profile
+      if (propUserId && propUserId !== user?.id) {
+        try {
+          setIsLoading(true);
+          const response = await fetch(
+            `/api/admin/users/${propUserId}/business-profile`,
+            {
+              credentials: 'include',
+            }
+          );
 
-    if (user?.business_profile) {
-      console.log('Loading existing business profile data into form');
-      const serviceAreas = user.business_profile.service_areas || [];
-      const hasNationwide =
-        Array.isArray(serviceAreas) && serviceAreas.includes('Nationwide');
-      const initialCoverageType = hasNationwide ? 'nationwide' : 'regions';
+          if (response.ok) {
+            const data = await response.json();
+            const businessProfile =
+              data.businessProfile || data.business_profile;
 
-      let finalServiceAreas: string[];
-      if (initialCoverageType === 'nationwide') {
-        finalServiceAreas = ['Nationwide'];
-      } else {
-        finalServiceAreas = Array.isArray(serviceAreas)
-          ? serviceAreas.filter(
-              area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
-            )
-          : [];
+            if (businessProfile) {
+              const serviceAreas = businessProfile.service_areas || [];
+              const hasNationwide =
+                Array.isArray(serviceAreas) &&
+                serviceAreas.includes('Nationwide');
+              const initialCoverageType = hasNationwide
+                ? 'nationwide'
+                : 'regions';
+
+              let finalServiceAreas: string[];
+              if (initialCoverageType === 'nationwide') {
+                finalServiceAreas = ['Nationwide'];
+              } else {
+                finalServiceAreas = Array.isArray(serviceAreas)
+                  ? serviceAreas.filter(
+                      area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+                    )
+                  : [];
+              }
+
+              setCoverageType(initialCoverageType);
+              setSelectedServiceAreas(finalServiceAreas);
+
+              reset({
+                company_name: businessProfile.company_name || '',
+                description: businessProfile.description || '',
+                website: businessProfile.website || '',
+                location: businessProfile.location || '',
+                service_areas: finalServiceAreas,
+                service_categories: businessProfile.service_categories || [],
+                facebook_url: businessProfile.facebook_url || '',
+                instagram_url: businessProfile.instagram_url || '',
+                linkedin_url: businessProfile.linkedin_url || '',
+                twitter_url: businessProfile.twitter_url || '',
+                youtube_url: businessProfile.youtube_url || '',
+                tiktok_url: businessProfile.tiktok_url || '',
+              });
+              setIsCreating(false);
+            } else {
+              // No business profile exists, show empty form
+              reset({
+                company_name: '',
+                description: '',
+                website: '',
+                location: '',
+                service_areas: [],
+                service_categories: [],
+                facebook_url: '',
+                instagram_url: '',
+                linkedin_url: '',
+                twitter_url: '',
+                youtube_url: '',
+                tiktok_url: '',
+              });
+              setIsCreating(true);
+            }
+          } else {
+            // API call failed, show error but still render form
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to load business profile:', errorData);
+            onError?.(errorData.error || 'Failed to load business profile');
+            // Still show empty form
+            reset({
+              company_name: '',
+              description: '',
+              website: '',
+              location: '',
+              service_areas: [],
+              service_categories: [],
+              facebook_url: '',
+              instagram_url: '',
+              linkedin_url: '',
+              twitter_url: '',
+              youtube_url: '',
+              tiktok_url: '',
+            });
+            setIsCreating(true);
+          }
+        } catch (error) {
+          console.error('Error loading business profile:', error);
+          onError?.('Failed to load business profile');
+          // Still show empty form
+          reset({
+            company_name: '',
+            description: '',
+            website: '',
+            location: '',
+            service_areas: [],
+            service_categories: [],
+            facebook_url: '',
+            instagram_url: '',
+            linkedin_url: '',
+            twitter_url: '',
+            youtube_url: '',
+            tiktok_url: '',
+          });
+          setIsCreating(true);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
       }
 
-      setCoverageType(initialCoverageType);
-      setSelectedServiceAreas(finalServiceAreas);
+      // Use logged-in user's business profile
+      console.log('BusinessProfileForm useEffect - user:', user);
+      console.log(
+        'BusinessProfileForm useEffect - user.business_profile:',
+        user?.business_profile
+      );
 
-      reset({
-        company_name: user.business_profile.company_name || '',
-        description: user.business_profile.description || '',
-        website: user.business_profile.website || '',
-        location: user.business_profile.location || '',
-        service_areas: finalServiceAreas,
-        service_categories: user.business_profile.service_categories || [],
-        facebook_url: user.business_profile.facebook_url || '',
-        instagram_url: user.business_profile.instagram_url || '',
-        linkedin_url: user.business_profile.linkedin_url || '',
-        twitter_url: user.business_profile.twitter_url || '',
-        youtube_url: user.business_profile.youtube_url || '',
-        tiktok_url: user.business_profile.tiktok_url || '',
-      });
-      setIsCreating(false);
-    } else {
-      console.log('No business profile data found, setting to creating mode');
-      setIsCreating(true);
-    }
-  }, [user, reset]);
+      if (user?.business_profile) {
+        console.log('Loading existing business profile data into form');
+        const serviceAreas = user.business_profile.service_areas || [];
+        const hasNationwide =
+          Array.isArray(serviceAreas) && serviceAreas.includes('Nationwide');
+        const initialCoverageType = hasNationwide ? 'nationwide' : 'regions';
+
+        let finalServiceAreas: string[];
+        if (initialCoverageType === 'nationwide') {
+          finalServiceAreas = ['Nationwide'];
+        } else {
+          finalServiceAreas = Array.isArray(serviceAreas)
+            ? serviceAreas.filter(
+                area => area !== 'Nationwide' && NZ_REGIONS.includes(area)
+              )
+            : [];
+        }
+
+        setCoverageType(initialCoverageType);
+        setSelectedServiceAreas(finalServiceAreas);
+
+        reset({
+          company_name: user.business_profile.company_name || '',
+          description: user.business_profile.description || '',
+          website: user.business_profile.website || '',
+          location: user.business_profile.location || '',
+          service_areas: finalServiceAreas,
+          service_categories: user.business_profile.service_categories || [],
+          facebook_url: user.business_profile.facebook_url || '',
+          instagram_url: user.business_profile.instagram_url || '',
+          linkedin_url: user.business_profile.linkedin_url || '',
+          twitter_url: user.business_profile.twitter_url || '',
+          youtube_url: user.business_profile.youtube_url || '',
+          tiktok_url: user.business_profile.tiktok_url || '',
+        });
+        setIsCreating(false);
+      } else {
+        console.log('No business profile data found, setting to creating mode');
+        setIsCreating(true);
+      }
+    };
+
+    loadBusinessProfile();
+  }, [user, propUserId, reset]);
 
   const onSubmit = async (data: BusinessProfileFormData) => {
     setIsLoading(true);
@@ -219,9 +347,9 @@ export default function BusinessProfileForm({
     try {
       console.log('Submitting business profile form:', { isCreating, data });
 
-      // Ensure we have a valid user session
-      if (!user) {
-        throw new Error('User not authenticated. Please log in again.');
+      // Ensure we have a valid user ID
+      if (!targetUserId) {
+        throw new Error('User ID is required');
       }
 
       // Clean up social media URLs - convert empty strings to undefined
@@ -242,7 +370,12 @@ export default function BusinessProfileForm({
 
       const method = isCreating ? 'POST' : 'PUT';
       console.log('Submitting with method:', method, 'isCreating:', isCreating);
-      const response = await fetch('/api/user/business-profile', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/business-profile`
+        : '/api/user/business-profile';
+
+      const response = await fetch(apiEndpoint, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -349,11 +482,40 @@ export default function BusinessProfileForm({
   return (
     <div className="space-y-6">
       <BusinessLogoUpload
+        userId={propUserId}
         onSuccess={() => {
           setSuccessMessage('Business logo updated successfully!');
           setTimeout(() => {
             setSuccessMessage(null);
           }, 3000);
+          // Reload business profile to get updated logo
+          if (propUserId && propUserId !== user?.id) {
+            // Trigger a reload by updating a dependency or calling loadBusinessProfile
+            const loadBusinessProfile = async () => {
+              try {
+                const response = await fetch(
+                  `/api/admin/users/${propUserId}/business-profile`,
+                  {
+                    credentials: 'include',
+                  }
+                );
+                if (response.ok) {
+                  const data = await response.json();
+                  const businessProfile =
+                    data.businessProfile || data.business_profile;
+                  if (businessProfile) {
+                    // Update form with latest data including logo
+                    reset({
+                      ...methods.getValues(),
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Error reloading business profile:', error);
+              }
+            };
+            loadBusinessProfile();
+          }
         }}
         onError={setError}
       />

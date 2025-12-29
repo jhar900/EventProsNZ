@@ -20,8 +20,11 @@ const settingsSchema = z.object({
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
 interface UserSettingsProps {
+  userId?: string | null; // Optional: for admin viewing other users
+  userRole?: 'event_manager' | 'contractor' | 'admin'; // Optional: user role for conditional rendering
   onSuccess?: (settings: any) => void;
   onError?: (error: string) => void;
+  readOnly?: boolean; // Optional: if true, disable editing (for admin view)
 }
 
 const TIMEZONES = [
@@ -43,10 +46,16 @@ interface VerificationStatus {
 }
 
 export default function UserSettings({
+  userId: propUserId,
+  userRole: propUserRole,
   onSuccess,
   onError,
+  readOnly = false,
 }: UserSettingsProps) {
   const { user } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
+  const targetUserRole = propUserRole || user?.role;
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,38 +89,61 @@ export default function UserSettings({
   console.log('UserSettings: Form errors:', errors);
 
   const loadVerificationStatus = useCallback(async () => {
-    if (!user?.id) return;
+    if (!targetUserId) return;
 
     try {
       setLoadingVerification(true);
 
-      // Get user verification status from user object
-      const userVerified = user.is_verified || false;
-
-      setVerificationStatus({
-        userVerified,
-      });
+      // If viewing another user (admin), fetch their data
+      if (propUserId) {
+        const response = await fetch(`/api/admin/users/${propUserId}`, {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const userData = data.user;
+          setVerificationStatus({
+            userVerified: userData?.is_verified || false,
+            businessVerified: userData?.business_profiles?.is_verified || false,
+          });
+        } else {
+          setVerificationStatus({
+            userVerified: false,
+          });
+        }
+      } else {
+        // Get user verification status from user object
+        const userVerified = user?.is_verified || false;
+        setVerificationStatus({
+          userVerified,
+        });
+      }
     } catch (err) {
       console.error('Error loading verification status:', err);
       // Set default status on error
       setVerificationStatus({
-        userVerified: user?.is_verified || false,
+        userVerified: false,
       });
     } finally {
       setLoadingVerification(false);
     }
-  }, [user?.id, user?.is_verified]);
+  }, [targetUserId, propUserId, user?.id, user?.is_verified]);
 
   const loadSettings = useCallback(async () => {
-    if (!user?.id) return;
+    if (!targetUserId) return;
 
     try {
       setIsFetching(true);
       setError(null);
 
-      const response = await fetch('/api/user/settings', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/settings`
+        : '/api/user/settings';
+
+      const response = await fetch(apiEndpoint, {
         headers: {
-          'x-user-id': user.id,
+          'x-user-id': targetUserId,
         },
         credentials: 'include',
       });
@@ -179,11 +211,11 @@ export default function UserSettings({
     } finally {
       setIsFetching(false);
     }
-  }, [user?.id, reset]);
+  }, [targetUserId, propUserId, user?.id, reset]);
 
   // Load settings on mount
   useEffect(() => {
-    if (user?.id) {
+    if (targetUserId) {
       loadSettings();
       loadVerificationStatus();
     } else {
@@ -202,11 +234,16 @@ export default function UserSettings({
       setIsFetching(false);
       setLoadingVerification(false);
     }
-  }, [user?.id, loadSettings, loadVerificationStatus, reset]);
+  }, [targetUserId, loadSettings, loadVerificationStatus, reset]);
 
   const onSubmit = async (data: SettingsFormData) => {
-    if (!user?.id) {
-      setError('You must be logged in to update settings');
+    if (!targetUserId) {
+      setError('User ID is required to update settings');
+      return;
+    }
+
+    if (readOnly) {
+      setError('Settings are read-only in this view');
       return;
     }
 
@@ -226,11 +263,16 @@ export default function UserSettings({
         requestBody
       );
 
-      const response = await fetch('/api/user/settings', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/settings`
+        : '/api/user/settings';
+
+      const response = await fetch(apiEndpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': targetUserId,
         },
         credentials: 'include',
         body: requestBody,
@@ -305,7 +347,7 @@ export default function UserSettings({
     <>
       <div className="space-y-6">
         {/* Verification Status Section */}
-        {user && (
+        {targetUserId && (
           <div className="bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center mb-4">
@@ -401,7 +443,8 @@ export default function UserSettings({
                     <select
                       {...register('timezone')}
                       id="timezone"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      disabled={readOnly}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
                     >
                       {TIMEZONES.map(tz => (
                         <option key={tz.value} value={tz.value}>
@@ -426,7 +469,8 @@ export default function UserSettings({
                     <select
                       {...register('language')}
                       id="language"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      disabled={readOnly}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
                     >
                       {LANGUAGES.map(lang => (
                         <option key={lang.value} value={lang.value}>
@@ -443,47 +487,52 @@ export default function UserSettings({
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  Publication
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex items-start">
-                    <input
-                      {...register('show_on_homepage_map')}
-                      type="checkbox"
-                      id="show_on_homepage_map"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
-                    />
-                    <label
-                      htmlFor="show_on_homepage_map"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Add a pin of my business address to the map on Event Pros
-                      NZ homepage{' '}
-                      <span className="text-gray-500 italic">
-                        (This is more exposure for your business!)
-                      </span>
-                    </label>
-                  </div>
+              {/* Publication settings - only show for contractors */}
+              {targetUserRole === 'contractor' && (
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">
+                    Publication
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-start">
+                      <input
+                        {...register('show_on_homepage_map')}
+                        type="checkbox"
+                        id="show_on_homepage_map"
+                        disabled={readOnly}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1 disabled:opacity-50"
+                      />
+                      <label
+                        htmlFor="show_on_homepage_map"
+                        className="ml-2 text-sm text-gray-700"
+                      >
+                        Add a pin of my business address to the map on Event
+                        Pros NZ homepage{' '}
+                        <span className="text-gray-500 italic">
+                          (This is more exposure for your business!)
+                        </span>
+                      </label>
+                    </div>
 
-                  <div className="flex items-start">
-                    <input
-                      {...register('publish_to_contractors')}
-                      type="checkbox"
-                      id="publish_to_contractors"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
-                    />
-                    <label
-                      htmlFor="publish_to_contractors"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Add my business to the contractors database and publish my
-                      business profile page
-                    </label>
+                    <div className="flex items-start">
+                      <input
+                        {...register('publish_to_contractors')}
+                        type="checkbox"
+                        id="publish_to_contractors"
+                        disabled={readOnly}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1 disabled:opacity-50"
+                      />
+                      <label
+                        htmlFor="publish_to_contractors"
+                        className="ml-2 text-sm text-gray-700"
+                      >
+                        Add my business to the contractors database and publish
+                        my business profile page
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -491,19 +540,24 @@ export default function UserSettings({
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  onClick={() => {
-                    console.log('Save Settings button clicked');
-                    console.log('Form state:', { isLoading, user: user?.id });
-                  }}
-                  className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Saving...' : 'Save Settings'}
-                </button>
-              </div>
+              {!readOnly && (
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    onClick={() => {
+                      console.log('Save Settings button clicked');
+                      console.log('Form state:', {
+                        isLoading,
+                        userId: targetUserId,
+                      });
+                    }}
+                    className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>

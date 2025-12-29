@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
@@ -13,42 +14,75 @@ const updateProfileSchema = z.object({
   timezone: z.string().max(50).optional(),
 });
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
+    }
+
+    const { userId } = params;
+    const adminSupabase = authResult.supabase || supabaseAdmin;
+
+    // Get profile for this user
+    const { data: profile, error: profileError } = await adminSupabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return NextResponse.json(
+        {
+          error: 'Failed to fetch profile',
+          details: profileError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!profile) {
+      return NextResponse.json({ profile: null });
+    }
+
+    return NextResponse.json({ profile });
+  } catch (error) {
+    console.error('Error in GET /api/admin/users/[userId]/profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 
     const { userId } = params;
+    const adminSupabase = authResult.supabase || supabaseAdmin;
     const body = await request.json();
 
     const validatedData = updateProfileSchema.parse(body);
 
     // Use admin client to update profile
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .update(validatedData)
       .eq('user_id', userId)
@@ -58,7 +92,7 @@ export async function PUT(
     if (profileError) {
       // If profile doesn't exist, create it
       if (profileError.code === 'PGRST116') {
-        const { data: newProfile, error: createError } = await supabaseAdmin
+        const { data: newProfile, error: createError } = await adminSupabase
           .from('profiles')
           .insert({
             user_id: userId,

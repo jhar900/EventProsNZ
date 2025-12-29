@@ -29,12 +29,19 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (profile: any) => void;
   onError?: (error: string) => void;
 }
 
-export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
+export default function ProfileForm({
+  userId: propUserId,
+  onSuccess,
+  onError,
+}: ProfileFormProps) {
   const { user, refreshUser } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -52,17 +59,90 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
 
   // Load existing profile data
   useEffect(() => {
-    if (user?.profile) {
-      reset({
-        first_name: user.profile.first_name || '',
-        last_name: user.profile.last_name || '',
-        phone: user.profile.phone || '',
-        address: user.profile.address || '',
-        bio: user.profile.bio || '',
-        timezone: user.profile.timezone || 'Pacific/Auckland',
-      });
-    }
-  }, [user, reset]);
+    const loadProfile = async () => {
+      // If viewing another user (admin), fetch their profile
+      if (propUserId && propUserId !== user?.id) {
+        try {
+          setIsLoading(true);
+          const response = await fetch(
+            `/api/admin/users/${propUserId}/profile`,
+            {
+              credentials: 'include',
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const profile = data.profile;
+
+            if (profile) {
+              reset({
+                first_name: profile.first_name || '',
+                last_name: profile.last_name || '',
+                phone: profile.phone || '',
+                address: profile.address || '',
+                bio: profile.bio || '',
+                timezone: profile.timezone || 'Pacific/Auckland',
+              });
+            } else {
+              // No profile exists, show empty form
+              reset({
+                first_name: '',
+                last_name: '',
+                phone: '',
+                address: '',
+                bio: '',
+                timezone: 'Pacific/Auckland',
+              });
+            }
+          } else {
+            // API call failed, show error but still render form
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to load profile:', errorData);
+            onError?.(errorData.error || 'Failed to load profile');
+            // Still show empty form
+            reset({
+              first_name: '',
+              last_name: '',
+              phone: '',
+              address: '',
+              bio: '',
+              timezone: 'Pacific/Auckland',
+            });
+          }
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          onError?.('Failed to load profile');
+          // Still show empty form
+          reset({
+            first_name: '',
+            last_name: '',
+            phone: '',
+            address: '',
+            bio: '',
+            timezone: 'Pacific/Auckland',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Use logged-in user's profile
+      if (user?.profile) {
+        reset({
+          first_name: user.profile.first_name || '',
+          last_name: user.profile.last_name || '',
+          phone: user.profile.phone || '',
+          address: user.profile.address || '',
+          bio: user.profile.bio || '',
+          timezone: user.profile.timezone || 'Pacific/Auckland',
+        });
+      }
+    };
+
+    loadProfile();
+  }, [user, propUserId, reset, onError]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -70,11 +150,21 @@ export default function ProfileForm({ onSuccess, onError }: ProfileFormProps) {
     setSuccessMessage(null); // Clear success message on new submission
 
     try {
-      const response = await fetch('/api/user/profile', {
+      if (!targetUserId) {
+        setError('User ID is required');
+        return;
+      }
+
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/profile`
+        : '/api/user/profile';
+
+      const response = await fetch(apiEndpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
+          'x-user-id': targetUserId,
         },
         credentials: 'include',
         body: JSON.stringify(data),

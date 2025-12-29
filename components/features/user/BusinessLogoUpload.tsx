@@ -1,26 +1,64 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface BusinessLogoUploadProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (logoUrl: string) => void;
   onError?: (error: string) => void;
 }
 
 export default function BusinessLogoUpload({
+  userId: propUserId,
   onSuccess,
   onError,
 }: BusinessLogoUploadProps) {
   const { user, refreshUser, isLoading } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [businessLogoUrl, setBusinessLogoUrl] = useState<string | null>(null);
+  const [isLoadingLogo, setIsLoadingLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get business logo URL from user's business profile
-  const businessLogoUrl = user?.business_profile?.logo_url || null;
+  // Load business logo for the target user
+  useEffect(() => {
+    const loadBusinessLogo = async () => {
+      if (!targetUserId) return;
+
+      // If viewing another user (admin), fetch their business profile
+      if (propUserId && propUserId !== user?.id) {
+        try {
+          setIsLoadingLogo(true);
+          const response = await fetch(
+            `/api/admin/users/${propUserId}/business-profile`,
+            {
+              credentials: 'include',
+            }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const businessProfile =
+              data.businessProfile || data.business_profile;
+            setBusinessLogoUrl(businessProfile?.logo_url || null);
+          }
+        } catch (error) {
+          console.error('Error loading business logo:', error);
+        } finally {
+          setIsLoadingLogo(false);
+        }
+      } else {
+        // Use logged-in user's business logo
+        setBusinessLogoUrl(user?.business_profile?.logo_url || null);
+      }
+    };
+
+    loadBusinessLogo();
+  }, [targetUserId, propUserId, user?.id, user?.business_profile?.logo_url]);
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -52,12 +90,17 @@ export default function BusinessLogoUpload({
       const formData = new FormData();
       formData.append('logo', file);
 
-      const response = await fetch('/api/user/business-logo', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/business-logo`
+        : '/api/user/business-logo';
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
         credentials: 'include',
         headers: {
-          'x-user-id': user?.id || '',
+          'x-user-id': targetUserId || '',
         },
       });
 
@@ -70,8 +113,13 @@ export default function BusinessLogoUpload({
       // Wait a moment for database to be updated
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Refresh user data
-      await refreshUser();
+      // Update logo URL in state
+      setBusinessLogoUrl(result.logo_url || null);
+
+      // Refresh user data (only if viewing own profile)
+      if (!propUserId) {
+        await refreshUser();
+      }
 
       onSuccess?.(result.logo_url);
 
@@ -98,11 +146,16 @@ export default function BusinessLogoUpload({
     setError(null);
 
     try {
-      const response = await fetch('/api/user/business-logo', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/business-logo`
+        : '/api/user/business-logo';
+
+      const response = await fetch(apiEndpoint, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
-          'x-user-id': user?.id || '',
+          'x-user-id': targetUserId || '',
         },
       });
 
@@ -112,8 +165,13 @@ export default function BusinessLogoUpload({
         throw new Error(result.error || 'Failed to delete logo');
       }
 
-      // Refresh user data
-      await refreshUser();
+      // Update logo URL in state
+      setBusinessLogoUrl(null);
+
+      // Refresh user data (only if viewing own profile)
+      if (!propUserId) {
+        await refreshUser();
+      }
 
       onSuccess?.('');
     } catch (err) {
@@ -139,7 +197,7 @@ export default function BusinessLogoUpload({
 
         <div className="flex items-center space-x-6">
           <div className="flex-shrink-0">
-            {isLoading ? (
+            {isLoading || isLoadingLogo ? (
               <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
               </div>
@@ -175,13 +233,13 @@ export default function BusinessLogoUpload({
               <button
                 type="button"
                 onClick={triggerFileSelect}
-                disabled={isUploading || isLoading}
+                disabled={isUploading || isLoading || isLoadingLogo}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? 'Uploading...' : 'Upload Logo'}
               </button>
 
-              {businessLogoUrl && !isLoading && (
+              {businessLogoUrl && !isLoading && !isLoadingLogo && (
                 <button
                   type="button"
                   onClick={deleteLogo}

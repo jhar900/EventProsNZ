@@ -39,6 +39,7 @@ interface Service {
 }
 
 interface ServicesEditorProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (message: string) => void;
   onError?: (error: string) => void;
 }
@@ -93,8 +94,14 @@ const CATEGORY_TO_SERVICE_TYPE_MAP: Record<string, string[]> = {
   Other: ['Other'],
 };
 
-export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
+export function ServicesEditor({
+  userId: propUserId,
+  onSuccess,
+  onError,
+}: ServicesEditorProps) {
   const { user } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -107,25 +114,30 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
+    if (targetUserId) {
       fetchServices();
     }
-  }, [user?.id]);
+  }, [targetUserId]);
 
   // Load business profile to get selected service categories
   useEffect(() => {
     const loadServiceCategories = async () => {
-      if (!user?.id) {
+      if (!targetUserId) {
         setLoadingCategories(false);
         setAvailableServiceTypes(SERVICE_TYPES);
         return;
       }
 
       try {
-        const response = await fetch('/api/user/business-profile', {
+        // If viewing another user (admin), use admin API endpoint
+        const apiEndpoint = propUserId
+          ? `/api/admin/users/${propUserId}/business-profile`
+          : '/api/user/business-profile';
+
+        const response = await fetch(apiEndpoint, {
           method: 'GET',
           headers: {
-            'x-user-id': user.id,
+            'x-user-id': targetUserId,
           },
           credentials: 'include',
         });
@@ -176,18 +188,23 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
     };
 
     loadServiceCategories();
-  }, [user?.id]);
+  }, [targetUserId, propUserId]);
 
   const fetchServices = async () => {
-    if (!user?.id) return;
+    if (!targetUserId) return;
 
     try {
       setIsFetching(true);
       setError(null);
 
-      const response = await fetch('/api/profile/me/services', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/services`
+        : '/api/profile/me/services';
+
+      const response = await fetch(apiEndpoint, {
         headers: {
-          'x-user-id': user.id,
+          'x-user-id': targetUserId,
         },
         credentials: 'include',
       });
@@ -230,19 +247,23 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   });
 
   const onSubmit = async (data: ServiceForm) => {
-    if (!user?.id) {
-      setError('User not authenticated');
+    if (!targetUserId) {
+      setError('User ID is required');
       return;
     }
 
     try {
       setIsLoading(true);
 
-      const url = '/api/profile/me/services';
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/services`
+        : '/api/profile/me/services';
+
       const method = editingService ? 'PUT' : 'POST';
       const body = editingService ? { ...data, id: editingService.id } : data;
 
-      const response = await fetch(url, {
+      const response = await fetch(apiEndpoint, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -301,8 +322,8 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
   };
 
   const handleDelete = async (serviceId: string) => {
-    if (!user?.id) {
-      setError('User not authenticated');
+    if (!targetUserId) {
+      setError('User ID is required');
       return;
     }
 
@@ -311,10 +332,15 @@ export function ServicesEditor({ onSuccess, onError }: ServicesEditorProps) {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`/api/profile/me/services/${serviceId}`, {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/services/${serviceId}`
+        : `/api/profile/me/services/${serviceId}`;
+
+      const response = await fetch(apiEndpoint, {
         method: 'DELETE',
         headers: {
-          'x-user-id': user.id,
+          'x-user-id': targetUserId,
         },
         credentials: 'include',
       });

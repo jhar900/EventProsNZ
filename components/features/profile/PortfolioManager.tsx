@@ -39,15 +39,19 @@ interface PortfolioItem {
 }
 
 interface PortfolioManagerProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (message: string) => void;
   onError?: (error: string) => void;
 }
 
 export function PortfolioManager({
+  userId: propUserId,
   onSuccess,
   onError,
 }: PortfolioManagerProps) {
   const { user } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -57,18 +61,23 @@ export function PortfolioManager({
   const [error, setError] = useState<string | null>(null);
 
   const fetchPortfolio = async () => {
-    if (!user) return; // Guard clause
+    if (!targetUserId) return; // Guard clause
 
     try {
       setIsFetching(true);
       setError(null);
 
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/portfolio`
+        : '/api/profile/me/portfolio';
+
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
-        'x-user-id': user.id, // Always include if user exists
+        'x-user-id': targetUserId,
       };
 
-      const response = await fetch('/api/profile/me/portfolio', {
+      const response = await fetch(apiEndpoint, {
         credentials: 'include',
         headers,
       });
@@ -92,14 +101,14 @@ export function PortfolioManager({
   };
 
   useEffect(() => {
-    // Only fetch portfolio if user is authenticated
-    if (!user) {
+    // Only fetch portfolio if user ID is available
+    if (!targetUserId) {
       setIsFetching(false);
       return;
     }
     fetchPortfolio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [targetUserId, propUserId]);
 
   const {
     register,
@@ -124,11 +133,17 @@ export function PortfolioManager({
   const watchedVideoUrl = watch('video_url');
 
   const onSubmit = async (data: PortfolioItemForm) => {
+    if (!targetUserId) {
+      setError('User ID is required');
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      const url = editingItem
-        ? '/api/profile/me/portfolio'
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/portfolio`
         : '/api/profile/me/portfolio';
 
       const method = editingItem ? 'PUT' : 'POST';
@@ -136,6 +151,7 @@ export function PortfolioManager({
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'x-user-id': targetUserId,
       };
       if (user?.id) {
         headers['x-user-id'] = user.id;
@@ -189,21 +205,29 @@ export function PortfolioManager({
   };
 
   const handleDelete = async (itemId: string) => {
+    if (!targetUserId) {
+      setError('User ID is required');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this portfolio item?'))
       return;
 
     try {
       setIsLoading(true);
+      setError(null);
 
-      const headers: HeadersInit = {};
-      if (user?.id) {
-        headers['x-user-id'] = user.id;
-      }
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/portfolio/${itemId}`
+        : `/api/profile/me/portfolio/${itemId}`;
 
-      const response = await fetch(`/api/profile/me/portfolio/${itemId}`, {
+      const response = await fetch(apiEndpoint, {
         method: 'DELETE',
+        headers: {
+          'x-user-id': targetUserId,
+        },
         credentials: 'include',
-        headers,
       });
 
       if (response.ok) {

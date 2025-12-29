@@ -6,18 +6,25 @@ import { Contractor, Service } from '@/types/contractors';
 import { ContractorProfileDisplay } from '@/components/features/contractors/ContractorProfileDisplay';
 
 interface ProfilePreviewProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (message: string) => void;
   onError?: (error: string) => void;
 }
 
-export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
+export function ProfilePreview({
+  userId: propUserId,
+  onSuccess,
+  onError,
+}: ProfilePreviewProps) {
   const { user } = useAuth();
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [contractor, setContractor] = useState<Contractor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (!user?.id) {
+      if (!targetUserId) {
         setIsLoading(false);
         return;
       }
@@ -25,17 +32,19 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
       try {
         setIsLoading(true);
 
+        // If viewing another user (admin), use admin API endpoint
+        const businessProfileEndpoint = propUserId
+          ? `/api/admin/users/${propUserId}/business-profile`
+          : '/api/user/business-profile';
+
         // Fetch business profile
-        const businessProfileResponse = await fetch(
-          '/api/user/business-profile',
-          {
-            method: 'GET',
-            headers: {
-              'x-user-id': user.id,
-            },
-            credentials: 'include',
-          }
-        );
+        const businessProfileResponse = await fetch(businessProfileEndpoint, {
+          method: 'GET',
+          headers: {
+            'x-user-id': targetUserId,
+          },
+          credentials: 'include',
+        });
 
         if (!businessProfileResponse.ok) {
           throw new Error('Failed to load business profile');
@@ -53,10 +62,15 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
         // Debug: Log website field
         console.log('Business profile website:', businessProfile.website);
 
+        // If viewing another user (admin), use admin API endpoint
+        const servicesEndpoint = propUserId
+          ? `/api/admin/users/${propUserId}/services`
+          : '/api/profile/me/services';
+
         // Fetch services
-        const servicesResponse = await fetch('/api/profile/me/services', {
+        const servicesResponse = await fetch(servicesEndpoint, {
           headers: {
-            'x-user-id': user.id,
+            'x-user-id': targetUserId,
           },
           credentials: 'include',
         });
@@ -80,10 +94,15 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
             }));
         }
 
+        // If viewing another user (admin), use admin API endpoint
+        const portfolioEndpoint = propUserId
+          ? `/api/admin/users/${propUserId}/portfolio`
+          : '/api/profile/me/portfolio';
+
         // Fetch portfolio items
-        const portfolioResponse = await fetch('/api/profile/me/portfolio', {
+        const portfolioResponse = await fetch(portfolioEndpoint, {
           headers: {
-            'x-user-id': user.id,
+            'x-user-id': targetUserId,
           },
           credentials: 'include',
         });
@@ -105,30 +124,56 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
             }));
         }
 
+        // If viewing another user (admin), use admin API endpoint
+        const profileEndpoint = propUserId
+          ? `/api/admin/users/${propUserId}/profile`
+          : '/api/user/profile';
+
         // Fetch user profile for name and avatar
-        const profileResponse = await fetch('/api/user/profile', {
+        const profileResponse = await fetch(profileEndpoint, {
           method: 'GET',
           headers: {
-            'x-user-id': user.id,
+            'x-user-id': targetUserId,
           },
           credentials: 'include',
         });
 
         let profile: any = null;
+        let userEmail: string = '';
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
           profile = profileData.profile;
+
+          // If viewing another user (admin), also fetch user email
+          if (propUserId) {
+            try {
+              const userResponse = await fetch(
+                `/api/admin/users/${propUserId}`,
+                {
+                  credentials: 'include',
+                }
+              );
+              if (userResponse.ok) {
+                const userData = await userResponse.json();
+                userEmail = userData.user?.email || '';
+              }
+            } catch (error) {
+              console.error('Error fetching user email:', error);
+            }
+          } else {
+            userEmail = user?.email || '';
+          }
         }
 
         // Transform to Contractor type
         const contractorData: Contractor = {
-          id: user.id,
-          email: user.email || '',
+          id: targetUserId,
+          email: userEmail,
           name: profile
             ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
-              user.email?.split('@')[0] ||
+              userEmail?.split('@')[0] ||
               'User'
-            : user.email?.split('@')[0] || 'User',
+            : userEmail?.split('@')[0] || 'User',
           companyName: businessProfile.company_name || 'No Company Name',
           description: businessProfile.description || null,
           location:
@@ -184,7 +229,7 @@ export function ProfilePreview({ onSuccess, onError }: ProfilePreviewProps) {
     };
 
     fetchProfileData();
-  }, [user?.id, onError]);
+  }, [targetUserId, propUserId]);
 
   if (isLoading) {
     return (

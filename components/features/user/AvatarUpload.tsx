@@ -1,51 +1,68 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AvatarUploadProps {
+  userId?: string | null; // Optional: for admin viewing other users
   onSuccess?: (avatarUrl: string) => void;
   onError?: (error: string) => void;
 }
 
 export default function AvatarUpload({
+  userId: propUserId,
   onSuccess,
   onError,
 }: AvatarUploadProps) {
   const { user, refreshUser, isLoading } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(false);
+
+  // Use provided userId (for admin) or fall back to logged-in user
+  const targetUserId = propUserId || user?.id;
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Debug: Log user data structure
-  console.log('AvatarUpload - User data:', user);
-  console.log('AvatarUpload - Profile data:', user?.profile);
-  console.log('AvatarUpload - Avatar URL:', user?.profile?.avatar_url);
+  // Load avatar for the target user
+  useEffect(() => {
+    const loadAvatar = async () => {
+      if (!targetUserId) return;
 
-  // Handle case where profile might be an array
-  const profileData = Array.isArray(user?.profile)
-    ? user.profile[0]
-    : user?.profile;
-  const avatarUrl = profileData?.avatar_url;
+      // If viewing another user (admin), fetch their profile
+      if (propUserId && propUserId !== user?.id) {
+        try {
+          setIsLoadingAvatar(true);
+          const response = await fetch(`/api/admin/users/${propUserId}`, {
+            credentials: 'include',
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const profile = Array.isArray(data.user?.profiles)
+              ? data.user.profiles[0]
+              : data.user?.profiles;
+            setAvatarUrl(profile?.avatar_url || null);
+          }
+        } catch (error) {
+          console.error('Error loading avatar:', error);
+        } finally {
+          setIsLoadingAvatar(false);
+        }
+      } else {
+        // Use logged-in user's avatar
+        const profileData = Array.isArray(user?.profile)
+          ? user.profile[0]
+          : user?.profile;
+        setAvatarUrl(profileData?.avatar_url || null);
+      }
+    };
 
-  console.log('AvatarUpload - Processed profile data:', profileData);
-  console.log('AvatarUpload - Processed avatar URL:', avatarUrl);
+    loadAvatar();
+  }, [targetUserId, propUserId, user?.id, user?.profile]);
 
-  // If user is null, try to get from localStorage as fallback
-  const fallbackUser =
-    user ||
-    (typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('user_data') || '{}')
-      : null);
-  const fallbackProfileData = Array.isArray(fallbackUser?.profile)
-    ? fallbackUser.profile[0]
-    : fallbackUser?.profile;
-  const fallbackAvatarUrl = fallbackProfileData?.avatar_url;
-
-  // Use the best available avatar URL
-  const displayAvatarUrl = avatarUrl || fallbackAvatarUrl;
+  const displayAvatarUrl = avatarUrl;
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,12 +94,17 @@ export default function AvatarUpload({
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch('/api/user/avatar', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/avatar`
+        : '/api/user/avatar';
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
         credentials: 'include',
         headers: {
-          'x-user-id': user?.id || '',
+          'x-user-id': targetUserId || '',
         },
       });
 
@@ -128,11 +150,16 @@ export default function AvatarUpload({
     setError(null);
 
     try {
-      const response = await fetch('/api/user/avatar', {
+      // If viewing another user (admin), use admin API endpoint
+      const apiEndpoint = propUserId
+        ? `/api/admin/users/${propUserId}/avatar`
+        : '/api/user/avatar';
+
+      const response = await fetch(apiEndpoint, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
-          'x-user-id': user?.id || '',
+          'x-user-id': targetUserId || '',
         },
       });
 
@@ -169,7 +196,7 @@ export default function AvatarUpload({
 
         <div className="flex items-center space-x-6">
           <div className="flex-shrink-0">
-            {isLoading ? (
+            {isLoading || isLoadingAvatar ? (
               <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
               </div>
@@ -205,17 +232,17 @@ export default function AvatarUpload({
               <button
                 type="button"
                 onClick={triggerFileSelect}
-                disabled={isUploading || isLoading}
+                disabled={isUploading || isLoading || isLoadingAvatar}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? 'Uploading...' : 'Upload Photo'}
               </button>
 
-              {displayAvatarUrl && !isLoading && (
+              {displayAvatarUrl && !isLoading && !isLoadingAvatar && (
                 <button
                   type="button"
                   onClick={deleteAvatar}
-                  disabled={isDeleting || isLoading}
+                  disabled={isDeleting || isLoading || isLoadingAvatar}
                   className="ml-3 inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isDeleting ? 'Deleting...' : 'Remove Photo'}

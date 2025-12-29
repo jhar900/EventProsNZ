@@ -390,7 +390,11 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         Edit
       </DropdownMenuItem>
       <DropdownMenuItem
-        onClick={() => window.open(`/admin/users/${user.id}`, '_blank')}
+        onClick={() => {
+          setSelectedUserId(user.id);
+          setSelectedUserEmail(user.email);
+          setProfileModalOpen(true);
+        }}
       >
         <Eye className="h-4 w-4 mr-2" />
         View Details
