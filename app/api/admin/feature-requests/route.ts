@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
 // Validation schemas
@@ -24,31 +26,17 @@ const getAdminFeatureRequestsSchema = z.object({
 // GET /api/admin/feature-requests - Get feature requests for admin management
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
-
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
+
+    // Always use admin client to bypass RLS and see ALL requests (including private)
+    // Don't use authResult.supabase as it's a regular client subject to RLS
+    const adminSupabase = supabaseAdmin;
 
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
@@ -59,8 +47,8 @@ export async function GET(request: NextRequest) {
       validatedParams;
     const offset = (page - 1) * limit;
 
-    // Build query
-    let query = supabase.from('feature_requests').select(
+    // Build query - admins can see ALL requests (public and private)
+    let query = adminSupabase.from('feature_requests').select(
       `
         *,
         feature_request_categories(name, color),

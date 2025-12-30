@@ -125,10 +125,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(params.limit || '20'), 100);
     const offset = (page - 1) * limit;
 
-    // Check if user is admin
+    // Check if user is admin - use admin client to bypass RLS
     let isAdmin = false;
     if (user) {
-      const { data: userData } = await supabase
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      const { data: userData, error: userError } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', user.id)
@@ -139,6 +140,7 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         role: userData?.role,
         isAdmin,
+        error: userError?.message,
       });
     }
 
@@ -150,6 +152,7 @@ export async function GET(request: NextRequest) {
 
     if (isAdmin) {
       // Admin can see all requests - use admin client to bypass RLS
+      // IMPORTANT: Do NOT filter by is_public - admins should see everything
       const { supabaseAdmin } = await import('@/lib/supabase/server');
       allRequestsQuery = supabaseAdmin.from('feature_requests').select(
         `
@@ -161,7 +164,11 @@ export async function GET(request: NextRequest) {
         `
       );
       console.log(
-        'Admin user detected - fetching ALL requests (public and private)'
+        'Admin user detected - fetching ALL requests (public and private)',
+        {
+          userId: user?.id,
+          isAdmin,
+        }
       );
     } else {
       // Non-admin: show public requests, or user's own requests if authenticated
@@ -214,8 +221,13 @@ export async function GET(request: NextRequest) {
             'Using server client for user own requests (header auth - bypasses RLS)'
           );
         } else {
-          // User authenticated via cookies, use middleware client (RLS will work)
-          userOwnQuery = supabase
+          // User authenticated via cookies - use server client to ensure we get ALL user's requests (including private)
+          // This bypasses RLS to ensure users can see their own private requests
+          const { createClient: createServerClient } = await import(
+            '@/lib/supabase/server'
+          );
+          const serverSupabase = createServerClient();
+          userOwnQuery = serverSupabase
             .from('feature_requests')
             .select(
               `
@@ -228,7 +240,7 @@ export async function GET(request: NextRequest) {
             )
             .eq('user_id', user.id);
           console.log(
-            'Using middleware client for user own requests (cookie auth - uses RLS)'
+            'Using server client for user own requests (cookie auth - bypasses RLS to include private requests)'
           );
         }
       } else {
@@ -276,7 +288,7 @@ export async function GET(request: NextRequest) {
     let error: any = null;
 
     if (allRequestsQuery) {
-      // Admin: fetch all requests
+      // Admin: fetch all requests (public and private)
       allRequestsQuery = applyFilters(allRequestsQuery);
       allRequestsQuery = applySorting(allRequestsQuery);
       const { data: allRequests, error: allError } = await allRequestsQuery;
@@ -287,12 +299,18 @@ export async function GET(request: NextRequest) {
         publicCount: allRequests?.filter((fr: any) => fr.is_public).length || 0,
         privateCount:
           allRequests?.filter((fr: any) => !fr.is_public).length || 0,
+        sampleIds: allRequests?.slice(0, 5).map((fr: any) => ({
+          id: fr.id,
+          title: fr.title?.substring(0, 30),
+          is_public: fr.is_public,
+        })),
       });
 
       if (!allError && allRequests) {
         featureRequests = allRequests;
       } else {
         error = allError;
+        console.error('Error fetching all requests for admin:', allError);
       }
     } else {
       // Non-admin: fetch public requests
