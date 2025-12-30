@@ -47,6 +47,7 @@ export async function GET(
           feature_request_tags(name)
         ),
         profiles(first_name, last_name, avatar_url),
+        users(role),
         feature_request_comments(
           id,
           content,

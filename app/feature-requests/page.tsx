@@ -77,6 +77,9 @@ interface FeatureRequest {
     last_name: string;
     avatar_url?: string;
   };
+  users?: {
+    role: string;
+  };
   comments_count?: number;
   is_public?: boolean;
 }
@@ -898,15 +901,59 @@ export default function FeatureRequestsPage() {
                 <DialogHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <DialogTitle className="text-2xl mb-2">
-                        {selectedRequest.title}
-                      </DialogTitle>
-                      <DialogDescription className="text-base">
+                      <div className="flex items-center gap-3 mb-2">
+                        <DialogTitle className="text-2xl">
+                          {selectedRequest.title}
+                        </DialogTitle>
+                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(
+                            selectedRequest.created_at
+                          ).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <DialogDescription className="text-base mb-4">
                         {selectedRequest.description}
                       </DialogDescription>
+                      {/* Creator Information */}
+                      {selectedRequest.profiles && (
+                        <div className="flex items-center gap-3 mb-0">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage
+                              src={selectedRequest.profiles.avatar_url}
+                              alt={`${selectedRequest.profiles.first_name} ${selectedRequest.profiles.last_name}`}
+                            />
+                            <AvatarFallback>
+                              {selectedRequest.profiles.first_name?.[0]}
+                              {selectedRequest.profiles.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">
+                              {selectedRequest.profiles.first_name}{' '}
+                              {selectedRequest.profiles.last_name}
+                            </span>
+                            {selectedRequest.users?.role && (
+                              <Badge
+                                variant="secondary"
+                                className="w-fit mt-0.5 text-xs"
+                              >
+                                {selectedRequest.users.role === 'admin'
+                                  ? 'Admin'
+                                  : selectedRequest.users.role === 'contractor'
+                                    ? 'Contractor'
+                                    : selectedRequest.users.role ===
+                                        'event_manager'
+                                      ? 'Event Manager'
+                                      : selectedRequest.users.role}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2 ml-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
                         {selectedRequest.is_featured && (
                           <Badge
                             variant="secondary"
@@ -915,6 +962,37 @@ export default function FeatureRequestsPage() {
                             Featured
                           </Badge>
                         )}
+                        {selectedRequest.feature_request_categories && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  selectedRequest.feature_request_categories
+                                    .color,
+                              }}
+                            />
+                            {selectedRequest.feature_request_categories.name}
+                          </Badge>
+                        )}
+                        {selectedRequest.feature_request_tag_assignments &&
+                          selectedRequest.feature_request_tag_assignments
+                            .length > 0 &&
+                          selectedRequest.feature_request_tag_assignments.map(
+                            (assignment, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                <Tag className="w-3 h-3 mr-1" />
+                                {assignment.feature_request_tags.name}
+                              </Badge>
+                            )
+                          )}
                         <Badge
                           variant={
                             selectedRequest.is_public ? 'default' : 'secondary'
@@ -926,6 +1004,25 @@ export default function FeatureRequestsPage() {
                           }
                         >
                           {selectedRequest.is_public ? 'Public' : 'Private'}
+                        </Badge>
+                        <Badge
+                          className={`flex items-center gap-1 ${
+                            selectedRequest.status === 'submitted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : selectedRequest.status === 'under_review'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : selectedRequest.status === 'planned'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : selectedRequest.status === 'in_development'
+                                    ? 'bg-orange-100 text-orange-800'
+                                    : selectedRequest.status === 'completed'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {selectedRequest.status
+                            .replace('_', ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase())}
                         </Badge>
                         {isOwner && (
                           <Button
@@ -943,66 +1040,7 @@ export default function FeatureRequestsPage() {
                   </div>
                 </DialogHeader>
 
-                <div className="mt-6 space-y-6">
-                  {/* Status and Category */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge
-                      className={`flex items-center gap-1 ${
-                        selectedRequest.status === 'submitted'
-                          ? 'bg-blue-100 text-blue-800'
-                          : selectedRequest.status === 'under_review'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : selectedRequest.status === 'planned'
-                              ? 'bg-purple-100 text-purple-800'
-                              : selectedRequest.status === 'in_development'
-                                ? 'bg-orange-100 text-orange-800'
-                                : selectedRequest.status === 'completed'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {selectedRequest.status
-                        .replace('_', ' ')
-                        .replace(/\b\w/g, l => l.toUpperCase())}
-                    </Badge>
-
-                    {selectedRequest.feature_request_categories && (
-                      <Badge
-                        variant="outline"
-                        className="flex items-center gap-1"
-                      >
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{
-                            backgroundColor:
-                              selectedRequest.feature_request_categories.color,
-                          }}
-                        />
-                        {selectedRequest.feature_request_categories.name}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Tags */}
-                  {selectedRequest.feature_request_tag_assignments &&
-                    selectedRequest.feature_request_tag_assignments.length >
-                      0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedRequest.feature_request_tag_assignments.map(
-                          (assignment, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              <Tag className="w-3 h-3 mr-1" />
-                              {assignment.feature_request_tags.name}
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                    )}
-
+                <div className="mt-0 space-y-4">
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div className="flex items-center gap-2">
@@ -1019,27 +1057,6 @@ export default function FeatureRequestsPage() {
                       <div>
                         <p className="text-sm text-gray-600">Comments</p>
                         <p className="text-lg font-bold">{comments.length}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Author and Date */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    {selectedRequest.profiles && (
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">
-                          {selectedRequest.profiles.first_name}{' '}
-                          {selectedRequest.profiles.last_name}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(
-                          selectedRequest.created_at
-                        ).toLocaleDateString()}
                       </div>
                     </div>
                   </div>

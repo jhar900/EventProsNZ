@@ -416,13 +416,14 @@ export async function GET(request: NextRequest) {
       userOwnRequestsCount: userOwnRequests?.length || 0,
     });
 
-    // Fetch profiles separately if needed
+    // Fetch profiles and user roles separately if needed
     const userIds =
       featureRequests?.map((fr: any) => fr.user_id).filter(Boolean) || [];
     let profilesMap: Record<string, any> = {};
+    let usersMap: Record<string, any> = {};
 
-    if (userIds.length > 0 && user) {
-      // Only fetch profiles if user is authenticated (optional)
+    if (userIds.length > 0) {
+      // Fetch profiles (available to all users)
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, avatar_url')
@@ -431,6 +432,20 @@ export async function GET(request: NextRequest) {
       if (profiles) {
         profilesMap = profiles.reduce((acc: any, p: any) => {
           acc[p.user_id] = p;
+          return acc;
+        }, {});
+      }
+
+      // Fetch user roles (use admin client to bypass RLS)
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, role')
+        .in('id', userIds);
+
+      if (users) {
+        usersMap = users.reduce((acc: any, u: any) => {
+          acc[u.id] = { role: u.role };
           return acc;
         }, {});
       }
@@ -455,11 +470,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Attach profiles and comment counts to feature requests
+    // Attach profiles, user roles, and comment counts to feature requests
     const featureRequestsWithProfiles =
       featureRequests?.map((fr: any) => ({
         ...fr,
         profiles: profilesMap[fr.user_id] || null,
+        users: usersMap[fr.user_id] || null,
         comments_count: commentCountsMap[fr.id] || 0,
       })) || [];
 
