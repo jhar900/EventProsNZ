@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || userData?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 
@@ -53,20 +38,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (
-      !['all', 'pending', 'active', 'completed', 'cancelled'].includes(status)
-    ) {
+    // Accept both component status values and database status values
+    const validStatuses = [
+      'all',
+      'pending',
+      'approved',
+      'rejected',
+      'flagged',
+      'active',
+      'filled',
+      'completed',
+      'cancelled',
+    ];
+    if (!validStatuses.includes(status)) {
       return NextResponse.json(
         {
           error:
-            'Invalid status parameter. Must be one of: all, pending, active, completed, cancelled',
+            'Invalid status parameter. Must be one of: all, pending, approved, rejected, flagged, active, filled, completed, cancelled',
         },
         { status: 400 }
       );
     }
 
-    // Build query
-    let query = supabase
+    // Use admin client to bypass RLS and get all jobs
+    // Build query to get all jobs with user information
+    // First, get all jobs
+    let query = supabaseAdmin
       .from('jobs')
       .select(
         `
@@ -74,39 +71,44 @@ export async function GET(request: NextRequest) {
         title,
         description,
         location,
-        budget,
-        event_date,
+        budget_range_min,
+        budget_range_max,
+        timeline_start_date,
+        timeline_end_date,
         status,
-        quality_score,
         created_at,
         updated_at,
-        user_id,
-        category,
-        urgency,
-        applications_count,
-        views_count,
-        users!inner(
-          id,
-          name,
-          email
-        ),
-        job_flags(
-          id,
-          reason,
-          flagged_by,
-          flagged_at
-        )
+        posted_by_user_id,
+        service_category,
+        view_count,
+        application_count
       `
       )
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // Apply status filter
+    // Apply status filter - map component status values to database status values
+    // Component uses: pending, approved, rejected, flagged
+    // Database uses: active, filled, completed, cancelled
     if (status !== 'all') {
-      query = query.eq('status', status);
+      // Map component status to database status
+      const statusMap: Record<string, string> = {
+        pending: 'active', // Active jobs are considered pending moderation
+        approved: 'active',
+        rejected: 'cancelled',
+        flagged: 'active', // Flagged jobs are still active
+      };
+      const dbStatus = statusMap[status] || status;
+      query = query.eq('status', dbStatus);
     }
 
     const { data: jobs, error: jobsError } = await query;
+
+    console.log('Jobs query result:', {
+      count: jobs?.length || 0,
+      error: jobsError?.message,
+      sample: jobs?.[0],
+    });
 
     if (jobsError) {
       console.error('Error fetching jobs for moderation:', jobsError);
@@ -139,27 +141,97 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch user information for all jobs
+    const userIds = [
+      ...new Set(
+        (jobs || []).map(job => job.posted_by_user_id).filter(Boolean)
+      ),
+    ];
+    const userMap = new Map();
+
+    if (userIds.length > 0) {
+      const { data: usersData, error: usersError } = await supabaseAdmin
+        .from('users')
+        .select(
+          `
+          id,
+          email,
+          profiles(
+            first_name,
+            last_name
+          )
+        `
+        )
+        .in('id', userIds);
+
+      if (!usersError && usersData) {
+        usersData.forEach(user => {
+          const profile = Array.isArray(user.profiles)
+            ? user.profiles[0]
+            : user.profiles;
+          const firstName = profile?.first_name || '';
+          const lastName = profile?.last_name || '';
+          const userName =
+            firstName && lastName
+              ? `${firstName} ${lastName}`.trim()
+              : firstName || lastName || 'Unknown User';
+
+          userMap.set(user.id, {
+            email: user.email,
+            name: userName,
+          });
+        });
+      }
+    }
+
     // Transform data to match expected format
-    const transformedJobs = (jobs || []).map(job => ({
-      id: job.id,
-      title: job.title,
-      description: job.description,
-      location: job.location,
-      budget: job.budget,
-      event_date: job.event_date,
-      status: job.status,
-      quality_score: job.quality_score || 0,
-      created_at: job.created_at,
-      updated_at: job.updated_at,
-      user_id: job.user_id,
-      user_name: job.users?.name || 'Unknown',
-      user_email: job.users?.email || 'unknown@example.com',
-      category: job.category,
-      urgency: job.urgency || 'medium',
-      applications_count: job.applications_count || 0,
-      views_count: job.views_count || 0,
-      flags: job.job_flags || [],
-    }));
+    const transformedJobs = (jobs || []).map(job => {
+      const userInfo = userMap.get(job.posted_by_user_id) || {
+        email: 'unknown@example.com',
+        name: 'Unknown User',
+      };
+
+      // Calculate budget (use max if available, otherwise min, otherwise 0)
+      const budget = job.budget_range_max || job.budget_range_min || 0;
+
+      // Use timeline_start_date as event_date, fallback to created_at
+      const eventDate = job.timeline_start_date || job.created_at;
+
+      // Map database status to component status
+      // Database: active, filled, completed, cancelled
+      // Component: pending, approved, rejected, flagged
+      const statusMap: Record<
+        string,
+        'pending' | 'approved' | 'rejected' | 'flagged'
+      > = {
+        active: 'pending', // Active jobs are pending moderation
+        filled: 'approved', // Filled jobs are approved/completed
+        completed: 'approved',
+        cancelled: 'rejected',
+      };
+      const componentStatus = statusMap[job.status || 'active'] || 'pending';
+
+      return {
+        id: job.id,
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        budget: budget,
+        event_date: eventDate,
+        status: componentStatus,
+        quality_score: 0, // Not in schema, default to 0
+        created_at: job.created_at,
+        updated_at: job.updated_at,
+        user_id: job.posted_by_user_id,
+        user_name: userInfo.name,
+        user_email: userInfo.email,
+        category: job.service_category || 'Uncategorized',
+        urgency: 'medium', // Not in schema, default to medium
+        applications_count: job.application_count || 0,
+        views_count: job.view_count || 0,
+        flags: [], // job_flags table might not exist, default to empty array
+      };
+    });
 
     return NextResponse.json({
       jobs: transformedJobs,

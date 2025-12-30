@@ -96,13 +96,25 @@ export default function JobModerationDashboard() {
     try {
       setIsLoading(true);
       const response = await fetch('/api/admin/jobs/moderation');
-      if (response.ok) {
-        const data = await response.json();
-        setJobs(data.jobs || []);
-        setFilteredJobs(data.jobs || []);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to load jobs:', response.status, errorData);
+        setJobs([]);
+        setFilteredJobs([]);
+        return;
       }
+
+      const data = await response.json();
+      console.log('Jobs loaded:', data);
+      const jobsList = data.jobs || [];
+      console.log('Jobs count:', jobsList.length);
+      setJobs(jobsList);
+      setFilteredJobs(jobsList);
     } catch (error) {
-      // Error handled
+      console.error('Error loading jobs:', error);
+      setJobs([]);
+      setFilteredJobs([]);
     } finally {
       setIsLoading(false);
     }

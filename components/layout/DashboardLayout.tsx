@@ -25,6 +25,7 @@ import {
   ChevronDown,
   ChevronRight,
   UserCheck,
+  Mail,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -158,8 +159,10 @@ export default function DashboardLayout({
             ],
           },
           { href: '/admin/events', label: 'Events', icon: Calendar },
+          { href: '/admin/job-board', label: 'Job Board', icon: Briefcase },
           { href: '/admin/inquiries', label: 'Inquiries', icon: MessageSquare },
           { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+          { href: '/admin/emails', label: 'Emails', icon: Mail },
           {
             href: '/feature-requests',
             label: 'Feature Requests',

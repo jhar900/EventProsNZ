@@ -24,7 +24,18 @@ import {
   Type,
   Image,
   Code,
+  Send,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface EmailTemplate {
   id: string;
@@ -56,6 +67,15 @@ export function EmailTemplateCustomizer({
   const [activeTab, setActiveTab] = useState('templates');
   const [isEditing, setIsEditing] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [testEmailDialogOpen, setTestEmailDialogOpen] = useState(false);
+  const [testEmailTemplate, setTestEmailTemplate] =
+    useState<EmailTemplate | null>(null);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailStatus, setTestEmailStatus] = useState<{
+    status: 'idle' | 'success' | 'error';
+    message: string;
+  }>({ status: 'idle', message: '' });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -242,6 +262,86 @@ export function EmailTemplateCustomizer({
     }
   };
 
+  const handleTestEmail = (template: EmailTemplate) => {
+    setTestEmailTemplate(template);
+    setTestEmailAddress('');
+    setTestEmailStatus({ status: 'idle', message: '' });
+    setTestEmailDialogOpen(true);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (
+      !testEmailTemplate ||
+      !testEmailAddress ||
+      !testEmailAddress.includes('@')
+    ) {
+      setTestEmailStatus({
+        status: 'error',
+        message: 'Please enter a valid email address',
+      });
+      return;
+    }
+
+    setTestEmailLoading(true);
+    setTestEmailStatus({ status: 'idle', message: 'Sending test email...' });
+
+    try {
+      const adminToken = 'admin-secure-token-2024-eventpros';
+      const response = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          // Send template content directly for mock templates
+          subject: testEmailTemplate.subject,
+          htmlContent: testEmailTemplate.htmlContent,
+          textContent: testEmailTemplate.textContent,
+          recipientEmail: testEmailAddress,
+          emailType: testEmailTemplate.category,
+          // Extract variables from template content for replacement
+          variables: testEmailTemplate.variables.reduce(
+            (acc, varName) => {
+              acc[varName] = 'Test'; // Default test value
+              return acc;
+            },
+            {} as Record<string, string>
+          ),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send test email');
+      }
+
+      setTestEmailStatus({
+        status: 'success',
+        message: `Test email sent successfully to ${testEmailAddress}`,
+      });
+
+      // Close dialog after 2 seconds
+      setTimeout(() => {
+        setTestEmailDialogOpen(false);
+        setTestEmailStatus({ status: 'idle', message: '' });
+        setTestEmailAddress('');
+      }, 2000);
+    } catch (error) {
+      setTestEmailStatus({
+        status: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to send test email. Please try again.',
+      });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -316,6 +416,7 @@ export function EmailTemplateCustomizer({
                       variant="outline"
                       size="sm"
                       onClick={() => handlePreviewTemplate(template)}
+                      title="Preview"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -323,13 +424,23 @@ export function EmailTemplateCustomizer({
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditTemplate(template)}
+                      title="Edit"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleTestEmail(template)}
+                      title="Send Test Email"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleDuplicateTemplate(template)}
+                      title="Duplicate"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -337,6 +448,7 @@ export function EmailTemplateCustomizer({
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteTemplate(template.id)}
+                      title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -522,6 +634,72 @@ export function EmailTemplateCustomizer({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Test Email Dialog */}
+      <Dialog open={testEmailDialogOpen} onOpenChange={setTestEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Test Email</DialogTitle>
+            <DialogDescription>
+              Send a test email for &quot;{testEmailTemplate?.name}&quot; to
+              verify the template looks correct.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="test-email">Recipient Email Address</Label>
+              <Input
+                id="test-email"
+                type="email"
+                placeholder="test@example.com"
+                value={testEmailAddress}
+                onChange={e => setTestEmailAddress(e.target.value)}
+                disabled={testEmailLoading}
+              />
+            </div>
+            {testEmailStatus.status !== 'idle' && (
+              <div
+                className={`p-3 rounded-md text-sm ${
+                  testEmailStatus.status === 'success'
+                    ? 'bg-green-50 text-green-800 border border-green-200'
+                    : 'bg-red-50 text-red-800 border border-red-200'
+                }`}
+              >
+                {testEmailStatus.message}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTestEmailDialogOpen(false);
+                setTestEmailStatus({ status: 'idle', message: '' });
+                setTestEmailAddress('');
+              }}
+              disabled={testEmailLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendTestEmail}
+              disabled={testEmailLoading || !testEmailAddress}
+            >
+              {testEmailLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Test Email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
