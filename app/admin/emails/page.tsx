@@ -13,16 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Mail,
-  BarChart3,
-  Settings,
-  Plus,
-  Send,
-  Eye,
-  Edit,
-  Trash2,
-} from 'lucide-react';
+import { Mail, BarChart3, Send, Eye, Edit, Trash2 } from 'lucide-react';
 
 // Import email components
 import { WelcomeEmailSeries } from '@/components/features/email/WelcomeEmailSeries';
@@ -30,8 +21,6 @@ import { JobApplicationEmails } from '@/components/features/email/JobApplication
 import { EventEmails } from '@/components/features/email/EventEmails';
 import { SubscriptionEmails } from '@/components/features/email/SubscriptionEmails';
 import { PlatformAnnouncementEmails } from '@/components/features/email/PlatformAnnouncementEmails';
-import { EmailPreferences } from '@/components/features/email/EmailPreferences';
-import { EmailTemplateCustomizer } from '@/components/features/email/EmailTemplateCustomizer';
 import { EmailDeliveryTracker } from '@/components/features/email/EmailDeliveryTracker';
 import EmailLogTab from '@/components/features/admin/emails/EmailLogTab';
 
@@ -88,20 +77,10 @@ export default function EmailsPage() {
                       Manage automated email communications and templates
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </Button>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Campaign
-                    </Button>
-                  </div>
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-9">
+                  <TabsList className="grid w-full grid-cols-8">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="welcome">Welcome</TabsTrigger>
                     <TabsTrigger value="jobs">Jobs</TabsTrigger>
@@ -110,7 +89,6 @@ export default function EmailsPage() {
                     <TabsTrigger value="announcements">
                       Announcements
                     </TabsTrigger>
-                    <TabsTrigger value="templates">Templates</TabsTrigger>
                     <TabsTrigger value="log">Email Log</TabsTrigger>
                     <TabsTrigger value="analytics">Analytics</TabsTrigger>
                   </TabsList>
@@ -335,10 +313,6 @@ export default function EmailsPage() {
 
                   <TabsContent value="announcements">
                     <PlatformAnnouncementEmails />
-                  </TabsContent>
-
-                  <TabsContent value="templates">
-                    <EmailTemplateCustomizer />
                   </TabsContent>
 
                   <TabsContent value="log">

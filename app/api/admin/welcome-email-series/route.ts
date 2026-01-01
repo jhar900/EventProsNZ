@@ -5,19 +5,12 @@ import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-const emailTemplateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255),
-  slug: z.string().min(1, 'Slug is required').max(255),
-  subject: z.string().min(1, 'Subject is required').max(500),
-  html_body: z.string().min(1, 'HTML body is required'),
-  text_body: z.string().optional(),
-  description: z.string().optional(),
-  trigger_action: z.string().min(1, 'Trigger action is required'),
-  is_active: z.boolean().default(true),
-  variables: z.array(z.string()).default([]),
+const updateStatusSchema = z.object({
+  email_key: z.string().min(1, 'Email key is required'),
+  status: z.enum(['active', 'paused', 'draft']),
 });
 
-// GET /api/admin/email-templates - Get all email templates
+// GET /api/admin/welcome-email-series - Get all welcome email series configuration
 export async function GET(request: NextRequest) {
   try {
     // Check for admin token header first (development bypass)
@@ -79,23 +72,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get all templates (admins can see all, including inactive)
-    const { data: templates, error } = await supabaseAdmin
-      .from('email_templates')
+    const { data: series, error } = await supabaseAdmin
+      .from('welcome_email_series')
       .select('*')
-      .order('name', { ascending: true });
+      .order('delay_hours', { ascending: true });
 
     if (error) {
-      console.error('Error fetching email templates:', error);
+      console.error('Error fetching welcome email series:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch email templates' },
+        { error: 'Failed to fetch welcome email series' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ templates: templates || [] });
+    return NextResponse.json({ series: series || [] });
   } catch (error) {
-    console.error('Error in GET /api/admin/email-templates:', error);
+    console.error('Error in GET /api/admin/welcome-email-series:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -103,8 +95,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/email-templates - Create a new email template
-export async function POST(request: NextRequest) {
+// PATCH /api/admin/welcome-email-series - Update status of a welcome email
+export async function PATCH(request: NextRequest) {
   try {
     // Check for admin token header first (development bypass)
     const adminToken = request.headers.get('x-admin-token');
@@ -166,51 +158,41 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = emailTemplateSchema.parse(body);
+    const validatedData = updateStatusSchema.parse(body);
 
-    // Check if slug already exists
-    const { data: existing } = await supabaseAdmin
-      .from('email_templates')
-      .select('id')
-      .eq('slug', validatedData.slug)
-      .single();
-
-    if (existing) {
-      return NextResponse.json(
-        { error: 'A template with this slug already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Insert new template
-    const { data: template, error } = await supabaseAdmin
-      .from('email_templates')
-      .insert({
-        ...validatedData,
-        created_by: user?.id || null,
-        updated_by: user?.id || null,
-      })
+    // Update the status
+    const { data: updated, error } = await supabaseAdmin
+      .from('welcome_email_series')
+      .update({ status: validatedData.status })
+      .eq('email_key', validatedData.email_key)
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating email template:', error);
+      console.error('Error updating welcome email series status:', error);
       return NextResponse.json(
-        { error: 'Failed to create email template' },
+        { error: 'Failed to update email status' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ template }, { status: 201 });
+    if (!updated) {
+      return NextResponse.json({ error: 'Email not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      email: updated,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
+        { error: 'Invalid input', details: error.errors },
         { status: 400 }
       );
     }
 
-    console.error('Error in POST /api/admin/email-templates:', error);
+    console.error('Error in PATCH /api/admin/welcome-email-series:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

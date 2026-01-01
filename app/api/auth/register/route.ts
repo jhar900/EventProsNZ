@@ -37,11 +37,12 @@ export async function POST(request: NextRequest) {
     const { email, password, role, first_name, last_name } = validatedData;
 
     // Create user in Supabase Auth
+    // Set email_confirm to false so user must verify their email
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
-        email_confirm: true, // Auto-confirm for development
+        email_confirm: false, // Require email verification
       });
 
     if (authError) {
@@ -63,11 +64,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user record in our users table
+    // Set is_verified to false - user must verify email first
     const { error: userError } = await supabaseAdmin.from('users').insert({
       id: authData.user.id,
       email,
       role,
-      is_verified: true, // Auto-verify for development
+      is_verified: false, // User must verify email
       last_login: new Date().toISOString(),
     });
 
@@ -121,8 +123,29 @@ export async function POST(request: NextRequest) {
       // Don't fail registration, but user will need to log in manually
     }
 
+    // Send email verification email (non-blocking - don't fail registration if email fails)
+    // Use dynamic import to avoid blocking route registration
+    import('@/lib/email/verification-email')
+      .then(({ sendVerificationEmail }) => {
+        sendVerificationEmail({
+          userId: authData.user.id,
+          email,
+          firstName: first_name,
+        }).catch(error => {
+          // Log error but don't throw - registration should succeed even if email fails
+          console.error(
+            'Failed to send verification email during registration:',
+            error
+          );
+        });
+      })
+      .catch(() => {
+        // Silently fail if email module can't be loaded
+      });
+
     // Send welcome email (non-blocking - don't fail registration if email fails)
     // Use dynamic import to avoid blocking route registration
+    // Note: Welcome email will be sent after email verification
     import('@/lib/email/welcome-email')
       .then(({ sendWelcomeEmail }) => {
         sendWelcomeEmail({
@@ -248,7 +271,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: error.errors,
+          details: error.issues,
           code: 'VALIDATION_ERROR',
         },
         { status: 400 }
@@ -272,7 +295,9 @@ export async function POST(request: NextRequest) {
         error: 'Internal server error',
         details:
           process.env.NODE_ENV === 'development'
-            ? error.message
+            ? error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred'
             : 'An unexpected error occurred',
         code: 'INTERNAL_ERROR',
       },
