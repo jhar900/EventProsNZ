@@ -75,7 +75,6 @@ const contractorSteps: Step[] = [
       'Complete your profile',
       'Upload portfolio and credentials',
       'Set your service areas',
-      'Define your availability',
     ],
   },
   {
@@ -164,7 +163,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
             const IconComponent = step.icon;
 
             return (
-              <div key={step.id} className="relative">
+              <div key={step.id} className="relative h-full">
                 {/* Connection line */}
                 {index <
                   (activeTab === 'event-managers'
@@ -175,7 +174,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
                   <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-orange-200 to-amber-200 transform translate-x-4 z-0"></div>
                 )}
 
-                <div className="relative z-10 bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <div className="relative z-10 bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-full flex flex-col">
                   {/* Step number */}
                   <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
                     {index + 1}
@@ -217,7 +216,7 @@ export function HowItWorksSection({ className = '' }: HowItWorksSectionProps) {
               Why Choose Event Pros NZ?
             </h3>
             <p className="text-gray-600">
-              Join thousands of satisfied users across New Zealand
+              Join many satisfied users across New Zealand
             </p>
           </div>
 

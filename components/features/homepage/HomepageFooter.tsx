@@ -26,12 +26,6 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
   }, []);
 
   const footerLinks = {
-    platform: [
-      { name: 'For Event Managers', href: '/event-managers' },
-      { name: 'For Contractors', href: '/contractors' },
-      { name: 'Pricing', href: '/pricing' },
-      { name: 'Features', href: '/features' },
-    ],
     support: [
       { name: 'Help Center', href: '/help' },
       { name: 'Contact Us', href: '/contact' },
@@ -77,7 +71,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
     <footer className={`bg-gray-900 text-white ${className}`}>
       {/* Main footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Brand section */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
@@ -134,23 +128,6 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
                 );
               })}
             </div>
-          </div>
-
-          {/* Platform links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Platform</h4>
-            <ul className="space-y-3">
-              {footerLinks.platform.map(link => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Support links */}

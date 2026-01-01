@@ -1,8 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Linkedin, Mail, MapPin } from 'lucide-react';
 
 interface TeamMember {
@@ -21,12 +21,18 @@ const teamMembers: TeamMember[] = [
   {
     id: '1',
     name: 'Jason Hart',
-    role: 'Founder of EventPros',
-    bio: "With over a decade of experience organizing large-scale junior sports events across New Zealand, Jason founded EventPros to address the challenges he witnessed in the events sector. Having managed countless tournaments, competitions, and sporting events, he recognized the need for a better way to connect event managers with reliable contractors. EventPros was built as a solution to help streamline event planning and support the growth of New Zealand's vibrant events industry.",
+    role: 'Founder of Event Pros NZ',
+    bio: "With over a decade of experience organizing large-scale junior sports events across New Zealand, Jason founded EventPros to address the challenges he witnessed in the events sector. Having managed countless tournaments, competitions, and sporting events, he recognized the need for a better way to connect event managers with reliable contractors. EventPros was built as a solution to help streamline event planning and support the growth of New Zealand's vibrant events industry. Jason is also a doctor at Auckland City Hospital with aspirations of specialising in emergency medicine.",
+    image: '/jason-hart.jpg',
     location: 'Auckland',
-    linkedin: 'https://linkedin.com/in/jason-hart',
+    linkedin: 'https://www.linkedin.com/in/thedailyjase/',
     email: 'jason@eventprosnz.co.nz',
-    specialties: ['Event Management', 'Sports Events', 'Business Development'],
+    specialties: [
+      'Event Management',
+      'Sports Events',
+      'Business Development',
+      'Technical Development',
+    ],
   },
 ];
 
@@ -42,88 +48,122 @@ export default function TeamSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-1 gap-8 max-w-md mx-auto">
+        <div className="max-w-7xl mx-auto">
           {teamMembers.map(member => (
             <Card
               key={member.id}
-              className="shadow-lg hover:shadow-xl transition-shadow"
+              className="shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
             >
-              <CardHeader className="text-center">
-                <Avatar className="w-24 h-24 mx-auto mb-4">
-                  <AvatarImage src={member.image} alt={member.name} />
-                  <AvatarFallback className="text-lg">
-                    {member.name
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <CardTitle className="text-xl">{member.name}</CardTitle>
-                <p className="text-primary font-semibold">{member.role}</p>
-                <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
-                  <MapPin className="w-4 h-4" />
-                  {member.location}
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Photo Section */}
+                <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 h-full">
+                  {member.image ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        style={
+                          {
+                            imageRendering: 'auto',
+                            filter: 'contrast(1.1) saturate(1.1)',
+                          } as React.CSSProperties
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <Avatar className="w-48 h-48 mx-auto">
+                      <AvatarFallback className="text-4xl bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600">
+                        {member.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4 text-sm">{member.bio}</p>
 
-                <div className="mb-4">
-                  <h4 className="font-semibold text-sm mb-2">Specialties:</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {member.specialties.map(specialty => (
-                      <Badge
-                        key={specialty}
-                        variant="outline"
-                        className="text-xs"
+                {/* Content Section */}
+                <div className="p-8 md:p-12 flex flex-col justify-center">
+                  <div className="mb-6">
+                    <CardTitle className="text-3xl mb-2">
+                      {member.name}
+                    </CardTitle>
+                    <p className="text-orange-600 font-semibold text-lg mb-3">
+                      {member.role}
+                    </p>
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <MapPin className="w-4 h-4" />
+                      {member.location}
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-3 text-lg">
+                      About {member.name.split(' ')[0]}
+                    </h3>
+                    {member.bio.split(' Jason is also').length > 1 ? (
+                      <>
+                        <p className="text-gray-600 leading-relaxed">
+                          {member.bio.split(' Jason is also')[0]}
+                        </p>
+                        <p className="text-gray-600 leading-relaxed mt-3">
+                          Jason is also{member.bio.split(' Jason is also')[1]}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 leading-relaxed">
+                        {member.bio}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Specialties */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold text-sm mb-3 text-gray-900">
+                      Specialties:
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {member.specialties.map(specialty => (
+                        <Badge
+                          key={specialty}
+                          variant="outline"
+                          className="text-sm px-3 py-1 border-orange-200 text-orange-700 bg-orange-50"
+                        >
+                          {specialty}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  <div className="flex gap-3">
+                    {member.linkedin && (
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-blue-200"
+                        aria-label={`${member.name}'s LinkedIn`}
                       >
-                        {specialty}
-                      </Badge>
-                    ))}
+                        <Linkedin className="w-5 h-5" />
+                      </a>
+                    )}
+                    {member.email && (
+                      <a
+                        href={`mailto:${member.email}`}
+                        className="p-3 text-gray-600 hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                        aria-label={`Email ${member.name}`}
+                      >
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex justify-center gap-2">
-                  {member.linkedin && (
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                    >
-                      <Linkedin className="w-4 h-4" />
-                    </a>
-                  )}
-                  {member.email && (
-                    <a
-                      href={`mailto:${member.email}`}
-                      className="p-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
-                    >
-                      <Mail className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <Card className="inline-block shadow-lg">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-semibold mb-2">Join Our Team</h3>
-              <p className="text-gray-600 mb-4">
-                We&apos;re always looking for passionate New Zealanders to join
-                our mission.
-              </p>
-              <a
-                href="/careers"
-                className="inline-flex items-center text-primary hover:underline font-semibold"
-              >
-                View Open Positions
-              </a>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </section>

@@ -312,7 +312,7 @@ export function ServiceCategoriesSection({
 
             const CardContent = (
               <div
-                className={`group relative bg-white rounded-xl p-6 shadow-lg transition-all duration-300 ${
+                className={`group relative bg-white rounded-xl p-6 shadow-lg transition-all duration-300 h-full flex flex-col ${
                   hasContractors
                     ? 'hover:shadow-xl transform hover:scale-105 cursor-pointer'
                     : 'cursor-default'
@@ -342,7 +342,7 @@ export function ServiceCategoriesSection({
                 </p>
 
                 {/* Stats */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Users className="w-4 h-4" />
                     <span>
@@ -366,13 +366,21 @@ export function ServiceCategoriesSection({
 
             if (hasContractors) {
               return (
-                <Link key={category.id} href={contractorsUrl}>
+                <Link
+                  key={category.id}
+                  href={contractorsUrl}
+                  className="h-full"
+                >
                   {CardContent}
                 </Link>
               );
             }
 
-            return <div key={category.id}>{CardContent}</div>;
+            return (
+              <div key={category.id} className="h-full">
+                {CardContent}
+              </div>
+            );
           })}
         </div>
 

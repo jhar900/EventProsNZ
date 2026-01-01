@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Users, Heart, Award, Clock, Star } from 'lucide-react';
 import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
+import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
 import TeamSection from './TeamSection';
 import CompanyValuesSection from './CompanyValuesSection';
-import CompanyHistoryTimeline from './CompanyHistoryTimeline';
 import { AboutContent } from '@/types/about';
 
 interface AboutPageProps {
@@ -50,14 +50,22 @@ export default function AboutPage({ className }: AboutPageProps) {
   }
 
   return (
-    <HomepageLayout
-      className={`min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 ${className}`}
-    >
+    <HomepageLayout className={`min-h-screen bg-white ${className}`}>
       {/* Content with top padding to account for fixed navigation */}
       <div className="pt-16">
         {/* Hero Section */}
-        <section className="relative py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
+        <section className="relative min-h-[70vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+          {/* Background with gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-amber-50"></div>
+
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-pulse"></div>
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto w-full">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
                 About <span className="text-orange-600">Event Pros NZ</span>
@@ -106,7 +114,7 @@ export default function AboutPage({ className }: AboutPageProps) {
                       Building New Zealand&apos;s Event Community
                     </h3>
                     <p className="text-gray-600 mb-4">
-                      Founded in 2024, Event Pros NZ was born from a simple
+                      Founded in 2026, Event Pros NZ was born from a simple
                       belief: that every event in New Zealand deserves access to
                       the best contractors and services. We saw the challenges
                       event managers faced in finding reliable, verified
@@ -160,11 +168,8 @@ export default function AboutPage({ className }: AboutPageProps) {
         {/* Team Section */}
         <TeamSection />
 
-        {/* Company History Timeline */}
-        <CompanyHistoryTimeline />
-
         {/* New Zealand Focus Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <Card className="shadow-lg">
               <CardHeader>
@@ -237,6 +242,9 @@ export default function AboutPage({ className }: AboutPageProps) {
           </div>
         </section>
       </div>
+
+      {/* Footer */}
+      <HomepageFooter />
     </HomepageLayout>
   );
 }
