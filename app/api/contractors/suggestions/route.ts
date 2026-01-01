@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const { data: companySuggestions, error: companyError } = await supabase
       .from('business_profiles')
       .select('company_name')
+      .eq('is_published', true)
       .ilike('company_name', `%${q}%`)
       .limit(limit);
 
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
     const { data: serviceSuggestions, error: serviceError } = await supabase
       .from('business_profiles')
       .select('service_categories')
+      .eq('is_published', true)
       .not('service_categories', 'is', null);
 
     if (!serviceError && serviceSuggestions) {
@@ -52,6 +54,7 @@ export async function GET(request: NextRequest) {
     const { data: locationSuggestions, error: locationError } = await supabase
       .from('business_profiles')
       .select('location, service_areas')
+      .eq('is_published', true)
       .or(`location.ilike.%${q}%,service_areas.cs.{${q}}`)
       .limit(limit);
 

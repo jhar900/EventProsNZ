@@ -5,14 +5,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckCircle, Clock, AlertCircle, Shield } from 'lucide-react';
 
 const settingsSchema = z.object({
   email_notifications: z.boolean(),
   sms_notifications: z.boolean(),
   marketing_emails: z.boolean(),
-  timezone: z.string().max(50, 'Timezone too long'),
-  language: z.string().max(10, 'Language code too long'),
   show_on_homepage_map: z.boolean(),
   publish_to_contractors: z.boolean(),
 });
@@ -25,24 +22,6 @@ interface UserSettingsProps {
   onSuccess?: (settings: any) => void;
   onError?: (error: string) => void;
   readOnly?: boolean; // Optional: if true, disable editing (for admin view)
-}
-
-const TIMEZONES = [
-  { value: 'Pacific/Auckland', label: 'Pacific/Auckland (NZST/NZDT)' },
-  { value: 'Pacific/Chatham', label: 'Pacific/Chatham (CHAST/CHADT)' },
-  { value: 'UTC', label: 'UTC' },
-];
-
-const LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'mi', label: 'Te Reo Māori' },
-];
-
-interface VerificationStatus {
-  userVerified: boolean;
-  businessVerified?: boolean;
-  verificationDate?: string;
-  businessVerificationDate?: string;
 }
 
 export default function UserSettings({
@@ -59,10 +38,8 @@ export default function UserSettings({
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [settings, setSettings] = useState<SettingsFormData | null>(null);
-  const [verificationStatus, setVerificationStatus] =
-    useState<VerificationStatus | null>(null);
-  const [loadingVerification, setLoadingVerification] = useState(true);
 
   const {
     register,
@@ -70,14 +47,13 @@ export default function UserSettings({
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       email_notifications: true,
       sms_notifications: false,
       marketing_emails: false,
-      timezone: 'Pacific/Auckland',
-      language: 'en',
       show_on_homepage_map: false,
       publish_to_contractors: false,
     },
@@ -85,49 +61,16 @@ export default function UserSettings({
 
   // Watch form values for debugging
   const formValues = watch();
+  const publishToContractors = watch('publish_to_contractors');
   console.log('UserSettings: Current form values:', formValues);
   console.log('UserSettings: Form errors:', errors);
 
-  const loadVerificationStatus = useCallback(async () => {
-    if (!targetUserId) return;
-
-    try {
-      setLoadingVerification(true);
-
-      // If viewing another user (admin), fetch their data
-      if (propUserId) {
-        const response = await fetch(`/api/admin/users/${propUserId}`, {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const userData = data.user;
-          setVerificationStatus({
-            userVerified: userData?.is_verified || false,
-            businessVerified: userData?.business_profiles?.is_verified || false,
-          });
-        } else {
-          setVerificationStatus({
-            userVerified: false,
-          });
-        }
-      } else {
-        // Get user verification status from user object
-        const userVerified = user?.is_verified || false;
-        setVerificationStatus({
-          userVerified,
-        });
-      }
-    } catch (err) {
-      console.error('Error loading verification status:', err);
-      // Set default status on error
-      setVerificationStatus({
-        userVerified: false,
-      });
-    } finally {
-      setLoadingVerification(false);
+  // Uncheck show_on_homepage_map if publish_to_contractors is unchecked
+  useEffect(() => {
+    if (!publishToContractors) {
+      setValue('show_on_homepage_map', false);
     }
-  }, [targetUserId, propUserId, user?.id, user?.is_verified]);
+  }, [publishToContractors, setValue]);
 
   const loadSettings = useCallback(async () => {
     if (!targetUserId) return;
@@ -159,8 +102,6 @@ export default function UserSettings({
             result.settings.sms_notifications ?? false
           ),
           marketing_emails: Boolean(result.settings.marketing_emails ?? false),
-          timezone: String(result.settings.timezone ?? 'Pacific/Auckland'),
-          language: String(result.settings.language ?? 'en'),
           show_on_homepage_map: Boolean(
             result.settings.show_on_homepage_map ?? false
           ),
@@ -176,8 +117,6 @@ export default function UserSettings({
           email_notifications: true,
           sms_notifications: false,
           marketing_emails: false,
-          timezone: 'Pacific/Auckland',
-          language: 'en',
           show_on_homepage_map: false,
           publish_to_contractors: false,
         };
@@ -200,8 +139,6 @@ export default function UserSettings({
         email_notifications: true,
         sms_notifications: false,
         marketing_emails: false,
-        timezone: 'Pacific/Auckland',
-        language: 'en',
         show_on_homepage_map: false,
         publish_to_contractors: false,
       };
@@ -217,24 +154,20 @@ export default function UserSettings({
   useEffect(() => {
     if (targetUserId) {
       loadSettings();
-      loadVerificationStatus();
     } else {
       // If no user, set default settings and stop loading
       const defaultSettings: SettingsFormData = {
         email_notifications: true,
         sms_notifications: false,
         marketing_emails: false,
-        timezone: 'Pacific/Auckland',
-        language: 'en',
         show_on_homepage_map: false,
         publish_to_contractors: false,
       };
       setSettings(defaultSettings);
       reset(defaultSettings);
       setIsFetching(false);
-      setLoadingVerification(false);
     }
-  }, [targetUserId, loadSettings, loadVerificationStatus, reset]);
+  }, [targetUserId, loadSettings, reset]);
 
   const onSubmit = async (data: SettingsFormData) => {
     if (!targetUserId) {
@@ -255,6 +188,7 @@ export default function UserSettings({
 
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       const requestBody = JSON.stringify(data);
@@ -287,7 +221,13 @@ export default function UserSettings({
       }
 
       setSettings(result.settings);
+      setSuccessMessage('Settings saved successfully!');
       onSuccess?.(result.settings);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to update settings';
@@ -346,78 +286,11 @@ export default function UserSettings({
   return (
     <>
       <div className="space-y-6">
-        {/* Verification Status Section */}
-        {targetUserId && (
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center mb-4">
-                <Shield className="h-5 w-5 text-gray-600 mr-2" />
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Verification Status
-                </h3>
-              </div>
-
-              {loadingVerification ? (
-                <div className="animate-pulse space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              ) : verificationStatus ? (
-                <div className="space-y-4">
-                  {/* User Verification Status */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      {verificationStatus.userVerified ? (
-                        <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-yellow-600 mr-3" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Account Verification
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {verificationStatus.userVerified
-                            ? 'Your account has been verified'
-                            : 'Your account verification is pending'}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        verificationStatus.userVerified
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {verificationStatus.userVerified ? 'Verified' : 'Pending'}
-                    </span>
-                  </div>
-
-                  {/* Overall Status Message */}
-                  {!verificationStatus.userVerified && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        Your account verification is pending. You will be
-                        notified once verification is complete.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  Unable to load verification status.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Settings Form */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Settings & Preferences
+              Publication
             </h3>
 
             <form
@@ -428,107 +301,118 @@ export default function UserSettings({
               }}
               className="space-y-6"
             >
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  General
-                </h4>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="timezone"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Timezone
-                    </label>
-                    <select
-                      {...register('timezone')}
-                      id="timezone"
-                      disabled={readOnly}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
-                    >
-                      {TIMEZONES.map(tz => (
-                        <option key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.timezone && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.timezone.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="language"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Language
-                    </label>
-                    <select
-                      {...register('language')}
-                      id="language"
-                      disabled={readOnly}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
-                    >
-                      {LANGUAGES.map(lang => (
-                        <option key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.language && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.language.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               {/* Publication settings - only show for contractors */}
               {targetUserRole === 'contractor' && (
                 <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">
-                    Publication
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <input
-                        {...register('show_on_homepage_map')}
-                        type="checkbox"
-                        id="show_on_homepage_map"
-                        disabled={readOnly}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1 disabled:opacity-50"
-                      />
-                      <label
-                        htmlFor="show_on_homepage_map"
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        Add a pin of my business address to the map on Event
-                        Pros NZ homepage{' '}
-                        <span className="text-gray-500 italic">
-                          (This is more exposure for your business!)
-                        </span>
-                      </label>
+                  <div className="space-y-4">
+                    {/* Card 1: Publish to Contractors Database */}
+                    <div
+                      className={`relative border-2 rounded-lg p-5 transition-all cursor-pointer ${
+                        publishToContractors
+                          ? 'border-orange-500 bg-orange-50 shadow-md'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      } ${readOnly ? 'cursor-not-allowed' : ''}`}
+                      onClick={() => {
+                        if (!readOnly) {
+                          const currentValue = watch('publish_to_contractors');
+                          setValue('publish_to_contractors', !currentValue);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 mt-1">
+                          <input
+                            {...register('publish_to_contractors')}
+                            type="checkbox"
+                            id="publish_to_contractors"
+                            disabled={readOnly}
+                            className="h-6 w-6 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="publish_to_contractors"
+                            className="text-base font-semibold text-gray-900 cursor-pointer block"
+                          >
+                            Publish My Business Profile Page
+                          </label>
+                          <p className="text-sm text-gray-600 mt-1">
+                            This will add your business to the Event Pros NZ
+                            searchable database making your business visible to
+                            site visitors and event managers searching for
+                            contractors
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-start">
-                      <input
-                        {...register('publish_to_contractors')}
-                        type="checkbox"
-                        id="publish_to_contractors"
-                        disabled={readOnly}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1 disabled:opacity-50"
-                      />
-                      <label
-                        htmlFor="publish_to_contractors"
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        Add my business to the contractors database and publish
-                        my business profile page
-                      </label>
+                    {/* Card 2: Show on Homepage Map */}
+                    <div
+                      className={`relative border-2 rounded-lg p-5 transition-all ${
+                        !publishToContractors
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : watch('show_on_homepage_map')
+                            ? 'border-orange-500 bg-orange-50 shadow-md cursor-pointer'
+                            : 'border-gray-200 bg-white hover:border-gray-300 cursor-pointer'
+                      } ${readOnly ? 'cursor-not-allowed' : ''}`}
+                      onClick={() => {
+                        if (!readOnly && publishToContractors) {
+                          const currentValue = watch('show_on_homepage_map');
+                          setValue('show_on_homepage_map', !currentValue);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 mt-1">
+                          <input
+                            {...register('show_on_homepage_map')}
+                            type="checkbox"
+                            id="show_on_homepage_map"
+                            disabled={readOnly || !publishToContractors}
+                            className="h-6 w-6 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="show_on_homepage_map"
+                            className={`text-base font-semibold block cursor-pointer ${
+                              !publishToContractors
+                                ? 'text-gray-400'
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            Publish My Business Address
+                          </label>
+                          <p
+                            className={`text-sm mt-1 ${
+                              !publishToContractors
+                                ? 'text-gray-400'
+                                : 'text-gray-600'
+                            }`}
+                          >
+                            <p className="text-sm text-gray-600 mt-1">
+                              This will add your address to your business
+                              profile page as well as a pin of your business
+                              address to the map on Event Pros NZ homepage
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              We don&apos;t recommend ticking this if you work
+                              from home, remotely or only have a PO Box address.
+                            </p>
+                            <span className="font-medium italic">
+                              However, if you have an office that you operate
+                              your business from, this will give your business
+                              more exposure!
+                            </span>
+                            {!publishToContractors && (
+                              <span className="block mt-1 text-xs">
+                                (Requires &quot;Add my business to the
+                                contractors database&quot; to be enabled)
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -541,7 +425,27 @@ export default function UserSettings({
               )}
 
               {!readOnly && (
-                <div className="flex justify-end">
+                <div className="flex justify-end items-center">
+                  {successMessage && (
+                    <div className="mr-4 bg-green-50 border border-green-200 rounded-md p-2">
+                      <div className="flex items-center">
+                        <svg
+                          className="h-5 w-5 text-green-400 mr-2"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <p className="text-sm text-green-800">
+                          {successMessage}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={isLoading}

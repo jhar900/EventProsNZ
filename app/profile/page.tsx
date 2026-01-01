@@ -31,7 +31,7 @@ export default function ProfilePage() {
     { id: 'services', name: 'Services', icon: '🛠️' },
     { id: 'portfolio', name: 'Portfolio', icon: '📸' },
     { id: 'preview', name: 'Preview', icon: '👁️' },
-    { id: 'settings', name: 'Settings', icon: '⚙️' },
+    { id: 'settings', name: 'Publication', icon: '💻' },
   ];
 
   return (

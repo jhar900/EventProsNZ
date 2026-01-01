@@ -293,7 +293,7 @@ export function ContractorDetails({
                       </a>
                     </div>
                   )}
-                  {contractor.businessAddress && (
+                  {contractor.businessAddress && contractor.publishAddress && (
                     <div className="flex items-start">
                       <MapPinIcon className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                       <span className="text-gray-700">

@@ -38,10 +38,10 @@ export async function GET(
       .eq('user_id', userId)
       .maybeSingle();
 
-    // Get business profile to check is_published status
+    // Get business profile to check is_published and publish_address status
     const { data: businessProfile } = await supabaseAdmin
       .from('business_profiles')
-      .select('is_published')
+      .select('is_published, publish_address')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -54,7 +54,7 @@ export async function GET(
           marketing_emails: false,
           timezone: 'Pacific/Auckland',
           language: 'en',
-          show_on_homepage_map: false,
+          show_on_homepage_map: businessProfile?.publish_address ?? false,
           publish_to_contractors: businessProfile?.is_published ?? false,
         },
       });
@@ -76,10 +76,17 @@ export async function GET(
       preferences.publish_to_contractors ??
       false;
 
+    // Use business_profiles.publish_address as the source of truth for show_on_homepage_map
+    const showOnHomepageMap =
+      businessProfile?.publish_address ??
+      preferences.show_on_homepage_map ??
+      false;
+
     return NextResponse.json({
       settings: {
         ...preferences,
         publish_to_contractors: publishToContractors,
+        show_on_homepage_map: showOnHomepageMap,
         timezone: profile.timezone || 'Pacific/Auckland',
       },
     });
@@ -169,39 +176,58 @@ export async function PUT(
       );
     }
 
-    // Sync publish_to_contractors preference to business_profiles.is_published
-    if (validatedData.publish_to_contractors !== undefined) {
-      const isPublished = Boolean(validatedData.publish_to_contractors);
-
-      // Check if business profile exists
-      const { data: existingBusinessProfile } = await supabaseAdmin
-        .from('business_profiles')
-        .select('id, is_published')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (existingBusinessProfile) {
-        await supabaseAdmin
-          .from('business_profiles')
-          .update({
-            is_published: isPublished,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', userId);
-      }
-    }
-
-    // Get the actual is_published value from business_profiles to return accurate state
-    const { data: businessProfile } = await supabaseAdmin
+    // Check if business profile exists
+    const { data: existingBusinessProfile } = await supabaseAdmin
       .from('business_profiles')
-      .select('is_published')
+      .select('id, is_published, publish_address')
       .eq('user_id', userId)
       .maybeSingle();
 
-    // Use business_profiles.is_published as the source of truth for the response
+    // Prepare business profile update data
+    const businessProfileUpdate: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    // Sync publish_to_contractors preference to business_profiles.is_published
+    if (validatedData.publish_to_contractors !== undefined) {
+      const isPublished = Boolean(validatedData.publish_to_contractors);
+      businessProfileUpdate.is_published = isPublished;
+    }
+
+    // Sync show_on_homepage_map preference to business_profiles.publish_address
+    if (validatedData.show_on_homepage_map !== undefined) {
+      const publishAddress = Boolean(validatedData.show_on_homepage_map);
+      businessProfileUpdate.publish_address = publishAddress;
+    }
+
+    // Update business profile if there are changes
+    if (
+      existingBusinessProfile &&
+      Object.keys(businessProfileUpdate).length > 1
+    ) {
+      // More than just updated_at
+      await supabaseAdmin
+        .from('business_profiles')
+        .update(businessProfileUpdate)
+        .eq('user_id', userId);
+    }
+
+    // Get the actual values from business_profiles to return accurate state
+    const { data: businessProfile } = await supabaseAdmin
+      .from('business_profiles')
+      .select('is_published, publish_address')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    // Use business_profiles values as the source of truth for the response
     const publishToContractors =
       businessProfile?.is_published ??
       updatedProfile.preferences?.publish_to_contractors ??
+      false;
+
+    const showOnHomepageMap =
+      businessProfile?.publish_address ??
+      updatedProfile.preferences?.show_on_homepage_map ??
       false;
 
     return NextResponse.json({
@@ -209,6 +235,7 @@ export async function PUT(
       settings: {
         ...(updatedProfile.preferences || {}),
         publish_to_contractors: publishToContractors,
+        show_on_homepage_map: showOnHomepageMap,
         timezone: updatedProfile.timezone || 'Pacific/Auckland',
       },
     });

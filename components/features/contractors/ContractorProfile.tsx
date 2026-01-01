@@ -5,6 +5,7 @@ import { Contractor } from '@/types/contractors';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ContractorProfileDisplay } from './ContractorProfileDisplay';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ContractorProfileProps {
   contractorId: string;
@@ -14,12 +15,33 @@ export function ContractorProfile({ contractorId }: ContractorProfileProps) {
   const [contractor, setContractor] = useState<Contractor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchContractor = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/contractors/${contractorId}`);
+
+        // Check if user is viewing their own profile
+        const isOwner = user?.id === contractorId;
+
+        // Only bypass cache for owners - public users get cached responses
+        const fetchOptions: RequestInit = isOwner
+          ? {
+              cache: 'no-store', // Never cache for owners
+              headers: {
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache',
+              },
+            }
+          : {
+              // Default fetch behavior for public users (allows browser/CDN caching)
+            };
+
+        const response = await fetch(
+          `/api/contractors/${contractorId}`,
+          fetchOptions
+        );
 
         if (!response.ok) {
           throw new Error('Contractor not found');
@@ -39,7 +61,7 @@ export function ContractorProfile({ contractorId }: ContractorProfileProps) {
     if (contractorId) {
       fetchContractor();
     }
-  }, [contractorId]);
+  }, [contractorId, user?.id]);
 
   if (loading) {
     return (

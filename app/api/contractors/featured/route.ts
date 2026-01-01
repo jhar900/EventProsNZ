@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
         .select(
           'user_id, company_name, description, location, service_categories, average_rating, review_count, is_verified, subscription_tier, business_address, service_areas, social_links, verification_date, logo_url'
         )
+        .eq('is_published', true)
         .eq('is_verified', true)
         .in('subscription_tier', ['showcase', 'spotlight'])
         .gte('average_rating', 4.0)

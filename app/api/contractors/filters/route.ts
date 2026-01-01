@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       const { data: businessProfiles, error: fallbackError } = await supabase
         .from('business_profiles')
         .select('service_categories')
+        .eq('is_published', true)
         .not('service_categories', 'is', null);
 
       if (fallbackError) {
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
     const { data: regions, error: regionsError } = await supabase
       .from('business_profiles')
       .select('service_areas')
+      .eq('is_published', true)
       .not('service_areas', 'is', null);
 
     if (regionsError) {
@@ -109,6 +111,7 @@ export async function GET(request: NextRequest) {
     const { data: ratings, error: ratingError } = await supabase
       .from('business_profiles')
       .select('average_rating')
+      .eq('is_published', true)
       .not('average_rating', 'is', null)
       .gt('average_rating', 0);
 

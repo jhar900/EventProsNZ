@@ -4,6 +4,182 @@ import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 
+/**
+ * Extract city name from a New Zealand address string
+ * Examples:
+ * - "123 Main Street, Auckland, New Zealand" -> "Auckland"
+ * - "456 Queen St, Wellington 6011, New Zealand" -> "Wellington"
+ * - "789 High St, Christchurch, Canterbury, New Zealand" -> "Christchurch"
+ */
+function extractCityFromAddress(address: string): string | null {
+  if (!address || address.trim() === '') {
+    return null;
+  }
+
+  // Remove "New Zealand" if present (case insensitive)
+  let cleaned = address.replace(/,?\s*New\s+Zealand\s*$/i, '').trim();
+
+  // If no commas, try to extract city from the end of the string
+  if (!cleaned.includes(',')) {
+    // Try to match a city name at the end (before any postal code)
+    const postalCodeMatch = cleaned.match(/\s+(\d{4,5})$/);
+    if (postalCodeMatch) {
+      cleaned = cleaned.replace(/\s+\d{4,5}$/, '').trim();
+    }
+    // For addresses without commas, assume the last word(s) might be the city
+    // But this is less reliable, so we'll still try to match known cities
+    const words = cleaned.split(/\s+/);
+    if (words.length > 0) {
+      const lastWord = words[words.length - 1];
+      // Check if last word matches a known city
+      const nzCities = [
+        'Auckland',
+        'Wellington',
+        'Christchurch',
+        'Hamilton',
+        'Tauranga',
+        'Napier',
+        'Hastings',
+        'Dunedin',
+        'Palmerston',
+        'Nelson',
+        'Rotorua',
+        'Plymouth',
+        'Whangarei',
+        'Invercargill',
+        'Whanganui',
+        'Gisborne',
+        'Timaru',
+        'Pukekohe',
+        'Masterton',
+        'Levin',
+        'Ashburton',
+        'Queenstown',
+        'Taupo',
+        'Wanaka',
+        'Blenheim',
+        'Cambridge',
+        'Feilding',
+        'Oamaru',
+        'Greymouth',
+      ];
+      const matchedCity = nzCities.find(
+        city => city.toLowerCase() === lastWord.toLowerCase()
+      );
+      if (matchedCity) {
+        return matchedCity;
+      }
+    }
+    // If no match found for address without commas, return null
+    return null;
+  }
+
+  // Split by comma
+  const parts = cleaned.split(',').map(part => part.trim());
+
+  if (parts.length === 0) {
+    return null;
+  }
+
+  // Common NZ cities list for validation
+  const nzCities = [
+    'Auckland',
+    'Wellington',
+    'Christchurch',
+    'Hamilton',
+    'Tauranga',
+    'Napier',
+    'Hastings',
+    'Dunedin',
+    'Palmerston North',
+    'Nelson',
+    'Rotorua',
+    'New Plymouth',
+    'Whangarei',
+    'Invercargill',
+    'Whanganui',
+    'Gisborne',
+    'Timaru',
+    'Pukekohe',
+    'Masterton',
+    'Levin',
+    'Ashburton',
+    'Queenstown',
+    'Taupo',
+    'Wanaka',
+    'Blenheim',
+    'Cambridge',
+    'Te Awamutu',
+    'Feilding',
+    'Oamaru',
+    'Greymouth',
+  ];
+
+  // Try to find a city name in the address parts
+  // Usually the city is the second-to-last or last part
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const part = parts[i];
+
+    // Remove postal code if present (e.g., "Wellington 6011" -> "Wellington")
+    const cityPart = part.replace(/\s+\d{4,5}$/, '').trim();
+
+    // Check if it matches a known NZ city (case insensitive)
+    const matchedCity = nzCities.find(
+      city => city.toLowerCase() === cityPart.toLowerCase()
+    );
+
+    if (matchedCity) {
+      return matchedCity;
+    }
+  }
+
+  // If no known city found, try the last part (before postal code if present)
+  // This handles cases where the city might not be in our list
+  if (parts.length > 0) {
+    const lastPart = parts[parts.length - 1];
+    const cityCandidate = lastPart.replace(/\s+\d{4,5}$/, '').trim();
+
+    // Return the city candidate if it's not empty and looks like a city name
+    // (not a street address, not too long, doesn't start with a number)
+    if (
+      cityCandidate &&
+      cityCandidate.length < 50 &&
+      cityCandidate.length > 2 &&
+      !/^\d+/.test(cityCandidate) &&
+      !cityCandidate.toLowerCase().includes('street') &&
+      !cityCandidate.toLowerCase().includes('road') &&
+      !cityCandidate.toLowerCase().includes('avenue') &&
+      !cityCandidate.toLowerCase().includes('drive') &&
+      !cityCandidate.toLowerCase().includes('lane') &&
+      !cityCandidate.toLowerCase().includes('st') &&
+      !cityCandidate.toLowerCase().includes('rd') &&
+      !cityCandidate.toLowerCase().includes('ave')
+    ) {
+      return cityCandidate;
+    }
+
+    // If last part doesn't work, try second-to-last part
+    if (parts.length > 1) {
+      const secondLastPart = parts[parts.length - 2];
+      const cityCandidate2 = secondLastPart.replace(/\s+\d{4,5}$/, '').trim();
+
+      if (
+        cityCandidate2 &&
+        cityCandidate2.length < 50 &&
+        cityCandidate2.length > 2 &&
+        !/^\d+/.test(cityCandidate2) &&
+        !cityCandidate2.toLowerCase().includes('street') &&
+        !cityCandidate2.toLowerCase().includes('road') &&
+        !cityCandidate2.toLowerCase().includes('avenue')
+      ) {
+        return cityCandidate2;
+      }
+    }
+  }
+
+  return null;
+}
+
 const updateBusinessProfileSchema = z.object({
   company_name: z
     .string()
@@ -175,13 +351,99 @@ export async function PUT(request: NextRequest) {
 
     const validatedData = updateBusinessProfileSchema.parse(formData);
 
+    // Map location field from form to business_address column in database
+    const updateData: any = {
+      ...validatedData,
+    };
+
+    // Always map location field from form to business_address column in database
+    // This ensures business_address is updated whenever location is provided (even if empty string)
+    if (validatedData.location !== undefined) {
+      // Set business_address to the location value (even if it's an empty string)
+      updateData.business_address = validatedData.location || null;
+      // Remove location from updateData so we don't update the location column directly
+      delete updateData.location;
+
+      // Extract city from business_address and save to location column
+      if (
+        updateData.business_address &&
+        updateData.business_address.trim() !== ''
+      ) {
+        const extractedCity = extractCityFromAddress(
+          updateData.business_address
+        );
+        updateData.location = extractedCity || null;
+        console.log('[DEBUG] Extracted city from business_address:', {
+          business_address: updateData.business_address,
+          extracted_city: extractedCity,
+          location: updateData.location,
+        });
+      } else {
+        // If business_address is cleared, also clear location
+        updateData.location = null;
+        console.log(
+          '[DEBUG] Business address cleared, setting location to null'
+        );
+      }
+
+      console.log('[DEBUG] Mapping location to business_address:', {
+        location: validatedData.location,
+        business_address: updateData.business_address,
+        locationIsEmpty: validatedData.location === '',
+        locationIsNull: validatedData.location === null,
+      });
+    } else {
+      // If location is not provided, don't touch business_address or location
+      console.log(
+        '[DEBUG] Location field not provided in form data, leaving business_address and location unchanged'
+      );
+    }
+
+    console.log(
+      '[DEBUG] Update data being sent to database:',
+      JSON.stringify(updateData, null, 2)
+    );
+    console.log('[DEBUG] User ID:', user.id);
+    console.log(
+      '[DEBUG] business_address in updateData:',
+      updateData.business_address
+    );
+
+    // First, get the current business profile to compare
+    const { data: currentProfile } = await supabaseAdmin
+      .from('business_profiles')
+      .select('business_address, location')
+      .eq('user_id', user.id)
+      .single();
+
+    console.log(
+      '[DEBUG] Current business_address in database:',
+      currentProfile?.business_address
+    );
+    console.log(
+      '[DEBUG] Current location in database:',
+      currentProfile?.location
+    );
+
     const { data: businessProfile, error: businessProfileError } =
       await supabaseAdmin
         .from('business_profiles')
-        .update(validatedData)
+        .update(updateData)
         .eq('user_id', user.id)
         .select()
         .single();
+
+    if (businessProfileError) {
+      console.error(
+        '[ERROR] Business profile update failed:',
+        businessProfileError
+      );
+    } else {
+      console.log('[DEBUG] Business profile updated successfully:', {
+        business_address: businessProfile?.business_address,
+        location: businessProfile?.location,
+      });
+    }
 
     if (businessProfileError) {
       return NextResponse.json(
@@ -296,6 +558,37 @@ export async function POST(request: NextRequest) {
 
     const validatedData = updateBusinessProfileSchema.parse(formData);
 
+    // Map location field from form to business_address column in database
+    const insertData: any = {
+      ...validatedData,
+    };
+
+    // If location is provided in the form, save it to business_address column
+    if (validatedData.location !== undefined) {
+      insertData.business_address = validatedData.location || null;
+      // Remove location from insertData so we don't set the location column directly
+      delete insertData.location;
+
+      // Extract city from business_address and save to location column
+      if (
+        insertData.business_address &&
+        insertData.business_address.trim() !== ''
+      ) {
+        const extractedCity = extractCityFromAddress(
+          insertData.business_address
+        );
+        insertData.location = extractedCity || null;
+        console.log('[DEBUG] Extracted city from business_address (POST):', {
+          business_address: insertData.business_address,
+          extracted_city: extractedCity,
+          location: insertData.location,
+        });
+      } else {
+        // If business_address is empty, set location to null
+        insertData.location = null;
+      }
+    }
+
     // Check if business profile already exists
     const { data: existingProfile } = await supabaseAdmin
       .from('business_profiles')
@@ -312,7 +605,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating business profile with data:', {
       user_id: user.id,
-      ...validatedData,
+      ...insertData,
       subscription_tier: 'essential',
     });
 
@@ -321,7 +614,7 @@ export async function POST(request: NextRequest) {
         .from('business_profiles')
         .insert({
           user_id: user.id,
-          ...validatedData,
+          ...insertData,
           subscription_tier: 'essential',
         })
         .select()

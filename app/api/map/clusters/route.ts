@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq('users.role', 'contractor')
+      .eq('is_published', true)
+      .eq('publish_address', true)
       .not('business_address', 'is', null);
 
     // Apply filters by chaining properly

@@ -211,7 +211,10 @@ export default function BusinessProfileForm({
                 company_name: businessProfile.company_name || '',
                 description: businessProfile.description || '',
                 website: businessProfile.website || '',
-                location: businessProfile.location || '',
+                location:
+                  businessProfile.business_address ||
+                  businessProfile.location ||
+                  '',
                 service_areas: finalServiceAreas,
                 service_categories: businessProfile.service_categories || [],
                 facebook_url: businessProfile.facebook_url || '',
@@ -319,7 +322,10 @@ export default function BusinessProfileForm({
           company_name: user.business_profile.company_name || '',
           description: user.business_profile.description || '',
           website: user.business_profile.website || '',
-          location: user.business_profile.location || '',
+          location:
+            user.business_profile.business_address ||
+            user.business_profile.location ||
+            '',
           service_areas: finalServiceAreas,
           service_categories: user.business_profile.service_categories || [],
           facebook_url: user.business_profile.facebook_url || '',

@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
     const supabase = createClient();
 
     // Build the query - get business profiles with addresses
-    // Try both location and business_address columns to support different database states
     let query = supabase
       .from('business_profiles')
       .select(
@@ -41,7 +40,7 @@ export async function GET(request: NextRequest) {
         user_id,
         company_name,
         description,
-        location,
+        business_address,
         logo_url,
         is_verified,
         subscription_tier,
@@ -56,7 +55,8 @@ export async function GET(request: NextRequest) {
       .eq('users.role', 'contractor')
       .neq('users.status', 'suspended')
       .eq('is_published', true)
-      .not('location', 'is', null);
+      .eq('publish_address', true)
+      .not('business_address', 'is', null);
 
     // Apply filters
     if (verifiedOnly) {
@@ -114,12 +114,14 @@ export async function GET(request: NextRequest) {
       contractorsWithServices.map(async contractor => {
         let location = { lat: -36.8485, lng: 174.7633 }; // Default Auckland fallback
 
-        // Use location field from business_profiles (contains the address)
-        // Location is a TEXT field with the address string
-        if (contractor.location && typeof contractor.location === 'string') {
+        // Use business_address field from business_profiles for geocoding
+        if (
+          contractor.business_address &&
+          typeof contractor.business_address === 'string'
+        ) {
           // Geocode the address string to get lat/lng
           const geocodedLocation = await mapService.geocodeAddress(
-            contractor.location
+            contractor.business_address
           );
           if (geocodedLocation) {
             location = geocodedLocation;
@@ -142,7 +144,7 @@ export async function GET(request: NextRequest) {
           id: contractor.user_id,
           company_name: contractor.company_name || 'Unnamed Business',
           description: contractor.description || null,
-          business_address: contractor.location || '', // Use location field as business_address
+          business_address: contractor.business_address || '',
           service_type: serviceTypeValue,
           location,
           logo_url: contractor.logo_url || null,

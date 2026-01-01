@@ -16,7 +16,6 @@ const personalInfoSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().optional(),
-  address: z.string().optional(),
   bio: z.string().optional(),
 });
 
@@ -58,7 +57,6 @@ export function PersonalInfoEditor({
       first_name: profile.first_name,
       last_name: profile.last_name,
       phone: profile.phone || '',
-      address: profile.address || '',
       bio: profile.bio || '',
     },
   });
@@ -202,21 +200,6 @@ export function PersonalInfoEditor({
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                {...register('address')}
-                placeholder="123 Main Street, Auckland, New Zealand"
-                className={errors.address ? 'border-red-500' : ''}
-              />
-              {errors.address && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.address.message}
                 </p>
               )}
             </div>

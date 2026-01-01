@@ -18,6 +18,8 @@ import {
   AlertCircle,
   ArrowRight,
   Plus,
+  CheckCircle,
+  Shield,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -31,11 +33,21 @@ interface DashboardStats {
   recentApplications?: any[];
 }
 
+interface VerificationStatus {
+  userVerified: boolean;
+  businessVerified?: boolean;
+  verificationDate?: string;
+  businessVerificationDate?: string;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const { status: completionStatus } = useProfileCompletion();
   const [stats, setStats] = useState<DashboardStats>({});
   const [loading, setLoading] = useState(true);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus | null>(null);
+  const [loadingVerification, setLoadingVerification] = useState(true);
 
   useEffect(() => {
     const loadDashboardStats = async () => {
@@ -136,6 +148,34 @@ export default function DashboardPage() {
 
     loadDashboardStats();
   }, [user?.id, user?.role]);
+
+  // Load verification status
+  useEffect(() => {
+    const loadVerificationStatus = async () => {
+      if (!user?.id) {
+        setLoadingVerification(false);
+        return;
+      }
+
+      try {
+        setLoadingVerification(true);
+        // Get user verification status from user object
+        const userVerified = user?.is_verified || false;
+        setVerificationStatus({
+          userVerified,
+        });
+      } catch (err) {
+        console.error('Error loading verification status:', err);
+        setVerificationStatus({
+          userVerified: false,
+        });
+      } finally {
+        setLoadingVerification(false);
+      }
+    };
+
+    loadVerificationStatus();
+  }, [user?.id, user?.is_verified]);
 
   const getUserName = () => {
     if (!user) return '';
@@ -243,24 +283,6 @@ export default function DashboardPage() {
                     Complete Profile
                   </Button>
                 </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Verification Status for Contractors */}
-        {user && user.role === 'contractor' && !user.is_verified && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <Clock className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                  Verification Pending
-                </h3>
-                <p className="text-sm text-blue-700">
-                  Your profile is pending admin approval. You&apos;ll be
-                  notified once you&apos;re verified.
-                </p>
               </div>
             </div>
           </div>
@@ -385,6 +407,73 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 </RoleGuard>
+
+                {/* Verification Status Card */}
+                {user && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:col-span-2 lg:col-span-2">
+                    <div className="flex items-center mb-4">
+                      <Shield className="h-5 w-5 text-gray-600 mr-2" />
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Verification Status
+                      </h3>
+                    </div>
+
+                    {loadingVerification ? (
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    ) : verificationStatus ? (
+                      <div className="space-y-4">
+                        {/* User Verification Status */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center">
+                            {verificationStatus.userVerified ? (
+                              <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
+                            ) : (
+                              <Clock className="h-5 w-5 text-yellow-600 mr-3" />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                Account Verification
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {verificationStatus.userVerified
+                                  ? 'Your account has been verified'
+                                  : 'Your account verification is pending'}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-3 py-1 text-xs font-medium rounded-full ${
+                              verificationStatus.userVerified
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {verificationStatus.userVerified
+                              ? 'Verified'
+                              : 'Pending'}
+                          </span>
+                        </div>
+
+                        {/* Overall Status Message */}
+                        {!verificationStatus.userVerified && (
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              Your account verification is pending. You will be
+                              notified once verification is complete.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        Unable to load verification status.
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>

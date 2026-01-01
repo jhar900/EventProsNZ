@@ -18,6 +18,7 @@ export interface Contractor {
   isVerified: boolean;
   subscriptionTier: 'essential' | 'professional' | 'enterprise';
   businessAddress?: string | null;
+  publishAddress?: boolean;
   nzbn?: string | null;
   serviceAreas: string[];
   socialLinks?: any | null;

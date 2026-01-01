@@ -23,7 +23,6 @@ const profileSchema = z.object({
     .or(z.literal('')),
   address: z.string().max(200, 'Address too long').optional(),
   bio: z.string().max(500, 'Bio too long').optional(),
-  timezone: z.string().max(50, 'Timezone too long').optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -45,6 +44,7 @@ export default function ProfileForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const methods = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -55,10 +55,23 @@ export default function ProfileForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = methods;
+
+  // Watch bio field for character counter
+  const bioValue = watch('bio') || '';
+  const bioLength = bioValue.length;
+  const bioMaxLength = 500;
+
+  // Set mounted state to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load existing profile data
   useEffect(() => {
+    if (!isMounted) return;
+
     const loadProfile = async () => {
       // If viewing another user (admin), fetch their profile
       if (propUserId && propUserId !== user?.id) {
@@ -82,7 +95,6 @@ export default function ProfileForm({
                 phone: profile.phone || '',
                 address: profile.address || '',
                 bio: profile.bio || '',
-                timezone: profile.timezone || 'Pacific/Auckland',
               });
             } else {
               // No profile exists, show empty form
@@ -92,7 +104,6 @@ export default function ProfileForm({
                 phone: '',
                 address: '',
                 bio: '',
-                timezone: 'Pacific/Auckland',
               });
             }
           } else {
@@ -107,7 +118,6 @@ export default function ProfileForm({
               phone: '',
               address: '',
               bio: '',
-              timezone: 'Pacific/Auckland',
             });
           }
         } catch (error) {
@@ -120,7 +130,6 @@ export default function ProfileForm({
             phone: '',
             address: '',
             bio: '',
-            timezone: 'Pacific/Auckland',
           });
         } finally {
           setIsLoading(false);
@@ -134,15 +143,14 @@ export default function ProfileForm({
           first_name: user.profile.first_name || '',
           last_name: user.profile.last_name || '',
           phone: user.profile.phone || '',
-          address: user.profile.address || '',
-          bio: user.profile.bio || '',
-          timezone: user.profile.timezone || 'Pacific/Auckland',
+          address: (user.profile as any).address || '',
+          bio: (user.profile as any).bio || '',
         });
       }
     };
 
     loadProfile();
-  }, [user, propUserId, reset, onError]);
+  }, [user, propUserId, reset, onError, isMounted]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -198,6 +206,24 @@ export default function ProfileForm({
     }
   };
 
+  // Don't render form until mounted to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            Personal Information
+          </h3>
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -251,25 +277,47 @@ export default function ProfileForm({
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <input
-                {...register('phone')}
-                type="tel"
-                id="phone"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="+64 21 123 4567"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.phone.message}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={user?.email || ''}
+                  disabled
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm"
+                  readOnly
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Email cannot be changed since it is linked to your login
                 </p>
-              )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone Number
+                </label>
+                <input
+                  {...register('phone')}
+                  type="tel"
+                  id="phone"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="+64 21 123 4567"
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.phone.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -308,38 +356,22 @@ export default function ProfileForm({
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Tell us about yourself..."
               />
-              {errors.bio && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.bio.message}
+              <div className="mt-1 flex justify-between items-center">
+                {errors.bio && (
+                  <p className="text-sm text-red-600">{errors.bio.message}</p>
+                )}
+                <p
+                  className={`text-xs ml-auto ${
+                    bioLength > bioMaxLength
+                      ? 'text-red-600 font-semibold'
+                      : bioLength > bioMaxLength * 0.9
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                  }`}
+                >
+                  {bioLength}/{bioMaxLength} characters
                 </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="timezone"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Timezone
-              </label>
-              <select
-                {...register('timezone')}
-                id="timezone"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="Pacific/Auckland">
-                  Pacific/Auckland (NZST/NZDT)
-                </option>
-                <option value="Pacific/Chatham">
-                  Pacific/Chatham (CHAST/CHADT)
-                </option>
-                <option value="UTC">UTC</option>
-              </select>
-              {errors.timezone && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.timezone.message}
-                </p>
-              )}
+              </div>
             </div>
 
             {error && (

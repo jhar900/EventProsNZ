@@ -49,7 +49,8 @@ export async function GET(
           twitter_url,
           youtube_url,
           tiktok_url,
-          is_published
+          is_published,
+          publish_address
         )
       `
       )
@@ -219,8 +220,10 @@ export async function GET(
       reviewCount: businessProfile?.review_count || 0,
       isVerified: businessProfile?.is_verified || false,
       subscriptionTier: businessProfile?.subscription_tier || 'essential',
-      businessAddress:
-        businessProfile?.business_address || businessProfile?.location || null,
+      businessAddress: businessProfile?.publish_address
+        ? businessProfile?.business_address || null
+        : null,
+      publishAddress: businessProfile?.publish_address || false,
       nzbn: businessProfile?.nzbn || null,
       serviceAreas: businessProfile?.service_areas || [],
       website: businessProfile?.website || null,
@@ -242,12 +245,20 @@ export async function GET(
 
     const response = NextResponse.json({ contractor });
 
-    // Add caching headers for public contractor profiles
-    // Cache for 1 minute, but allow stale-while-revalidate for 30 seconds
-    response.headers.set(
-      'Cache-Control',
-      'public, max-age=60, stale-while-revalidate=30'
-    );
+    // Cache headers: bypass cache for owners, cache for public views
+    if (isOwner) {
+      // No cache for owners viewing their own profile - always fresh data
+      response.headers.set(
+        'Cache-Control',
+        'no-cache, no-store, must-revalidate'
+      );
+    } else {
+      // Cache for 1 minute for public views, but allow stale-while-revalidate for 30 seconds
+      response.headers.set(
+        'Cache-Control',
+        'public, max-age=60, stale-while-revalidate=30'
+      );
+    }
 
     return response;
   } catch (error) {
