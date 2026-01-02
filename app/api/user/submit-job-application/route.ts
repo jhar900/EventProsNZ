@@ -19,9 +19,9 @@ const createJobApplicationSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  console.log('[POST /api/user/submit-job-application] Route handler called');
   // Lazy initialization: create JobService inside handler to avoid module-level side effects
   const jobService = new JobService();
-  console.log('[POST /api/user/submit-job-application] Route handler called');
   console.log(
     '[POST /api/user/submit-job-application] Request URL:',
     request.url
