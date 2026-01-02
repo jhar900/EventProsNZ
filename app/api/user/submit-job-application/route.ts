@@ -5,6 +5,8 @@ import { sanitizeJobDescription } from '@/lib/security/sanitization';
 import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 // Validation schema (safe to define at module scope - no side effects)
 const createJobApplicationSchema = z.object({
   job_id: z.string().uuid(),
