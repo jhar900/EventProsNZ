@@ -22,7 +22,15 @@ import {
 } from '@/types/jobs';
 
 export class JobService {
-  private supabase = createClient();
+  private _supabase: ReturnType<typeof createClient> | null = null;
+
+  // Lazy getter: initialize supabase client on first access, not during construction
+  private get supabase(): ReturnType<typeof createClient> {
+    if (!this._supabase) {
+      this._supabase = createClient();
+    }
+    return this._supabase;
+  }
 
   async createJob(jobData: CreateJobRequest, userId: string): Promise<Job> {
     try {
@@ -371,7 +379,10 @@ export class JobService {
   ): Promise<JobApplication> {
     try {
       const applicationInsert: JobApplicationInsert = {
-        ...applicationData,
+        job_id: applicationData.job_id,
+        application_message: applicationData.application_message,
+        proposed_budget: applicationData.proposed_budget ?? null,
+        attachments: applicationData.attachments || [],
         contractor_id: contractorId,
         status: 'pending',
       };

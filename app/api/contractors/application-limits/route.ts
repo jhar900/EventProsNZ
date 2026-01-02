@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 // Validation schemas
 const getApplicationLimitsSchema = z.object({
@@ -10,7 +12,8 @@ const getApplicationLimitsSchema = z.object({
 // GET /api/contractors/application-limits - Get contractor's application limits
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Use middleware client that reads cookies from request for proper authentication
+    const { supabase } = createClient(request);
 
     // Get current user
     const {
@@ -156,7 +159,7 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           message: 'Invalid request parameters',
-          errors: error.errors.map(err => ({
+          errors: error.issues.map((err: z.ZodIssue) => ({
             field: err.path.join('.'),
             message: err.message,
           })),
