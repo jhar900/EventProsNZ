@@ -45,10 +45,8 @@ export interface JobFormData {
 }
 
 export interface JobApplicationFormData {
-  cover_letter: string;
+  application_message: string;
   proposed_budget?: number;
-  availability_start_date?: string;
-  availability_end_date?: string;
   attachments?: string[];
 }
 
@@ -271,18 +269,14 @@ export interface UpdateJobRequest {
 
 export interface CreateJobApplicationRequest {
   job_id: string;
-  cover_letter: string;
+  application_message: string;
   proposed_budget?: number;
-  availability_start_date?: string;
-  availability_end_date?: string;
   attachments?: string[];
 }
 
 export interface UpdateJobApplicationRequest {
-  cover_letter?: string;
+  application_message?: string;
   proposed_budget?: number;
-  availability_start_date?: string;
-  availability_end_date?: string;
   attachments?: string[];
   status?: ApplicationStatus;
 }

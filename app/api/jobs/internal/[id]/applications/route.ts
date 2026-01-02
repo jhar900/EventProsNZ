@@ -8,13 +8,11 @@ const jobService = new JobService();
 
 // Validation schema for internal job application
 const createInternalJobApplicationSchema = z.object({
-  cover_letter: z
+  application_message: z
     .string()
-    .min(1, 'Cover letter is required')
-    .max(2000, 'Cover letter too long'),
+    .min(1, 'Application message is required')
+    .max(2000, 'Application message too long'),
   proposed_budget: z.number().min(0).optional(),
-  availability_start_date: z.string().optional(),
-  availability_end_date: z.string().optional(),
   attachments: z.array(z.string()).optional(),
 });
 

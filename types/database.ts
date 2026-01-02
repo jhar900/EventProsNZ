@@ -1155,7 +1155,7 @@ export interface Database {
         id: string;
         job_id: string;
         contractor_id: string;
-        cover_letter: string;
+        application_message: string;
         status: 'pending' | 'reviewed' | 'accepted' | 'rejected';
         attachments: any;
         proposed_budget: number | null;
@@ -1168,7 +1168,7 @@ export interface Database {
         id?: string;
         job_id: string;
         contractor_id: string;
-        cover_letter: string;
+        application_message: string;
         status?: 'pending' | 'reviewed' | 'accepted' | 'rejected';
         attachments?: any;
         proposed_budget?: number | null;
@@ -1181,7 +1181,7 @@ export interface Database {
         id?: string;
         job_id?: string;
         contractor_id?: string;
-        cover_letter?: string;
+        application_message?: string;
         status?: 'pending' | 'reviewed' | 'accepted' | 'rejected';
         attachments?: any;
         proposed_budget?: number | null;

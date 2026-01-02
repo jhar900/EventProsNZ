@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,20 +23,20 @@ import { JobApplicationFormData } from '@/types/jobs';
 
 // Validation schema
 const jobApplicationSchema = z.object({
-  cover_letter: z
+  application_message: z
     .string()
-    .min(50, 'Cover letter must be at least 50 characters')
-    .max(2000, 'Cover letter must be less than 2000 characters'),
+    .min(50, 'Application message must be at least 50 characters')
+    .max(2000, 'Application message must be less than 2000 characters'),
   proposed_budget: z
     .number()
     .min(0, 'Proposed budget must be positive')
-    .optional(),
-  availability_start_date: z.string().optional(),
-  availability_end_date: z.string().optional(),
+    .optional()
+    .or(z.undefined()),
   attachments: z
     .array(z.string())
     .max(3, 'Maximum 3 attachments allowed')
-    .optional(),
+    .optional()
+    .or(z.undefined()),
 });
 
 interface JobApplicationFormProps {
@@ -57,6 +58,7 @@ export function JobApplicationForm({
   initialData,
   isDraft = false,
 }: JobApplicationFormProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,26 +71,26 @@ export function JobApplicationForm({
     total: number;
     resetDate: string;
   } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { errors },
     setValue,
     watch,
-    reset,
   } = useForm<JobApplicationFormData>({
     resolver: zodResolver(jobApplicationSchema),
     defaultValues: {
-      cover_letter: initialData?.cover_letter || '',
-      proposed_budget: initialData?.proposed_budget,
-      availability_start_date: initialData?.availability_start_date,
-      availability_end_date: initialData?.availability_end_date,
-      attachments: attachments,
-    },
+      application_message: initialData?.application_message || '',
+      ...(initialData?.proposed_budget !== undefined && {
+        proposed_budget: initialData.proposed_budget,
+      }),
+      ...(attachments.length > 0 && { attachments }),
+    } as JobApplicationFormData,
   });
 
-  const watchedCoverLetter = watch('cover_letter');
+  const watchedApplicationMessage = watch('application_message');
   const watchedProposedBudget = watch('proposed_budget');
 
   // Load application limits on mount
@@ -98,7 +100,9 @@ export function JobApplicationForm({
 
   const loadApplicationLimits = async () => {
     try {
-      const response = await fetch('/api/contractors/application-limits');
+      const response = await fetch('/api/contractors/application-limits', {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setApplicationLimits(data);
@@ -113,18 +117,86 @@ export function JobApplicationForm({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/jobs/${jobId}/applications`, {
+      console.log('[JobApplicationForm] onSubmit called');
+      console.log('[JobApplicationForm] User:', user?.id);
+      console.log('[JobApplicationForm] Job ID:', jobId);
+      console.log('[JobApplicationForm] Form data:', {
+        applicationMessageLength: data.application_message?.length,
+        hasProposedBudget: data.proposed_budget !== undefined,
+        attachmentsCount: attachments.length,
+      });
+
+      if (!user?.id) {
+        console.error('[JobApplicationForm] No user ID');
+        throw new Error('User not authenticated');
+      }
+
+      const requestBody = {
+        application_message: data.application_message,
+        ...(data.proposed_budget !== undefined && {
+          proposed_budget: data.proposed_budget,
+        }),
+        ...(attachments.length > 0 && { attachments }),
+      };
+
+      console.log(
+        '[JobApplicationForm] Request URL:',
+        '/api/user/submit-job-application'
+      );
+      console.log('[JobApplicationForm] Request body:', {
+        ...requestBody,
+        job_id: jobId,
+      });
+
+      const response = await fetch('/api/user/submit-job-application', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id,
         },
+        credentials: 'include',
         body: JSON.stringify({
-          ...data,
-          attachments,
+          job_id: jobId,
+          ...requestBody,
         }),
       });
 
+      console.log('[JobApplicationForm] Response status:', response.status);
+      console.log(
+        '[JobApplicationForm] Response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
+      console.log('[JobApplicationForm] Response URL:', response.url);
+      console.log('[JobApplicationForm] Response type:', response.type);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(
+          '[JobApplicationForm] Response not OK. Status:',
+          response.status
+        );
+        console.error('[JobApplicationForm] Response text:', text);
+
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          console.error(
+            '[JobApplicationForm] Failed to parse response as JSON:',
+            e
+          );
+          throw new Error(
+            `Server returned ${response.status}: ${text.substring(0, 200)}`
+          );
+        }
+
+        throw new Error(
+          result.message || result.error || `Server returned ${response.status}`
+        );
+      }
+
       const result = await response.json();
+      console.log('[JobApplicationForm] Success response:', result);
 
       if (!response.ok) {
         throw new Error(result.message || 'Failed to submit application');
@@ -132,7 +204,19 @@ export function JobApplicationForm({
 
       onSuccess?.(result.application);
     } catch (error) {
-      console.error('Job application submission error:', error);
+      console.error('[JobApplicationForm] Submission error:', error);
+      console.error(
+        '[JobApplicationForm] Error type:',
+        error?.constructor?.name
+      );
+      console.error(
+        '[JobApplicationForm] Error message:',
+        error instanceof Error ? error.message : String(error)
+      );
+      console.error(
+        '[JobApplicationForm] Error stack:',
+        error instanceof Error ? error.stack : 'No stack trace'
+      );
       setError(
         error instanceof Error ? error.message : 'Failed to submit application'
       );
@@ -144,12 +228,12 @@ export function JobApplicationForm({
   const handleSaveDraft = async () => {
     try {
       setIsSavingDraft(true);
-      const formData = {
-        cover_letter: watchedCoverLetter,
-        proposed_budget: watchedProposedBudget,
-        availability_start_date: watch('availability_start_date'),
-        availability_end_date: watch('availability_end_date'),
-        attachments,
+      const formData: JobApplicationFormData = {
+        application_message: watchedApplicationMessage,
+        ...(watchedProposedBudget !== undefined && {
+          proposed_budget: watchedProposedBudget,
+        }),
+        ...(attachments.length > 0 && { attachments }),
       };
 
       if (onSaveDraft) {
@@ -200,22 +284,46 @@ export function JobApplicationForm({
       setUploadingFiles(prev => [...prev, file.name]);
       setError(null);
 
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`/api/jobs/${jobId}/applications/upload`, {
+      const response = await fetch('/api/user/job-application-attachment', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
+        headers: {
+          'x-user-id': user.id,
+          'x-job-id': jobId,
+        },
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('File upload failed');
+        const errorMessage =
+          result.error ||
+          result.details ||
+          result.message ||
+          `File upload failed (${response.status})`;
+        console.error('File upload API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          result,
+        });
+        throw new Error(errorMessage);
       }
 
-      const result = await response.json();
-      const newAttachments = [...attachments, result.url];
-      setAttachments(newAttachments);
-      setValue('attachments', newAttachments);
+      if (result.file?.url) {
+        const newAttachments = [...attachments, result.file.url];
+        setAttachments(newAttachments);
+        setValue('attachments', newAttachments);
+      } else {
+        throw new Error('File upload succeeded but no URL returned');
+      }
     } catch (error) {
       console.error('File upload error:', error);
       setError(error instanceof Error ? error.message : 'File upload failed');
@@ -238,7 +346,7 @@ export function JobApplicationForm({
   };
 
   const getCharacterCount = () => {
-    return watchedCoverLetter?.length || 0;
+    return watchedApplicationMessage?.length || 0;
   };
 
   const getCharacterCountColor = () => {
@@ -259,6 +367,11 @@ export function JobApplicationForm({
             </h2>
             <p className="text-gray-600 text-sm mt-1">
               Submit your application to be considered for this job
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              Please know, when you submit this application, your profile
+              information will be shared with the job creator to help them
+              evaluate your application.
             </p>
           </div>
           {isDraft && (
@@ -290,14 +403,14 @@ export function JobApplicationForm({
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Cover Letter */}
+          {/* Application Message */}
           <div className="space-y-2">
-            <Label htmlFor="cover_letter">
-              Cover Letter <span className="text-red-500">*</span>
+            <Label htmlFor="application_message">
+              Application Message <span className="text-red-500">*</span>
             </Label>
             <Textarea
-              id="cover_letter"
-              {...register('cover_letter')}
+              id="application_message"
+              {...register('application_message')}
               placeholder="Tell the employer why you're the right fit for this job. Include your relevant experience, skills, and what makes you unique..."
               className="min-h-[200px]"
             />
@@ -319,9 +432,9 @@ export function JobApplicationForm({
                 )}
               </div>
             </div>
-            {errors.cover_letter && (
+            {errors.application_message && (
               <p className="text-red-600 text-sm">
-                {errors.cover_letter.message}
+                {errors.application_message.message}
               </p>
             )}
           </div>
@@ -345,26 +458,6 @@ export function JobApplicationForm({
             )}
           </div>
 
-          {/* Availability */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="availability_start_date">Available From</Label>
-              <Input
-                id="availability_start_date"
-                type="date"
-                {...register('availability_start_date')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="availability_end_date">Available Until</Label>
-              <Input
-                id="availability_end_date"
-                type="date"
-                {...register('availability_end_date')}
-              />
-            </div>
-          </div>
-
           {/* File Attachments */}
           <div className="space-y-2">
             <Label>Attachments (Optional)</Label>
@@ -375,6 +468,7 @@ export function JobApplicationForm({
                   Upload your portfolio, CV, or other relevant documents
                 </p>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   multiple
                   onChange={handleFileSelect}
@@ -382,11 +476,14 @@ export function JobApplicationForm({
                   id="file-upload"
                   accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
                 />
-                <Label htmlFor="file-upload" className="cursor-pointer">
-                  <Button type="button" variant="outline" size="sm">
-                    Choose Files
-                  </Button>
-                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose Files
+                </Button>
                 <p className="text-xs text-gray-500 mt-1">
                   Max 3 files, 10MB each. Supported: PDF, JPG, PNG, GIF, DOC,
                   DOCX

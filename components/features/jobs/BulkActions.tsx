@@ -52,10 +52,8 @@ export function BulkActions({
   const [error, setError] = useState<string | null>(null);
   const [bulkApplicationData, setBulkApplicationData] =
     useState<JobApplicationFormData>({
-      cover_letter: '',
+      application_message: '',
       proposed_budget: undefined,
-      availability_start_date: '',
-      availability_end_date: '',
       attachments: [],
     });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -333,14 +331,14 @@ export function BulkActions({
             {/* Cover Letter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Cover Letter (will be used for all applications)
+                Application Message (will be used for all applications)
               </label>
               <textarea
-                value={bulkApplicationData.cover_letter}
+                value={bulkApplicationData.application_message}
                 onChange={e =>
                   setBulkApplicationData(prev => ({
                     ...prev,
-                    cover_letter: e.target.value,
+                    application_message: e.target.value,
                   }))
                 }
                 placeholder="Enter your cover letter. Use placeholders like {job_title}, {company_name}, etc."
@@ -381,13 +379,6 @@ export function BulkActions({
                 </label>
                 <input
                   type="date"
-                  value={bulkApplicationData.availability_start_date || ''}
-                  onChange={e =>
-                    setBulkApplicationData(prev => ({
-                      ...prev,
-                      availability_start_date: e.target.value,
-                    }))
-                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -397,13 +388,6 @@ export function BulkActions({
                 </label>
                 <input
                   type="date"
-                  value={bulkApplicationData.availability_end_date || ''}
-                  onChange={e =>
-                    setBulkApplicationData(prev => ({
-                      ...prev,
-                      availability_end_date: e.target.value,
-                    }))
-                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -416,7 +400,9 @@ export function BulkActions({
               </Button>
               <Button
                 onClick={handleBulkApply}
-                disabled={isSubmitting || !bulkApplicationData.cover_letter}
+                disabled={
+                  isSubmitting || !bulkApplicationData.application_message
+                }
                 className="min-w-[120px]"
               >
                 {isSubmitting ? (

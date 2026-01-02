@@ -584,10 +584,10 @@ export function InternalJobApplicationManager({
                                 {/* Cover Letter */}
                                 <div>
                                   <Label className="font-medium">
-                                    Cover Letter
+                                    Application Message
                                   </Label>
                                   <p className="text-sm text-gray-700 mt-1 p-3 bg-gray-50 rounded">
-                                    {selectedApplication.cover_letter}
+                                    {selectedApplication.application_message}
                                   </p>
                                 </div>
 

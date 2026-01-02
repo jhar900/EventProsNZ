@@ -98,7 +98,9 @@ export function EditJobModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update job');
+        throw new Error(
+          result.error || result.message || 'Failed to update job'
+        );
       }
 
       // Close modal and reset state
@@ -106,8 +108,11 @@ export function EditJobModal({
 
       // Call onSuccess callback if provided
       if (onSuccess) {
-        onSuccess(result.job.id);
+        onSuccess(result.job?.id || job.id);
       }
+
+      // Refresh the page to show updated job
+      router.refresh();
     } catch (error) {
       console.error('Job update error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update job');
@@ -193,6 +198,7 @@ export function EditJobModal({
               onEdit={handleEdit}
               onSubmit={handlePreviewSubmit}
               isEditing={true}
+              isSubmitting={isSubmitting}
             />
           )
         )}

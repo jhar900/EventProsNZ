@@ -75,6 +75,7 @@ export function validateFileUpload(
     'application/pdf',
     'image/jpeg',
     'image/png',
+    'image/gif',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ],
@@ -102,6 +103,7 @@ export function validateFileUpload(
     'application/pdf': ['pdf'],
     'image/jpeg': ['jpg', 'jpeg'],
     'image/png': ['png'],
+    'image/gif': ['gif'],
     'application/msword': ['doc'],
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
       'docx',

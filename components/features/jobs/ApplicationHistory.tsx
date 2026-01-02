@@ -173,7 +173,7 @@ export function ApplicationHistory({
     const query = searchQuery.toLowerCase();
     return (
       application.job?.title?.toLowerCase().includes(query) ||
-      application.cover_letter?.toLowerCase().includes(query)
+      application.application_message?.toLowerCase().includes(query)
     );
   });
 
@@ -319,10 +319,10 @@ export function ApplicationHistory({
                     {/* Cover Letter Preview */}
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-gray-700">
-                        Cover Letter:
+                        Application Message:
                       </p>
                       <p className="text-gray-600 text-sm line-clamp-3">
-                        {application.cover_letter}
+                        {application.application_message}
                       </p>
                     </div>
 

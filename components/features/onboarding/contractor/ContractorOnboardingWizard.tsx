@@ -39,6 +39,7 @@ export function ContractorOnboardingWizard({
 }: ContractorOnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
   const router = useRouter();
   const { progress, status, loadStatus, submitForApproval } =
     useContractorOnboarding();
@@ -48,11 +49,22 @@ export function ContractorOnboardingWizard({
 
   // If onboarding is already submitted, redirect to dashboard
   // Users should have access to dashboard functions even if unverified
+  // Use router.replace to avoid adding to history and prevent redirect loops
   useEffect(() => {
-    if (status && status.is_submitted) {
-      router.push('/dashboard');
+    if (status && status.is_submitted && !hasRedirected) {
+      // Only redirect if we're actually on the onboarding page
+      // This prevents redirect loops if the user navigates away
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/onboarding')) {
+        setHasRedirected(true);
+        // Small delay to prevent rapid redirects during status updates
+        const timeoutId = setTimeout(() => {
+          router.replace('/dashboard');
+        }, 100);
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [status, router]);
+  }, [status, router, hasRedirected]);
 
   const handleStepComplete = async (step: number) => {
     // Reload status after step completion with a small delay to ensure API has updated

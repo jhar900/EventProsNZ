@@ -5,17 +5,17 @@ import { sanitizeJobDescription } from '@/lib/security/sanitization';
 import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const jobService = new JobService();
 
 // Validation schemas
 const createJobApplicationSchema = z.object({
-  cover_letter: z
+  application_message: z
     .string()
-    .min(1, 'Cover letter is required')
-    .max(2000, 'Cover letter too long'),
+    .min(1, 'Application message is required')
+    .max(2000, 'Application message too long'),
   proposed_budget: z.number().min(0).optional(),
-  availability_start_date: z.string().optional(),
-  availability_end_date: z.string().optional(),
   attachments: z.array(z.string()).optional(),
 });
 
@@ -28,8 +28,10 @@ const getJobApplicationsSchema = z.object({
 // GET /api/jobs/[id]/applications - Get applications for a job
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  // Handle params being a Promise (Next.js 15)
+  const resolvedParams = params instanceof Promise ? await params : params;
   try {
     const supabase = createClient();
 
@@ -46,7 +48,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = resolvedParams;
 
     if (!id) {
       return NextResponse.json(
@@ -110,10 +112,22 @@ export async function GET(
 // POST /api/jobs/[id]/applications - Create a job application
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  console.log('[POST /api/jobs/[id]/applications] Route handler called');
+  console.log('[POST /api/jobs/[id]/applications] Request URL:', request.url);
+  console.log('[POST /api/jobs/[id]/applications] Params type:', typeof params);
+
   try {
+    // Handle params being a Promise (Next.js 15)
+    const resolvedParams = params instanceof Promise ? await params : params;
+    console.log(
+      '[POST /api/jobs/[id]/applications] Resolved params:',
+      resolvedParams
+    );
+
     const supabase = createClient();
+    console.log('[POST /api/jobs/[id]/applications] Supabase client created');
 
     // Get current user
     const {
@@ -138,21 +152,31 @@ export async function POST(
       return suspensionResponse;
     }
 
-    const { id } = params;
+    const { id } = resolvedParams;
+    console.log('[POST /api/jobs/[id]/applications] Job ID:', id);
 
     if (!id) {
+      console.error('[POST /api/jobs/[id]/applications] No job ID in params');
       return NextResponse.json(
-        { success: false, error: 'Job ID is required' },
+        { success: false, error: 'Job ID is required', params: resolvedParams },
         { status: 400 }
       );
     }
 
     // Parse request body
+    console.log('[POST /api/jobs/[id]/applications] Parsing request body...');
     const body = await request.json();
+    console.log('[POST /api/jobs/[id]/applications] Request body:', {
+      hasApplicationMessage: !!body.application_message,
+      hasProposedBudget: body.proposed_budget !== undefined,
+      attachmentsCount: body.attachments?.length || 0,
+    });
 
     // Sanitize user input
-    if (body.cover_letter) {
-      body.cover_letter = sanitizeJobDescription(body.cover_letter);
+    if (body.application_message) {
+      body.application_message = sanitizeJobDescription(
+        body.application_message
+      );
     }
 
     // Validate request body
@@ -172,6 +196,9 @@ export async function POST(
       );
     }
 
+    console.log(
+      '[POST /api/jobs/[id]/applications] Creating job application...'
+    );
     const application = await jobService.createJobApplication(
       {
         job_id: id,
@@ -180,13 +207,21 @@ export async function POST(
       user.id
     );
 
+    console.log(
+      '[POST /api/jobs/[id]/applications] Application created successfully:',
+      application.id
+    );
     return NextResponse.json({
       success: true,
       application,
       message: 'Job application submitted successfully',
     });
   } catch (error) {
-    console.error('POST /api/jobs/[id]/applications error:', error);
+    console.error('[POST /api/jobs/[id]/applications] Error:', error);
+    console.error(
+      '[POST /api/jobs/[id]/applications] Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
       {
         success: false,
@@ -194,6 +229,7 @@ export async function POST(
           error instanceof Error
             ? error.message
             : 'Failed to create job application',
+        details: error instanceof Error ? error.stack : String(error),
       },
       { status: 500 }
     );

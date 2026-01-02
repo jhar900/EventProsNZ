@@ -22,6 +22,7 @@ interface JobPreviewProps {
   onEdit?: () => void;
   onSubmit?: () => void;
   isEditing?: boolean;
+  isSubmitting?: boolean;
 }
 
 export function JobPreview({
@@ -29,6 +30,7 @@ export function JobPreview({
   onEdit,
   onSubmit,
   isEditing = false,
+  isSubmitting = false,
 }: JobPreviewProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not specified';
@@ -222,10 +224,22 @@ export function JobPreview({
                 Back to Edit
               </Button>
               <Button
-                onClick={onSubmit}
-                className="bg-green-600 hover:bg-green-700"
+                type="button"
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onSubmit && !isSubmitting) {
+                    onSubmit();
+                  }
+                }}
+                disabled={isSubmitting}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isEditing ? 'Update Job Posting' : 'Post Job'}
+                {isSubmitting
+                  ? 'Updating...'
+                  : isEditing
+                    ? 'Update Job Posting'
+                    : 'Post Job'}
               </Button>
             </div>
           )}

@@ -27,6 +27,7 @@ import {
   UserCheck,
   Mail,
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -451,6 +452,53 @@ export default function DashboardLayout({
               })}
             </ul>
           </nav>
+
+          {/* User Details Section */}
+          {user && (
+            <div className="p-4 border-gray-200">
+              <div className="flex items-center space-x-3 mb-0">
+                {/* Avatar */}
+                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  {user.profile?.avatar_url ? (
+                    <Image
+                      src={user.profile.avatar_url}
+                      alt={user.profile.first_name || user.email || 'User'}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-400 to-orange-600 text-white font-semibold text-sm">
+                      {user.profile?.first_name?.[0]?.toUpperCase() ||
+                        user.profile?.last_name?.[0]?.toUpperCase() ||
+                        user.email?.[0]?.toUpperCase() ||
+                        'U'}
+                    </div>
+                  )}
+                </div>
+
+                {/* User Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.profile?.first_name && user.profile?.last_name
+                      ? `${user.profile.first_name} ${user.profile.last_name}`
+                      : user.profile?.first_name ||
+                        user.email?.split('@')[0] ||
+                        'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate capitalize">
+                    {user.role === 'event_manager'
+                      ? 'Event Manager'
+                      : user.role === 'contractor'
+                        ? 'Contractor'
+                        : user.role === 'admin'
+                          ? 'Administrator'
+                          : user.role}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Logout Button */}
           <div className="p-4 border-t border-gray-200">
