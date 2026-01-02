@@ -6,6 +6,7 @@ import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware'
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Validation schema (safe to define at module scope - no side effects)
 const createJobApplicationSchema = z.object({
@@ -18,6 +19,7 @@ const createJobApplicationSchema = z.object({
   attachments: z.array(z.string()).optional(),
 });
 
+// Named export for POST handler
 export async function POST(request: NextRequest) {
   console.log('[POST /api/user/submit-job-application] Route handler called');
   // Lazy initialization: create JobService inside handler to avoid module-level side effects
