@@ -6,7 +6,6 @@ import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware'
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
 
 // Validation schema (safe to define at module scope - no side effects)
 const createJobApplicationSchema = z.object({
