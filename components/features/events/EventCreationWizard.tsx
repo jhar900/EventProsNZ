@@ -104,8 +104,13 @@ export function EventCreationWizard({
         try {
           const result = await submitEvent(user?.id);
           if (result?.event?.id) {
-            onComplete?.(result.event.id);
-            router.push(`/events/${result.event.id}`);
+            // If onComplete is provided, call it (modal usage)
+            // Otherwise, navigate to the event page (page usage)
+            if (onComplete) {
+              onComplete(result.event.id);
+            } else {
+              router.push(`/events/${result.event.id}`);
+            }
           }
         } catch (error) {
           console.error('Error submitting event:', error);

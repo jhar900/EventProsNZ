@@ -32,6 +32,8 @@ interface JobListProps {
   onJobApply?: (job: Job) => void;
   onJobEdit?: (job: Job) => void;
   onJobViewApplications?: (job: Job) => void;
+  onJobViewApplications2?: (job: Job) => void;
+  onSimpleJobApply?: (job: Job) => void;
   blurContactInfo?: boolean;
 }
 
@@ -45,6 +47,8 @@ export function JobList({
   onJobApply,
   onJobEdit,
   onJobViewApplications,
+  onJobViewApplications2,
+  onSimpleJobApply,
   blurContactInfo,
 }: JobListProps) {
   const { user } = useAuth();
@@ -312,6 +316,8 @@ export function JobList({
                   onApply={() => onJobApply?.(job)}
                   onEdit={() => onJobEdit?.(job)}
                   onViewApplications={() => onJobViewApplications?.(job)}
+                  onViewApplications2={() => onJobViewApplications2?.(job)}
+                  onSimpleApply={() => onSimpleJobApply?.(job)}
                   blurContactInfo={shouldBlur}
                 />
               ))}

@@ -26,6 +26,7 @@ import LoginModal from '@/components/features/auth/LoginModal';
 import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
 import { EditJobModal } from '@/components/features/jobs/EditJobModal';
 import { InternalJobApplicationManager } from '@/components/features/jobs/InternalJobApplicationManager';
+import { SimpleJobApplicationModal } from '@/components/features/jobs/SimpleJobApplicationModal';
 import {
   Dialog,
   DialogContent,
@@ -53,6 +54,10 @@ export default function JobsPage() {
   const [viewingApplicationsJob, setViewingApplicationsJob] =
     useState<Job | null>(null);
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
+  const [showSimpleApplicationModal, setShowSimpleApplicationModal] =
+    useState(false);
+  const [selectedJobForSimpleModal, setSelectedJobForSimpleModal] =
+    useState<Job | null>(null);
 
   // Check onboarding status when user logs in
   useEffect(() => {
@@ -139,6 +144,20 @@ export default function JobsPage() {
   const handleJobViewApplications = (job: Job) => {
     setViewingApplicationsJob(job);
     setShowApplicationsDialog(true);
+  };
+
+  const handleSimpleJobApply = (job: Job) => {
+    console.log('[JobsPage] handleSimpleJobApply called with job:', job.id);
+    setSelectedJobForSimpleModal(job);
+    setShowSimpleApplicationModal(true);
+    console.log('[JobsPage] Modal state set to true');
+  };
+
+  const handleSimpleApplicationSuccess = (application: any) => {
+    // Don't close modal or reload - let the form show success message
+    console.log('Simple application submitted successfully:', application);
+    // Note: Modal will stay open to show success message
+    // User can close it manually via the Close button
   };
 
   const handleEditJobSuccess = () => {
@@ -250,6 +269,7 @@ export default function JobsPage() {
                       onJobApply={handleJobApply}
                       onJobEdit={handleJobEdit}
                       onJobViewApplications={handleJobViewApplications}
+                      onSimpleJobApply={handleSimpleJobApply}
                       showFilters={true}
                       showSearch={true}
                     />
@@ -391,6 +411,14 @@ export default function JobsPage() {
         onOpenChange={setShowEditJobModal}
         job={editingJob}
         onSuccess={handleEditJobSuccess}
+      />
+
+      {/* Simple Job Application Modal */}
+      <SimpleJobApplicationModal
+        open={showSimpleApplicationModal}
+        onOpenChange={setShowSimpleApplicationModal}
+        job={selectedJobForSimpleModal}
+        onSuccess={handleSimpleApplicationSuccess}
       />
 
       {/* View Applications Dialog */}

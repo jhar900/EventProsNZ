@@ -26,6 +26,8 @@ interface JobCardProps {
   onApply?: () => void;
   onEdit?: () => void;
   onViewApplications?: () => void;
+  onViewApplications2?: () => void;
+  onSimpleApply?: () => void;
   showActions?: boolean;
   className?: string;
   blurContactInfo?: boolean;
@@ -50,6 +52,8 @@ export function JobCard({
   onApply,
   onEdit,
   onViewApplications,
+  onViewApplications2,
+  onSimpleApply,
   showActions = true,
   className = '',
   blurContactInfo = false,
@@ -246,11 +250,19 @@ export function JobCard({
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <EyeIcon className="h-4 w-4" />
-              <span>{job.view_count || 0} views</span>
+              <span>
+                {job.view_count || 0}{' '}
+                {(job.view_count || 0) === 1 ? 'view' : 'views'}
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <UserIcon className="h-4 w-4" />
-              <span>{job.application_count || 0} applications</span>
+              <span>
+                {job.application_count || 0}{' '}
+                {(job.application_count || 0) === 1
+                  ? 'application'
+                  : 'applications'}
+              </span>
             </div>
           </div>
           <div className="flex items-center space-x-1">
@@ -258,7 +270,7 @@ export function JobCard({
             <span>
               {formatDistanceToNow(new Date(job.created_at), {
                 addSuffix: true,
-              })}
+              }).replace(/^about /, '~ ')}
             </span>
           </div>
         </div>
@@ -289,6 +301,19 @@ export function JobCard({
                 >
                   View Applications
                 </Button>
+                {onViewApplications2 && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onViewApplications2();
+                    }}
+                    className="flex-1"
+                  >
+                    Applications 2
+                  </Button>
+                )}
               </>
             ) : (
               <>
@@ -311,6 +336,24 @@ export function JobCard({
                 >
                   {isApplying ? 'Applying...' : 'Apply Now'}
                 </Button>
+                {onSimpleApply && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={e => {
+                      e.stopPropagation();
+                      console.log(
+                        '[JobCard] Quick Apply clicked for job:',
+                        job.id
+                      );
+                      onSimpleApply();
+                    }}
+                    disabled={job.status !== 'active'}
+                    className="flex-1"
+                  >
+                    Quick Apply
+                  </Button>
+                )}
               </>
             )}
           </div>

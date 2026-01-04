@@ -26,6 +26,12 @@ import {
   StarIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { JOB_SERVICE_CATEGORIES } from '@/types/jobs';
 
 interface ApplicationTemplate {
@@ -164,6 +170,32 @@ export function ApplicationTemplates({
           return;
         }
 
+        // Prepare request body - ensure all required fields are present
+        const requestBody: {
+          name: string;
+          cover_letter_template: string;
+          service_categories?: string[];
+          is_public: boolean;
+          description?: string;
+        } = {
+          name: formData.name.trim(),
+          cover_letter_template: formData.cover_letter_template.trim(),
+          is_public: formData.is_public || false,
+        };
+
+        // Only include optional fields if they have values
+        if (formData.service_categories.length > 0) {
+          requestBody.service_categories = formData.service_categories;
+        }
+        if (formData.description && formData.description.trim()) {
+          requestBody.description = formData.description.trim();
+        }
+
+        console.log(
+          '[ApplicationTemplates] Creating template with body:',
+          requestBody
+        );
+
         const response = await fetch('/api/applications/templates', {
           method: 'POST',
           headers: {
@@ -171,14 +203,52 @@ export function ApplicationTemplates({
             'x-user-id': user.id,
           },
           credentials: 'include',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(requestBody),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to create template');
+        // Read response body only once
+        let responseData: any = {};
+        try {
+          const text = await response.text();
+          responseData = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error(
+            '[ApplicationTemplates] Failed to parse response:',
+            parseError
+          );
+          responseData = {};
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+          console.error('[ApplicationTemplates] API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: responseData,
+          });
+
+          // Build detailed error message
+          let errorMessage = `Failed to create template (${response.status})`;
+
+          if (responseData.errors?.length > 0) {
+            errorMessage = responseData.errors
+              .map((e: any) => `${e.field}: ${e.message}`)
+              .join(', ');
+          } else if (responseData.error) {
+            errorMessage = responseData.error;
+            if (responseData.errorCode) {
+              errorMessage += ` (code: ${responseData.errorCode})`;
+            }
+            if (responseData.errorDetails) {
+              errorMessage += ` - ${responseData.errorDetails}`;
+            }
+          } else if (responseData.message) {
+            errorMessage = responseData.message;
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const data = responseData;
         setTemplates(prev => [data.template, ...prev]);
         setShowCreateForm(false);
         resetForm();
@@ -203,6 +273,32 @@ export function ApplicationTemplates({
           return;
         }
 
+        // Prepare request body - ensure all required fields are present
+        const requestBody: {
+          name: string;
+          cover_letter_template: string;
+          service_categories?: string[];
+          is_public: boolean;
+          description?: string;
+        } = {
+          name: formData.name.trim(),
+          cover_letter_template: formData.cover_letter_template.trim(),
+          is_public: formData.is_public || false,
+        };
+
+        // Only include optional fields if they have values
+        if (formData.service_categories.length > 0) {
+          requestBody.service_categories = formData.service_categories;
+        }
+        if (formData.description && formData.description.trim()) {
+          requestBody.description = formData.description.trim();
+        }
+
+        console.log(
+          '[ApplicationTemplates] Updating template with body:',
+          requestBody
+        );
+
         const response = await fetch(
           `/api/applications/templates/${editingTemplate.id}`,
           {
@@ -212,19 +308,58 @@ export function ApplicationTemplates({
               'x-user-id': user.id,
             },
             credentials: 'include',
-            body: JSON.stringify(formData),
+            body: JSON.stringify(requestBody),
           }
         );
 
-        if (!response.ok) {
-          throw new Error('Failed to update template');
+        // Read response body only once
+        let responseData: any = {};
+        try {
+          const text = await response.text();
+          responseData = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error(
+            '[ApplicationTemplates] Failed to parse response:',
+            parseError
+          );
+          responseData = {};
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+          console.error('[ApplicationTemplates] API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: responseData,
+          });
+
+          // Build detailed error message
+          let errorMessage = `Failed to update template (${response.status})`;
+
+          if (responseData.errors?.length > 0) {
+            errorMessage = responseData.errors
+              .map((e: any) => `${e.field}: ${e.message}`)
+              .join(', ');
+          } else if (responseData.error) {
+            errorMessage = responseData.error;
+            if (responseData.errorCode) {
+              errorMessage += ` (code: ${responseData.errorCode})`;
+            }
+            if (responseData.errorDetails) {
+              errorMessage += ` - ${responseData.errorDetails}`;
+            }
+          } else if (responseData.message) {
+            errorMessage = responseData.message;
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const data = responseData;
         setTemplates(prev =>
           prev.map(t => (t.id === editingTemplate.id ? data.template : t))
         );
         setEditingTemplate(null);
+        setShowCreateForm(false);
         resetForm();
       }
     } catch (error) {
@@ -240,15 +375,56 @@ export function ApplicationTemplates({
       if (onTemplateDelete) {
         onTemplateDelete(templateId);
       } else {
+        if (!user?.id) {
+          setError('You must be logged in to delete templates');
+          return;
+        }
+
         const response = await fetch(
           `/api/applications/templates/${templateId}`,
           {
             method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user.id,
+            },
+            credentials: 'include',
           }
         );
 
+        // Read response body only once
+        let responseData: any = {};
+        try {
+          const text = await response.text();
+          responseData = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error(
+            '[ApplicationTemplates] Failed to parse response:',
+            parseError
+          );
+          responseData = {};
+        }
+
         if (!response.ok) {
-          throw new Error('Failed to delete template');
+          console.error('[ApplicationTemplates] API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: responseData,
+          });
+
+          // Build detailed error message
+          let errorMessage = `Failed to delete template (${response.status})`;
+
+          if (responseData.error) {
+            errorMessage = responseData.error;
+            if (responseData.errorCode) {
+              errorMessage += ` (code: ${responseData.errorCode})`;
+            }
+          } else if (responseData.message) {
+            errorMessage = responseData.message;
+          }
+
+          throw new Error(errorMessage);
         }
 
         setTemplates(prev => prev.filter(t => t.id !== templateId));
@@ -377,54 +553,41 @@ export function ApplicationTemplates({
         </div>
       </Card>
 
-      {/* Create/Edit Form */}
-      {showCreateForm && (
-        <Card className="p-6">
+      {/* Create/Edit Form Modal */}
+      <Dialog
+        open={showCreateForm}
+        onOpenChange={open => {
+          if (!open) {
+            cancelEditing();
+          } else {
+            setShowCreateForm(true);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTemplate ? 'Edit Template' : 'Create New Template'}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {editingTemplate ? 'Edit Template' : 'Create New Template'}
-              </h3>
-              <Button variant="ghost" onClick={cancelEditing}>
-                Cancel
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name">Template Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="Enter template name"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Brief description of this template"
-                />
-              </div>
+              <Label htmlFor="name">Template Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Enter template name"
+              />
             </div>
 
             {/* Cover Letter Template */}
             <div className="space-y-2">
               <Label htmlFor="cover_letter_template">
-                Cover Letter Template *
+                Cover Letter Template * (minimum 50 characters)
               </Label>
               <Textarea
                 id="cover_letter_template"
@@ -438,67 +601,20 @@ export function ApplicationTemplates({
                 placeholder="Enter your cover letter template. Use placeholders like {job_title}, {company_name}, etc."
                 className="min-h-[200px]"
               />
-              <p className="text-sm text-gray-500">
-                Use placeholders like {'{job_title}'}, {'{company_name}'},{' '}
-                {'{your_name}'} for dynamic content
-              </p>
-            </div>
-
-            {/* Service Categories */}
-            <div className="space-y-2">
-              <Label>Service Categories</Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {Object.entries(JOB_SERVICE_CATEGORIES).map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`category-${key}`}
-                      checked={formData.service_categories.includes(value)}
-                      onCheckedChange={checked => {
-                        if (checked) {
-                          setFormData(prev => ({
-                            ...prev,
-                            service_categories: [
-                              ...prev.service_categories,
-                              value,
-                            ],
-                          }));
-                        } else {
-                          setFormData(prev => ({
-                            ...prev,
-                            service_categories: prev.service_categories.filter(
-                              cat => cat !== value
-                            ),
-                          }));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`category-${key}`} className="text-sm">
-                      {value.replace('_', ' ').toUpperCase()}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Public Template */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_public"
-                checked={formData.is_public}
-                onCheckedChange={checked =>
-                  setFormData(prev => ({
-                    ...prev,
-                    is_public: checked as boolean,
-                  }))
-                }
-              />
-              <Label htmlFor="is_public" className="text-sm">
-                Make this template public for other users
-              </Label>
+              {formData.cover_letter_template && (
+                <p className="text-sm text-gray-500">
+                  {formData.cover_letter_template.trim().length}/50 characters
+                  {formData.cover_letter_template.trim().length < 50 && (
+                    <span className="text-red-600 ml-2">
+                      (minimum 50 characters required)
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end space-x-2">
+            <div className="flex items-center justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={cancelEditing}>
                 Cancel
               </Button>
@@ -506,14 +622,18 @@ export function ApplicationTemplates({
                 onClick={
                   editingTemplate ? handleUpdateTemplate : handleCreateTemplate
                 }
-                disabled={!formData.name || !formData.cover_letter_template}
+                disabled={
+                  !formData.name ||
+                  !formData.cover_letter_template ||
+                  formData.cover_letter_template.trim().length < 50
+                }
               >
                 {editingTemplate ? 'Update Template' : 'Create Template'}
               </Button>
             </div>
           </div>
-        </Card>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Loading State */}
       {isLoading && (

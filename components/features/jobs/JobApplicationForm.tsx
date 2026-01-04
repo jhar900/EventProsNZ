@@ -30,13 +30,11 @@ const jobApplicationSchema = z.object({
   proposed_budget: z
     .number()
     .min(0, 'Proposed budget must be positive')
-    .optional()
-    .or(z.undefined()),
+    .optional(),
   attachments: z
     .array(z.string())
     .max(3, 'Maximum 3 attachments allowed')
-    .optional()
-    .or(z.undefined()),
+    .optional(),
 });
 
 interface JobApplicationFormProps {
@@ -80,7 +78,7 @@ export function JobApplicationForm({
     setValue,
     watch,
   } = useForm<JobApplicationFormData>({
-    resolver: zodResolver(jobApplicationSchema),
+    resolver: zodResolver(jobApplicationSchema) as any,
     defaultValues: {
       application_message: initialData?.application_message || '',
       ...(initialData?.proposed_budget !== undefined && {
@@ -141,14 +139,14 @@ export function JobApplicationForm({
 
       console.log(
         '[JobApplicationForm] Request URL:',
-        '/api/user/submit-job-application'
+        '/api/user/create-job-application'
       );
       console.log('[JobApplicationForm] Request body:', {
         ...requestBody,
         job_id: jobId,
       });
 
-      const response = await fetch('/api/user/submit-job-application', {
+      const response = await fetch('/api/user/create-job-application', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

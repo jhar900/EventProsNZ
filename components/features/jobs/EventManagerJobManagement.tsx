@@ -47,6 +47,7 @@ import { JobWithDetails, JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
 import { InternalJobApplicationManager } from './InternalJobApplicationManager';
 import { CreateJobModal } from './CreateJobModal';
+import { ApplicationsListModal } from './ApplicationsListModal';
 
 interface EventManagerJobManagementProps {
   userId: string;
@@ -88,6 +89,9 @@ export function EventManagerJobManagement({
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const [showApplications2Modal, setShowApplications2Modal] = useState(false);
+  const [selectedJobForApplications2, setSelectedJobForApplications2] =
+    useState<JobWithDetails | null>(null);
 
   const fetchUserJobs = useCallback(async () => {
     try {
@@ -125,16 +129,88 @@ export function EventManagerJobManagement({
   const fetchJobApplications = async (jobId: string) => {
     try {
       setLoadingApplications(true);
-      const response = await fetch(`/api/jobs/${jobId}/applications`);
-      const result = await response.json();
+      setError(null);
+      const url = `/api/jobs/${jobId}/applications`;
+      console.log(
+        '[EventManagerJobManagement] Fetching applications from:',
+        url
+      );
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch applications');
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      console.log(
+        '[EventManagerJobManagement] Response status:',
+        response.status,
+        response.statusText
+      );
+      console.log('[EventManagerJobManagement] Response URL:', response.url);
+
+      // Read response body only once
+      let result: any = {};
+      try {
+        const text = await response.text();
+        console.log(
+          '[EventManagerJobManagement] Response text (first 200 chars):',
+          text.substring(0, 200)
+        );
+        result = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error(
+          '[EventManagerJobManagement] Failed to parse response:',
+          parseError
+        );
+        if (response.status === 404) {
+          throw new Error(
+            'API route not found. Please restart the development server.'
+          );
+        }
+        throw new Error('Failed to parse server response');
       }
 
-      setSelectedJobApplications(result.applications || []);
+      if (!response.ok) {
+        console.error(
+          '[EventManagerJobManagement] API error response:',
+          result
+        );
+        throw new Error(
+          result.error ||
+            result.message ||
+            `Failed to fetch applications (${response.status})`
+        );
+      }
+
+      // Handle both success: true and direct applications array
+      if (result.success === false) {
+        console.error(
+          '[EventManagerJobManagement] API returned success: false:',
+          result
+        );
+        setSelectedJobApplications([]);
+        return;
+      }
+
+      // The API returns { success: true, applications: [...], ... }
+      const applications = result.applications || [];
+      console.log(
+        '[EventManagerJobManagement] Fetched applications:',
+        applications.length
+      );
+      setSelectedJobApplications(applications);
     } catch (error) {
-      console.error('Fetch job applications error:', error);
+      console.error(
+        '[EventManagerJobManagement] Fetch job applications error:',
+        error
+      );
+      setSelectedJobApplications([]);
+      setError(
+        error instanceof Error ? error.message : 'Failed to fetch applications'
+      );
     } finally {
       setLoadingApplications(false);
     }
@@ -144,6 +220,11 @@ export function EventManagerJobManagement({
     setSelectedJob(job);
     setShowApplicationsDialog(true);
     await fetchJobApplications(job.id);
+  };
+
+  const handleViewApplications2 = (job: JobWithDetails) => {
+    setSelectedJobForApplications2(job);
+    setShowApplications2Modal(true);
   };
 
   const handleApplicationUpdate = async (
@@ -520,6 +601,14 @@ export function EventManagerJobManagement({
                             Applications ({job.application_count || 0})
                           </Button>
                           <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleViewApplications2(job)}
+                          >
+                            <Users className="h-4 w-4 mr-1" />
+                            Applications 2
+                          </Button>
+                          <Button
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/jobs/${job.id}`)}
@@ -602,6 +691,7 @@ export function EventManagerJobManagement({
           </DialogHeader>
           {selectedJob && (
             <InternalJobApplicationManager
+              key={selectedJob.id}
               jobId={selectedJob.id}
               applications={selectedJobApplications}
               onApplicationUpdate={handleApplicationUpdate}
@@ -620,6 +710,20 @@ export function EventManagerJobManagement({
           fetchUserJobs();
         }}
       />
+
+      {/* Applications 2 Modal */}
+      {selectedJobForApplications2 && (
+        <ApplicationsListModal
+          jobId={selectedJobForApplications2.id}
+          jobTitle={selectedJobForApplications2.title}
+          open={showApplications2Modal}
+          onClose={() => {
+            setShowApplications2Modal(false);
+            setSelectedJobForApplications2(null);
+          }}
+          userId={userId}
+        />
+      )}
     </div>
   );
 }

@@ -210,21 +210,42 @@ export const useEventCreationStore = create<EventCreationState>()(
           if (userId) {
             headers['x-user-id'] = userId;
           }
+          // Clean up eventData before sending - remove undefined values and ensure proper structure
+          const cleanedEventData = {
+            ...eventData,
+            location:
+              eventData.location &&
+              (eventData.location.address || eventData.location.coordinates)
+                ? {
+                    address: eventData.location.address || null,
+                    coordinates: eventData.location.coordinates || null,
+                    placeId: eventData.location.placeId || null,
+                    city: eventData.location.city || null,
+                    region: eventData.location.region || null,
+                    country: eventData.location.country || null,
+                  }
+                : null,
+            serviceRequirements: eventData.serviceRequirements || null,
+            budgetPlan: eventData.budgetPlan || null,
+          };
+
           const response = await fetch('/api/events/drafts', {
             method: 'POST',
             headers,
             credentials: 'include',
             body: JSON.stringify({
-              eventData,
+              eventData: cleanedEventData,
               stepNumber: currentStep,
             }),
           });
 
           let data;
           try {
-            data = await response.json();
+            const text = await response.text();
+            data = text ? JSON.parse(text) : {};
           } catch (parseError) {
             console.error('Failed to parse draft response:', parseError);
+            console.error('Response status:', response.status);
             // Don't throw for draft saves - they're not critical
             return;
           }
@@ -232,8 +253,14 @@ export const useEventCreationStore = create<EventCreationState>()(
           if (!response.ok || !data.success) {
             console.warn(
               'Failed to save draft:',
-              data.message || response.statusText
+              data.message || data.error || response.statusText
             );
+            if (data.errors) {
+              console.warn('Validation errors:', data.errors);
+            }
+            if (data.details) {
+              console.warn('Error details:', data.details);
+            }
           }
         } catch (error) {
         } finally {

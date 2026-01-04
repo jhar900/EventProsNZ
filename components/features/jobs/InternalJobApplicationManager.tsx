@@ -90,26 +90,80 @@ export function InternalJobApplicationManager({
 
   // Fetch applications if not provided as prop
   useEffect(() => {
-    if (!propApplications && jobId) {
-      fetchApplications();
-    } else if (propApplications) {
+    console.log(
+      '[InternalJobApplicationManager] useEffect - jobId:',
+      jobId,
+      'propApplications:',
+      propApplications?.length || 0
+    );
+
+    if (propApplications !== undefined) {
+      // Always use prop applications if provided (even if empty array)
+      console.log(
+        '[InternalJobApplicationManager] Using prop applications:',
+        propApplications.length
+      );
       setApplications(propApplications);
+    } else if (jobId) {
+      // Only fetch if no prop applications provided
+      console.log(
+        '[InternalJobApplicationManager] No prop applications, fetching...'
+      );
+      fetchApplications();
     }
   }, [jobId, propApplications]);
 
   const fetchApplications = async () => {
     try {
       setIsLoadingApplications(true);
-      const response = await fetch(`/api/jobs/${jobId}/applications`);
+      console.log(
+        '[InternalJobApplicationManager] Fetching applications for job:',
+        jobId
+      );
+
+      const response = await fetch(`/api/jobs/${jobId}/applications`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
       const result = await response.json();
+      console.log('[InternalJobApplicationManager] API response:', {
+        ok: response.ok,
+        status: response.status,
+        success: result.success,
+        applicationsCount: result.applications?.length || 0,
+      });
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch applications');
+        console.error('[InternalJobApplicationManager] API error:', result);
+        throw new Error(
+          result.error || result.message || 'Failed to fetch applications'
+        );
+      }
+
+      // Handle both success: true and direct applications array
+      if (result.success === false) {
+        console.error(
+          '[InternalJobApplicationManager] API returned success: false:',
+          result
+        );
+        setApplications([]);
+        return;
       }
 
       setApplications(result.applications || []);
+      console.log(
+        '[InternalJobApplicationManager] Set applications:',
+        result.applications?.length || 0
+      );
     } catch (error) {
-      console.error('Fetch applications error:', error);
+      console.error(
+        '[InternalJobApplicationManager] Fetch applications error:',
+        error
+      );
       setApplications([]);
     } finally {
       setIsLoadingApplications(false);
@@ -202,8 +256,20 @@ export function InternalJobApplicationManager({
           throw new Error(result.error || 'Failed to update application');
         }
 
-        // Refresh applications
-        await fetchApplications();
+        // Refresh applications - use prop callback if available, otherwise fetch
+        if (propOnApplicationUpdate) {
+          // If using prop callback, parent should handle refresh
+          // But we can also refresh locally
+          if (propApplications) {
+            // If we have prop applications, we should let parent refresh
+            // For now, fetch locally as fallback
+            await fetchApplications();
+          } else {
+            await fetchApplications();
+          }
+        } else {
+          await fetchApplications();
+        }
       }
     } catch (error) {
       // Log error for debugging

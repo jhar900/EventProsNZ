@@ -40,6 +40,7 @@ import { MilestoneTracker } from './MilestoneTracker';
 import { FeedbackCollection } from './FeedbackCollection';
 import { NotificationCenter } from './NotificationCenter';
 import { EventTimeline } from './EventTimeline';
+import { CreateEventModal } from '../CreateEventModal';
 import { useEventManagement } from '@/hooks/useEventManagement';
 import { Event, EVENT_STATUS } from '@/types/events';
 
@@ -54,6 +55,7 @@ export function EventManagement({
 }: EventManagementProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   const {
     events,
@@ -144,11 +146,13 @@ export function EventManagement({
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href="/events/create">
-              <Plus className="h-4 w-4 mr-2" />
-              New Event
-            </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreateEventModal(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Event
           </Button>
           {selectedEvent && (
             <Button variant="outline" size="sm" asChild>
@@ -183,25 +187,29 @@ export function EventManagement({
                   Event Date
                 </div>
                 <p className="font-medium">
-                  {new Date(selectedEvent.event_date).toLocaleDateString(
-                    'en-NZ',
-                    {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    }
-                  )}
+                  {selectedEvent.event_date
+                    ? new Date(selectedEvent.event_date).toLocaleDateString(
+                        'en-NZ',
+                        {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        }
+                      )
+                    : 'Not set'}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(selectedEvent.event_date).toLocaleTimeString(
-                    'en-NZ',
-                    {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }
-                  )}
-                </p>
+                {selectedEvent.event_date && (
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(selectedEvent.event_date).toLocaleTimeString(
+                      'en-NZ',
+                      {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }
+                    )}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -308,10 +316,19 @@ export function EventManagement({
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <h3 className="font-semibold">{event.title}</h3>
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{event.title}</h3>
+                          {event.status === 'draft' && (
+                            <Badge variant="outline" className="text-xs">
+                              Draft
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(event.event_date).toLocaleDateString()}
+                          {event.event_date
+                            ? new Date(event.event_date).toLocaleDateString()
+                            : 'Date not set'}
                         </p>
                         <Badge className={getStatusColor(event.status)}>
                           {getStatusIcon(event.status)}
@@ -409,6 +426,17 @@ export function EventManagement({
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        open={showCreateEventModal}
+        onOpenChange={setShowCreateEventModal}
+        onSuccess={eventId => {
+          // Refresh events list after successful creation
+          loadEvents();
+          setShowCreateEventModal(false);
+        }}
+      />
     </div>
   );
 }

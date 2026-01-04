@@ -13,7 +13,7 @@ import { JobPreview } from '@/components/features/jobs/JobPreview';
 import { JobFormData } from '@/types/jobs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, X } from 'lucide-react';
+import { Eye, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CreateJobModalProps {
@@ -114,19 +114,9 @@ export function CreateJobModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-gray-900">
-              {step === 'form' ? 'Create Job Posting' : 'Preview Job Posting'}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleOpenChange(false)}
-              className="h-6 w-6 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-2xl font-bold text-gray-900">
+            {step === 'form' ? 'Create Job Posting' : 'Preview Job Posting'}
+          </DialogTitle>
           <p className="text-gray-600 mt-2">
             {step === 'form'
               ? 'Fill out the form below to create your job posting'

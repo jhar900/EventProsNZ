@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { JobService } from '@/lib/jobs/job-service';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
 import { sanitizeJobDescription } from '@/lib/security/sanitization';
 import { checkSuspensionAndBlock } from '@/lib/middleware/suspension-middleware';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-const jobService = new JobService();
+// Lazy initialization to avoid top-level side effects
+let jobService: JobService | null = null;
+const getJobService = () => {
+  if (!jobService) {
+    jobService = new JobService();
+  }
+  return jobService;
+};
 
 // Validation schemas
 const createJobApplicationSchema = z.object({
@@ -30,82 +37,24 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  // Handle params being a Promise (Next.js 15)
-  const resolvedParams = params instanceof Promise ? await params : params;
+  // CRITICAL: This log should appear in terminal if route is working
+  console.error('=== GET /api/jobs/[id]/applications ROUTE HANDLER CALLED ===');
+  console.error('Request URL:', request.url);
+
+  // Return immediately to test if route is registered
   try {
-    const supabase = createClient();
+    const resolvedParams = params instanceof Promise ? await params : params;
+    console.error('Resolved params:', resolvedParams);
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { id } = resolvedParams;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'Job ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Parse and validate query parameters
-    const { searchParams } = new URL(request.url);
-    const queryParams = Object.fromEntries(searchParams.entries());
-
-    // Convert string parameters to appropriate types
-    const processedParams = {
-      ...queryParams,
-      page: queryParams.page ? parseInt(queryParams.page) : 1,
-      limit: queryParams.limit ? parseInt(queryParams.limit) : 20,
-    };
-
-    const validationResult =
-      getJobApplicationsSchema.safeParse(processedParams);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid query parameters',
-          errors:
-            validationResult.error.errors?.map(err => ({
-              field: err.path.join('.'),
-              message: err.message,
-            })) || [],
-        },
-        { status: 400 }
-      );
-    }
-
-    const result = await jobService.getJobApplications({
-      job_id: id,
-      ...validationResult.data,
-    });
-
+    // Return a simple test response first
     return NextResponse.json({
       success: true,
-      ...result,
+      message: 'Route is working',
+      jobId: resolvedParams.id,
     });
   } catch (error) {
-    console.error('GET /api/jobs/[id]/applications error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch job applications',
-      },
-      { status: 500 }
-    );
+    console.error('Error in GET handler:', error);
+    return NextResponse.json({ error: 'Route error' }, { status: 500 });
   }
 }
 
@@ -126,7 +75,7 @@ export async function POST(
       resolvedParams
     );
 
-    const supabase = createClient();
+    const { supabase } = createClient(request);
     console.log('[POST /api/jobs/[id]/applications] Supabase client created');
 
     // Get current user
@@ -199,7 +148,7 @@ export async function POST(
     console.log(
       '[POST /api/jobs/[id]/applications] Creating job application...'
     );
-    const application = await jobService.createJobApplication(
+    const application = await getJobService().createJobApplication(
       {
         job_id: id,
         ...validationResult.data,

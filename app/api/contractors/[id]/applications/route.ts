@@ -54,23 +54,95 @@ export async function GET(
       );
     }
 
-    // Verify the contractor is requesting their own applications or user is admin
-    if (id !== userId) {
-      // Check if user is admin
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', userId)
+    // The 'id' param could be either user.id or business_profiles.id
+    // We need to determine which one it is and get the business_profiles.id
+    let contractorId: string;
+
+    // First, check if it's a business_profiles.id (UUID format)
+    // If not, assume it's a user.id and look up the business profile
+    const { data: businessProfile, error: businessProfileError } =
+      await supabase
+        .from('business_profiles')
+        .select('id, user_id')
+        .eq('id', id)
         .single();
 
-      if (userData?.role !== 'admin') {
+    if (businessProfile && !businessProfileError) {
+      // The id is already a business_profiles.id
+      contractorId = businessProfile.id;
+
+      // Verify the user is requesting their own applications or is admin
+      if (businessProfile.user_id !== userId) {
+        // Check if user is admin
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (userData?.role !== 'admin') {
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Unauthorized to view these applications',
+            },
+            { status: 403 }
+          );
+        }
+      }
+    } else {
+      // The id is likely a user.id, so look up the business profile
+      console.log(
+        '[GET /api/contractors/[id]/applications] Looking up business profile for user_id:',
+        id
+      );
+      const { data: userBusinessProfile, error: userBusinessProfileError } =
+        await supabase
+          .from('business_profiles')
+          .select('id, user_id')
+          .eq('user_id', id)
+          .single();
+
+      if (userBusinessProfileError || !userBusinessProfile) {
+        console.error(
+          '[GET /api/contractors/[id]/applications] Business profile lookup error:',
+          userBusinessProfileError
+        );
         return NextResponse.json(
           {
             success: false,
-            message: 'Unauthorized to view these applications',
+            message: 'Business profile not found for this user',
           },
-          { status: 403 }
+          { status: 404 }
         );
+      }
+
+      contractorId = userBusinessProfile.id;
+      console.log(
+        '[GET /api/contractors/[id]/applications] Found business profile ID:',
+        contractorId,
+        'for user_id:',
+        id
+      );
+
+      // Verify the user is requesting their own applications or is admin
+      if (userBusinessProfile.user_id !== userId) {
+        // Check if user is admin
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (userData?.role !== 'admin') {
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Unauthorized to view these applications',
+            },
+            { status: 403 }
+          );
+        }
       }
     }
 
@@ -84,10 +156,20 @@ export async function GET(
       limit: params_data.limit ? parseInt(params_data.limit) : 20,
     });
 
+    console.log(
+      '[GET /api/contractors/[id]/applications] Fetching applications with contractor_id:',
+      contractorId
+    );
     const result = await jobService.getJobApplications({
-      contractor_id: id,
+      contractor_id: contractorId, // Use business_profiles.id
       ...parsedParams,
     });
+
+    console.log(
+      '[GET /api/contractors/[id]/applications] Found',
+      result.applications?.length || 0,
+      'applications'
+    );
 
     return NextResponse.json({
       success: true,

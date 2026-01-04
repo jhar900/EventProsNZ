@@ -43,51 +43,53 @@ export function EventReviewStep() {
   const [matches, setMatches] = useState<ContractorMatch[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
 
-  // Simulate contractor matching (in real app, this would be an API call)
+  // Fetch contractor matches from API
   useEffect(() => {
     if (serviceRequirements.length > 0) {
       setIsLoadingMatches(true);
 
-      // Simulate API delay
-      setTimeout(() => {
-        const mockMatches: ContractorMatch[] = [
-          {
-            contractorId: '1',
-            contractorName: 'Auckland Catering Co.',
-            serviceCategory: 'catering',
-            matchScore: 0.95,
-            estimatedPrice: { min: 2000, max: 3000 },
-            availability: true,
-            rating: 4.8,
-            reviewCount: 127,
-          },
-          {
-            contractorId: '2',
-            contractorName: 'Perfect Moments Photography',
-            serviceCategory: 'photography',
-            matchScore: 0.92,
-            estimatedPrice: { min: 1500, max: 2500 },
-            availability: true,
-            rating: 4.9,
-            reviewCount: 89,
-          },
-          {
-            contractorId: '3',
-            contractorName: 'Sound & Vision Events',
-            serviceCategory: 'music',
-            matchScore: 0.88,
-            estimatedPrice: { min: 800, max: 1200 },
-            availability: true,
-            rating: 4.7,
-            reviewCount: 156,
-          },
-        ];
+      const fetchMatches = async () => {
+        try {
+          const response = await fetch('/api/events/match-contractors', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              serviceRequirements: serviceRequirements.map(req => ({
+                category: req.category,
+                priority: req.priority,
+                estimatedBudget: req.estimatedBudget,
+              })),
+              location: eventData.location?.address,
+              eventDate: eventData.eventDate,
+            }),
+          });
 
-        setMatches(mockMatches);
-        setIsLoadingMatches(false);
-      }, 2000);
+          if (!response.ok) {
+            throw new Error('Failed to fetch contractor matches');
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            setMatches(data.matches || []);
+          } else {
+            console.error('Error fetching matches:', data.error);
+            setMatches([]);
+          }
+        } catch (error) {
+          console.error('Error fetching contractor matches:', error);
+          setMatches([]);
+        } finally {
+          setIsLoadingMatches(false);
+        }
+      };
+
+      fetchMatches();
+    } else {
+      setMatches([]);
     }
-  }, [serviceRequirements]);
+  }, [serviceRequirements, eventData.location, eventData.eventDate]);
 
   const formatDate = (dateString: string) => {
     try {

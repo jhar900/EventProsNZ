@@ -464,11 +464,18 @@ export class JobService {
 
       const offset = (page - 1) * limit;
 
-      // Fetch applications without joins to avoid relationship issues
-      // We'll enrich the data with job/contractor info separately if needed
-      let query = this.supabase
-        .from('job_applications')
-        .select('*', { count: 'exact' });
+      // Fetch applications with job details
+      let query = this.supabase.from('job_applications').select(
+        `
+          *,
+          job:jobs!job_applications_job_id_fkey(
+            id,
+            title,
+            status
+          )
+        `,
+        { count: 'exact' }
+      );
 
       // Apply filters
       if (job_id) {

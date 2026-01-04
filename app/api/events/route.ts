@@ -527,9 +527,11 @@ export async function GET(request: NextRequest) {
       query = query.eq('user_id', userId);
     }
 
+    // If status filter is provided, filter by it; otherwise show all events including drafts
     if (status) {
       query = query.eq('status', status);
     }
+    // If no status filter, show all events (including drafts) - no additional filter needed
 
     if (eventType) {
       query = query.eq('event_type', eventType);

@@ -5,9 +5,9 @@ import { z } from 'zod';
 // Validation schemas
 const createTemplateSchema = z.object({
   name: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
+  description: z.string().max(500).optional().nullable(),
   cover_letter_template: z.string().min(50).max(2000),
-  service_categories: z.array(z.string()).optional(),
+  service_categories: z.array(z.string()).optional().default([]),
   is_public: z.boolean().default(false),
 });
 
@@ -80,9 +80,9 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_public', parsedParams.is_public);
     }
 
-    // If user is authenticated, show their templates and public templates
+    // If user is authenticated, show only their templates
     if (user?.id) {
-      query = query.or(`created_by_user_id.eq.${user.id},is_public.eq.true`);
+      query = query.eq('created_by_user_id', user.id);
     } else {
       // Only show public templates for unauthenticated users
       query = query.eq('is_public', true);
@@ -174,8 +174,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
+    console.log('[POST /api/applications/templates] Request body:', body);
+    console.log('[POST /api/applications/templates] User ID:', userId);
+
     const validationResult = createTemplateSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error(
+        '[POST /api/applications/templates] Validation error:',
+        validationResult.error
+      );
       return NextResponse.json(
         {
           success: false,
@@ -190,17 +197,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const insertData = {
+      ...validationResult.data,
+      created_by_user_id: userId,
+    };
+    console.log('[POST /api/applications/templates] Insert data:', insertData);
+
     const { data: template, error } = await supabase
       .from('application_templates')
-      .insert({
-        ...validationResult.data,
-        created_by_user_id: userId,
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (error) {
-      throw new Error(`Failed to create template: ${error.message}`);
+      console.error('[POST /api/applications/templates] Supabase error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        fullError: JSON.stringify(error, null, 2),
+      });
+
+      // Return more detailed error information
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to create template: ${error.message}`,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
