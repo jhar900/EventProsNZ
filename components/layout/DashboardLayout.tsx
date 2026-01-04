@@ -184,7 +184,6 @@ export default function DashboardLayout({
         return [
           ...baseItems,
           { href: '/events', label: 'My Events', icon: Calendar },
-          { href: '/events/create', label: 'Create Event', icon: Calendar },
           { href: '/contractors', label: 'Find Contractors', icon: Search },
           { href: '/jobs/manage', label: 'Jobs', icon: Briefcase },
           {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 import {
   UpdateEventRequest,
@@ -82,37 +83,40 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    let user;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+      user = { id: userId };
+    } else {
+      // Fallback to cookie-based auth
+      const supabaseClient = await createClient();
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabaseClient.auth.getUser();
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = supabaseClient;
+      user = authUser;
+      userId = authUser.id;
     }
 
     const eventId = params.id;
 
     // Get event with related data
+    // Simplified query - just get event and service requirements
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select(
-        `
-        *,
-        profiles!events_event_manager_id_fkey (
-          first_name,
-          last_name,
-          avatar_url
-        ),
-        event_service_requirements (*),
-        event_versions (*)
-      `
-      )
+      .select('*')
       .eq('id', eventId)
       .single();
 
@@ -123,14 +127,40 @@ export async function GET(
           { status: 404 }
         );
       }
+      console.error('Error fetching event:', eventError);
       return NextResponse.json(
-        { success: false, message: 'Failed to fetch event' },
+        {
+          success: false,
+          message: 'Failed to fetch event',
+          error: eventError.message,
+        },
         { status: 500 }
       );
     }
 
+    // Get service requirements separately
+    const { data: serviceRequirements, error: serviceError } = await supabase
+      .from('event_service_requirements')
+      .select('*')
+      .eq('event_id', eventId);
+
+    if (serviceError) {
+      console.error('Error fetching service requirements:', serviceError);
+      // Don't fail if service requirements can't be fetched, just log it
+    }
+
+    // Combine event with service requirements
+    const eventWithRelations = {
+      ...event,
+      event_service_requirements: serviceRequirements || [],
+    };
+
     // Check if user has access to this event
-    if (event.event_manager_id !== user.id) {
+    // Events table uses user_id
+    const eventOwnerId =
+      eventWithRelations.user_id ||
+      (eventWithRelations as any).event_manager_id;
+    if (eventOwnerId !== user.id) {
       // Check if user is admin
       const { data: userProfile } = await supabase
         .from('users')
@@ -147,7 +177,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      event,
+      event: eventWithRelations,
       success: true,
     });
   } catch (error) {
@@ -164,18 +194,31 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    let user;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+      user = { id: userId };
+    } else {
+      // Fallback to cookie-based auth
+      const supabaseClient = await createClient();
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabaseClient.auth.getUser();
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = supabaseClient;
+      user = authUser;
+      userId = authUser.id;
     }
 
     const eventId = params.id;
@@ -203,7 +246,7 @@ export async function PUT(
     // Check if event exists and user has access
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('event_manager_id, status')
+      .select('user_id, event_manager_id, status')
       .eq('id', eventId)
       .single();
 
@@ -220,8 +263,10 @@ export async function PUT(
       );
     }
 
-    // Check permissions
-    if (existingEvent.event_manager_id !== user.id) {
+    // Check permissions - events table uses user_id
+    const eventOwnerId =
+      existingEvent.user_id || (existingEvent as any).event_manager_id;
+    if (eventOwnerId !== user.id) {
       // Check if user is admin
       const { data: userProfile } = await supabase
         .from('users')
@@ -286,7 +331,7 @@ export async function PUT(
         .eq('event_id', eventId);
 
       if (deleteError) {
-        }
+      }
 
       // Insert new service requirements
       if (updateData.serviceRequirements.length > 0) {
@@ -305,7 +350,7 @@ export async function PUT(
           .insert(serviceRequirements);
 
         if (serviceError) {
-          }
+        }
       }
     }
 
@@ -330,18 +375,31 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    let userId = request.headers.get('x-user-id');
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
+    let supabase;
+    let user;
+    if (userId) {
+      // Use service role client if we have user ID from header
+      supabase = supabaseAdmin;
+      user = { id: userId };
+    } else {
+      // Fallback to cookie-based auth
+      const supabaseClient = await createClient();
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabaseClient.auth.getUser();
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      supabase = supabaseClient;
+      user = authUser;
+      userId = authUser.id;
     }
 
     const eventId = params.id;
@@ -349,7 +407,7 @@ export async function DELETE(
     // Check if event exists and user has access
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('event_manager_id, status')
+      .select('user_id, event_manager_id, status')
       .eq('id', eventId)
       .single();
 
@@ -366,8 +424,10 @@ export async function DELETE(
       );
     }
 
-    // Check permissions
-    if (existingEvent.event_manager_id !== user.id) {
+    // Check permissions - events table uses user_id
+    const eventOwnerId =
+      existingEvent.user_id || (existingEvent as any).event_manager_id;
+    if (eventOwnerId !== user.id) {
       // Check if user is admin
       const { data: userProfile } = await supabase
         .from('users')

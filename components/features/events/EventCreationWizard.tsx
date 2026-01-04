@@ -23,12 +23,16 @@ import { useRouter } from 'next/navigation';
 
 interface EventCreationWizardProps {
   initialEventData?: any;
+  eventId?: string;
+  isEditMode?: boolean;
   onComplete?: (eventId: string) => void;
   onCancel?: () => void;
 }
 
 export function EventCreationWizard({
   initialEventData,
+  eventId,
+  isEditMode = false,
   onComplete,
   onCancel,
 }: EventCreationWizardProps) {
@@ -44,6 +48,7 @@ export function EventCreationWizard({
     goToStep,
     saveDraft,
     submitEvent,
+    updateEvent,
     validateStep,
     clearValidationErrors,
     loadDrafts,
@@ -100,20 +105,36 @@ export function EventCreationWizard({
       if (currentStep < 4) {
         nextStep();
       } else {
-        // Final step - submit event
+        // Final step - submit or update event
         try {
-          const result = await submitEvent(user?.id);
-          if (result?.event?.id) {
-            // If onComplete is provided, call it (modal usage)
-            // Otherwise, navigate to the event page (page usage)
-            if (onComplete) {
-              onComplete(result.event.id);
-            } else {
-              router.push(`/events/${result.event.id}`);
+          let result;
+          if (isEditMode && eventId) {
+            // Update existing event
+            result = await updateEvent(eventId, user?.id);
+            if (result?.event?.id) {
+              // If onComplete is provided, call it (modal usage)
+              // Otherwise, navigate to the event page (page usage)
+              if (onComplete) {
+                onComplete(result.event.id);
+              } else {
+                router.push(`/events/${result.event.id}`);
+              }
+            }
+          } else {
+            // Create new event
+            result = await submitEvent(user?.id);
+            if (result?.event?.id) {
+              // If onComplete is provided, call it (modal usage)
+              // Otherwise, navigate to the event page (page usage)
+              if (onComplete) {
+                onComplete(result.event.id);
+              } else {
+                router.push(`/events/${result.event.id}`);
+              }
             }
           }
         } catch (error) {
-          console.error('Error submitting event:', error);
+          console.error('Error submitting/updating event:', error);
           // Error is already handled in the store and validationErrors are set
           // The validation errors will be displayed in the Alert component
           if (error instanceof Error) {

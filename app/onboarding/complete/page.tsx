@@ -27,7 +27,7 @@ export default function OnboardingCompletePage() {
   };
 
   const handleCreateEvent = () => {
-    router.push('/events/create');
+    router.push('/events');
   };
 
   if (loading) {
@@ -63,8 +63,8 @@ export default function OnboardingCompletePage() {
                 Welcome to EventProsNZ!
               </h1>
               <p className="text-gray-600">
-                Your profile has been set up successfully. You're ready to start
-                managing events!
+                Your profile has been set up successfully. You&apos;re ready to
+                start managing events!
               </p>
             </div>
 

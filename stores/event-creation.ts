@@ -43,6 +43,8 @@ interface EventCreationState {
   loadDrafts: (userId?: string) => Promise<void>;
   saveDraft: (userId?: string) => Promise<void>;
   submitEvent: (userId?: string) => Promise<void>;
+  updateEvent: (eventId: string, userId?: string) => Promise<void>;
+  loadEventData: (eventId: string, userId?: string) => Promise<void>;
   validateStep: (step: number) => boolean;
   clearValidationErrors: () => void;
   resetWizard: () => void;
@@ -593,6 +595,201 @@ export const useEventCreationStore = create<EventCreationState>()(
             recommendations: [],
           },
         }));
+      },
+
+      loadEventData: async (eventId: string, userId?: string) => {
+        set({ isLoading: true });
+        try {
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+
+          if (userId) {
+            headers['x-user-id'] = userId;
+          }
+
+          const response = await fetch(`/api/events/${eventId}`, {
+            headers,
+            credentials: 'include',
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to load event');
+          }
+
+          const event = data.event;
+
+          // Transform event data to wizard format
+          const eventData: Partial<EventFormData> = {
+            eventType: event.event_type || '',
+            title: event.title || '',
+            description: event.description || '',
+            eventDate: event.event_date
+              ? new Date(event.event_date).toISOString()
+              : '',
+            durationHours: event.duration_hours || undefined,
+            attendeeCount: event.attendee_count || undefined,
+            location: event.location
+              ? {
+                  address: event.location,
+                  coordinates: event.location_data?.coordinates || {
+                    lat: 0,
+                    lng: 0,
+                  },
+                  placeId: event.location_data?.placeId || null,
+                  city: event.location_data?.city || null,
+                  region: event.location_data?.region || null,
+                  country: event.location_data?.country || null,
+                }
+              : {
+                  address: '',
+                  coordinates: { lat: 0, lng: 0 },
+                },
+            specialRequirements:
+              event.requirements || event.special_requirements || '',
+            serviceRequirements: [],
+            budgetPlan: {
+              totalBudget: event.budget || event.budget_total || 0,
+              breakdown: {},
+              recommendations: [],
+            },
+            isDraft: event.status === 'draft',
+          };
+
+          // Transform service requirements
+          const serviceRequirements: ServiceRequirement[] = (
+            event.event_service_requirements || []
+          ).map((req: any) => ({
+            id: req.id,
+            category: req.category,
+            type: req.type,
+            description: req.description || '',
+            priority: req.priority || 'medium',
+            estimatedBudget: req.estimated_budget || undefined,
+            isRequired: req.is_required !== false,
+          }));
+
+          set({
+            eventData,
+            serviceRequirements,
+            budgetPlan: eventData.budgetPlan || initialBudgetPlan,
+            currentStep: 1,
+            isLoading: false,
+          });
+        } catch (error) {
+          console.error('Error loading event data:', error);
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      updateEvent: async (eventId: string, userId?: string) => {
+        const { eventData, serviceRequirements, budgetPlan } = get();
+        set({ isLoading: true });
+
+        try {
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+
+          if (userId) {
+            headers['x-user-id'] = userId;
+          }
+
+          // Prepare payload similar to submitEvent but for update
+          const payload: any = {
+            eventType: eventData.eventType,
+            title: eventData.title,
+            eventDate: eventData.eventDate,
+            location: {
+              address: eventData.location?.address || '',
+              coordinates: {
+                lat: eventData.location?.coordinates?.lat ?? 0,
+                lng: eventData.location?.coordinates?.lng ?? 0,
+              },
+            },
+            serviceRequirements: serviceRequirements || [],
+            budgetPlan: budgetPlan || {
+              totalBudget: 0,
+              breakdown: {},
+              recommendations: [],
+            },
+          };
+
+          if (eventData.description !== undefined) {
+            payload.description = eventData.description;
+          }
+          if (eventData.durationHours !== undefined) {
+            payload.durationHours = eventData.durationHours;
+          }
+          if (eventData.attendeeCount !== undefined) {
+            payload.attendeeCount = eventData.attendeeCount;
+          }
+          if (eventData.specialRequirements !== undefined) {
+            payload.specialRequirements = eventData.specialRequirements;
+          }
+
+          const response = await fetch(`/api/events/${eventId}`, {
+            method: 'PUT',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            const errors = data.errors || [];
+            if (data.error) {
+              errors.push({
+                field: 'general',
+                message: data.error,
+              });
+            }
+            set({ validationErrors: errors });
+            throw new Error(data.message || 'Failed to update event');
+          }
+
+          if (data.success) {
+            // Reset wizard after successful update
+            get().resetWizard();
+            // Return in the same format as submitEvent for consistency
+            return {
+              event: data.event,
+              success: true,
+            };
+          } else {
+            const errors = data.errors || [];
+            if (data.error) {
+              errors.push({
+                field: 'general',
+                message: data.error,
+              });
+            }
+            set({ validationErrors: errors });
+            throw new Error(data.message || 'Failed to update event');
+          }
+        } catch (error) {
+          console.error('Error in updateEvent:', error);
+          if (error instanceof Error) {
+            const currentErrors = get().validationErrors;
+            if (currentErrors.length === 0) {
+              set({
+                validationErrors: [
+                  {
+                    field: 'general',
+                    message: error.message || 'An unexpected error occurred',
+                  },
+                ],
+              });
+            }
+          }
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
       },
     }),
     {

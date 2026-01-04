@@ -41,6 +41,7 @@ import { FeedbackCollection } from './FeedbackCollection';
 import { NotificationCenter } from './NotificationCenter';
 import { EventTimeline } from './EventTimeline';
 import { CreateEventModal } from '../CreateEventModal';
+import { EditEventModal } from '../EditEventModal';
 import { useEventManagement } from '@/hooks/useEventManagement';
 import { Event, EVENT_STATUS } from '@/types/events';
 
@@ -56,6 +57,7 @@ export function EventManagement({
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
 
   const {
     events,
@@ -133,6 +135,127 @@ export function EventManagement({
 
   return (
     <div className="space-y-6">
+      {/* Event Selection - Always show at top */}
+      <Card>
+        <CardHeader className={selectedEvent ? 'pb-3' : ''}>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className={selectedEvent ? 'text-lg' : ''}>
+                Select an Event
+              </CardTitle>
+              {!selectedEvent && (
+                <CardDescription>
+                  Choose an event to manage or view its details
+                </CardDescription>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateEventModal(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Event
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div
+            className={`grid gap-4 ${
+              selectedEvent
+                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                : 'md:grid-cols-2 lg:grid-cols-3'
+            }`}
+          >
+            {events.map(event => (
+              <Card
+                key={event.id}
+                className={`cursor-pointer transition-colors hover:bg-gray-50 ${
+                  selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
+                } ${selectedEvent ? 'p-2' : ''}`}
+                onClick={() => setSelectedEvent(event)}
+              >
+                <CardContent className={selectedEvent ? 'p-3' : 'p-4'}>
+                  <div className="flex items-start justify-between">
+                    <div
+                      className={`flex-1 ${selectedEvent ? 'space-y-1' : 'space-y-2'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className={
+                            selectedEvent
+                              ? 'font-medium text-sm line-clamp-1'
+                              : 'font-semibold'
+                          }
+                        >
+                          {event.title}
+                        </h3>
+                        {event.status === 'draft' && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              selectedEvent ? 'text-xs px-1 py-0' : 'text-xs'
+                            }
+                          >
+                            Draft
+                          </Badge>
+                        )}
+                      </div>
+                      <p
+                        className={
+                          selectedEvent
+                            ? 'text-xs text-muted-foreground'
+                            : 'text-sm text-muted-foreground'
+                        }
+                      >
+                        {event.event_date
+                          ? new Date(event.event_date).toLocaleDateString()
+                          : 'Date not set'}
+                      </p>
+                      <Badge
+                        className={`${getStatusColor(event.status)} ${
+                          selectedEvent ? 'text-xs' : ''
+                        }`}
+                      >
+                        {getStatusIcon(event.status)}
+                        <span className="ml-1 capitalize">
+                          {event.status.replace('_', ' ')}
+                        </span>
+                      </Badge>
+                    </div>
+                    {!selectedEvent && (
+                      <div className="flex items-center space-x-1">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {!selectedEvent && (
+                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <DollarSign className="h-4 w-4 mr-1" />$
+                        {event.budget_total?.toLocaleString() || '0'}
+                      </div>
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        {event.attendee_count || 'N/A'}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -145,227 +268,17 @@ export function EventManagement({
               : 'Manage your events throughout their lifecycle'}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        {selectedEvent && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowCreateEventModal(true)}
+            onClick={() => setShowEditEventModal(true)}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
           </Button>
-          {selectedEvent && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={`/events/${selectedEvent.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </a>
-            </Button>
-          )}
-        </div>
+        )}
       </div>
-
-      {/* Event Details Summary - Show when event is selected */}
-      {selectedEvent && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Event Details</CardTitle>
-              <Badge className={getStatusColor(selectedEvent.status)}>
-                {getStatusIcon(selectedEvent.status)}
-                <span className="ml-1 capitalize">
-                  {selectedEvent.status.replace('_', ' ')}
-                </span>
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Event Date
-                </div>
-                <p className="font-medium">
-                  {selectedEvent.event_date
-                    ? new Date(selectedEvent.event_date).toLocaleDateString(
-                        'en-NZ',
-                        {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        }
-                      )
-                    : 'Not set'}
-                </p>
-                {selectedEvent.event_date && (
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedEvent.event_date).toLocaleTimeString(
-                      'en-NZ',
-                      {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      }
-                    )}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Duration
-                </div>
-                <p className="font-medium">
-                  {selectedEvent.duration_hours
-                    ? `${selectedEvent.duration_hours} hours`
-                    : 'Not specified'}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Users className="h-4 w-4 mr-2" />
-                  Attendees
-                </div>
-                <p className="font-medium">
-                  {selectedEvent.attendee_count
-                    ? selectedEvent.attendee_count.toLocaleString()
-                    : 'Not specified'}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Budget
-                </div>
-                <p className="font-medium">
-                  $
-                  {(
-                    selectedEvent.budget ||
-                    selectedEvent.budget_total ||
-                    0
-                  ).toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            {selectedEvent.location && (
-              <div className="mt-6 pt-6 border-t">
-                <div className="flex items-start space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium">{selectedEvent.location}</p>
-                    {selectedEvent.location_data?.city && (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedEvent.location_data.city}
-                        {selectedEvent.location_data.region &&
-                          `, ${selectedEvent.location_data.region}`}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedEvent.description && (
-              <div className="mt-6 pt-6 border-t">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Description
-                  </p>
-                  <p className="text-sm">{selectedEvent.description}</p>
-                </div>
-              </div>
-            )}
-
-            {selectedEvent.requirements && (
-              <div className="mt-6 pt-6 border-t">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Special Requirements
-                  </p>
-                  <p className="text-sm">{selectedEvent.requirements}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Event Selection */}
-      {!eventId && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select an Event</CardTitle>
-            <CardDescription>
-              Choose an event to manage or view its details
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {events.map(event => (
-                <Card
-                  key={event.id}
-                  className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                  onClick={() => setSelectedEvent(event)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{event.title}</h3>
-                          {event.status === 'draft' && (
-                            <Badge variant="outline" className="text-xs">
-                              Draft
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {event.event_date
-                            ? new Date(event.event_date).toLocaleDateString()
-                            : 'Date not set'}
-                        </p>
-                        <Badge className={getStatusColor(event.status)}>
-                          {getStatusIcon(event.status)}
-                          <span className="ml-1 capitalize">
-                            {event.status.replace('_', ' ')}
-                          </span>
-                        </Badge>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />$
-                        {event.budget_total?.toLocaleString() || '0'}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {event.attendee_count || 'N/A'}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Event Management Tabs */}
       {selectedEvent && (
@@ -435,6 +348,21 @@ export function EventManagement({
           // Refresh events list after successful creation
           loadEvents();
           setShowCreateEventModal(false);
+        }}
+      />
+
+      {/* Edit Event Modal */}
+      <EditEventModal
+        open={showEditEventModal}
+        onOpenChange={setShowEditEventModal}
+        eventId={selectedEvent?.id || null}
+        onSuccess={eventId => {
+          // Refresh events list after successful update
+          loadEvents();
+          if (selectedEvent) {
+            loadEvent(selectedEvent.id);
+          }
+          setShowEditEventModal(false);
         }}
       />
     </div>

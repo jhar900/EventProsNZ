@@ -243,14 +243,6 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              {user.role === 'event_manager' && (
-                <Link href="/events/create">
-                  <Button className="flex items-center space-x-2">
-                    <Plus className="h-4 w-4" />
-                    <span>Create Event</span>
-                  </Button>
-                </Link>
-              )}
             </div>
           </div>
         )}
@@ -489,23 +481,6 @@ export default function DashboardPage() {
               allowedRoles={['event_manager']}
               hideOnUnauthorized={true}
             >
-              <Link
-                href="/events/create"
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow group"
-              >
-                <div className="flex items-center mb-3">
-                  <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                    <Plus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
-                    Create Event
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Set up a new event and start getting quotes from contractors
-                </p>
-              </Link>
-
               <Link
                 href="/contractors"
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow group"

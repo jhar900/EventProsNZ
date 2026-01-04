@@ -85,7 +85,6 @@ export default function UserProfileDropdown({
         return [
           ...baseItems,
           { href: '/events', label: 'My Events', icon: Calendar },
-          { href: '/events/create', label: 'Create Event', icon: Calendar },
           { href: '/contractors', label: 'Find Contractors', icon: Search },
           {
             href: '/budget/analytics',
