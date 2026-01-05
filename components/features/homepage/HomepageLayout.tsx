@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, createContext, useEffect } from 'react';
+import React, { useState, createContext, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { HomepageNavigation } from './HomepageNavigation';
 import LoginModal from '@/components/features/auth/LoginModal';
@@ -21,7 +21,8 @@ interface HomepageLayoutProps {
   className?: string;
 }
 
-export function HomepageLayout({
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function HomepageLayoutContent({
   children,
   className = '',
 }: HomepageLayoutProps) {
@@ -191,5 +192,29 @@ export function HomepageLayout({
         )}
       </div>
     </HomepageModalContext.Provider>
+  );
+}
+
+// Wrapper component with Suspense boundary
+export function HomepageLayout({
+  children,
+  className = '',
+}: HomepageLayoutProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className={className}>
+          <HomepageNavigation
+            onLoginClick={() => {}}
+            onRegisterClick={() => {}}
+          />
+          {children}
+        </div>
+      }
+    >
+      <HomepageLayoutContent className={className}>
+        {children}
+      </HomepageLayoutContent>
+    </Suspense>
   );
 }

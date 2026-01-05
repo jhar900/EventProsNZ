@@ -4,6 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Validation schemas
 const getAdminFeatureRequestsSchema = z.object({
   page: z
