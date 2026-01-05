@@ -117,6 +117,7 @@ export async function GET(request: NextRequest) {
           description,
           location,
           service_categories,
+          service_areas,
           average_rating,
           review_count,
           is_verified,
@@ -260,10 +261,24 @@ export async function GET(request: NextRequest) {
       console.log(`[Search] No service type filter applied`);
     }
 
-    // Location filter - simplified (service_areas column doesn't exist)
+    // Location filter - includes contractors with "Nationwide" in service_areas
     if (location) {
       const locationLower = location.toLowerCase();
       filteredContractors = filteredContractors.filter(contractor => {
+        // Check if contractor has "Nationwide" in service_areas
+        const serviceAreas = contractor.business_profiles?.service_areas || [];
+        const hasNationwide =
+          Array.isArray(serviceAreas) &&
+          serviceAreas.some(
+            area => area?.toString().toLowerCase() === 'nationwide'
+          );
+
+        // If they have "Nationwide", include them regardless of location filter
+        if (hasNationwide) {
+          return true;
+        }
+
+        // Otherwise, check if location matches business or profile location
         const businessLocation =
           contractor.business_profiles?.location?.toLowerCase() || '';
         const profileLocation =
@@ -373,7 +388,7 @@ export async function GET(request: NextRequest) {
       isVerified: contractor.business_profiles.is_verified,
       subscriptionTier: contractor.business_profiles.subscription_tier,
       businessAddress: contractor.business_profiles.location || '',
-      serviceAreas: [],
+      serviceAreas: contractor.business_profiles.service_areas || [],
       socialLinks: null,
       verificationDate: null,
       services: [], // Services will be fetched separately if needed

@@ -9,6 +9,12 @@ const serviceSchema = z.object({
   description: z.string().optional(),
   price_range_min: z.number().min(0).optional(),
   price_range_max: z.number().min(0).optional(),
+  exact_price: z.number().min(0).optional(),
+  hourly_rate: z.number().min(0).optional(),
+  daily_rate: z.number().min(0).optional(),
+  hide_price: z.boolean().default(false),
+  contact_for_pricing: z.boolean().default(false),
+  is_free: z.boolean().default(false),
   availability: z.string().optional(),
   is_visible: z.boolean().default(true),
 });
@@ -70,6 +76,12 @@ export async function GET(
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_available !== false,
       created_at: service.created_at,
@@ -131,6 +143,9 @@ export async function POST(
       category: validatedData.service_type,
       description: validatedData.description || validatedData.service_name,
       is_available: validatedData.is_visible !== false,
+      hide_price: validatedData.hide_price || false,
+      contact_for_pricing: validatedData.contact_for_pricing || false,
+      is_free: validatedData.is_free || false,
     };
 
     if (validatedData.price_range_min !== undefined) {
@@ -138,6 +153,15 @@ export async function POST(
     }
     if (validatedData.price_range_max !== undefined) {
       serviceData.price_range_max = validatedData.price_range_max;
+    }
+    if (validatedData.exact_price !== undefined) {
+      serviceData.exact_price = validatedData.exact_price;
+    }
+    if (validatedData.hourly_rate !== undefined) {
+      serviceData.hourly_rate = validatedData.hourly_rate;
+    }
+    if (validatedData.daily_rate !== undefined) {
+      serviceData.daily_rate = validatedData.daily_rate;
     }
     if (validatedData.availability !== undefined) {
       serviceData.availability = validatedData.availability.trim() || null;
@@ -179,6 +203,12 @@ export async function POST(
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_available !== false,
       created_at: service.created_at,
@@ -264,6 +294,9 @@ export async function PUT(
       category: validatedData.service_type,
       description: validatedData.description || validatedData.service_name,
       is_available: validatedData.is_visible !== false,
+      hide_price: validatedData.hide_price || false,
+      contact_for_pricing: validatedData.contact_for_pricing || false,
+      is_free: validatedData.is_free || false,
       updated_at: new Date().toISOString(),
     };
 
@@ -272,6 +305,15 @@ export async function PUT(
     }
     if (validatedData.price_range_max !== undefined) {
       updateData.price_range_max = validatedData.price_range_max;
+    }
+    if (validatedData.exact_price !== undefined) {
+      updateData.exact_price = validatedData.exact_price;
+    }
+    if (validatedData.hourly_rate !== undefined) {
+      updateData.hourly_rate = validatedData.hourly_rate;
+    }
+    if (validatedData.daily_rate !== undefined) {
+      updateData.daily_rate = validatedData.daily_rate;
     }
     if (validatedData.availability !== undefined) {
       updateData.availability = validatedData.availability.trim() || null;
@@ -315,6 +357,12 @@ export async function PUT(
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_available !== false,
       created_at: service.created_at,

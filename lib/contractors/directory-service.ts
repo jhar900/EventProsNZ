@@ -234,11 +234,41 @@ export class ContractorDirectoryService {
 
   /**
    * Format price range for display
+   * Supports new pricing options: free, contact for pricing, hide price, hourly rate, daily rate, exact price, and price range
    */
   static formatPriceRange(
     priceMin: number | null,
-    priceMax: number | null
+    priceMax: number | null,
+    options?: {
+      exactPrice?: number | null;
+      hourlyRate?: number | null;
+      dailyRate?: number | null;
+      hidePrice?: boolean;
+      contactForPricing?: boolean;
+      isFree?: boolean;
+    }
   ): string {
+    // Check pricing options in priority order
+    if (options?.isFree) {
+      return 'Free';
+    }
+    if (options?.contactForPricing) {
+      return 'Contact for pricing';
+    }
+    if (options?.hidePrice) {
+      return 'Price not shown';
+    }
+    if (options?.hourlyRate !== undefined && options.hourlyRate !== null) {
+      return `$${options.hourlyRate.toLocaleString()}/hour`;
+    }
+    if (options?.dailyRate !== undefined && options.dailyRate !== null) {
+      return `$${options.dailyRate.toLocaleString()}/day`;
+    }
+    if (options?.exactPrice !== undefined && options.exactPrice !== null) {
+      return `$${options.exactPrice.toLocaleString()}`;
+    }
+
+    // Fall back to price range logic
     if (priceMin === null && priceMax === null) {
       return 'Contact for pricing';
     }
@@ -267,24 +297,14 @@ export class ContractorDirectoryService {
 
   /**
    * Get service category display name
+   * Since categories come from the service_categories table with proper names,
+   * we just return the category as-is. This ensures consistency between
+   * the listing page and individual contractor pages.
    */
   static getServiceCategoryDisplayName(category: string): string {
-    const categoryMap: Record<string, string> = {
-      catering: 'Catering',
-      photography: 'Photography',
-      videography: 'Videography',
-      music: 'Music & Entertainment',
-      decorations: 'Decorations & Styling',
-      venue: 'Venue & Location',
-      planning: 'Event Planning',
-      security: 'Security',
-      transportation: 'Transportation',
-      flowers: 'Flowers & Floral',
-      lighting: 'Lighting & Sound',
-      other: 'Other Services',
-    };
-
-    return categoryMap[category.toLowerCase()] || category;
+    // Categories are already properly formatted from the database
+    // Just return the category name as-is
+    return category;
   }
 
   /**

@@ -38,17 +38,26 @@ export async function GET(
       .select(
         `
         id,
+        name,
+        service_name,
         service_type,
+        category,
         description,
         price_range_min,
         price_range_max,
+        exact_price,
+        hourly_rate,
+        daily_rate,
+        hide_price,
+        contact_for_pricing,
+        is_free,
         availability,
         created_at,
         updated_at
       `
       )
       .eq('user_id', contractorId)
-      .eq('is_visible', true)
+      .eq('is_available', true)
       .order('created_at', { ascending: false });
 
     if (servicesError) {

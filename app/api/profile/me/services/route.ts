@@ -9,6 +9,12 @@ const serviceSchema = z.object({
   description: z.string().optional(),
   price_range_min: z.number().min(0).optional(),
   price_range_max: z.number().min(0).optional(),
+  exact_price: z.number().min(0).optional(),
+  hourly_rate: z.number().min(0).optional(),
+  daily_rate: z.number().min(0).optional(),
+  hide_price: z.boolean().default(false),
+  contact_for_pricing: z.boolean().default(false),
+  is_free: z.boolean().default(false),
   availability: z.string().optional(),
   is_visible: z.boolean().default(true),
 });
@@ -85,6 +91,12 @@ export async function GET(request: NextRequest) {
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '', // May not exist in all schemas
       is_visible: service.is_available !== false, // Map is_available to is_visible
       created_at: service.created_at,
@@ -161,6 +173,9 @@ export async function POST(request: NextRequest) {
       category: validatedData.service_type, // Map service_type to category
       description: validatedData.description || validatedData.service_name,
       is_available: validatedData.is_visible !== false,
+      hide_price: validatedData.hide_price || false,
+      contact_for_pricing: validatedData.contact_for_pricing || false,
+      is_free: validatedData.is_free || false,
     };
 
     if (validatedData.price_range_min !== undefined) {
@@ -168,6 +183,15 @@ export async function POST(request: NextRequest) {
     }
     if (validatedData.price_range_max !== undefined) {
       serviceData.price_range_max = validatedData.price_range_max;
+    }
+    if (validatedData.exact_price !== undefined) {
+      serviceData.exact_price = validatedData.exact_price;
+    }
+    if (validatedData.hourly_rate !== undefined) {
+      serviceData.hourly_rate = validatedData.hourly_rate;
+    }
+    if (validatedData.daily_rate !== undefined) {
+      serviceData.daily_rate = validatedData.daily_rate;
     }
     // Always include availability (even if empty, to allow clearing it)
     if (validatedData.availability !== undefined) {
@@ -208,10 +232,17 @@ export async function POST(request: NextRequest) {
     const mappedService = {
       id: service.id,
       user_id: userId,
+      service_name: service.service_name || service.name || '',
       service_type: service.category || service.service_type || '',
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_available !== false,
       created_at: service.created_at,
@@ -312,14 +343,36 @@ export async function PUT(request: NextRequest) {
       category: validatedData.service_type,
       description: validatedData.description || validatedData.service_name,
       is_available: validatedData.is_visible !== false,
+      hide_price: validatedData.hide_price || false,
+      contact_for_pricing: validatedData.contact_for_pricing || false,
+      is_free: validatedData.is_free || false,
       updated_at: new Date().toISOString(),
     };
 
+    // Handle pricing fields - allow null to clear values, but preserve 0
     if (validatedData.price_range_min !== undefined) {
-      updateData.price_range_min = validatedData.price_range_min;
+      updateData.price_range_min =
+        validatedData.price_range_min === null
+          ? null
+          : validatedData.price_range_min;
     }
     if (validatedData.price_range_max !== undefined) {
-      updateData.price_range_max = validatedData.price_range_max;
+      updateData.price_range_max =
+        validatedData.price_range_max === null
+          ? null
+          : validatedData.price_range_max;
+    }
+    if (validatedData.exact_price !== undefined) {
+      updateData.exact_price =
+        validatedData.exact_price === null ? null : validatedData.exact_price;
+    }
+    if (validatedData.hourly_rate !== undefined) {
+      updateData.hourly_rate =
+        validatedData.hourly_rate === null ? null : validatedData.hourly_rate;
+    }
+    if (validatedData.daily_rate !== undefined) {
+      updateData.daily_rate =
+        validatedData.daily_rate === null ? null : validatedData.daily_rate;
     }
     // Always include availability (even if empty, to allow clearing it)
     if (validatedData.availability !== undefined) {
@@ -367,6 +420,12 @@ export async function PUT(request: NextRequest) {
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hourly_rate: service.hourly_rate || undefined,
+      daily_rate: service.daily_rate || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_available !== false,
       created_at: service.created_at,

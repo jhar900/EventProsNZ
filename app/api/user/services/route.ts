@@ -44,6 +44,10 @@ export async function GET(request: NextRequest) {
       description: service.description || '',
       price_range_min: service.price_range_min || undefined,
       price_range_max: service.price_range_max || undefined,
+      exact_price: service.exact_price || undefined,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
     }));
 

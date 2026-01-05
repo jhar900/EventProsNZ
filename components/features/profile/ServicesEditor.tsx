@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Edit, Trash2, DollarSign } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,6 +20,12 @@ const serviceSchema = z.object({
   description: z.string().optional(),
   price_range_min: z.number().min(0).optional(),
   price_range_max: z.number().min(0).optional(),
+  exact_price: z.number().min(0).optional(),
+  hourly_rate: z.number().min(0).optional(),
+  daily_rate: z.number().min(0).optional(),
+  hide_price: z.boolean().default(false),
+  contact_for_pricing: z.boolean().default(false),
+  is_free: z.boolean().default(false),
   availability: z.string().optional(),
   is_visible: z.boolean().default(true),
 });
@@ -33,6 +40,12 @@ interface Service {
   description?: string;
   price_range_min?: number;
   price_range_max?: number;
+  exact_price?: number;
+  hourly_rate?: number;
+  daily_rate?: number;
+  hide_price?: boolean;
+  contact_for_pricing?: boolean;
+  is_free?: boolean;
   availability?: string;
   is_visible: boolean;
   created_at: string;
@@ -44,55 +57,7 @@ interface ServicesEditorProps {
   onError?: (error: string) => void;
 }
 
-const SERVICE_TYPES = [
-  'Photography',
-  'Videography',
-  'Catering',
-  'Music/DJ',
-  'Floral Design',
-  'Event Planning',
-  'Venue Management',
-  'Security',
-  'Transportation',
-  'Decorations',
-  'Lighting',
-  'Sound Equipment',
-  'Other',
-];
-
-// Map service categories from Business Information to service types
-// Keys must match exactly with SERVICE_CATEGORIES from BusinessInfoForm
-const CATEGORY_TO_SERVICE_TYPE_MAP: Record<string, string[]> = {
-  Catering: ['Catering'],
-  Photography: ['Photography'],
-  Videography: ['Videography'],
-  'Music & Entertainment': ['Music/DJ'],
-  Venues: ['Venue Management'],
-  'Decoration & Styling': ['Decorations'],
-  'Event Planning': ['Event Planning'],
-  Security: ['Security'],
-  Transportation: ['Transportation'],
-  'Audio/Visual': ['Sound Equipment'],
-  'Floral Design': ['Floral Design'],
-  Lighting: ['Lighting'],
-  Photobooth: ['Photography'], // Could be photography or other
-  'DJ Services': ['Music/DJ'],
-  'Wedding Services': [
-    'Event Planning',
-    'Photography',
-    'Videography',
-    'Floral Design',
-    'Music/DJ',
-  ],
-  'Corporate Events': [
-    'Event Planning',
-    'Venue Management',
-    'Catering',
-    'Security',
-  ],
-  'Party Planning': ['Event Planning', 'Decorations', 'Lighting', 'Music/DJ'],
-  Other: ['Other'],
-};
+// Service categories will be fetched from the database
 
 export function ServicesEditor({
   userId: propUserId,
@@ -112,6 +77,12 @@ export function ServicesEditor({
     []
   );
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [allServiceCategories, setAllServiceCategories] = useState<
+    Array<{ id: string; name: string; description?: string }>
+  >([]);
+  const [pricingType, setPricingType] = useState<
+    'hourly' | 'daily' | 'exact' | 'range' | 'none'
+  >('none');
 
   useEffect(() => {
     if (targetUserId) {
@@ -119,76 +90,60 @@ export function ServicesEditor({
     }
   }, [targetUserId]);
 
-  // Load business profile to get selected service categories
+  // Load service categories from database
   useEffect(() => {
     const loadServiceCategories = async () => {
-      if (!targetUserId) {
-        setLoadingCategories(false);
-        setAvailableServiceTypes(SERVICE_TYPES);
-        return;
-      }
-
       try {
-        // If viewing another user (admin), use admin API endpoint
-        const apiEndpoint = propUserId
-          ? `/api/admin/users/${propUserId}/business-profile`
-          : '/api/user/business-profile';
+        setLoadingCategories(true);
 
-        const response = await fetch(apiEndpoint, {
+        // Fetch all active service categories from the database
+        const response = await fetch('/api/service-categories', {
           method: 'GET',
-          headers: {
-            'x-user-id': targetUserId,
-          },
           credentials: 'include',
         });
 
         if (response.ok) {
           const result = await response.json();
-          const businessProfile =
-            result.businessProfile || result.business_profile;
+          // The API returns both categories array (names) and fullCategories array (full objects)
+          const fullCategories = result.fullCategories || [];
 
-          if (
-            businessProfile?.service_categories &&
-            Array.isArray(businessProfile.service_categories) &&
-            businessProfile.service_categories.length > 0
-          ) {
-            // Get unique service types based on selected categories
-            const selectedCategories = businessProfile.service_categories;
-            const allowedServiceTypesSet = new Set<string>();
-
-            selectedCategories.forEach((category: string) => {
-              const trimmedCategory = category.trim();
-              const mappedTypes =
-                CATEGORY_TO_SERVICE_TYPE_MAP[trimmedCategory] || [];
-              mappedTypes.forEach(type => allowedServiceTypesSet.add(type));
-            });
-
-            // Filter SERVICE_TYPES to only include allowed types
-            const filteredTypes =
-              allowedServiceTypesSet.size > 0
-                ? SERVICE_TYPES.filter(type => allowedServiceTypesSet.has(type))
-                : SERVICE_TYPES;
-
-            setAvailableServiceTypes(filteredTypes);
+          if (fullCategories.length > 0) {
+            // Use full categories with id, name, description
+            setAllServiceCategories(fullCategories);
+            // Extract category names for the dropdown
+            const categoryNames = fullCategories.map(
+              (cat: { name: string; id?: string; description?: string }) =>
+                cat.name
+            );
+            setAvailableServiceTypes(categoryNames);
+          } else if (result.categories && Array.isArray(result.categories)) {
+            // Fallback: if only category names are returned
+            const categoryNames = result.categories;
+            setAvailableServiceTypes(categoryNames);
+            // Create minimal category objects from names
+            setAllServiceCategories(
+              categoryNames.map((name: string) => ({ name }))
+            );
           } else {
-            // If no categories selected, show all service types
-            setAvailableServiceTypes(SERVICE_TYPES);
+            setAvailableServiceTypes([]);
+            setAllServiceCategories([]);
           }
         } else {
-          // If business profile not found, show all service types
-          setAvailableServiceTypes(SERVICE_TYPES);
+          console.error('Error loading service categories from database');
+          // Fallback: show empty array if fetch fails
+          setAvailableServiceTypes([]);
+          setAllServiceCategories([]);
         }
       } catch (error) {
         console.error('Error loading service categories:', error);
-        // On error, show all service types
-        setAvailableServiceTypes(SERVICE_TYPES);
+        setAvailableServiceTypes([]);
       } finally {
         setLoadingCategories(false);
       }
     };
 
     loadServiceCategories();
-  }, [targetUserId, propUserId]);
+  }, []);
 
   const fetchServices = async () => {
     if (!targetUserId) return;
@@ -233,6 +188,7 @@ export function ServicesEditor({
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<ServiceForm>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
@@ -241,10 +197,75 @@ export function ServicesEditor({
       description: '',
       price_range_min: undefined,
       price_range_max: undefined,
+      exact_price: undefined,
+      hourly_rate: undefined,
+      daily_rate: undefined,
+      hide_price: false,
+      contact_for_pricing: false,
+      is_free: false,
       availability: '',
       is_visible: true,
     },
   });
+
+  // Watch pricing-related fields to manage pricing type state
+  const hidePrice = watch('hide_price');
+  const contactForPricing = watch('contact_for_pricing');
+  const isFree = watch('is_free');
+  const exactPrice = watch('exact_price');
+  const hourlyRate = watch('hourly_rate');
+  const dailyRate = watch('daily_rate');
+  const priceRangeMin = watch('price_range_min');
+  const priceRangeMax = watch('price_range_max');
+
+  // Update pricing type based on form values
+  useEffect(() => {
+    if (isFree) {
+      setPricingType('none');
+    } else if (contactForPricing) {
+      setPricingType('none');
+    } else if (hidePrice) {
+      setPricingType('none');
+    } else if (
+      hourlyRate !== undefined &&
+      hourlyRate !== null &&
+      hourlyRate !== 0
+    ) {
+      setPricingType('hourly');
+    } else if (
+      dailyRate !== undefined &&
+      dailyRate !== null &&
+      dailyRate !== 0
+    ) {
+      setPricingType('daily');
+    } else if (
+      exactPrice !== undefined &&
+      exactPrice !== null &&
+      exactPrice !== 0
+    ) {
+      setPricingType('exact');
+    } else if (
+      (priceRangeMin !== undefined &&
+        priceRangeMin !== null &&
+        priceRangeMin !== 0) ||
+      (priceRangeMax !== undefined &&
+        priceRangeMax !== null &&
+        priceRangeMax !== 0)
+    ) {
+      setPricingType('range');
+    } else {
+      setPricingType('none');
+    }
+  }, [
+    hidePrice,
+    contactForPricing,
+    isFree,
+    hourlyRate,
+    dailyRate,
+    exactPrice,
+    priceRangeMin,
+    priceRangeMax,
+  ]);
 
   const onSubmit = async (data: ServiceForm) => {
     if (!targetUserId) {
@@ -308,6 +329,12 @@ export function ServicesEditor({
       description: service.description || '',
       price_range_min: service.price_range_min,
       price_range_max: service.price_range_max,
+      exact_price: service.exact_price,
+      hourly_rate: service.hourly_rate,
+      daily_rate: service.daily_rate,
+      hide_price: service.hide_price || false,
+      contact_for_pricing: service.contact_for_pricing || false,
+      is_free: service.is_free || false,
       availability: service.availability || '',
       is_visible: service.is_visible !== false,
     });
@@ -372,19 +399,41 @@ export function ServicesEditor({
       description: '',
       price_range_min: undefined,
       price_range_max: undefined,
+      exact_price: undefined,
+      hourly_rate: undefined,
+      daily_rate: undefined,
+      hide_price: false,
+      contact_for_pricing: false,
+      is_free: false,
       availability: '',
       is_visible: true,
     });
+    setPricingType('none');
     setEditingService(null);
     setIsFormOpen(false);
   };
 
-  const formatPriceRange = (min?: number, max?: number) => {
-    if (!min && !max) return 'Price on request';
-    if (min && max) return `$${min} - $${max}`;
-    if (min) return `From $${min}`;
-    if (max) return `Up to $${max}`;
-    return 'Price on request';
+  const formatPrice = (service: Service) => {
+    if (service.is_free) return 'Free';
+    if (service.contact_for_pricing) return 'Contact for pricing';
+    if (service.hide_price) return 'Price not shown';
+    if (service.hourly_rate !== undefined && service.hourly_rate !== null) {
+      return `$${service.hourly_rate}/hour`;
+    }
+    if (service.daily_rate !== undefined && service.daily_rate !== null) {
+      return `$${service.daily_rate}/day`;
+    }
+    if (service.exact_price !== undefined && service.exact_price !== null) {
+      return `$${service.exact_price}`;
+    }
+    if (service.price_range_min || service.price_range_max) {
+      const min = service.price_range_min;
+      const max = service.price_range_max;
+      if (min && max) return `$${min} - $${max}`;
+      if (min) return `From $${min}`;
+      if (max) return `Up to $${max}`;
+    }
+    return 'Contact for pricing';
   };
 
   if (isFetching) {
@@ -415,9 +464,16 @@ export function ServicesEditor({
                   description: '',
                   price_range_min: undefined,
                   price_range_max: undefined,
+                  exact_price: undefined,
+                  hourly_rate: undefined,
+                  daily_rate: undefined,
+                  hide_price: false,
+                  contact_for_pricing: false,
+                  is_free: false,
                   availability: '',
                   is_visible: true,
                 });
+                setPricingType('none');
                 setIsFormOpen(true);
               }}
               className="bg-orange-500 hover:bg-orange-600"
@@ -465,10 +521,7 @@ export function ServicesEditor({
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          {formatPriceRange(
-                            service.price_range_min,
-                            service.price_range_max
-                          )}
+                          {formatPrice(service)}
                         </div>
                         {service.availability && (
                           <span>Available: {service.availability}</span>
@@ -523,9 +576,14 @@ export function ServicesEditor({
                     description: '',
                     price_range_min: undefined,
                     price_range_max: undefined,
+                    exact_price: undefined,
+                    hide_price: false,
+                    contact_for_pricing: false,
+                    is_free: false,
                     availability: '',
                     is_visible: true,
                   });
+                  setPricingType('none');
                 }}
               >
                 ×
@@ -602,29 +660,262 @@ export function ServicesEditor({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="price_range_min">Minimum Price (NZD)</Label>
-                  <Input
-                    id="price_range_min"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    {...register('price_range_min', { valueAsNumber: true })}
-                    placeholder="0.00"
-                  />
+              {/* Pricing Options */}
+              <div className="space-y-4">
+                <Label>Pricing Options</Label>
+
+                {/* Pricing Type Checkboxes */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="is_free"
+                      checked={isFree}
+                      onCheckedChange={checked => {
+                        setValue('is_free', checked as boolean);
+                        if (checked) {
+                          setValue('contact_for_pricing', false);
+                          setValue('hide_price', false);
+                          setValue('exact_price', undefined);
+                          setValue('hourly_rate', undefined);
+                          setValue('daily_rate', undefined);
+                          setValue('price_range_min', undefined);
+                          setValue('price_range_max', undefined);
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor="is_free"
+                      className="font-normal cursor-pointer"
+                    >
+                      Free service
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="contact_for_pricing"
+                      checked={contactForPricing}
+                      onCheckedChange={checked => {
+                        setValue('contact_for_pricing', checked as boolean);
+                        if (checked) {
+                          setValue('is_free', false);
+                          setValue('hide_price', false);
+                          setValue('exact_price', undefined);
+                          setValue('hourly_rate', undefined);
+                          setValue('daily_rate', undefined);
+                          setValue('price_range_min', undefined);
+                          setValue('price_range_max', undefined);
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor="contact_for_pricing"
+                      className="font-normal cursor-pointer"
+                    >
+                      Contact for pricing
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hide_price"
+                      checked={hidePrice}
+                      onCheckedChange={checked => {
+                        setValue('hide_price', checked as boolean);
+                        if (checked) {
+                          setValue('is_free', false);
+                          setValue('contact_for_pricing', false);
+                          setValue('exact_price', undefined);
+                          setValue('hourly_rate', undefined);
+                          setValue('daily_rate', undefined);
+                          setValue('price_range_min', undefined);
+                          setValue('price_range_max', undefined);
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor="hide_price"
+                      className="font-normal cursor-pointer"
+                    >
+                      Do not show price
+                    </Label>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="price_range_max">Maximum Price (NZD)</Label>
-                  <Input
-                    id="price_range_max"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    {...register('price_range_max', { valueAsNumber: true })}
-                    placeholder="0.00"
-                  />
-                </div>
+
+                {/* Price Input Fields - Only show if no special pricing option is selected */}
+                {!isFree && !contactForPricing && !hidePrice && (
+                  <div className="space-y-4 pt-2 border-t">
+                    <div className="space-y-2">
+                      <Label>Price Type</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="pricing_hourly"
+                            name="pricing_type"
+                            checked={pricingType === 'hourly'}
+                            onChange={() => {
+                              setPricingType('hourly');
+                              setValue('exact_price', undefined);
+                              setValue('daily_rate', undefined);
+                              setValue('price_range_min', undefined);
+                              setValue('price_range_max', undefined);
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <Label
+                            htmlFor="pricing_hourly"
+                            className="font-normal cursor-pointer"
+                          >
+                            Hourly rate
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="pricing_daily"
+                            name="pricing_type"
+                            checked={pricingType === 'daily'}
+                            onChange={() => {
+                              setPricingType('daily');
+                              setValue('exact_price', undefined);
+                              setValue('hourly_rate', undefined);
+                              setValue('price_range_min', undefined);
+                              setValue('price_range_max', undefined);
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <Label
+                            htmlFor="pricing_daily"
+                            className="font-normal cursor-pointer"
+                          >
+                            Daily rate
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="pricing_exact"
+                            name="pricing_type"
+                            checked={pricingType === 'exact'}
+                            onChange={() => {
+                              setPricingType('exact');
+                              setValue('hourly_rate', undefined);
+                              setValue('daily_rate', undefined);
+                              setValue('price_range_min', undefined);
+                              setValue('price_range_max', undefined);
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <Label
+                            htmlFor="pricing_exact"
+                            className="font-normal cursor-pointer"
+                          >
+                            Exact price
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="pricing_range"
+                            name="pricing_type"
+                            checked={pricingType === 'range'}
+                            onChange={() => {
+                              setPricingType('range');
+                              setValue('exact_price', undefined);
+                              setValue('hourly_rate', undefined);
+                              setValue('daily_rate', undefined);
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <Label
+                            htmlFor="pricing_range"
+                            className="font-normal cursor-pointer"
+                          >
+                            Price range
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {pricingType === 'hourly' && (
+                      <div>
+                        <Label htmlFor="hourly_rate">Hourly Rate (NZD)</Label>
+                        <Input
+                          id="hourly_rate"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register('hourly_rate', { valueAsNumber: true })}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    )}
+
+                    {pricingType === 'daily' && (
+                      <div>
+                        <Label htmlFor="daily_rate">Daily Rate (NZD)</Label>
+                        <Input
+                          id="daily_rate"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register('daily_rate', { valueAsNumber: true })}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    )}
+
+                    {pricingType === 'exact' && (
+                      <div>
+                        <Label htmlFor="exact_price">Exact Price (NZD)</Label>
+                        <Input
+                          id="exact_price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register('exact_price', { valueAsNumber: true })}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    )}
+
+                    {pricingType === 'range' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="price_range_min">
+                            Minimum Price (NZD)
+                          </Label>
+                          <Input
+                            id="price_range_min"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...register('price_range_min', {
+                              valueAsNumber: true,
+                            })}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="price_range_max">
+                            Maximum Price (NZD)
+                          </Label>
+                          <Input
+                            id="price_range_max"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...register('price_range_max', {
+                              valueAsNumber: true,
+                            })}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">

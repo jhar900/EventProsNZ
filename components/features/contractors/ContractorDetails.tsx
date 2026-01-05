@@ -330,7 +330,15 @@ export function ContractorDetails({
                         <span className="text-sm font-medium text-gray-600">
                           {ContractorDirectoryService.formatPriceRange(
                             service.priceRangeMin,
-                            service.priceRangeMax
+                            service.priceRangeMax,
+                            {
+                              exactPrice: service.exactPrice,
+                              hourlyRate: service.hourlyRate,
+                              dailyRate: service.dailyRate,
+                              hidePrice: service.hidePrice,
+                              contactForPricing: service.contactForPricing,
+                              isFree: service.isFree,
+                            }
                           )}
                         </span>
                       </div>

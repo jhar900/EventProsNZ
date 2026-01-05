@@ -119,6 +119,28 @@ export function ContractorProfileDisplay({
     return stars;
   };
 
+  const formatPrice = (service: Service) => {
+    if (service.isFree) return 'Free';
+    if (service.contactForPricing) return 'Contact for pricing';
+    if (service.hidePrice) return 'Price not shown';
+    if (service.hourlyRate !== undefined && service.hourlyRate !== null) {
+      return `$${service.hourlyRate.toLocaleString()}/hour`;
+    }
+    if (service.dailyRate !== undefined && service.dailyRate !== null) {
+      return `$${service.dailyRate.toLocaleString()}/day`;
+    }
+    if (service.exactPrice !== undefined && service.exactPrice !== null) {
+      return `$${service.exactPrice.toLocaleString()}`;
+    }
+    const min = service.priceRangeMin;
+    const max = service.priceRangeMax;
+    if (!min && !max) return 'Contact for pricing';
+    if (min && !max) return `From $${min.toLocaleString()}`;
+    if (!min && max) return `Up to $${max.toLocaleString()}`;
+    if (min === max) return `$${min.toLocaleString()}`;
+    return `$${min?.toLocaleString()} - $${max?.toLocaleString()}`;
+  };
+
   const formatPriceRange = (min: number | null, max: number | null) => {
     if (min === null && max === null) return 'Contact for pricing';
     if (min === null) return `Up to $${max}`;
@@ -472,10 +494,7 @@ export function ContractorProfileDisplay({
                             {service.serviceType}
                           </h3>
                           <span className="text-orange-600 font-medium text-sm">
-                            {formatPriceRange(
-                              service.priceRangeMin,
-                              service.priceRangeMax
-                            )}
+                            {formatPrice(service)}
                           </span>
                         </div>
                         {service.description && (
@@ -975,10 +994,7 @@ function PortfolioLightbox({
                 />
               </div>
             ) : type === 'video' ? (
-              <div
-                className="w-full max-w-4xl"
-                style={{ pointerEvents: 'none' }}
-              >
+              <div className="w-full max-w-4xl">
                 <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-lg">
                   <iframe
                     src={url}
@@ -987,6 +1003,7 @@ function PortfolioLightbox({
                     title={portfolioItem.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     frameBorder="0"
+                    style={{ pointerEvents: 'auto' }}
                   />
                 </div>
               </div>

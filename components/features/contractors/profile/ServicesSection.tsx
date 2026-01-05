@@ -20,6 +20,10 @@ interface Service {
   description?: string;
   priceRangeMin?: number;
   priceRangeMax?: number;
+  exactPrice?: number;
+  hidePrice?: boolean;
+  contactForPricing?: boolean;
+  isFree?: boolean;
   availability?: string;
   isVisible: boolean;
   createdAt: string;
@@ -51,7 +55,25 @@ export function ServicesSection({
       const data = await response.json();
 
       if (response.ok) {
-        setServices(data.services || []);
+        // Map API response (snake_case) to component Service interface (camelCase)
+        const mappedServices = (data.services || []).map((s: any) => ({
+          id: s.id,
+          serviceType:
+            s.service_name || s.name || s.service_type || s.category || '',
+          description: s.description || null,
+          priceRangeMin: s.price_range_min || null,
+          priceRangeMax: s.price_range_max || null,
+          exactPrice: s.exact_price || null,
+          hourlyRate: s.hourly_rate || null,
+          dailyRate: s.daily_rate || null,
+          hidePrice: s.hide_price || false,
+          contactForPricing: s.contact_for_pricing || false,
+          isFree: s.is_free || false,
+          availability: s.availability || null,
+          isVisible: s.is_visible !== false,
+          createdAt: s.created_at || new Date().toISOString(),
+        }));
+        setServices(mappedServices);
       } else {
         const errorMessage = data.error || 'Failed to load services';
         setError(errorMessage);
@@ -79,7 +101,21 @@ export function ServicesSection({
     }
   }, [contractorId]);
 
-  const formatPriceRange = (min?: number, max?: number) => {
+  const formatPrice = (service: Service) => {
+    if (service.isFree) return 'Free';
+    if (service.contactForPricing) return 'Contact for pricing';
+    if (service.hidePrice) return 'Price not shown';
+    if (service.hourlyRate !== undefined && service.hourlyRate !== null) {
+      return `$${service.hourlyRate.toLocaleString()}/hour`;
+    }
+    if (service.dailyRate !== undefined && service.dailyRate !== null) {
+      return `$${service.dailyRate.toLocaleString()}/day`;
+    }
+    if (service.exactPrice !== undefined && service.exactPrice !== null) {
+      return `$${service.exactPrice.toLocaleString()}`;
+    }
+    const min = service.priceRangeMin;
+    const max = service.priceRangeMax;
     if (!min && !max) return 'Contact for pricing';
     if (min && !max) return `From $${min.toLocaleString()}`;
     if (!min && max) return `Up to $${max.toLocaleString()}`;
@@ -247,12 +283,7 @@ export function ServicesSection({
                   {/* Pricing */}
                   <div className="flex items-center text-gray-700">
                     <CurrencyDollarIcon className="h-4 w-4 mr-1 text-gray-400" />
-                    <span className="font-medium">
-                      {formatPriceRange(
-                        service.priceRangeMin,
-                        service.priceRangeMax
-                      )}
-                    </span>
+                    <span className="font-medium">{formatPrice(service)}</span>
                   </div>
 
                   {/* Availability */}

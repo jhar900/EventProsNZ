@@ -44,6 +44,12 @@ export interface Service {
   description: string | null;
   priceRangeMin: number | null;
   priceRangeMax: number | null;
+  exactPrice?: number | null;
+  hourlyRate?: number | null;
+  dailyRate?: number | null;
+  hidePrice?: boolean;
+  contactForPricing?: boolean;
+  isFree?: boolean;
   availability: string | null;
   createdAt: string;
   updatedAt?: string;

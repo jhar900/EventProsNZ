@@ -93,6 +93,14 @@ export class SimpleEmailService {
         process.env.RESEND_FROM_EMAIL ||
         'onboarding@resend.dev';
 
+      console.log('[Resend] Sending email:', {
+        from: fromEmail,
+        to: Array.isArray(options.to) ? options.to : [options.to],
+        subject: options.subject,
+        htmlLength: options.html?.length || 0,
+        textLength: options.text?.length || 0,
+      });
+
       const result = await resend.emails.send({
         from: fromEmail,
         to: Array.isArray(options.to) ? options.to : [options.to],
@@ -101,7 +109,15 @@ export class SimpleEmailService {
         text: options.text,
       });
 
+      console.log('[Resend] API Response:', {
+        hasError: !!result.error,
+        error: result.error,
+        messageId: result.data?.id,
+        fullResponse: JSON.stringify(result, null, 2),
+      });
+
       if (result.error) {
+        console.error('[Resend] Error sending email:', result.error);
         return {
           success: false,
           error: result.error.message || 'Failed to send via Resend',
@@ -113,6 +129,7 @@ export class SimpleEmailService {
         messageId: result.data?.id,
       };
     } catch (error: any) {
+      console.error('[Resend] Exception sending email:', error);
       return {
         success: false,
         error: error.message || 'Failed to send via Resend',
