@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Users, Heart, Award, Clock, Star } from 'lucide-react';
-import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
+import {
+  HomepageLayout,
+  HomepageModalContext,
+} from '@/components/features/homepage/HomepageLayout';
 import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
+import { useAuth } from '@/hooks/useAuth';
 import TeamSection from './TeamSection';
 import CompanyValuesSection from './CompanyValuesSection';
 import { AboutContent } from '@/types/about';
@@ -18,6 +23,9 @@ interface AboutPageProps {
 export default function AboutPage({ className }: AboutPageProps) {
   const [content, setContent] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const modalContext = useContext(HomepageModalContext);
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -228,15 +236,22 @@ export default function AboutPage({ className }: AboutPageProps) {
               Ready to Plan Your Next Event?
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              Join thousands of event managers who trust Event Pros NZ for their
+              Join the many event managers who trust Event Pros NZ for their
               event planning needs.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="px-8 py-3">
-                Get Started Today
-              </Button>
-              <Button variant="outline" size="lg" className="px-8 py-3">
-                Learn More
+            <div className="flex justify-center">
+              <Button
+                size="lg"
+                className="px-8 py-3"
+                onClick={() => {
+                  if (user) {
+                    router.push('/dashboard');
+                  } else {
+                    modalContext?.onRegisterClick();
+                  }
+                }}
+              >
+                {user ? 'Go To My Dashboard' : 'Get Started Today'}
               </Button>
             </div>
           </div>

@@ -21,7 +21,6 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
   Search,
-  Filter,
   SortAsc,
   SortDesc,
   X,
@@ -29,6 +28,7 @@ import {
   Users,
   TrendingUp,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SearchFilters {
   search: string;
@@ -51,6 +51,7 @@ export default function FeatureRequestSearch({
   showUserFilter = false,
   className = '',
 }: FeatureRequestSearchProps) {
+  const { user } = useAuth();
   const [filters, setFilters] = useState<SearchFilters>({
     search: '',
     status: '',
@@ -62,7 +63,6 @@ export default function FeatureRequestSearch({
   const [categories, setCategories] = useState<
     Array<{ id: string; name: string; color: string }>
   >([]);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Load categories
   useEffect(() => {
@@ -119,11 +119,13 @@ export default function FeatureRequestSearch({
   const statusOptions = [
     { value: 'all', label: 'All Statuses' },
     { value: 'submitted', label: 'Submitted' },
-    { value: 'under_review', label: 'Under Review' },
     { value: 'planned', label: 'Planned' },
     { value: 'in_development', label: 'In Development' },
     { value: 'completed', label: 'Completed' },
-    { value: 'rejected', label: 'Rejected' },
+    // Only show rejected option for admins
+    ...(user?.role === 'admin'
+      ? [{ value: 'rejected', label: 'Rejected' }]
+      : []),
   ];
 
   return (
@@ -172,29 +174,6 @@ export default function FeatureRequestSearch({
           </Select>
 
           <Select
-            value={filters.category_id || 'all'}
-            onValueChange={value => updateFilter('category_id', value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category.id} value={category.id}>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    {category.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
             value={filters.sort}
             onValueChange={(value: any) => updateFilter('sort', value)}
           >
@@ -214,20 +193,9 @@ export default function FeatureRequestSearch({
           </Select>
         </div>
 
-        {/* Advanced Filters Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
-          </Button>
-
-          {hasActiveFilters && (
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <div className="flex justify-end">
             <Button
               type="button"
               variant="outline"
@@ -238,52 +206,6 @@ export default function FeatureRequestSearch({
               <X className="w-4 h-4" />
               Clear Filters
             </Button>
-          )}
-        </div>
-
-        {/* Advanced Filters */}
-        {showAdvanced && (
-          <div className="space-y-4 pt-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Date Range */}
-              <div className="space-y-2">
-                <Label>Date Range</Label>
-                <div className="flex gap-2">
-                  <Input type="date" placeholder="From" className="flex-1" />
-                  <Input type="date" placeholder="To" className="flex-1" />
-                </div>
-              </div>
-
-              {/* Vote Range */}
-              <div className="space-y-2">
-                <Label>Vote Count</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Min votes"
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max votes"
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* User Filter */}
-            {showUserFilter && (
-              <div className="space-y-2">
-                <Label htmlFor="user-filter">Filter by User</Label>
-                <Input
-                  id="user-filter"
-                  value={filters.user_id || ''}
-                  onChange={e => updateFilter('user_id', e.target.value)}
-                  placeholder="User ID or email..."
-                />
-              </div>
-            )}
           </div>
         )}
 

@@ -61,13 +61,7 @@ interface FeatureRequest {
   id: string;
   title: string;
   description: string;
-  status:
-    | 'submitted'
-    | 'under_review'
-    | 'planned'
-    | 'in_development'
-    | 'completed'
-    | 'rejected';
+  status: 'submitted' | 'planned' | 'in_development' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   vote_count: number;
   view_count: number;
@@ -281,8 +275,6 @@ export default function FeatureRequestManagementDashboard({
     switch (status) {
       case 'submitted':
         return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'under_review':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case 'planned':
         return <Calendar className="h-4 w-4 text-purple-500" />;
       case 'in_development':
@@ -315,8 +307,6 @@ export default function FeatureRequestManagementDashboard({
     switch (status) {
       case 'submitted':
         return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
       case 'planned':
         return 'bg-purple-100 text-purple-800';
       case 'in_development':
@@ -433,7 +423,6 @@ export default function FeatureRequestManagementDashboard({
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="submitted">Submitted</SelectItem>
-                <SelectItem value="under_review">Under Review</SelectItem>
                 <SelectItem value="planned">Planned</SelectItem>
                 <SelectItem value="in_development">In Development</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
@@ -624,13 +613,6 @@ export default function FeatureRequestManagementDashboard({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatusChange(request.id, 'under_review')
-                            }
-                          >
-                            Mark as Under Review
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               handleStatusChange(request.id, 'planned')

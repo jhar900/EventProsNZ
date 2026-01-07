@@ -8,14 +8,7 @@ const updateFeatureRequestSchema = z.object({
   category_id: z.string().uuid().optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   status: z
-    .enum([
-      'submitted',
-      'under_review',
-      'planned',
-      'in_development',
-      'completed',
-      'rejected',
-    ])
+    .enum(['submitted', 'planned', 'in_development', 'completed', 'rejected'])
     .optional(),
   is_public: z.boolean().optional(),
   admin_notes: z.string().optional(),
@@ -88,6 +81,23 @@ export async function GET(
 
       if (userProfile?.role !== 'admin') {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
+    }
+
+    // Hide rejected requests from non-admin users
+    if (featureRequest.status === 'rejected') {
+      // Check if user is admin
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Feature request not found' },
+          { status: 404 }
+        );
       }
     }
 

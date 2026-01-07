@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Save, Send } from 'lucide-react';
+import { X, Plus, Send, Upload, File } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FeatureRequestCategory {
@@ -38,12 +38,13 @@ interface FeatureRequestFormData {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   tags: string[];
   is_public: boolean;
+  attachment?: File;
 }
 
 interface FeatureRequestFormProps {
   initialData?: Partial<FeatureRequestFormData>;
   onSave?: (data: FeatureRequestFormData) => void;
-  onSubmit?: (data: FeatureRequestFormData) => void;
+  onSubmit?: (data: FeatureRequestFormData, attachment?: File | null) => void;
   isEditing?: boolean;
   isLoading?: boolean;
   showCard?: boolean;
@@ -74,10 +75,13 @@ export default function FeatureRequestForm({
   });
 
   const [categories, setCategories] = useState<FeatureRequestCategory[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(
+    null
+  );
 
   // Load categories on mount (only if category field is shown)
   useEffect(() => {
@@ -168,10 +172,9 @@ export default function FeatureRequestForm({
     setIsSubmitting(true);
     try {
       // Prepare submission data - only include category if shown
-      const submissionData: FeatureRequestFormData = {
+      const submissionData: any = {
         title: formData.title,
         description: formData.description,
-        tags: formData.tags,
         is_public: formData.is_public,
         ...(showCategory && formData.category_id
           ? { category_id: formData.category_id }
@@ -180,7 +183,7 @@ export default function FeatureRequestForm({
       };
 
       if (onSubmit) {
-        await onSubmit(submissionData);
+        await onSubmit(submissionData as FeatureRequestFormData, attachment);
         // Reset form after successful submission
         setFormData({
           title: '',
@@ -190,14 +193,25 @@ export default function FeatureRequestForm({
           tags: [],
           is_public: true,
         });
+        setAttachment(null);
+        setAttachmentPreview(null);
         setErrors({});
       } else {
+        // Create FormData to handle file upload
+        const formDataToSend = new FormData();
+        formDataToSend.append('title', submissionData.title);
+        formDataToSend.append('description', submissionData.description);
+        formDataToSend.append('is_public', String(submissionData.is_public));
+        if (submissionData.category_id) {
+          formDataToSend.append('category_id', submissionData.category_id);
+        }
+        if (attachment) {
+          formDataToSend.append('attachment', attachment);
+        }
+
         const response = await fetch('/api/feature-requests', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submissionData),
+          body: formDataToSend,
         });
 
         if (response.ok) {
@@ -214,31 +228,6 @@ export default function FeatureRequestForm({
       toast.error('Failed to submit feature request');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const addTag = () => {
-    const tag = tagInput.trim().toLowerCase().replace(/\s+/g, '-');
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tag],
-      }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove),
-    }));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag();
     }
   };
 
@@ -341,40 +330,73 @@ export default function FeatureRequestForm({
         </div>
       )}
 
-      {/* Tags */}
+      {/* Attachment */}
       <div className="space-y-2">
-        <Label htmlFor="tags">Tags</Label>
-        <div className="flex gap-2">
-          <Input
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Add a tag and press Enter"
+        <Label htmlFor="attachment">Attachment (Optional)</Label>
+        <div className="flex items-center gap-4">
+          <label
+            htmlFor="attachment"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="text-sm">Choose File</span>
+          </label>
+          <input
+            type="file"
+            id="attachment"
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) {
+                // Check file size (max 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                  toast.error('File size must be less than 10MB');
+                  return;
+                }
+                setAttachment(file);
+                // Create preview for images
+                if (file.type.startsWith('image/')) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setAttachmentPreview(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                } else {
+                  setAttachmentPreview(null);
+                }
+              }
+            }}
+            accept="image/*,.pdf,.doc,.docx,.txt"
           />
-          <Button type="button" onClick={addTag} size="sm">
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        {formData.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {formData.tags.map(tag => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="flex items-center gap-1"
+          {attachment && (
+            <div className="flex items-center gap-2">
+              <File className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-700">{attachment.name}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAttachment(null);
+                  setAttachmentPreview(null);
+                }}
+                className="text-red-500 hover:text-red-700"
               >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="ml-1 hover:text-red-500"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+        {attachmentPreview && (
+          <div className="mt-2">
+            <img
+              src={attachmentPreview}
+              alt="Preview"
+              className="max-w-xs max-h-48 rounded border border-gray-300"
+            />
           </div>
         )}
+        <p className="text-sm text-gray-500">
+          Supported formats: Images, PDF, Word documents, Text files (Max 10MB)
+        </p>
       </div>
 
       {/* Public/Private */}
@@ -398,16 +420,6 @@ export default function FeatureRequestForm({
 
       {/* Actions */}
       <div className="flex gap-4 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleSave}
-          disabled={isSaving || isSubmitting}
-          className="flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          {isSaving ? 'Saving...' : 'Save Draft'}
-        </Button>
         <Button
           type="button"
           onClick={handleSubmit}

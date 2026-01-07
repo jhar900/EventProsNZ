@@ -13,6 +13,7 @@ export interface EmailOptions {
   text: string;
   from?: string;
   fromName?: string;
+  replyTo?: string;
 }
 
 export interface EmailResult {
@@ -93,21 +94,33 @@ export class SimpleEmailService {
         process.env.RESEND_FROM_EMAIL ||
         'onboarding@resend.dev';
 
-      console.log('[Resend] Sending email:', {
-        from: fromEmail,
-        to: Array.isArray(options.to) ? options.to : [options.to],
-        subject: options.subject,
-        htmlLength: options.html?.length || 0,
-        textLength: options.text?.length || 0,
-      });
-
-      const result = await resend.emails.send({
+      const emailData: any = {
         from: fromEmail,
         to: Array.isArray(options.to) ? options.to : [options.to],
         subject: options.subject,
         html: options.html,
         text: options.text,
+      };
+
+      if (options.replyTo) {
+        // Resend supports reply_to as a string or array
+        // Also set it in headers as a fallback for better compatibility
+        emailData.reply_to = options.replyTo;
+        emailData.headers = {
+          'Reply-To': options.replyTo,
+        };
+      }
+
+      console.log('[Resend] Sending email:', {
+        from: fromEmail,
+        to: Array.isArray(options.to) ? options.to : [options.to],
+        subject: options.subject,
+        replyTo: options.replyTo || 'not set',
+        htmlLength: options.html?.length || 0,
+        textLength: options.text?.length || 0,
       });
+
+      const result = await resend.emails.send(emailData);
 
       console.log('[Resend] API Response:', {
         hasError: !!result.error,

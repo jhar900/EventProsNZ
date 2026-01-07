@@ -6,13 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   MessageSquare,
@@ -61,11 +54,7 @@ export default function ContractorInquiriesList({
   const [inquiries, setInquiries] = useState<InquiryWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('newest');
-  const [dateFrom, setDateFrom] = useState<string>('');
-  const [dateTo, setDateTo] = useState<string>('');
   const [selectedInquiry, setSelectedInquiry] =
     useState<InquiryWithRelations | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -79,7 +68,7 @@ export default function ContractorInquiriesList({
       fetchInquiries();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, statusFilter, dateFrom, dateTo]);
+  }, [user]);
 
   const fetchInquiries = async (preserveSelectedInquiry = false) => {
     try {
@@ -98,19 +87,9 @@ export default function ContractorInquiriesList({
       const params = new URLSearchParams({
         page: '1',
         limit: '50',
+        sort_by: 'created_at',
+        sort_order: 'desc',
       });
-
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
-      }
-
-      if (dateFrom) {
-        params.append('date_from', dateFrom);
-      }
-
-      if (dateTo) {
-        params.append('date_to', dateTo);
-      }
 
       const headers: HeadersInit = {};
       if (user?.id) {
@@ -188,33 +167,15 @@ export default function ContractorInquiriesList({
       );
     }
 
-    // Apply sorting
+    // Apply sorting - always newest first
     filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-        case 'oldest':
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        case 'status':
-          return a.status.localeCompare(b.status);
-        case 'priority':
-          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-          const aPriority =
-            priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-          const bPriority =
-            priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-          return bPriority - aPriority;
-        default:
-          return 0;
-      }
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
 
     return filtered;
-  }, [inquiries, searchQuery, sortBy]);
+  }, [inquiries, searchQuery]);
 
   const handleViewDetails = (inquiry: InquiryWithRelations) => {
     setSelectedInquiry(inquiry);
@@ -306,126 +267,20 @@ export default function ContractorInquiriesList({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Search and Filters */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search inquiries by subject, message, or sender..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Status Filter */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Status
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={statusFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={statusFilter === 'sent' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('sent')}
-                >
-                  Sent
-                </Button>
-                <Button
-                  variant={statusFilter === 'viewed' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('viewed')}
-                >
-                  Viewed
-                </Button>
-                <Button
-                  variant={statusFilter === 'responded' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('responded')}
-                >
-                  Responded
-                </Button>
-                <Button
-                  variant={statusFilter === 'quoted' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('quoted')}
-                >
-                  Quoted
-                </Button>
-              </div>
-            </div>
-
-            {/* Sort */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Sort By
-              </label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date From */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                From Date
-              </label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-              />
-            </div>
-
-            {/* Date To */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                To Date
-              </label>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                min={dateFrom}
-              />
-            </div>
-          </div>
-
-          {/* Clear Filters */}
-          {(dateFrom || dateTo || searchQuery) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setDateFrom('');
-                setDateTo('');
-                setSearchQuery('');
-              }}
-            >
-              Clear Filters
-            </Button>
-          )}
+      {/* Header with Search */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Inquiries</h1>
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+          <Input
+            type="text"
+            placeholder="Search inquiries by subject, message, or sender..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-10 border-0 bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none focus:bg-gray-100"
+          />
         </div>
-      </Card>
+      </div>
 
       {/* Inquiries List */}
       {filteredAndSortedInquiries.length === 0 ? (

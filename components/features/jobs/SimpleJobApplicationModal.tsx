@@ -55,6 +55,7 @@ export function SimpleJobApplicationModal({
           key={job.id}
           jobId={job.id}
           jobTitle={job.title}
+          job={job}
           onSuccess={handleSuccess}
           onCancel={handleCancel}
         />

@@ -6,14 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertCircle, Send } from 'lucide-react';
 
@@ -22,11 +14,7 @@ interface ContactFormData {
   email: string;
   phone?: string;
   company?: string;
-  category: string;
-  subject: string;
   message: string;
-  newsletter: boolean;
-  marketing: boolean;
   csrfToken?: string;
 }
 
@@ -34,27 +22,13 @@ interface ContactFormProps {
   className?: string;
 }
 
-const inquiryCategories = [
-  { value: 'general', label: 'General Inquiry' },
-  { value: 'support', label: 'Technical Support' },
-  { value: 'partnership', label: 'Partnership Opportunity' },
-  { value: 'contractor', label: 'Contractor Application' },
-  { value: 'feedback', label: 'Feedback & Suggestions' },
-  { value: 'media', label: 'Media & Press' },
-  { value: 'other', label: 'Other' },
-];
-
 export default function ContactForm({ className }: ContactFormProps) {
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
     phone: '',
     company: '',
-    category: '',
-    subject: '',
     message: '',
-    newsletter: false,
-    marketing: false,
     csrfToken: '',
   });
 
@@ -92,14 +66,6 @@ export default function ContactForm({ className }: ContactFormProps) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'Please select an inquiry category';
-    }
-
-    if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
     }
 
     if (!formData.message.trim()) {
@@ -150,11 +116,7 @@ export default function ContactForm({ className }: ContactFormProps) {
           email: '',
           phone: '',
           company: '',
-          category: '',
-          subject: '',
           message: '',
-          newsletter: false,
-          marketing: false,
           csrfToken: formData.csrfToken, // Keep the CSRF token
         });
       } else {
@@ -253,56 +215,6 @@ export default function ContactForm({ className }: ContactFormProps) {
             </div>
           </div>
 
-          {/* Inquiry Category */}
-          <div>
-            <Label htmlFor="category" id="category-label">
-              Inquiry Category *
-            </Label>
-            <Select
-              value={formData.category}
-              onValueChange={value => handleInputChange('category', value)}
-            >
-              <SelectTrigger
-                id="category"
-                aria-labelledby="category-label"
-                className={errors.category ? 'border-red-500' : ''}
-              >
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {inquiryCategories.map(category => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.category && (
-              <p
-                className="text-sm text-red-600 mt-1"
-                role="alert"
-                aria-live="polite"
-              >
-                {errors.category}
-              </p>
-            )}
-          </div>
-
-          {/* Subject */}
-          <div>
-            <Label htmlFor="subject">Subject *</Label>
-            <Input
-              id="subject"
-              value={formData.subject}
-              onChange={e => handleInputChange('subject', e.target.value)}
-              className={errors.subject ? 'border-red-500' : ''}
-              placeholder="Brief description of your inquiry"
-            />
-            {errors.subject && (
-              <p className="text-sm text-red-600 mt-1">{errors.subject}</p>
-            )}
-          </div>
-
           {/* Message */}
           <div>
             <Label htmlFor="message">Message *</Label>
@@ -317,35 +229,6 @@ export default function ContactForm({ className }: ContactFormProps) {
             {errors.message && (
               <p className="text-sm text-red-600 mt-1">{errors.message}</p>
             )}
-          </div>
-
-          {/* Preferences */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="newsletter"
-                checked={formData.newsletter}
-                onCheckedChange={checked =>
-                  handleInputChange('newsletter', checked as boolean)
-                }
-              />
-              <Label htmlFor="newsletter" className="text-sm">
-                Subscribe to our newsletter for event planning tips and updates
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="marketing"
-                checked={formData.marketing}
-                onCheckedChange={checked =>
-                  handleInputChange('marketing', checked as boolean)
-                }
-              />
-              <Label htmlFor="marketing" className="text-sm text-gray-600">
-                I agree to receive marketing communications from Event Pros NZ
-              </Label>
-            </div>
           </div>
 
           {/* Submit Button */}

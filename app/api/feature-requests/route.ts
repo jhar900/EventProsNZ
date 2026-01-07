@@ -249,7 +249,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply filters to queries
-    const applyFilters = (q: any) => {
+    const applyFilters = (q: any, excludeRejectedForNonAdmin = false) => {
+      // Exclude rejected requests for non-admin users (always, regardless of status filter)
+      if (excludeRejectedForNonAdmin) {
+        q = q.neq('status', 'rejected');
+      }
       if (params.status) {
         q = q.eq('status', params.status);
       }
@@ -288,8 +292,8 @@ export async function GET(request: NextRequest) {
     let error: any = null;
 
     if (allRequestsQuery) {
-      // Admin: fetch all requests (public and private)
-      allRequestsQuery = applyFilters(allRequestsQuery);
+      // Admin: fetch all requests (public and private) - admins can see rejected
+      allRequestsQuery = applyFilters(allRequestsQuery, false);
       allRequestsQuery = applySorting(allRequestsQuery);
       const { data: allRequests, error: allError } = await allRequestsQuery;
 
@@ -313,8 +317,8 @@ export async function GET(request: NextRequest) {
         console.error('Error fetching all requests for admin:', allError);
       }
     } else {
-      // Non-admin: fetch public requests
-      publicQuery = applyFilters(publicQuery);
+      // Non-admin: fetch public requests (exclude rejected unless explicitly filtering by rejected)
+      publicQuery = applyFilters(publicQuery, true);
       publicQuery = applySorting(publicQuery);
       const { data: publicReqs, error: publicError } = await publicQuery;
 
@@ -328,9 +332,9 @@ export async function GET(request: NextRequest) {
       }
       error = publicError;
 
-      // Fetch user's own requests if authenticated
+      // Fetch user's own requests if authenticated (exclude rejected unless explicitly filtering by rejected)
       if (userOwnQuery) {
-        userOwnQuery = applyFilters(userOwnQuery);
+        userOwnQuery = applyFilters(userOwnQuery, true);
         userOwnQuery = applySorting(userOwnQuery);
         const { data: ownRequests, error: ownError } = await userOwnQuery;
 
@@ -639,10 +643,112 @@ export async function POST(request: NextRequest) {
       return suspensionResponse;
     }
 
-    const body = await request.json();
+    // Check if request is FormData (file upload) or JSON
+    // Note: When FormData is sent, the browser sets Content-Type with boundary
+    // We need to check if the request has a file by trying to parse as FormData first
+    let body: any;
+    let attachmentUrl: string | null = null;
+    const contentType = request.headers.get('content-type') || '';
+    const isFormData = contentType.includes('multipart/form-data');
+
+    if (isFormData) {
+      const formData = await request.formData();
+      body = {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        category_id: (formData.get('category_id') as string) || undefined,
+        is_public: formData.get('is_public') === 'true',
+      };
+
+      // Handle file upload
+      const attachment = formData.get('attachment') as File | null;
+      if (attachment) {
+        // Validate file type
+        const allowedTypes = [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain',
+        ];
+        if (!allowedTypes.includes(attachment.type)) {
+          return NextResponse.json(
+            {
+              error:
+                'Invalid file type. Allowed: PDF, JPG, PNG, GIF, DOC, DOCX, TXT',
+            },
+            { status: 400 }
+          );
+        }
+
+        // Validate file size (10MB max)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (attachment.size > maxSize) {
+          return NextResponse.json(
+            {
+              error: 'File too large. Maximum size is 10MB.',
+            },
+            { status: 400 }
+          );
+        }
+
+        // Upload to Supabase Storage
+        const { supabaseAdmin } = await import('@/lib/supabase/server');
+        const fileExt = attachment.name.split('.').pop();
+        const timestamp = Date.now();
+        const sanitizedName = attachment.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${timestamp}_${sanitizedName}`;
+        const filePath = `feature-requests/${user.id}/${fileName}`;
+
+        const { data: uploadData, error: uploadError } =
+          await supabaseAdmin.storage
+            .from('feature-request-attachments')
+            .upload(filePath, attachment, {
+              contentType: attachment.type,
+              upsert: false,
+            });
+
+        if (uploadError) {
+          console.error('File upload error:', uploadError);
+          return NextResponse.json(
+            {
+              error: 'Failed to upload attachment',
+              details: uploadError.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        // Get public URL (for private buckets, we'll use the path for signed URLs)
+        // Store the full path so we can generate signed URLs later
+        const { data: urlData } = supabaseAdmin.storage
+          .from('feature-request-attachments')
+          .getPublicUrl(filePath);
+
+        // For private buckets, store the path, not the public URL
+        // The path format: feature-request-attachments/feature-requests/{user_id}/{filename}
+        attachmentUrl = urlData.publicUrl;
+
+        console.log('File uploaded successfully:', {
+          filePath,
+          attachmentUrl,
+          fileName: attachment.name,
+          fileSize: attachment.size,
+        });
+      }
+    } else {
+      body = await request.json();
+    }
+
     console.log('Request body received:', {
       ...body,
       description: body.description?.substring(0, 100),
+      hasAttachment: !!attachmentUrl,
+      attachmentUrl: attachmentUrl,
+      contentType: request.headers.get('content-type'),
+      isFormData: isFormData,
     });
 
     const validatedData = createFeatureRequestSchema.parse(body);
@@ -684,6 +790,7 @@ export async function POST(request: NextRequest) {
             : null,
         priority: validatedData.priority || 'medium',
         is_public: validatedData.is_public ?? true,
+        attachment_url: attachmentUrl,
       })
       .select()
       .single();
@@ -701,6 +808,7 @@ export async function POST(request: NextRequest) {
         category_id: validatedData.category_id,
         priority: validatedData.priority || 'medium',
         is_public: validatedData.is_public ?? true,
+        attachment_url: attachmentUrl,
       });
       return NextResponse.json(
         {
@@ -803,10 +911,10 @@ export async function POST(request: NextRequest) {
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #4F46E5; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+            .header { background: linear-gradient(135deg, #f18d30 0%, #f4a855 100%); color: white; padding: 20px; border-radius: 5px 5px 0 0; }
             .content { background-color: #f9fafb; padding: 20px; border-radius: 0 0 5px 5px; }
             .field { margin-bottom: 15px; }
-            .label { font-weight: bold; color: #4F46E5; }
+            .label { font-weight: bold; color: #f18d30; }
             .value { margin-top: 5px; padding: 10px; background-color: white; border-radius: 4px; }
             .description { white-space: pre-wrap; }
           </style>
@@ -863,12 +971,12 @@ ${featureRequest.description}
         );
 
         const result = await SimpleEmailService.sendEmail({
-          to: 'jasonhartnz@gmail.com',
+          to: 'jason@eventpros.co.nz',
           subject: emailSubject,
           html: emailHtml,
           text: emailText,
-          // Use Resend's test domain for development, or your verified domain for production
-          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+          // Use no-reply@eventpros.co.nz for feature request notifications
+          from: 'no-reply@eventpros.co.nz',
           fromName: 'EventProsNZ',
         });
 

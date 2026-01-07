@@ -97,9 +97,9 @@ export function JobCard({
     if (job.timeline_start_date && job.timeline_end_date) {
       const start = new Date(job.timeline_start_date);
       const end = new Date(job.timeline_end_date);
-      return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      return `${start.toLocaleDateString('en-GB')} - ${end.toLocaleDateString('en-GB')}`;
     } else if (job.timeline_start_date) {
-      return `Starting ${new Date(job.timeline_start_date).toLocaleDateString()}`;
+      return `Starting ${new Date(job.timeline_start_date).toLocaleDateString('en-GB')}`;
     }
     return 'Timeline not specified';
   };

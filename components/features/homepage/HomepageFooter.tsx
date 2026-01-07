@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -12,33 +12,26 @@ import {
   Heart,
   Flag,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { HomepageModalContext } from './HomepageLayout';
 
 interface HomepageFooterProps {
   className?: string;
 }
 
 export function HomepageFooter({ className = '' }: HomepageFooterProps) {
-  const [isMounted, setIsMounted] = useState(false);
   const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { user } = useAuth();
+  const modalContext = React.useContext(HomepageModalContext);
 
   const footerLinks = {
-    support: [
-      { name: 'Help Center', href: '/help' },
-      { name: 'Contact Us', href: '/contact' },
-      { name: 'Support', href: '/support' },
-      { name: 'Community', href: '/community' },
-      { name: 'Status', href: '/status' },
-    ],
-    company: [
-      { name: 'About Us', href: '/about' },
-      { name: 'Careers', href: '/careers' },
-      { name: 'Press', href: '/press' },
-      { name: 'Blog', href: '/blog' },
-      { name: 'Partners', href: '/partners' },
+    pages: [
+      { name: 'Home', href: '/' },
+      { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+      { name: 'Contractors', href: '/contractors' },
+      { name: 'Jobs', href: '/jobs' },
+      { name: 'About', href: '/about' },
+      { name: 'Contact', href: '/contact' },
     ],
     legal: [
       { name: 'Privacy Policy', href: '/privacy' },
@@ -71,7 +64,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
     <footer className={`bg-gray-900 text-white ${className}`}>
       {/* Main footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Brand section */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
@@ -130,72 +123,54 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
             </div>
           </div>
 
-          {/* Support links */}
+          {/* Pages links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Support</h4>
+            <h4 className="text-lg font-semibold mb-4">Pages</h4>
             <ul className="space-y-3">
-              {footerLinks.support.map(link => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Company</h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map(link => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
+              {footerLinks.pages.map(link => {
+                // Handle Dashboard link - show sign-up modal if not logged in
+                if (link.name === 'Dashboard' && !user) {
+                  if (modalContext) {
+                    return (
+                      <li key={link.name}>
+                        <button
+                          onClick={() => modalContext.onRegisterClick()}
+                          className="text-gray-300 hover:text-white transition-colors cursor-pointer text-left"
+                          type="button"
+                        >
+                          {link.name}
+                        </button>
+                      </li>
+                    );
+                  } else {
+                    // Fallback: navigate to dashboard if context not available
+                    return (
+                      <li key={link.name}>
+                        <Link
+                          href={link.href}
+                          className="text-gray-300 hover:text-white transition-colors"
+                        >
+                          {link.name}
+                        </Link>
+                      </li>
+                    );
+                  }
+                }
+                // Regular link
+                return (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-gray-300 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
-
-        {/* Newsletter signup */}
-        {isMounted && (
-          <div className="mt-12 pt-8 border-t border-gray-800">
-            <div className="max-w-md">
-              <h4 className="text-lg font-semibold mb-2">Stay Updated</h4>
-              <p className="text-gray-300 mb-4">
-                Get the latest news and updates from Event Pros NZ
-              </p>
-              <form
-                className="flex gap-2"
-                onSubmit={e => {
-                  e.preventDefault();
-                  // Newsletter subscription logic would go here
-                }}
-              >
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Subscribe
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bottom footer */}

@@ -48,7 +48,6 @@ interface FeatureRequestStatusProps {
   featureRequestId: string;
   currentStatus:
     | 'submitted'
-    | 'under_review'
     | 'planned'
     | 'in_development'
     | 'completed'
@@ -94,8 +93,6 @@ export default function FeatureRequestStatus({
     switch (status) {
       case 'submitted':
         return <FileText className="w-4 h-4" />;
-      case 'under_review':
-        return <AlertCircle className="w-4 h-4" />;
       case 'planned':
         return <Clock className="w-4 h-4" />;
       case 'in_development':
@@ -113,8 +110,6 @@ export default function FeatureRequestStatus({
     switch (status) {
       case 'submitted':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'planned':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'in_development':
@@ -132,8 +127,6 @@ export default function FeatureRequestStatus({
     switch (status) {
       case 'submitted':
         return 'Your feature request has been submitted and is awaiting review.';
-      case 'under_review':
-        return 'Your feature request is currently being reviewed by our team.';
       case 'planned':
         return 'Your feature request has been approved and is planned for development.';
       case 'in_development':
@@ -212,7 +205,6 @@ export default function FeatureRequestStatus({
 
   const statusOptions = [
     { value: 'submitted', label: 'Submitted' },
-    { value: 'under_review', label: 'Under Review' },
     { value: 'planned', label: 'Planned' },
     { value: 'in_development', label: 'In Development' },
     { value: 'completed', label: 'Completed' },

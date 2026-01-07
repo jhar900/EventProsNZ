@@ -10,6 +10,7 @@ export async function sendViaSMTP(options: {
   text: string;
   from?: string;
   fromName?: string;
+  replyTo?: string;
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const nodemailer = await import('nodemailer');
@@ -24,7 +25,7 @@ export async function sendViaSMTP(options: {
       },
     });
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: options.from
         ? `${options.fromName || 'EventProsNZ'} <${options.from}>`
         : process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER,
@@ -33,6 +34,10 @@ export async function sendViaSMTP(options: {
       text: options.text,
       html: options.html,
     };
+
+    if (options.replyTo) {
+      mailOptions.replyTo = options.replyTo;
+    }
 
     const info = await transporter.sendMail(mailOptions);
 
@@ -57,5 +62,3 @@ export async function sendViaSMTP(options: {
     };
   }
 }
-
-

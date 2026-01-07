@@ -141,8 +141,6 @@ export default function FeatureRequestAnalytics() {
     switch (status) {
       case 'submitted':
         return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
       case 'planned':
         return 'bg-purple-100 text-purple-800';
       case 'in_development':

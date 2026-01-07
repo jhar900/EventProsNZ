@@ -75,14 +75,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    let updateData: any = {};
+    const updateData: any = {};
     let historyComments = '';
 
     // Determine update data based on action
     switch (action) {
       case 'approve':
-        updateData.status = 'under_review';
-        historyComments = 'Bulk approved for review';
+        updateData.status = 'planned';
+        historyComments = 'Bulk approved and planned';
         break;
       case 'reject':
         updateData.status = 'rejected';

@@ -51,13 +51,7 @@ interface FeatureRequest {
   user_id: string;
   title: string;
   description: string;
-  status:
-    | 'submitted'
-    | 'under_review'
-    | 'planned'
-    | 'in_development'
-    | 'completed'
-    | 'rejected';
+  status: 'submitted' | 'planned' | 'in_development' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   vote_count: number;
   view_count: number;
@@ -89,6 +83,7 @@ interface FeatureRequest {
       avatar_url?: string;
     };
   }>;
+  attachment_url?: string | null;
 }
 
 export default function FeatureRequestPage() {
@@ -104,6 +99,8 @@ export default function FeatureRequestPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   // Load feature request data
   useEffect(() => {
@@ -384,6 +381,85 @@ export default function FeatureRequestPage() {
             </CardContent>
           </Card>
 
+          {/* Attachment */}
+          {featureRequest.attachment_url &&
+            (() => {
+              const fileName =
+                featureRequest.attachment_url.split('/').pop() || '';
+              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Attachment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">
+                          {fileName}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const headers: HeadersInit = {
+                              'Content-Type': 'application/json',
+                            };
+                            if (user?.id) {
+                              headers['x-user-id'] = user.id;
+                            }
+
+                            const response = await fetch(
+                              `/api/feature-requests/${featureRequest.id}/attachment`,
+                              {
+                                credentials: 'include',
+                                headers,
+                              }
+                            );
+                            if (response.ok) {
+                              const data = await response.json();
+                              if (isImage) {
+                                // Show image in modal
+                                setImagePreviewUrl(data.url);
+                                setShowImagePreview(true);
+                              } else {
+                                // Open non-image files in new tab
+                                window.open(data.url, '_blank');
+                              }
+                            } else {
+                              const errorData = await response
+                                .json()
+                                .catch(() => ({}));
+                              console.error(
+                                'Failed to load attachment:',
+                                errorData
+                              );
+                              toast.error(
+                                errorData.error || 'Failed to load attachment'
+                              );
+                            }
+                          } catch (error) {
+                            console.error('Error loading attachment:', error);
+                            toast.error('Failed to load attachment');
+                          }
+                        }}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        {isImage ? 'View Image' : 'View Attachment'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
           {/* Voting */}
           <FeatureRequestVoting
             featureRequestId={featureRequest.id}
@@ -589,6 +665,37 @@ export default function FeatureRequestPage() {
           </Card>
         </div>
       </div>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Attachment Preview</DialogTitle>
+          </DialogHeader>
+          {imagePreviewUrl && (
+            <div className="flex items-center justify-center">
+              <img
+                src={imagePreviewUrl}
+                alt="Attachment preview"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (imagePreviewUrl) {
+                  window.open(imagePreviewUrl, '_blank');
+                }
+              }}
+            >
+              Open in New Tab
+            </Button>
+            <Button onClick={() => setShowImagePreview(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

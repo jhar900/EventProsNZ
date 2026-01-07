@@ -17,13 +17,7 @@ interface FeatureRequest {
   user_id?: string;
   title: string;
   description: string;
-  status:
-    | 'submitted'
-    | 'under_review'
-    | 'planned'
-    | 'in_development'
-    | 'completed'
-    | 'rejected';
+  status: 'submitted' | 'planned' | 'in_development' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   vote_count: number;
   view_count: number;
@@ -61,12 +55,6 @@ const statusColumns = [
     title: 'Submitted',
     color: 'bg-blue-50 border-blue-200',
     headerColor: 'bg-blue-100 text-blue-800',
-  },
-  {
-    id: 'under_review',
-    title: 'Under Review',
-    color: 'bg-yellow-50 border-yellow-200',
-    headerColor: 'bg-yellow-100 text-yellow-800',
   },
   {
     id: 'planned',

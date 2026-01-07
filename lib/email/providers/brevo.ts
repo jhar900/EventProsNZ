@@ -10,6 +10,7 @@ export async function sendViaBrevo(options: {
   text: string;
   from?: string;
   fromName?: string;
+  replyTo?: string;
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const brevo = await import('@getbrevo/brevo');
@@ -34,6 +35,10 @@ export async function sendViaBrevo(options: {
       ? options.to.map(email => ({ email }))
       : [{ email: options.to }];
 
+    if (options.replyTo) {
+      sendSmtpEmail.replyTo = { email: options.replyTo };
+    }
+
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
     return {
@@ -57,5 +62,3 @@ export async function sendViaBrevo(options: {
     };
   }
 }
-
-

@@ -36,6 +36,7 @@ import {
   User as UserIcon,
   Send,
   Trash2,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import FeatureRequestSearch from '@/components/features/feature-requests/FeatureRequestSearch';
@@ -50,13 +51,7 @@ interface FeatureRequest {
   user_id?: string;
   title: string;
   description: string;
-  status:
-    | 'submitted'
-    | 'under_review'
-    | 'planned'
-    | 'in_development'
-    | 'completed'
-    | 'rejected';
+  status: 'submitted' | 'planned' | 'in_development' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   vote_count: number;
   view_count: number;
@@ -82,6 +77,7 @@ interface FeatureRequest {
   };
   comments_count?: number;
   is_public?: boolean;
+  attachment_url?: string | null;
 }
 
 interface SearchFilters {
@@ -113,6 +109,12 @@ export default function FeatureRequestsPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [attachmentImageUrl, setAttachmentImageUrl] = useState<string | null>(
+    null
+  );
+  const [isLoadingAttachment, setIsLoadingAttachment] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     search: '',
     status: '',
@@ -177,6 +179,59 @@ export default function FeatureRequestsPage() {
   useEffect(() => {
     loadFeatureRequests(1, filters, viewMode);
   }, [filters, loadFeatureRequests, viewMode]);
+
+  // Load attachment image when modal opens
+  useEffect(() => {
+    const loadAttachmentImage = async () => {
+      if (!isDetailModalOpen || !selectedRequest?.attachment_url || !user?.id) {
+        setAttachmentImageUrl(null);
+        return;
+      }
+
+      const fileName = selectedRequest.attachment_url.split('/').pop() || '';
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+
+      if (!isImage) {
+        setAttachmentImageUrl(null);
+        return;
+      }
+
+      setIsLoadingAttachment(true);
+      try {
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        headers['x-user-id'] = user.id;
+
+        const response = await fetch(
+          `/api/feature-requests/${selectedRequest.id}/attachment`,
+          {
+            credentials: 'include',
+            headers,
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setAttachmentImageUrl(data.url);
+        } else {
+          setAttachmentImageUrl(null);
+        }
+      } catch (error) {
+        console.error('Error loading attachment image:', error);
+        setAttachmentImageUrl(null);
+      } finally {
+        setIsLoadingAttachment(false);
+      }
+    };
+
+    loadAttachmentImage();
+  }, [
+    isDetailModalOpen,
+    selectedRequest?.id,
+    selectedRequest?.attachment_url,
+    user?.id,
+  ]);
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters(newFilters);
@@ -461,13 +516,16 @@ export default function FeatureRequestsPage() {
     }
   };
 
-  const handleSubmitRequest = async (data: {
-    title: string;
-    description: string;
-    category_id: string;
-    tags: string[];
-    is_public: boolean;
-  }) => {
+  const handleSubmitRequest = async (
+    data: {
+      title: string;
+      description: string;
+      category_id: string;
+      tags: string[];
+      is_public: boolean;
+    },
+    attachment?: File | null
+  ) => {
     if (!user) {
       toast.error('Please log in to submit a feature request');
       router.push('/login');
@@ -484,19 +542,42 @@ export default function FeatureRequestsPage() {
       // The API will authenticate via cookies, but also send user_id as fallback
       console.log('Submitting request (user authenticated via cookies)...');
       console.log('User ID:', user?.id);
+      console.log('Has attachment:', !!attachment);
 
-      const response = await fetch('/api/feature-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': user.id, // Send user ID as header fallback
-        },
-        credentials: 'include', // Ensure cookies are sent
-        body: JSON.stringify({
-          ...data,
-          user_id: user.id, // Also include in body as fallback
-        }),
-      });
+      // Use FormData if there's an attachment, otherwise use JSON
+      let response: Response;
+      if (attachment) {
+        const formData = new FormData();
+        formData.append('title', data.title);
+        formData.append('description', data.description);
+        formData.append('is_public', String(data.is_public));
+        if (data.category_id) {
+          formData.append('category_id', data.category_id);
+        }
+        formData.append('attachment', attachment);
+
+        response = await fetch('/api/feature-requests', {
+          method: 'POST',
+          headers: {
+            'X-User-Id': user.id, // Send user ID as header fallback
+          },
+          credentials: 'include', // Ensure cookies are sent
+          body: formData,
+        });
+      } else {
+        response = await fetch('/api/feature-requests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': user.id, // Send user ID as header fallback
+          },
+          credentials: 'include', // Ensure cookies are sent
+          body: JSON.stringify({
+            ...data,
+            user_id: user.id, // Also include in body as fallback
+          }),
+        });
+      }
 
       console.log('Response received:', response.status, response.ok);
 
@@ -563,7 +644,6 @@ export default function FeatureRequestsPage() {
   const getStatusCounts = () => {
     const counts = {
       submitted: 0,
-      under_review: 0,
       planned: 0,
       in_development: 0,
       completed: 0,
@@ -619,20 +699,6 @@ export default function FeatureRequestsPage() {
                   <div>
                     <p className="text-2xl font-bold">{totalCount}</p>
                     <p className="text-sm text-gray-600">Total Requests</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Search className="w-5 h-5 text-purple-600" />
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {statusCounts.under_review}
-                    </p>
-                    <p className="text-sm text-gray-600">Under Review</p>
                   </div>
                 </div>
               </CardContent>
@@ -892,6 +958,7 @@ export default function FeatureRequestsPage() {
               // Reset comments when modal closes
               setComments([]);
               setNewComment('');
+              setAttachmentImageUrl(null);
             }
           }}
         >
@@ -915,6 +982,103 @@ export default function FeatureRequestsPage() {
                       <DialogDescription className="text-base mb-4">
                         {selectedRequest.description}
                       </DialogDescription>
+                      {/* Attachment */}
+                      {selectedRequest.attachment_url &&
+                        (() => {
+                          const fileName =
+                            selectedRequest.attachment_url.split('/').pop() ||
+                            '';
+                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(
+                            fileName
+                          );
+
+                          return (
+                            <div className="mt-4">
+                              <div className="p-4 bg-gray-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-gray-500" />
+                                    <span className="text-sm font-medium text-gray-700">
+                                      Attachment
+                                    </span>
+                                  </div>
+                                  {!isImage && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={async () => {
+                                        try {
+                                          const headers: HeadersInit = {
+                                            'Content-Type': 'application/json',
+                                          };
+                                          if (user?.id) {
+                                            headers['x-user-id'] = user.id;
+                                          }
+
+                                          const response = await fetch(
+                                            `/api/feature-requests/${selectedRequest.id}/attachment`,
+                                            {
+                                              credentials: 'include',
+                                              headers,
+                                            }
+                                          );
+                                          if (response.ok) {
+                                            const data = await response.json();
+                                            window.open(data.url, '_blank');
+                                          } else {
+                                            const errorData = await response
+                                              .json()
+                                              .catch(() => ({}));
+                                            console.error(
+                                              'Failed to load attachment:',
+                                              errorData
+                                            );
+                                            toast.error(
+                                              errorData.error ||
+                                                'Failed to load attachment'
+                                            );
+                                          }
+                                        } catch (error) {
+                                          console.error(
+                                            'Error loading attachment:',
+                                            error
+                                          );
+                                          toast.error(
+                                            'Failed to load attachment'
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <FileText className="w-4 h-4 mr-2" />
+                                      View
+                                    </Button>
+                                  )}
+                                </div>
+                                {isImage && (
+                                  <div className="mt-3">
+                                    {isLoadingAttachment ? (
+                                      <div className="flex items-center justify-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+                                      </div>
+                                    ) : attachmentImageUrl ? (
+                                      <div className="rounded-lg overflow-hidden border border-gray-200">
+                                        <img
+                                          src={attachmentImageUrl}
+                                          alt="Attachment"
+                                          className="w-full h-auto max-h-96 object-contain"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-gray-500 py-2">
+                                        Failed to load image
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       {/* Creator Information */}
                       {selectedRequest.profiles && (
                         <div className="flex items-center gap-3 mb-0">
@@ -1009,15 +1173,13 @@ export default function FeatureRequestsPage() {
                           className={`flex items-center gap-1 ${
                             selectedRequest.status === 'submitted'
                               ? 'bg-blue-100 text-blue-800'
-                              : selectedRequest.status === 'under_review'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : selectedRequest.status === 'planned'
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : selectedRequest.status === 'in_development'
-                                    ? 'bg-orange-100 text-orange-800'
-                                    : selectedRequest.status === 'completed'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
+                              : selectedRequest.status === 'planned'
+                                ? 'bg-purple-100 text-purple-800'
+                                : selectedRequest.status === 'in_development'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : selectedRequest.status === 'completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
                           }`}
                         >
                           {selectedRequest.status
@@ -1160,6 +1322,37 @@ export default function FeatureRequestsPage() {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Image Preview Dialog */}
+        <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Attachment Preview</DialogTitle>
+            </DialogHeader>
+            {imagePreviewUrl && (
+              <div className="flex items-center justify-center">
+                <img
+                  src={imagePreviewUrl}
+                  alt="Attachment preview"
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (imagePreviewUrl) {
+                    window.open(imagePreviewUrl, '_blank');
+                  }
+                }}
+              >
+                Open in New Tab
+              </Button>
+              <Button onClick={() => setShowImagePreview(false)}>Close</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

@@ -102,7 +102,7 @@ export default function RequestPrioritization() {
     try {
       setLoading(true);
       const response = await fetch(
-        '/api/admin/feature-requests?status=submitted,under_review,planned'
+        '/api/admin/feature-requests?status=submitted,planned'
       );
       const data = await response.json();
 

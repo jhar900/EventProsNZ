@@ -196,14 +196,12 @@ export default function DashboardLayout({
             label: 'Feature Requests',
             icon: Lightbulb,
           },
-          { href: '/profile', label: 'Profile', icon: Settings },
         ];
       case 'contractor':
         return [
           ...baseItems,
-          { href: '/profile', label: 'Profile', icon: Settings },
-          { href: '/jobs', label: 'Browse Jobs', icon: Search },
           { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
+          { href: '/jobs', label: 'Jobs', icon: Briefcase },
           {
             href: '/feature-requests',
             label: 'Feature Requests',
@@ -240,7 +238,7 @@ export default function DashboardLayout({
 
         {/* Sidebar */}
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:inset-0 lg:h-screen flex flex-col ${
+          className={`fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:inset-0 lg:h-screen flex flex-col ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -454,8 +452,8 @@ export default function DashboardLayout({
 
           {/* User Details Section */}
           {user && (
-            <div className="p-4 border-gray-200">
-              <div className="flex items-center space-x-3 mb-0">
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex items-center space-x-3">
                 {/* Avatar */}
                 <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                   {user.profile?.avatar_url ? (
@@ -476,24 +474,35 @@ export default function DashboardLayout({
                 </div>
 
                 {/* User Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.profile?.first_name && user.profile?.last_name
-                      ? `${user.profile.first_name} ${user.profile.last_name}`
-                      : user.profile?.first_name ||
-                        user.email?.split('@')[0] ||
-                        'User'}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate capitalize">
-                    {user.role === 'event_manager'
-                      ? 'Event Manager'
-                      : user.role === 'contractor'
-                        ? 'Contractor'
-                        : user.role === 'admin'
-                          ? 'Administrator'
-                          : user.role}
-                  </p>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                <div className="flex-1 min-w-0 flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {user.profile?.first_name && user.profile?.last_name
+                        ? `${user.profile.first_name} ${user.profile.last_name}`
+                        : user.profile?.first_name ||
+                          user.email?.split('@')[0] ||
+                          'User'}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate capitalize">
+                      {user.role === 'event_manager'
+                        ? 'Event Manager'
+                        : user.role === 'contractor'
+                          ? 'Contractor'
+                          : user.role === 'admin'
+                            ? 'Administrator'
+                            : user.role}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/profile"
+                    className="ml-2 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors flex items-center"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Link>
                 </div>
               </div>
             </div>

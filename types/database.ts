@@ -1281,7 +1281,6 @@ export interface Database {
         category_id: string | null;
         status:
           | 'submitted'
-          | 'under_review'
           | 'planned'
           | 'in_development'
           | 'completed'
@@ -1303,7 +1302,6 @@ export interface Database {
         category_id?: string | null;
         status?:
           | 'submitted'
-          | 'under_review'
           | 'planned'
           | 'in_development'
           | 'completed'
@@ -1325,7 +1323,6 @@ export interface Database {
         category_id?: string | null;
         status?:
           | 'submitted'
-          | 'under_review'
           | 'planned'
           | 'in_development'
           | 'completed'

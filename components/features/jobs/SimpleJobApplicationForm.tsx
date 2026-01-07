@@ -23,6 +23,13 @@ import {
   DocumentIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import {
+  MapPinIcon,
+  CurrencyDollarIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { Job } from '@/types/jobs';
+import { Badge } from '@/components/ui/badge';
 
 // Simplified validation schema - no minimum character count
 const simpleJobApplicationSchema = z.object({
@@ -52,6 +59,7 @@ interface ApplicationTemplate {
 interface SimpleJobApplicationFormProps {
   jobId: string;
   jobTitle: string;
+  job?: Job | null;
   onSuccess?: (application: any) => void;
   onCancel?: () => void;
 }
@@ -59,6 +67,7 @@ interface SimpleJobApplicationFormProps {
 export function SimpleJobApplicationForm({
   jobId,
   jobTitle,
+  job,
   onSuccess,
   onCancel,
 }: SimpleJobApplicationFormProps) {
@@ -341,12 +350,104 @@ export function SimpleJobApplicationForm({
     );
   }
 
+  // Format budget range
+  const formatBudget = () => {
+    if (!job) return 'Budget not specified';
+    if (job.budget_range_min && job.budget_range_max) {
+      return `$${job.budget_range_min.toLocaleString()} - $${job.budget_range_max.toLocaleString()}`;
+    } else if (job.budget_range_min) {
+      return `From $${job.budget_range_min.toLocaleString()}`;
+    } else if (job.budget_range_max) {
+      return `Up to $${job.budget_range_max.toLocaleString()}`;
+    }
+    return 'Budget not specified';
+  };
+
+  // Format timeline
+  const formatTimeline = () => {
+    if (!job) return 'Timeline not specified';
+    if (job.timeline_start_date && job.timeline_end_date) {
+      const start = new Date(job.timeline_start_date);
+      const end = new Date(job.timeline_end_date);
+      return `${start.toLocaleDateString('en-GB')} - ${end.toLocaleDateString('en-GB')}`;
+    } else if (job.timeline_start_date) {
+      return `Starting ${new Date(job.timeline_start_date).toLocaleDateString('en-GB')}`;
+    }
+    return 'Timeline not specified';
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
           Apply for: {jobTitle}
         </h3>
+
+        {/* Job Details */}
+        {job && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3 border border-gray-200">
+            {/* Description */}
+            {job.description && (
+              <div>
+                <p className="text-sm text-gray-700 line-clamp-3">
+                  {job.description}
+                </p>
+              </div>
+            )}
+
+            {/* Service Category */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">
+                Service:
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {job.service_category.replace('_', ' ').toUpperCase()}
+              </Badge>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <MapPinIcon className="h-4 w-4 flex-shrink-0" />
+              <span>{job.location}</span>
+              {job.is_remote && (
+                <Badge variant="secondary" className="text-xs ml-2">
+                  Remote OK
+                </Badge>
+              )}
+            </div>
+
+            {/* Budget */}
+            {job.budget_range_min || job.budget_range_max ? (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <CurrencyDollarIcon className="h-4 w-4 flex-shrink-0" />
+                <span>{formatBudget()}</span>
+              </div>
+            ) : null}
+
+            {/* Timeline */}
+            {job.timeline_start_date && (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                <span>{formatTimeline()}</span>
+              </div>
+            )}
+
+            {/* Special Requirements */}
+            {job.special_requirements && (
+              <div className="pt-2 border-t border-gray-200">
+                <div className="text-sm">
+                  <span className="font-medium text-gray-700">
+                    Special Requirements:
+                  </span>
+                  <p className="text-gray-600 mt-1">
+                    {job.special_requirements}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <p className="text-sm text-gray-600 mb-2">
           Submit your application to be considered for this job.
         </p>

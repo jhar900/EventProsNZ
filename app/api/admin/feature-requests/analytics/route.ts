@@ -141,7 +141,6 @@ export async function GET(request: NextRequest) {
             acc[date] = {
               total: 0,
               submitted: 0,
-              under_review: 0,
               planned: 0,
               in_development: 0,
               completed: 0,
@@ -211,9 +210,7 @@ export async function GET(request: NextRequest) {
         total,
         pending: statusCounts.submitted || 0,
         in_progress:
-          (statusCounts.under_review || 0) +
-          (statusCounts.planned || 0) +
-          (statusCounts.in_development || 0),
+          (statusCounts.planned || 0) + (statusCounts.in_development || 0),
         completed: statusCounts.completed || 0,
         rejected: statusCounts.rejected || 0,
       },

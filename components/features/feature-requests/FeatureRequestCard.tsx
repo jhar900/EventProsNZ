@@ -32,13 +32,7 @@ interface FeatureRequestCardProps {
   id: string;
   title: string;
   description: string;
-  status:
-    | 'submitted'
-    | 'under_review'
-    | 'planned'
-    | 'in_development'
-    | 'completed'
-    | 'rejected';
+  status: 'submitted' | 'planned' | 'in_development' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   vote_count: number;
   view_count: number;
@@ -137,8 +131,6 @@ export default function FeatureRequestCard({
     switch (status) {
       case 'submitted':
         return <FileText className="w-4 h-4" />;
-      case 'under_review':
-        return <AlertCircle className="w-4 h-4" />;
       case 'planned':
         return <Clock className="w-4 h-4" />;
       case 'in_development':
@@ -156,8 +148,6 @@ export default function FeatureRequestCard({
     switch (status) {
       case 'submitted':
         return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
       case 'planned':
         return 'bg-purple-100 text-purple-800';
       case 'in_development':

@@ -675,9 +675,6 @@ export default function StatusUpdateSystem() {
                             <SelectValue placeholder="Select trigger status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="under_review">
-                              Under Review
-                            </SelectItem>
                             <SelectItem value="planned">Planned</SelectItem>
                             <SelectItem value="in_development">
                               In Development
