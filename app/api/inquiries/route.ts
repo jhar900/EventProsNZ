@@ -474,10 +474,38 @@ export async function GET(request: NextRequest) {
         eventIds.length > 0
           ? adminSupabase
               .from('events')
-              .select('id, user_id')
+              .select('id, title, event_type, event_date, location, user_id')
               .in('id', eventIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
+
+    // Get contractor user IDs from business profiles
+    const contractorUserIds = [
+      ...new Set(
+        (businessProfilesResult.data || [])
+          .map((bp: any) => bp.user_id)
+          .filter((id: any) => id)
+      ),
+    ];
+
+    // Fetch contractor user profiles
+    const contractorProfilesResult =
+      contractorUserIds.length > 0
+        ? await adminSupabase
+            .from('users')
+            .select(
+              `
+              id,
+              email,
+              profiles (
+                first_name,
+                last_name,
+                avatar_url
+              )
+            `
+            )
+            .in('id', contractorUserIds)
+        : { data: [], error: null };
 
     // Create lookup maps
     const businessProfileMap = new Map(
@@ -507,6 +535,30 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    // Create contractor profile map
+    const contractorProfileMap = new Map(
+      (contractorProfilesResult.data || []).map((contractor: any) => {
+        const profile = Array.isArray(contractor.profiles)
+          ? contractor.profiles[0]
+          : contractor.profiles;
+        return [
+          contractor.id,
+          {
+            id: contractor.id,
+            email: contractor.email,
+            profiles:
+              profile && (profile.first_name || profile.last_name)
+                ? {
+                    first_name: profile.first_name || '',
+                    last_name: profile.last_name || '',
+                    avatar_url: profile.avatar_url || null,
+                  }
+                : null,
+          },
+        ];
+      })
+    );
+
     const eventMap = new Map(
       (eventsResult.data || []).map((event: any) => [event.id, event])
     );
@@ -515,6 +567,12 @@ export async function GET(request: NextRequest) {
     const transformedInquiries = enquiriesList.map((enquiry: any) => {
       const businessProfile = enquiry.contractor_id
         ? businessProfileMap.get(enquiry.contractor_id)
+        : null;
+
+      // Get contractor user data
+      const contractorUserId = businessProfile?.user_id;
+      const contractor = contractorUserId
+        ? contractorProfileMap.get(contractorUserId)
         : null;
 
       // Get sender from sender_id (primary)
@@ -539,10 +597,34 @@ export async function GET(request: NextRequest) {
         };
       }
 
+      // Get event data
+      const event = enquiry.event_id ? eventMap.get(enquiry.event_id) : null;
+
       return {
         ...enquiry,
-        contractor_id: businessProfile?.user_id || enquiry.contractor_id,
+        contractor_id: contractorUserId || enquiry.contractor_id,
+        contractor: contractor
+          ? {
+              id: contractor.id,
+              email: contractor.email,
+              profiles: contractor.profiles,
+              business_profiles: businessProfile
+                ? {
+                    company_name: businessProfile.company_name,
+                  }
+                : null,
+            }
+          : null,
         event_manager: eventManager,
+        event: event
+          ? {
+              id: event.id,
+              title: event.title,
+              event_type: event.event_type,
+              event_date: event.event_date,
+              location: event.location,
+            }
+          : null,
         status: enquiry.status === 'pending' ? 'sent' : enquiry.status,
         inquiry_type: 'general',
         priority: 'medium',

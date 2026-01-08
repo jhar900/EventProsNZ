@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Card,
   CardContent,
@@ -56,22 +57,38 @@ export function EventDashboard({ eventId }: EventDashboardProps) {
     null
   );
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadDashboardData();
-  }, [eventId]);
+  }, [eventId, user?.id]);
 
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/events/dashboard?userId=${eventId}`);
+
+      const headers: HeadersInit = {};
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/events/dashboard?userId=${user?.id || ''}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
       const data = await response.json();
 
       if (data.success) {
         setDashboardData(data.dashboard);
       }
     } catch (error) {
-      } finally {
+      console.error('Error loading dashboard data:', error);
+    } finally {
       setIsLoading(false);
     }
   };

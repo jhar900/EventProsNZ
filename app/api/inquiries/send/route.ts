@@ -453,8 +453,11 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to contractor
     try {
+      // Use the contractor user ID (not the business profile ID)
+      const contractorUserId = contractorUser.id;
+
       // Fetch contractor and event manager details for email
-      const { data: contractorData } = await supabase
+      const { data: contractorData } = await adminSupabase
         .from('users')
         .select(
           `
@@ -465,10 +468,10 @@ export async function POST(request: NextRequest) {
           )
         `
         )
-        .eq('id', inquiryData.contractor_id)
+        .eq('id', contractorUserId)
         .single();
 
-      const { data: eventManagerData } = await supabase
+      const { data: eventManagerData } = await adminSupabase
         .from('users')
         .select(
           `
@@ -496,71 +499,133 @@ export async function POST(request: NextRequest) {
           eventManagerProfile?.first_name || 'Event Manager';
         const eventManagerEmail = eventManagerData?.email || '';
 
+        // Helper function to escape HTML
+        const escapeHtml = (text: string): string => {
+          const map: { [key: string]: string } = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+          };
+          return text.replace(/[&<>"']/g, m => map[m]);
+        };
+
+        // Format date in NZ timezone
+        const inquiryDate = inquiry.created_at || new Date().toISOString();
+        const nzDate = new Date(inquiryDate).toLocaleString('en-NZ', {
+          timeZone: 'Pacific/Auckland',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+
         // Prepare email content
-        const emailSubject = `New Inquiry on EventProsNZ: ${inquiryData.subject}`;
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL || 'https://eventprosnz.co.nz';
+        const inquiriesUrl = `${baseUrl}/inquiries`;
+        const emailSubject = `New Inquiry on Event Pros NZ: ${inquiryData.subject}`;
+
         const emailHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #f97316;">New Inquiry Received</h2>
-            <p>Hello ${contractorName},</p>
-            <p>You have received a new inquiry on EventProsNZ.</p>
-            <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #1f2937;">${inquiryData.subject}</h3>
-              <p style="color: #4b5563; white-space: pre-wrap;">${inquiryData.message}</p>
-              <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">
-                <strong>From:</strong> ${eventManagerName} (${eventManagerEmail})<br>
-                <strong>Priority:</strong> ${inquiryData.priority || 'medium'}
-              </p>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #f18d30 0%, #f4a855 100%); color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+              .content { background-color: #f9fafb; padding: 20px; border-radius: 0 0 5px 5px; }
+              .field { margin-bottom: 15px; }
+              .label { font-weight: bold; color: #f18d30; }
+              .value { margin-top: 5px; padding: 10px; background-color: white; border-radius: 4px; }
+              .message { white-space: pre-wrap; }
+              .button { display: inline-block; padding: 12px 24px; background-color: #f18d30; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold; }
+              .button:hover { background-color: #d97706; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h2>New Inquiry on Event Pros NZ</h2>
+              </div>
+              <div class="content">
+                <p>Hello ${escapeHtml(contractorName)},</p>
+                <p>You have received a new inquiry on Event Pros NZ from ${escapeHtml(eventManagerName)}.</p>
+                
+                <div class="field">
+                  <div class="label">Subject:</div>
+                  <div class="value">${escapeHtml(inquiryData.subject)}</div>
+                </div>
+                
+                <div class="field">
+                  <div class="label">Message:</div>
+                  <div class="value message">${escapeHtml(inquiryData.message)}</div>
+                </div>
+                
+                <div class="field">
+                  <div class="label">Received At (NZ Time):</div>
+                  <div class="value">${escapeHtml(nzDate)}</div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${inquiriesUrl}" class="button">View Inquiry</a>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                  You can view and respond to this inquiry by clicking the button above or visiting your <a href="${inquiriesUrl}" style="color: #f18d30;">inquiries page</a>.
+                </p>
+              </div>
             </div>
-            <p>
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://eventpros.co.nz'}/inquiries" 
-                 style="display: inline-block; background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px;">
-                View Inquiry on EventProsNZ
-              </a>
-            </p>
-            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-              Best regards,<br>
-              The EventProsNZ Team
-            </p>
-          </div>
+          </body>
+          </html>
         `;
+
         const emailText = `
-          New Inquiry Received
+New Inquiry on Event Pros NZ
 
-          Hello ${contractorName},
+Hello ${contractorName},
 
-          You have received a new inquiry on EventProsNZ.
+You have received a new inquiry on Event Pros NZ from ${eventManagerName}.
 
-          Subject: ${inquiryData.subject}
+Subject: ${inquiryData.subject}
 
-          Message:
-          ${inquiryData.message}
+Message:
+${inquiryData.message}
 
-          From: ${eventManagerName} (${eventManagerEmail})
-          Priority: ${inquiryData.priority || 'medium'}
+Received At (NZ Time): ${nzDate}
 
-          View this inquiry at: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://eventpros.co.nz'}/inquiries
+View this inquiry: ${inquiriesUrl}
+        `.trim();
 
-          Best regards,
-          The EventProsNZ Team
-        `;
-
-        // Send email using SendGrid
-        const { SendGridService } = await import(
-          '@/lib/email/sendgrid-service'
+        // Send email using SimpleEmailService
+        const { SimpleEmailService } = await import(
+          '@/lib/email/simple-email-service'
         );
-        const sendGridService = new SendGridService();
 
-        await sendGridService.sendEmail({
+        const result = await SimpleEmailService.sendEmail({
           to: contractorEmail,
           subject: emailSubject,
           html: emailHtml,
           text: emailText,
-          categories: ['inquiry', 'notification'],
+          from: 'no-reply@eventpros.co.nz',
+          fromName: 'Event Pros NZ',
         });
 
-        console.log(
-          `Inquiry notification email sent to contractor: ${contractorEmail}`
-        );
+        if (result.success) {
+          console.log(
+            `Inquiry notification email sent to contractor: ${contractorEmail}`,
+            { messageId: result.messageId, inquiryId: inquiry.id }
+          );
+        } else {
+          console.error(
+            'Failed to send inquiry notification email:',
+            result.error
+          );
+        }
       }
     } catch (emailError) {
       // Log email error but don't fail the inquiry creation

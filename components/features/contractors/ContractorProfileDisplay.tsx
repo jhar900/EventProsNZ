@@ -66,6 +66,93 @@ export function ContractorProfileDisplay({
   const [contactErrorMessage, setContactErrorMessage] = React.useState('');
   const getInTouchFormRef = useRef<HTMLDivElement>(null);
 
+  // Check for existing conversation
+  const [existingConversation, setExistingConversation] =
+    React.useState<any>(null);
+  const [conversationDetails, setConversationDetails] =
+    React.useState<any>(null);
+  const [loadingConversation, setLoadingConversation] = React.useState(false);
+  const [loadingDetails, setLoadingDetails] = React.useState(false);
+
+  // Fetch existing conversation with this contractor
+  React.useEffect(() => {
+    const fetchExistingConversation = async () => {
+      if (!user || isPreview || !contractor?.id) return;
+
+      try {
+        setLoadingConversation(true);
+        const params = new URLSearchParams({
+          page: '1',
+          limit: '50',
+          sort_by: 'created_at',
+          sort_order: 'desc',
+        });
+
+        const headers: HeadersInit = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+
+        const response = await fetch(`/api/inquiries?${params.toString()}`, {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Find conversation with this contractor
+          const conversation = (data.inquiries || []).find(
+            (conv: any) => conv.contractor?.id === contractor.id
+          );
+          if (conversation) {
+            setExistingConversation(conversation);
+            // Fetch full conversation details
+            fetchConversationDetails(conversation.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching existing conversation:', error);
+      } finally {
+        setLoadingConversation(false);
+      }
+    };
+
+    fetchExistingConversation();
+  }, [user, contractor?.id, isPreview]);
+
+  // Fetch full conversation details including responses
+  const fetchConversationDetails = async (inquiryId: string) => {
+    if (!user) return;
+
+    try {
+      setLoadingDetails(true);
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(`/api/inquiries/${inquiryId}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.inquiry) {
+          setConversationDetails(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching conversation details:', error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   // Portfolio lightbox state
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const [lightboxMediaIndex, setLightboxMediaIndex] = React.useState(0);
@@ -616,102 +703,238 @@ export function ContractorProfileDisplay({
                 </div>
               )}
 
-              {/* Get In Touch Form */}
+              {/* Get In Touch Form or Continue Conversation */}
               {(!isPreview && user) || isPreview ? (
                 <div ref={getInTouchFormRef}>
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Get In Touch
-                    </h3>
-                    {isPreview && (
-                      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                        <p className="text-sm text-yellow-800">
-                          <strong>Note:</strong> This form is for display
-                          purposes only. Visitors will see the functional form
-                          on your public profile page.
-                        </p>
+                    {loadingConversation ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                       </div>
-                    )}
-                    <form onSubmit={handleContactSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="contact-subject">
-                          Subject (Optional)
-                        </Label>
-                        <input
-                          type="text"
-                          id="contact-subject"
-                          value={contactSubject}
-                          onChange={e => setContactSubject(e.target.value)}
-                          maxLength={200}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                          placeholder="e.g., Event planning inquiry"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="contact-message">
-                          Message <span className="text-red-500">*</span>
-                        </Label>
-                        <Textarea
-                          id="contact-message"
-                          value={contactMessage}
-                          onChange={e => setContactMessage(e.target.value)}
-                          rows={4}
-                          maxLength={2000}
-                          required
-                          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                          placeholder="Type your message here..."
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                          {contactMessage.length}/2000 characters
-                        </p>
-                      </div>
-
-                      {/* Status Messages */}
-                      {contactSubmitStatus === 'success' && (
-                        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                          <div className="flex items-center">
-                            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                            <p className="text-sm text-green-800">
-                              Message sent successfully!
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {contactSubmitStatus === 'error' && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                          <div className="flex items-center">
-                            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                            <p className="text-sm text-red-800">
-                              {contactErrorMessage}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={
-                          isSubmittingContact ||
-                          !contactMessage.trim() ||
-                          isPreview
-                        }
-                        className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmittingContact ? (
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Sending...
+                    ) : existingConversation ? (
+                      <>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Continue Conversation
+                        </h3>
+                        {loadingDetails ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
-                          <>
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Message
-                          </>
+                          <div className="space-y-4">
+                            {/* Original Message */}
+                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-900 mb-1">
+                                    {existingConversation.subject ||
+                                      'No subject'}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                    {existingConversation.message}
+                                  </p>
+                                </div>
+                                <Badge
+                                  className={`ml-2 ${
+                                    existingConversation.status === 'responded'
+                                      ? 'bg-green-100 text-green-800'
+                                      : existingConversation.status === 'viewed'
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                  }`}
+                                >
+                                  {existingConversation.status}
+                                </Badge>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <span className="text-xs text-gray-500">
+                                  {new Date(
+                                    existingConversation.created_at
+                                  ).toLocaleDateString('en-NZ', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Responses */}
+                            {conversationDetails?.responses &&
+                              conversationDetails.responses.length > 0 && (
+                                <div className="space-y-3">
+                                  {conversationDetails.responses.map(
+                                    (response: any) => (
+                                      <div
+                                        key={response.id}
+                                        className="border border-gray-200 rounded-lg p-4 bg-white"
+                                      >
+                                        <div className="flex items-start justify-between mb-2">
+                                          <div className="flex-1">
+                                            <div className="flex items-center mb-1">
+                                              <span className="text-sm font-medium text-gray-900">
+                                                {response.responder?.profiles
+                                                  ? `${response.responder.profiles.first_name || ''} ${response.responder.profiles.last_name || ''}`.trim() ||
+                                                    response.responder.email
+                                                  : response.responder?.email ||
+                                                    'Unknown'}
+                                              </span>
+                                              <Badge
+                                                variant="outline"
+                                                className="ml-2 text-xs"
+                                              >
+                                                {response.response_type
+                                                  ? response.response_type
+                                                      .split('_')
+                                                      .map(
+                                                        (word: string) =>
+                                                          word
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                          word
+                                                            .slice(1)
+                                                            .toLowerCase()
+                                                      )
+                                                      .join(' ')
+                                                  : 'Reply'}
+                                              </Badge>
+                                            </div>
+                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                              {response.message}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="mt-2">
+                                          <span className="text-xs text-gray-500">
+                                            {new Date(
+                                              response.created_at
+                                            ).toLocaleDateString('en-NZ', {
+                                              year: 'numeric',
+                                              month: 'long',
+                                              day: 'numeric',
+                                              hour: '2-digit',
+                                              minute: '2-digit',
+                                            })}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              )}
+
+                            {/* Link to conversations page */}
+                            <div className="pt-2">
+                              <Link href="/conversations">
+                                <Button variant="outline" className="w-full">
+                                  View All Conversations
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
                         )}
-                      </Button>
-                    </form>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Get In Touch
+                        </h3>
+                        {isPreview && (
+                          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <p className="text-sm text-yellow-800">
+                              <strong>Note:</strong> This form is for display
+                              purposes only. Visitors will see the functional
+                              form on your public profile page.
+                            </p>
+                          </div>
+                        )}
+                        <form
+                          onSubmit={handleContactSubmit}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <Label htmlFor="contact-subject">
+                              Subject (Optional)
+                            </Label>
+                            <input
+                              type="text"
+                              id="contact-subject"
+                              value={contactSubject}
+                              onChange={e => setContactSubject(e.target.value)}
+                              maxLength={200}
+                              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                              placeholder="e.g., Event planning inquiry"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="contact-message">
+                              Message <span className="text-red-500">*</span>
+                            </Label>
+                            <Textarea
+                              id="contact-message"
+                              value={contactMessage}
+                              onChange={e => setContactMessage(e.target.value)}
+                              rows={4}
+                              maxLength={2000}
+                              required
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                              placeholder="Type your message here..."
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                              {contactMessage.length}/2000 characters
+                            </p>
+                          </div>
+
+                          {/* Status Messages */}
+                          {contactSubmitStatus === 'success' && (
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                              <div className="flex items-center">
+                                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                                <p className="text-sm text-green-800">
+                                  Message sent successfully!
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {contactSubmitStatus === 'error' && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                              <div className="flex items-center">
+                                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                                <p className="text-sm text-red-800">
+                                  {contactErrorMessage}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            type="submit"
+                            disabled={
+                              isSubmittingContact ||
+                              !contactMessage.trim() ||
+                              isPreview
+                            }
+                            className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmittingContact ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Sending...
+                              </div>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send Message
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </>
+                    )}
                   </Card>
                 </div>
               ) : null}

@@ -75,27 +75,49 @@ export function ContractorCard({
 
   const getPriceRange = () => {
     if (contractor.services.length === 0) {
-      return 'Contact for pricing';
+      return null;
     }
 
-    const prices = contractor.services
-      .filter(
-        service =>
-          service.priceRangeMin !== null || service.priceRangeMax !== null
-      )
-      .map(service => ({
-        min: service.priceRangeMin,
-        max: service.priceRangeMax,
-      }));
-
-    if (prices.length === 0) {
-      return 'Contact for pricing';
+    // Find the first service with pricing information
+    for (const service of contractor.services) {
+      // Check pricing options in priority order
+      if (service.isFree) {
+        return 'Free';
+      }
+      if (service.hidePrice) {
+        return null; // Don't show price if hidden
+      }
+      if (service.hourlyRate !== undefined && service.hourlyRate !== null) {
+        return `$${service.hourlyRate.toLocaleString()}/hour`;
+      }
+      if (service.dailyRate !== undefined && service.dailyRate !== null) {
+        return `$${service.dailyRate.toLocaleString()}/day`;
+      }
+      if (service.exactPrice !== undefined && service.exactPrice !== null) {
+        return `$${service.exactPrice.toLocaleString()}`;
+      }
+      // Check price range
+      if (service.priceRangeMin !== null || service.priceRangeMax !== null) {
+        const min = service.priceRangeMin;
+        const max = service.priceRangeMax;
+        if (min === null && max === null) {
+          continue; // Skip this service, try next
+        }
+        if (min === null) {
+          return `Up to $${max?.toLocaleString()}`;
+        }
+        if (max === null) {
+          return `From $${min.toLocaleString()}`;
+        }
+        if (min === max) {
+          return `$${min.toLocaleString()}`;
+        }
+        return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+      }
     }
 
-    const minPrice = Math.min(...prices.map(p => p.min || 0));
-    const maxPrice = Math.max(...prices.map(p => p.max || 0));
-
-    return ContractorDirectoryService.formatPriceRange(minPrice, maxPrice);
+    // No pricing information found
+    return null;
   };
 
   const cardClasses = `
@@ -221,9 +243,15 @@ export function ContractorCard({
           </div>
 
           {/* Price Range */}
-          <div className="text-sm font-medium text-gray-900 mb-4">
-            {getPriceRange()}
-          </div>
+          {(() => {
+            const priceRange = getPriceRange();
+            if (!priceRange) return null;
+            return (
+              <div className="text-sm font-medium text-gray-900 mb-4">
+                {priceRange}
+              </div>
+            );
+          })()}
 
           {/* Contact Info */}
           <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { DashboardQuerySchema } from '@/lib/validation/eventValidation';
 import {
@@ -8,17 +8,54 @@ import {
   createErrorResponse,
 } from '@/lib/middleware/errorHandler';
 import { withRateLimit } from '@/lib/middleware/rateLimit';
-import { getAuthenticatedUser } from '@/lib/middleware/eventAuth';
 import { DashboardCacheService } from '@/lib/cache/dashboardCache';
 
 // GET /api/events/dashboard - Get event dashboard data with pagination and optimization
 async function getDashboardHandler(request: NextRequest) {
-  const supabase = await createClient();
+  // Try to get user ID from header first (sent by client)
+  let userId = request.headers.get('x-user-id');
 
-  // Get authenticated user
-  const { user, error: authError } = await getAuthenticatedUser(request);
-  if (authError || !user) {
-    return createErrorResponse('Unauthorized', 401);
+  let user;
+
+  if (!userId) {
+    // Fallback to cookie-based auth using middleware client
+    try {
+      const { createClient } = await import('@/lib/supabase/middleware');
+      const { supabase: middlewareSupabase } = createClient(request);
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await middlewareSupabase.auth.getUser();
+
+      // Handle refresh token errors gracefully
+      if (authError) {
+        if (
+          authError.message?.includes('refresh_token_not_found') ||
+          authError.message?.includes('Invalid Refresh Token')
+        ) {
+          return createErrorResponse(
+            'Session expired. Please log in again.',
+            401
+          );
+        }
+        return createErrorResponse('Unauthorized', 401);
+      }
+
+      if (!authUser) {
+        return createErrorResponse('Unauthorized', 401);
+      }
+
+      user = authUser;
+      userId = authUser.id;
+    } catch (error: any) {
+      console.error('Auth error in GET /api/events/dashboard:', error);
+      return createErrorResponse(
+        'Authentication failed. Please log in again.',
+        401
+      );
+    }
+  } else {
+    user = { id: userId };
   }
 
   // Parse and validate query parameters
@@ -38,8 +75,8 @@ async function getDashboardHandler(request: NextRequest) {
     );
   }
 
-  const { userId, period, page, limit } = validationResult.data;
-  const targetUserId = userId || user.id;
+  const { userId: queryUserId, period, page, limit } = validationResult.data;
+  const targetUserId = queryUserId || user.id;
   const offset = (page - 1) * limit;
 
   // Check cache first
@@ -76,12 +113,21 @@ async function getDashboardHandler(request: NextRequest) {
       dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   }
 
+  // Get total count of all events (without date filter) for dashboard display
+  // Note: events table uses user_id, not event_manager_id
+  const { count: totalCount } = await supabaseAdmin
+    .from('events')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', targetUserId);
+
   // Optimized query with pagination and selective field loading
+  // Use left joins for milestones and feedback so events without them are still returned
+  // Note: events table uses user_id, not event_manager_id
   const {
     data: events,
     error: eventsError,
     count,
-  } = await supabase
+  } = await supabaseAdmin
     .from('events')
     .select(
       `
@@ -93,12 +139,12 @@ async function getDashboardHandler(request: NextRequest) {
       event_type,
       created_at,
       updated_at,
-      event_milestones!inner(id, milestone_name, status),
-      event_feedback!inner(id, rating)
+      event_milestones(id, milestone_name, status),
+      event_feedback(id, rating)
     `,
       { count: 'exact' }
     )
-    .eq('event_manager_id', targetUserId)
+    .eq('user_id', targetUserId)
     .gte('created_at', dateFrom.toISOString())
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -108,7 +154,9 @@ async function getDashboardHandler(request: NextRequest) {
   }
 
   // Calculate dashboard metrics efficiently
-  const totalEvents = count || 0;
+  // Use totalCount (all events) for the total, but count (filtered) for pagination
+  const totalEvents = totalCount || 0;
+  const filteredEventsCount = count || 0;
   const totalBudget =
     events?.reduce((sum, event) => sum + (event.budget_total || 0), 0) || 0;
 
@@ -239,11 +287,12 @@ async function getDashboardHandler(request: NextRequest) {
   const responseData = {
     dashboard,
     events: events || [],
+    total: totalEvents, // Total count of all events (for dashboard display)
     pagination: {
       page,
       limit,
-      total: totalEvents,
-      total_pages: Math.ceil(totalEvents / limit),
+      total: filteredEventsCount, // Count of filtered events (for pagination)
+      total_pages: Math.ceil(filteredEventsCount / limit),
     },
   };
 

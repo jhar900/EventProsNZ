@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
@@ -24,20 +24,14 @@ export default function NotFound() {
             Page Not Found
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Sorry, we couldn't find the page you're looking for.
+            Sorry, we couldn&apos;t find the page you&apos;re looking for.
           </p>
-          <div className="space-y-2">
+          <div>
             <Link
               href="/"
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors inline-block"
             >
               Go home
-            </Link>
-            <Link
-              href="/demo"
-              className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors inline-block"
-            >
-              View demos
             </Link>
           </div>
         </div>

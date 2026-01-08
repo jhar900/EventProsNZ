@@ -165,15 +165,6 @@ export default function DashboardLayout({
           { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
           { href: '/admin/emails', label: 'Emails', icon: Mail },
           {
-            href: '/feature-requests',
-            label: 'Feature Requests',
-            icon: Lightbulb,
-            badge:
-              submittedCount !== null && submittedCount > 0
-                ? submittedCount
-                : undefined,
-          },
-          {
             href: '/admin/platform-settings',
             label: 'Platform Settings',
             icon: Globe,
@@ -187,14 +178,9 @@ export default function DashboardLayout({
           { href: '/contractors', label: 'Find Contractors', icon: Search },
           { href: '/jobs/manage', label: 'Jobs', icon: Briefcase },
           {
-            href: '/budget/analytics',
-            label: 'Budget Analytics',
-            icon: BarChart3,
-          },
-          {
-            href: '/feature-requests',
-            label: 'Feature Requests',
-            icon: Lightbulb,
+            href: '/conversations',
+            label: 'Conversations',
+            icon: MessageSquare,
           },
         ];
       case 'contractor':
@@ -202,15 +188,24 @@ export default function DashboardLayout({
           ...baseItems,
           { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
           { href: '/jobs', label: 'Jobs', icon: Briefcase },
-          {
-            href: '/feature-requests',
-            label: 'Feature Requests',
-            icon: Lightbulb,
-          },
         ];
       default:
         return baseItems;
     }
+  };
+
+  const getFeatureRequestItem = (): SidebarItem | null => {
+    if (!user) return null;
+
+    return {
+      href: '/feature-requests',
+      label: 'Feature Requests',
+      icon: Lightbulb,
+      badge:
+        user.role === 'admin' && submittedCount !== null && submittedCount > 0
+          ? submittedCount
+          : undefined,
+    };
   };
 
   const sidebarItems = getSidebarItems();
@@ -285,8 +280,8 @@ export default function DashboardLayout({
             </Button>
           </div>
 
-          <nav className="mt-8 px-4 flex-1">
-            <ul className="space-y-2">
+          <nav className="mt-8 px-4 flex-1 flex flex-col">
+            <ul className="space-y-2 flex-1">
               {sidebarItems.map(item => {
                 const Icon = item.icon;
                 const hasChildren = item.children && item.children.length > 0;
@@ -448,6 +443,73 @@ export default function DashboardLayout({
                 );
               })}
             </ul>
+
+            {/* Feature Requests - at bottom of nav */}
+            {getFeatureRequestItem() &&
+              (() => {
+                const featureItem = getFeatureRequestItem()!;
+                const Icon = featureItem.icon;
+                const isActive =
+                  pathname === featureItem.href ||
+                  pathname.startsWith(featureItem.href + '/');
+
+                return (
+                  <div className="mt-auto py-2 border-gray-200 flex items-center">
+                    {disableNavigation ? (
+                      <div className="flex items-center justify-between px-3 py-2 rounded-md text-gray-400 cursor-not-allowed w-full">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-5 w-5" />
+                          <span>{featureItem.label}</span>
+                        </div>
+                        {featureItem.badge !== undefined &&
+                          featureItem.badge > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="h-5 min-w-5 flex items-center justify-center rounded-full px-1.5 text-xs font-semibold flex-shrink-0 bg-gray-300 text-gray-500"
+                            >
+                              {featureItem.badge > 99
+                                ? '99+'
+                                : featureItem.badge}
+                            </Badge>
+                          )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={featureItem.href}
+                        prefetch={true}
+                        className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors duration-200 w-full ${
+                          isActive
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                        }`}
+                        onClick={() => {
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-5 w-5" />
+                          <span>{featureItem.label}</span>
+                        </div>
+                        {featureItem.badge !== undefined &&
+                          featureItem.badge > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className={`h-5 min-w-5 flex items-center justify-center rounded-full px-1.5 text-xs font-semibold flex-shrink-0 ${
+                                isActive
+                                  ? 'bg-white text-primary'
+                                  : 'bg-red-500 text-white'
+                              }`}
+                            >
+                              {featureItem.badge > 99
+                                ? '99+'
+                                : featureItem.badge}
+                            </Badge>
+                          )}
+                      </Link>
+                    )}
+                  </div>
+                );
+              })()}
           </nav>
 
           {/* User Details Section */}
