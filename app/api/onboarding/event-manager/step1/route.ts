@@ -7,6 +7,16 @@ const step1Schema = z.object({
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().min(8, 'Phone number must be at least 8 characters'),
   address: z.string().min(5, 'Address is required'),
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 export async function POST(request: NextRequest) {
@@ -52,6 +62,8 @@ export async function POST(request: NextRequest) {
           last_name: validatedData.last_name,
           phone: validatedData.phone,
           address: validatedData.address,
+          linkedin_url: validatedData.linkedin_url || null,
+          website_url: validatedData.website_url || null,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
@@ -80,6 +92,8 @@ export async function POST(request: NextRequest) {
           last_name: validatedData.last_name,
           phone: validatedData.phone,
           address: validatedData.address,
+          linkedin_url: validatedData.linkedin_url || null,
+          website_url: validatedData.website_url || null,
           timezone: 'Pacific/Auckland', // Default to NZ timezone
         })
         .select()

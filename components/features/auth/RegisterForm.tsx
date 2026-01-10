@@ -35,6 +35,11 @@ interface RegisterFormProps {
   onError?: (error: string) => void;
   onSignInClick?: () => void;
   initialRole?: 'event_manager' | 'contractor';
+  initialEmail?: string;
+  initialFirstName?: string;
+  initialLastName?: string;
+  hideRole?: boolean; // If true, hide role selector and force 'event_manager'
+  hideSignInLink?: boolean; // If true, hide the "Already have an account?" link
 }
 
 export default function RegisterForm({
@@ -42,6 +47,11 @@ export default function RegisterForm({
   onError,
   onSignInClick,
   initialRole,
+  initialEmail,
+  initialFirstName,
+  initialLastName,
+  hideRole = false,
+  hideSignInLink = false,
 }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,16 +65,21 @@ export default function RegisterForm({
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: initialRole || undefined,
+      role: hideRole ? 'event_manager' : initialRole || undefined,
+      email: initialEmail || '',
+      first_name: initialFirstName || '',
+      last_name: initialLastName || '',
     },
   });
 
-  // Set the role when initialRole changes
+  // Set the role when initialRole changes or if hideRole is true
   useEffect(() => {
-    if (initialRole) {
+    if (hideRole) {
+      setValue('role', 'event_manager');
+    } else if (initialRole) {
       setValue('role', initialRole);
     }
-  }, [initialRole, setValue]);
+  }, [initialRole, setValue, hideRole]);
 
   const selectedRole = watch('role');
 
@@ -73,6 +88,9 @@ export default function RegisterForm({
     setError(null);
 
     try {
+      // Force role to 'event_manager' if hideRole is true
+      const role = hideRole ? 'event_manager' : data.role;
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -82,7 +100,7 @@ export default function RegisterForm({
         body: JSON.stringify({
           email: data.email,
           password: data.password,
-          role: data.role,
+          role: role,
           first_name: data.first_name,
           last_name: data.last_name,
         }),
@@ -158,8 +176,9 @@ export default function RegisterForm({
                 {...register('first_name')}
                 type="text"
                 id="first_name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="First name"
+                disabled={!!initialFirstName}
               />
               {errors.first_name && (
                 <p className="mt-1 text-sm text-red-600">
@@ -179,8 +198,9 @@ export default function RegisterForm({
                 {...register('last_name')}
                 type="text"
                 id="last_name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Last name"
+                disabled={!!initialLastName}
               />
               {errors.last_name && (
                 <p className="mt-1 text-sm text-red-600">
@@ -201,8 +221,9 @@ export default function RegisterForm({
               {...register('email')}
               type="email"
               id="email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="Enter your email"
+              disabled={!!initialEmail}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">
@@ -211,35 +232,44 @@ export default function RegisterForm({
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Account Type
-            </label>
-            <select
-              {...register('role')}
-              id="role"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select account type</option>
-              <option value="event_manager">Event Manager</option>
-              <option value="contractor">Contractor</option>
-            </select>
-            {errors.role && (
-              <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-            )}
-          </div>
+          {hideRole ? (
+            // Hidden input to ensure role is submitted when hidden
+            <input type="hidden" {...register('role')} value="event_manager" />
+          ) : (
+            <>
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Account Type
+                </label>
+                <select
+                  {...register('role')}
+                  id="role"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select account type</option>
+                  <option value="event_manager">Event Manager</option>
+                  <option value="contractor">Contractor</option>
+                </select>
+                {errors.role && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.role.message}
+                  </p>
+                )}
+              </div>
 
-          {selectedRole && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-              <p className="text-sm text-blue-800">
-                {selectedRole === 'event_manager'
-                  ? 'As an Event Manager, you can create and manage events, post jobs, and connect with contractors.'
-                  : 'As a Contractor, you can create a business profile, offer services, and apply for jobs.'}
-              </p>
-            </div>
+              {selectedRole && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-sm text-blue-800">
+                    {selectedRole === 'event_manager'
+                      ? 'As an Event Manager, you can create and manage events, post jobs, and connect with contractors.'
+                      : 'As a Contractor, you can create a business profile, offer services, and apply for jobs.'}
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           <div>
@@ -346,32 +376,35 @@ export default function RegisterForm({
             <GoogleSignInButton
               onSuccess={onSuccess || (() => {})}
               onError={onError || (() => {})}
-              initialRole={initialRole}
+              initialRole={hideRole ? 'event_manager' : initialRole}
+              hideRole={hideRole}
             />
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            {onSignInClick ? (
-              <button
-                type="button"
-                onClick={onSignInClick}
-                className="font-medium text-orange-600 hover:text-orange-500"
-              >
-                Sign in
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                className="font-medium text-orange-600 hover:text-orange-500"
-              >
-                Sign in
-              </Link>
-            )}
-          </p>
-        </div>
+        {!hideSignInLink && (
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              {onSignInClick ? (
+                <button
+                  type="button"
+                  onClick={onSignInClick}
+                  className="font-medium text-orange-600 hover:text-orange-500"
+                >
+                  Sign in
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="font-medium text-orange-600 hover:text-orange-500"
+                >
+                  Sign in
+                </Link>
+              )}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -382,23 +415,27 @@ function GoogleSignInButton({
   onSuccess,
   onError,
   initialRole,
+  hideRole = false,
 }: {
   onSuccess?: (user: any) => void;
   onError?: (error: string) => void;
   initialRole?: 'event_manager' | 'contractor';
+  hideRole?: boolean;
 }) {
   // Get role from form context or default to event_manager
   // For registration, we might want to show a role selector first
   const [selectedRole, setSelectedRole] = useState<
     'event_manager' | 'contractor'
-  >(initialRole || 'event_manager');
+  >(hideRole ? 'event_manager' : initialRole || 'event_manager');
 
-  // Update selectedRole when initialRole changes
+  // Update selectedRole when initialRole changes or hideRole is true
   useEffect(() => {
-    if (initialRole) {
+    if (hideRole) {
+      setSelectedRole('event_manager');
+    } else if (initialRole) {
       setSelectedRole(initialRole);
     }
-  }, [initialRole]);
+  }, [initialRole, hideRole]);
 
   const { signInWithGoogle, isLoading, isGoogleLoaded } = useGoogleAuth({
     onSuccess: async () => {
@@ -422,31 +459,33 @@ function GoogleSignInButton({
 
   return (
     <div className="space-y-2">
-      {/* Role selector for new registrations */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setSelectedRole('event_manager')}
-          className={`flex-1 px-3 py-1 text-xs rounded border ${
-            selectedRole === 'event_manager'
-              ? 'bg-orange-50 border-orange-300 text-orange-700'
-              : 'bg-gray-50 border-gray-300 text-gray-700'
-          }`}
-        >
-          Event Manager
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedRole('contractor')}
-          className={`flex-1 px-3 py-1 text-xs rounded border ${
-            selectedRole === 'contractor'
-              ? 'bg-orange-50 border-orange-300 text-orange-700'
-              : 'bg-gray-50 border-gray-300 text-gray-700'
-          }`}
-        >
-          Contractor
-        </button>
-      </div>
+      {/* Role selector for new registrations - hidden when hideRole is true */}
+      {!hideRole && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedRole('event_manager')}
+            className={`flex-1 px-3 py-1 text-xs rounded border ${
+              selectedRole === 'event_manager'
+                ? 'bg-orange-50 border-orange-300 text-orange-700'
+                : 'bg-gray-50 border-gray-300 text-gray-700'
+            }`}
+          >
+            Event Manager
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedRole('contractor')}
+            className={`flex-1 px-3 py-1 text-xs rounded border ${
+              selectedRole === 'contractor'
+                ? 'bg-orange-50 border-orange-300 text-orange-700'
+                : 'bg-gray-50 border-gray-300 text-gray-700'
+            }`}
+          >
+            Contractor
+          </button>
+        </div>
+      )}
       <button
         type="button"
         onClick={signInWithGoogle}

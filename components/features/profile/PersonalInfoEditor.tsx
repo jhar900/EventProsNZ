@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,16 @@ const personalInfoSchema = z.object({
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().optional(),
   bio: z.string().optional(),
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 type PersonalInfoForm = z.infer<typeof personalInfoSchema>;
@@ -30,6 +40,8 @@ interface Profile {
   address?: string;
   bio?: string;
   profile_photo_url?: string;
+  linkedin_url?: string;
+  website_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -58,8 +70,22 @@ export function PersonalInfoEditor({
       last_name: profile.last_name,
       phone: profile.phone || '',
       bio: profile.bio || '',
+      linkedin_url: profile.linkedin_url || '',
+      website_url: profile.website_url || '',
     },
   });
+
+  // Update form when profile prop changes (e.g., after save or external update)
+  useEffect(() => {
+    reset({
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      phone: profile.phone || '',
+      bio: profile.bio || '',
+      linkedin_url: profile.linkedin_url || '',
+      website_url: profile.website_url || '',
+    });
+  }, [profile, reset]);
 
   const onSubmit = async (data: PersonalInfoForm) => {
     try {
@@ -216,6 +242,38 @@ export function PersonalInfoEditor({
               {errors.bio && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.bio.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="linkedin_url">LinkedIn Profile</Label>
+              <Input
+                id="linkedin_url"
+                type="url"
+                {...register('linkedin_url')}
+                placeholder="https://linkedin.com/in/yourprofile"
+                className={errors.linkedin_url ? 'border-red-500' : ''}
+              />
+              {errors.linkedin_url && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.linkedin_url.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="website_url">Personal Website</Label>
+              <Input
+                id="website_url"
+                type="url"
+                {...register('website_url')}
+                placeholder="https://yourwebsite.com"
+                className={errors.website_url ? 'border-red-500' : ''}
+              />
+              {errors.website_url && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.website_url.message}
                 </p>
               )}
             </div>

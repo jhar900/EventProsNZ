@@ -95,6 +95,46 @@ export function useProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Calculate profile completion status
+  const calculateCompletionStatus = useCallback(
+    (
+      profileData: Profile | null,
+      businessData: BusinessProfile | null,
+      servicesData: Service[],
+      portfolioData: PortfolioItem[]
+    ) => {
+      const personal_info = !!(
+        profileData?.first_name && profileData?.last_name
+      );
+      const contact_info = !!(profileData?.phone && profileData?.address);
+      const business_info = !!(
+        businessData?.company_name && businessData?.description
+      );
+      const services = servicesData.length > 0;
+      const portfolio = portfolioData.length >= 3;
+
+      // For event managers, exclude services and portfolio from completion calculation
+      const isEventManager = user?.role === 'event_manager';
+      const completionItems = isEventManager
+        ? [personal_info, contact_info, business_info]
+        : [personal_info, contact_info, business_info, services, portfolio];
+
+      const completed = completionItems.filter(Boolean).length;
+      const totalItems = isEventManager ? 3 : 5;
+      const overall_completion = Math.round((completed / totalItems) * 100);
+
+      setCompletionStatus({
+        personal_info,
+        contact_info,
+        business_info,
+        services: isEventManager ? true : services, // Always true for event managers so it doesn't affect display
+        portfolio: isEventManager ? true : portfolio, // Always true for event managers so it doesn't affect display
+        overall_completion,
+      });
+    },
+    [user]
+  );
+
   // Load all profile data
   const loadProfileData = useCallback(async () => {
     if (!user) return;
@@ -161,46 +201,7 @@ export function useProfile() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
-
-  // Calculate profile completion status
-  const calculateCompletionStatus = useCallback(
-    (
-      profileData: Profile | null,
-      businessData: BusinessProfile | null,
-      servicesData: Service[],
-      portfolioData: PortfolioItem[]
-    ) => {
-      const personal_info = !!(
-        profileData?.first_name && profileData?.last_name
-      );
-      const contact_info = !!(profileData?.phone && profileData?.address);
-      const business_info = !!(
-        businessData?.company_name && businessData?.description
-      );
-      const services = servicesData.length > 0;
-      const portfolio = portfolioData.length >= 3;
-
-      const completed = [
-        personal_info,
-        contact_info,
-        business_info,
-        services,
-        portfolio,
-      ].filter(Boolean).length;
-      const overall_completion = Math.round((completed / 5) * 100);
-
-      setCompletionStatus({
-        personal_info,
-        contact_info,
-        business_info,
-        services,
-        portfolio,
-        overall_completion,
-      });
-    },
-    []
-  );
+  }, [user, calculateCompletionStatus]);
 
   // Update profile
   const updateProfile = useCallback(

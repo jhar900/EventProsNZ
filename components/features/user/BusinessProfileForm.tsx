@@ -91,6 +91,7 @@ export default function BusinessProfileForm({
   const { user, refreshUser } = useAuth();
   // Use provided userId (for admin) or fall back to logged-in user
   const targetUserId = propUserId || user?.id;
+  const isEventManager = user?.role === 'event_manager';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -140,8 +141,13 @@ export default function BusinessProfileForm({
     }
   }, [formServiceAreas, coverageType]);
 
-  // Load service categories from API
+  // Load service categories from API (only for contractors)
   useEffect(() => {
+    if (isEventManager) {
+      setLoadingCategories(false);
+      return;
+    }
+
     const loadServiceCategories = async () => {
       try {
         setLoadingCategories(true);
@@ -163,7 +169,7 @@ export default function BusinessProfileForm({
     };
 
     loadServiceCategories();
-  }, []);
+  }, [isEventManager]);
 
   // Load existing business profile data
   useEffect(() => {
@@ -702,41 +708,45 @@ export default function BusinessProfileForm({
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Categories
-                </label>
-                {loadingCategories ? (
-                  <p className="text-sm text-gray-500">Loading categories...</p>
-                ) : serviceCategories.length === 0 ? (
-                  <p className="text-sm text-amber-600">
-                    No service categories available. Please contact support.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {serviceCategories.map(category => (
-                      <label key={category} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category)}
-                          onChange={e =>
-                            handleCategoryChange(category, e.target.checked)
-                          }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {category}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {errors.service_categories && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.service_categories.message}
-                  </p>
-                )}
-              </div>
+              {!isEventManager && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Categories
+                  </label>
+                  {loadingCategories ? (
+                    <p className="text-sm text-gray-500">
+                      Loading categories...
+                    </p>
+                  ) : serviceCategories.length === 0 ? (
+                    <p className="text-sm text-amber-600">
+                      No service categories available. Please contact support.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {serviceCategories.map(category => (
+                        <label key={category} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(category)}
+                            onChange={e =>
+                              handleCategoryChange(category, e.target.checked)
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {category}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {errors.service_categories && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.service_categories.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">

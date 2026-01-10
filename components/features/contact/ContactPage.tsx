@@ -1,17 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
-import {
-  MapPin,
-  Clock,
-  MessageSquare,
-  Shield,
-  Mail,
-  Facebook,
-  Instagram,
-  Linkedin,
-} from 'lucide-react';
+import { MapPin, Mail, Facebook, Instagram, Linkedin } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { ContactInfo } from '@/types/contact';
 import { HomepageLayout } from '@/components/features/homepage/HomepageLayout';
@@ -93,20 +83,6 @@ export default function ContactPage({ className }: ContactPageProps) {
                   </span>
                   and we&apos;ll get back to you as soon as possible.
                 </p>
-                <div className="flex flex-wrap gap-4 mb-8">
-                  <Badge variant="secondary" className="px-4 py-2 text-sm">
-                    <Clock className="w-4 h-4 mr-2" />
-                    24/7 Support
-                  </Badge>
-                  <Badge variant="secondary" className="px-4 py-2 text-sm">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Quick Response
-                  </Badge>
-                  <Badge variant="secondary" className="px-4 py-2 text-sm">
-                    <Shield className="w-4 h-4 mr-2" />
-                    Secure Communication
-                  </Badge>
-                </div>
 
                 {/* Contact Information */}
                 <div className="space-y-4">
@@ -152,7 +128,7 @@ export default function ContactPage({ className }: ContactPageProps) {
                         <Instagram className="w-5 h-5" />
                       </a>
                       <a
-                        href="https://linkedin.com/company/eventprosnz"
+                        href="https://linkedin.com/company/event-pros-nz/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-600 hover:text-orange-600 transition-colors"

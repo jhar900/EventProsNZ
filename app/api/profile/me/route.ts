@@ -8,6 +8,16 @@ const profileUpdateSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   bio: z.string().optional(),
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 export async function GET(request: NextRequest) {
@@ -138,13 +148,18 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validatedData = profileUpdateSchema.parse(body);
 
+    // Convert empty strings to null for optional URL fields
+    const updateData = {
+      ...validatedData,
+      linkedin_url: validatedData.linkedin_url || null,
+      website_url: validatedData.website_url || null,
+      updated_at: new Date().toISOString(),
+    };
+
     // Update profile
     const { data: profile, error: updateError } = await supabase
       .from('profiles')
-      .update({
-        ...validatedData,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('user_id', user.id)
       .select()
       .single();

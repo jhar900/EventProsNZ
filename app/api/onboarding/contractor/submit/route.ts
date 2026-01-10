@@ -120,6 +120,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Update team member status from 'onboarding' to 'active' if user is a team member
+    const { error: teamMemberUpdateError } = await supabase
+      .from('team_members')
+      .update({
+        status: 'active',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('team_member_id', userId)
+      .eq('status', 'onboarding');
+
+    if (teamMemberUpdateError) {
+      // Log but don't fail - user might not be a team member
+      console.warn(
+        'Failed to update team member status:',
+        teamMemberUpdateError
+      );
+    }
+
     // TODO: Send admin notification email
     // This would typically integrate with SendGrid or similar service
     return NextResponse.json({

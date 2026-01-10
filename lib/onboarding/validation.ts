@@ -25,6 +25,16 @@ export const personalInfoSchema = z.object({
   last_name: z.string().min(1, 'Last name is required'),
   phone: phoneSchema,
   address: addressSchema,
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 // Business information validation

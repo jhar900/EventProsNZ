@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProfileCompletionTrackerProps {
   className?: string;
@@ -12,6 +13,7 @@ export default function ProfileCompletionTracker({
   className = '',
 }: ProfileCompletionTrackerProps) {
   const { completionStatus, isLoading, loadProfileData } = useProfile();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   // Load profile data when component mounts to calculate completion status
@@ -23,38 +25,61 @@ export default function ProfileCompletionTracker({
     return null; // Don't show anything while loading
   }
 
-  const completionItems = [
-    {
-      key: 'personal_info',
-      label: 'Personal Information',
-      completed: completionStatus.personal_info,
-      description: 'First name, last name, and basic details',
-    },
-    {
-      key: 'contact_info',
-      label: 'Contact Information',
-      completed: completionStatus.contact_info,
-      description: 'Phone number and address',
-    },
-    {
-      key: 'business_info',
-      label: 'Business Information',
-      completed: completionStatus.business_info,
-      description: 'Company name and business description',
-    },
-    {
-      key: 'services',
-      label: 'Services',
-      completed: completionStatus.services,
-      description: 'At least one service offering',
-    },
-    {
-      key: 'portfolio',
-      label: 'Portfolio',
-      completed: completionStatus.portfolio,
-      description: 'At least 3 portfolio items',
-    },
-  ];
+  const isEventManager = user?.role === 'event_manager';
+
+  const completionItems = isEventManager
+    ? [
+        {
+          key: 'personal_info',
+          label: 'Personal Information',
+          completed: completionStatus.personal_info,
+          description: 'First name, last name, and basic details',
+        },
+        {
+          key: 'contact_info',
+          label: 'Contact Information',
+          completed: completionStatus.contact_info,
+          description: 'Phone number and address',
+        },
+        {
+          key: 'business_info',
+          label: 'Business Information',
+          completed: completionStatus.business_info,
+          description: 'Company name and business description',
+        },
+      ]
+    : [
+        {
+          key: 'personal_info',
+          label: 'Personal Information',
+          completed: completionStatus.personal_info,
+          description: 'First name, last name, and basic details',
+        },
+        {
+          key: 'contact_info',
+          label: 'Contact Information',
+          completed: completionStatus.contact_info,
+          description: 'Phone number and address',
+        },
+        {
+          key: 'business_info',
+          label: 'Business Information',
+          completed: completionStatus.business_info,
+          description: 'Company name and business description',
+        },
+        {
+          key: 'services',
+          label: 'Services',
+          completed: completionStatus.services,
+          description: 'At least one service offering',
+        },
+        {
+          key: 'portfolio',
+          label: 'Portfolio',
+          completed: completionStatus.portfolio,
+          description: 'At least 3 portfolio items',
+        },
+      ];
 
   const getProgressColor = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-500';

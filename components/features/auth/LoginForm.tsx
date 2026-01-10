@@ -19,6 +19,7 @@ interface LoginFormProps {
   onError?: (error: string) => void;
   onSignUpClick?: () => void;
   onForgotPasswordClick?: () => void;
+  initialEmail?: string;
 }
 
 export default function LoginForm({
@@ -26,6 +27,7 @@ export default function LoginForm({
   onError,
   onSignUpClick,
   onForgotPasswordClick,
+  initialEmail,
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,9 @@ export default function LoginForm({
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: initialEmail || '',
+    },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -94,6 +99,7 @@ export default function LoginForm({
               id="email"
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               placeholder="Enter your email"
+              disabled={!!initialEmail}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">

@@ -16,6 +16,8 @@ interface OnboardingData {
     last_name: string;
     phone: string;
     address: string;
+    linkedin_url?: string;
+    website_url?: string;
   };
   roleType: 'personal' | 'business' | null;
   businessInfo: {
@@ -46,6 +48,20 @@ const STEPS = [
 export function OnboardingWizard() {
   const router = useRouter();
   const { user } = useAuth();
+  // Check if user came from invitation (check localStorage for flag)
+  const [isTeamMember, setIsTeamMember] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Check if there's a flag indicating they came from an invitation
+      const flag = localStorage.getItem('from-team-invitation') === 'true';
+      console.log(
+        '[OnboardingWizard] Initial isTeamMember from localStorage:',
+        flag
+      );
+      return flag;
+    }
+    return false;
+  });
+  const [isCheckingTeamMember, setIsCheckingTeamMember] = useState(true);
 
   // Initialize currentStep from localStorage if available, otherwise default to 1
   const [currentStep, setCurrentStep] = useState(() => {
@@ -55,6 +71,156 @@ export function OnboardingWizard() {
     }
     return 1;
   });
+
+  // Check if user is a team member
+  useEffect(() => {
+    const checkTeamMemberStatus = async () => {
+      // If no user yet, wait a bit and check again (user might be loading)
+      if (!user?.id) {
+        const hasFlag =
+          typeof window !== 'undefined' &&
+          localStorage.getItem('from-team-invitation') === 'true';
+        if (hasFlag) {
+          // If localStorage flag exists, trust it until user loads
+          console.log(
+            '[OnboardingWizard] No user yet but localStorage flag exists, keeping team member status'
+          );
+          setIsTeamMember(true);
+        }
+        setIsCheckingTeamMember(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/team-members/check', {
+          method: 'GET',
+          headers: {
+            'x-user-id': user.id,
+          },
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const isMember = data.isTeamMember || false;
+          const hasLocalStorageFlag =
+            typeof window !== 'undefined' &&
+            localStorage.getItem('from-team-invitation') === 'true';
+
+          console.log('[OnboardingWizard] Team member check result:', {
+            isMember,
+            hasLocalStorageFlag,
+            data,
+          });
+
+          // If API confirms they're a team member, or if localStorage flag exists, set as team member
+          // Only clear the flag if API explicitly says they're NOT a team member
+          const shouldBeTeamMember = isMember || hasLocalStorageFlag;
+          setIsTeamMember(shouldBeTeamMember);
+
+          // Store flag in localStorage for future reference
+          if (typeof window !== 'undefined') {
+            if (shouldBeTeamMember) {
+              localStorage.setItem('from-team-invitation', 'true');
+              console.log(
+                '[OnboardingWizard] Set from-team-invitation flag to true'
+              );
+            } else if (isMember === false && !hasLocalStorageFlag) {
+              // Only remove flag if API explicitly says false AND localStorage doesn't have it
+              localStorage.removeItem('from-team-invitation');
+              console.log(
+                '[OnboardingWizard] Removed from-team-invitation flag'
+              );
+            }
+          }
+
+          // If team member and current step is 2 or 3, redirect to step 4
+          if (shouldBeTeamMember && (currentStep === 2 || currentStep === 3)) {
+            console.log(
+              '[OnboardingWizard] Team member on step 2 or 3, redirecting to step 4'
+            );
+            setCurrentStep(4);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('event-manager-onboarding-step', '4');
+            }
+          }
+        } else {
+          const errorText = await response.text();
+          console.error(
+            '[OnboardingWizard] Team member check failed:',
+            response.status,
+            errorText
+          );
+          // If API fails but localStorage flag exists, keep team member status
+          if (typeof window !== 'undefined') {
+            const hasFlag =
+              localStorage.getItem('from-team-invitation') === 'true';
+            if (hasFlag && !isTeamMember) {
+              console.log(
+                '[OnboardingWizard] API check failed but localStorage flag exists, keeping team member status'
+              );
+              setIsTeamMember(true);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error checking team member status:', err);
+        // If API check fails but localStorage flag exists, keep it
+        if (typeof window !== 'undefined') {
+          const hasFlag =
+            localStorage.getItem('from-team-invitation') === 'true';
+          if (hasFlag && !isTeamMember) {
+            // Keep the flag and maintain team member status
+            console.log(
+              '[OnboardingWizard] API check failed but localStorage flag exists, keeping team member status'
+            );
+            setIsTeamMember(true);
+          }
+        }
+      } finally {
+        setIsCheckingTeamMember(false);
+      }
+    };
+
+    checkTeamMemberStatus();
+  }, [user?.id, currentStep]);
+
+  // Filter steps based on team member status and renumber them
+  const availableSteps = isTeamMember
+    ? STEPS.filter(step => step.id !== 2 && step.id !== 3).map(
+        (step, index) => ({ ...step, id: index + 1 })
+      ) // Renumber: 1, 2, 3 (was 1, 4, 5)
+    : STEPS;
+
+  console.log('[OnboardingWizard] Steps configuration:', {
+    isTeamMember,
+    availableStepsCount: availableSteps.length,
+    availableSteps: availableSteps.map(s => ({ id: s.id, title: s.title })),
+    allSteps: STEPS.map(s => ({ id: s.id, title: s.title })),
+  });
+
+  // Map displayed step number to actual step number
+  const getActualStepNumber = (displayedStep: number): number => {
+    if (!isTeamMember) return displayedStep;
+    // For team members: 1 -> 1, 2 -> 4, 3 -> 5
+    if (displayedStep === 1) return 1;
+    if (displayedStep === 2) return 4;
+    if (displayedStep === 3) return 5;
+    return displayedStep;
+  };
+
+  // Map actual step number to displayed step number
+  const getDisplayedStepNumber = (actualStep: number): number => {
+    if (!isTeamMember) return actualStep;
+    // For team members: 1 -> 1, 4 -> 2, 5 -> 3
+    if (actualStep === 1) return 1;
+    if (actualStep === 4) return 2;
+    if (actualStep === 5) return 3;
+    return actualStep;
+  };
+
+  // Get the displayed step number for progress indicator
+  const displayedStep = getDisplayedStepNumber(currentStep);
 
   // Persist currentStep to localStorage whenever it changes
   useEffect(() => {
@@ -75,6 +241,8 @@ export function OnboardingWizard() {
       last_name: '',
       phone: '',
       address: '',
+      linkedin_url: '',
+      website_url: '',
     },
     roleType: null,
     businessInfo: {
@@ -131,6 +299,8 @@ export function OnboardingWizard() {
                 last_name: profileData.last_name || '',
                 phone: profileData.phone || '',
                 address: profileData.address || '',
+                linkedin_url: profileData.linkedin_url || '',
+                website_url: profileData.website_url || '',
               },
               roleType: (profileData.preferences as any)?.role_type || null,
               profilePhoto: profileData.avatar_url || null,
@@ -214,8 +384,14 @@ export function OnboardingWizard() {
       // Save step data to API
       if (currentStep === 1) {
         await savePersonalInfo(stepData.personalInfo!);
-        // Move to step 2
-        setCurrentStep(2);
+        // If team member, set roleType to 'personal' and skip to step 4 (profile photo)
+        if (isTeamMember) {
+          // Set roleType to 'personal' for team members (they don't need business details)
+          await saveRoleType('personal');
+          setCurrentStep(4); // Skip role selection and business details
+        } else {
+          setCurrentStep(2);
+        }
         setIsLoading(false);
         return;
       } else if (currentStep === 2) {
@@ -279,6 +455,7 @@ export function OnboardingWizard() {
         // Clear localStorage when onboarding is complete
         if (typeof window !== 'undefined') {
           localStorage.removeItem('event-manager-onboarding-step');
+          localStorage.removeItem('from-team-invitation');
         }
         return; // Complete onboarding redirects
       }
@@ -396,7 +573,17 @@ export function OnboardingWizard() {
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      const newStep = currentStep - 1;
+      let newStep = currentStep - 1;
+
+      // If team member, skip steps 2 and 3 when going back
+      if (isTeamMember) {
+        if (newStep === 3) {
+          newStep = 1; // Skip from step 3 to step 1
+        } else if (newStep === 2) {
+          newStep = 1; // Skip from step 2 to step 1
+        }
+      }
+
       setCurrentStep(newStep);
       // Update localStorage when going back
       if (typeof window !== 'undefined') {
@@ -410,6 +597,11 @@ export function OnboardingWizard() {
   };
 
   const renderCurrentStep = () => {
+    // Prevent rendering steps 2 and 3 for team members
+    if (isTeamMember && (currentStep === 2 || currentStep === 3)) {
+      return null; // This shouldn't happen, but just in case
+    }
+
     switch (currentStep) {
       case 1:
         return (
@@ -475,9 +667,9 @@ export function OnboardingWizard() {
             </div>
 
             <ProgressIndicator
-              currentStep={currentStep}
-              totalSteps={STEPS.length}
-              steps={STEPS}
+              currentStep={displayedStep}
+              totalSteps={availableSteps.length}
+              steps={availableSteps}
             />
 
             {error && (
@@ -486,7 +678,7 @@ export function OnboardingWizard() {
               </div>
             )}
 
-            {isLoadingData ? (
+            {isLoadingData || isCheckingTeamMember ? (
               <div className="mt-8 flex justify-center items-center py-12">
                 <div className="text-gray-500">Loading your information...</div>
               </div>

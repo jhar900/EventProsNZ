@@ -15,6 +15,8 @@ interface PersonalInfoFormProps {
     last_name: string;
     phone: string;
     address: string;
+    linkedin_url?: string;
+    website_url?: string;
   };
   onComplete: (data: PersonalInfoFormData) => void;
   isLoading: boolean;
@@ -184,6 +186,48 @@ export function PersonalInfoForm({
             placeholder="Enter your address"
             error={errors.address?.message}
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="linkedin_url"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            LinkedIn Profile (Optional)
+          </label>
+          <input
+            {...register('linkedin_url')}
+            type="url"
+            id="linkedin_url"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            placeholder="https://linkedin.com/in/yourprofile"
+          />
+          {errors.linkedin_url && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.linkedin_url.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="website_url"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Personal Website (Optional)
+          </label>
+          <input
+            {...register('website_url')}
+            type="url"
+            id="website_url"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            placeholder="https://yourwebsite.com"
+          />
+          {errors.website_url && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.website_url.message}
+            </p>
+          )}
         </div>
 
         <div className="pt-6">

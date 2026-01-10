@@ -23,6 +23,16 @@ const profileSchema = z.object({
     .or(z.literal('')),
   address: z.string().max(200, 'Address too long').optional(),
   bio: z.string().max(500, 'Bio too long').optional(),
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -95,6 +105,8 @@ export default function ProfileForm({
                 phone: profile.phone || '',
                 address: profile.address || '',
                 bio: profile.bio || '',
+                linkedin_url: profile.linkedin_url || '',
+                website_url: profile.website_url || '',
               });
             } else {
               // No profile exists, show empty form
@@ -104,6 +116,8 @@ export default function ProfileForm({
                 phone: '',
                 address: '',
                 bio: '',
+                linkedin_url: '',
+                website_url: '',
               });
             }
           } else {
@@ -118,6 +132,8 @@ export default function ProfileForm({
               phone: '',
               address: '',
               bio: '',
+              linkedin_url: '',
+              website_url: '',
             });
           }
         } catch (error) {
@@ -130,6 +146,8 @@ export default function ProfileForm({
             phone: '',
             address: '',
             bio: '',
+            linkedin_url: '',
+            website_url: '',
           });
         } finally {
           setIsLoading(false);
@@ -145,6 +163,8 @@ export default function ProfileForm({
           phone: user.profile.phone || '',
           address: (user.profile as any).address || '',
           bio: (user.profile as any).bio || '',
+          linkedin_url: (user.profile as any).linkedin_url || '',
+          website_url: (user.profile as any).website_url || '',
         });
       }
     };
@@ -372,6 +392,48 @@ export default function ProfileForm({
                   {bioLength}/{bioMaxLength} characters
                 </p>
               </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="linkedin_url"
+                className="block text-sm font-medium text-gray-700"
+              >
+                LinkedIn Profile
+              </label>
+              <input
+                {...register('linkedin_url')}
+                type="url"
+                id="linkedin_url"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="https://linkedin.com/in/yourprofile"
+              />
+              {errors.linkedin_url && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.linkedin_url.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="website_url"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Personal Website
+              </label>
+              <input
+                {...register('website_url')}
+                type="url"
+                id="website_url"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="https://yourwebsite.com"
+              />
+              {errors.website_url && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.website_url.message}
+                </p>
+              )}
             </div>
 
             {error && (

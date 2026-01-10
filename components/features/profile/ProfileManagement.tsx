@@ -21,6 +21,8 @@ interface Profile {
   address?: string;
   bio?: string;
   profile_photo_url?: string;
+  linkedin_url?: string;
+  website_url?: string;
   created_at: string;
   updated_at: string;
 }

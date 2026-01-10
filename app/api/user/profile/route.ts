@@ -20,6 +20,16 @@ const updateProfileSchema = z.object({
   bio: z.string().max(500, 'Bio too long').optional(),
   location: z.string().max(100, 'Location too long').optional(),
   timezone: z.string().max(50, 'Timezone too long').optional(),
+  linkedin_url: z
+    .string()
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 export async function GET(request: NextRequest) {
@@ -144,9 +154,16 @@ export async function PUT(request: NextRequest) {
     const validatedData = updateProfileSchema.parse(body);
     console.log('Profile API - Validated data:', validatedData);
 
+    // Convert empty strings to null for optional URL fields
+    const updateData = {
+      ...validatedData,
+      linkedin_url: validatedData.linkedin_url || null,
+      website_url: validatedData.website_url || null,
+    };
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .update(validatedData)
+      .update(updateData)
       .eq('user_id', userId)
       .select()
       .single();

@@ -36,9 +36,6 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
     legal: [
       { name: 'Privacy Policy', href: '/privacy' },
       { name: 'Terms of Service', href: '/terms' },
-      { name: 'Cookie Policy', href: '/cookies' },
-      { name: 'GDPR', href: '/gdpr' },
-      { name: 'Accessibility', href: '/accessibility' },
     ],
   };
 
@@ -124,7 +121,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
           </div>
 
           {/* Pages links */}
-          <div>
+          <div className="text-right">
             <h4 className="text-lg font-semibold mb-4">Pages</h4>
             <ul className="space-y-3">
               {footerLinks.pages.map(link => {
@@ -135,7 +132,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
                       <li key={link.name}>
                         <button
                           onClick={() => modalContext.onRegisterClick()}
-                          className="text-gray-300 hover:text-white transition-colors cursor-pointer text-left"
+                          className="text-gray-300 hover:text-white transition-colors cursor-pointer text-right"
                           type="button"
                         >
                           {link.name}

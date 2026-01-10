@@ -10,6 +10,7 @@ import UserSettings from '@/components/features/user/UserSettings';
 import { ServicesEditor } from '@/components/features/profile/ServicesEditor';
 import { PortfolioManager } from '@/components/features/profile/PortfolioManager';
 import { ProfilePreview } from '@/components/features/profile/ProfilePreview';
+import { TeamMembersManager } from '@/components/features/profile/TeamMembersManager';
 import ProfileCompletionTracker from '@/components/features/profile/ProfileCompletionTracker';
 
 export default function ProfilePage() {
@@ -25,14 +26,22 @@ export default function ProfilePage() {
     console.error('Profile error:', error);
   };
 
-  const tabs = [
-    { id: 'personal', name: 'Personal Info', icon: '👤' },
-    { id: 'business', name: 'Business Profile', icon: '🏢' },
-    { id: 'services', name: 'Services', icon: '🛠️' },
-    { id: 'portfolio', name: 'Portfolio', icon: '📸' },
-    { id: 'preview', name: 'Preview', icon: '👁️' },
-    { id: 'settings', name: 'Publication', icon: '💻' },
-  ];
+  const isEventManager = user?.role === 'event_manager';
+
+  const tabs = isEventManager
+    ? [
+        { id: 'personal', name: 'Personal Info', icon: '👤' },
+        { id: 'business', name: 'Business Profile', icon: '🏢' },
+        { id: 'team', name: 'Team Members', icon: '👥' },
+      ]
+    : [
+        { id: 'personal', name: 'Personal Info', icon: '👤' },
+        { id: 'business', name: 'Business Profile', icon: '🏢' },
+        { id: 'services', name: 'Services', icon: '🛠️' },
+        { id: 'portfolio', name: 'Portfolio', icon: '📸' },
+        { id: 'preview', name: 'Preview', icon: '👁️' },
+        { id: 'settings', name: 'Publication', icon: '💻' },
+      ];
 
   return (
     <DashboardLayout>
@@ -101,7 +110,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'services' && (
+              {activeTab === 'services' && !isEventManager && (
                 <div>
                   <ServicesEditor
                     onSuccess={handleSuccess}
@@ -110,7 +119,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'portfolio' && (
+              {activeTab === 'portfolio' && !isEventManager && (
                 <div>
                   <PortfolioManager
                     onSuccess={handleSuccess}
@@ -119,7 +128,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'preview' && (
+              {activeTab === 'preview' && !isEventManager && (
                 <div>
                   <ProfilePreview
                     onSuccess={handleSuccess}
@@ -128,12 +137,21 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {activeTab === 'settings' && (
+              {activeTab === 'settings' && !isEventManager && (
                 <div>
                   <UserSettings
                     onSuccess={() =>
                       handleSuccess('Settings updated successfully!')
                     }
+                    onError={handleError}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'team' && isEventManager && (
+                <div>
+                  <TeamMembersManager
+                    onSuccess={handleSuccess}
                     onError={handleError}
                   />
                 </div>
