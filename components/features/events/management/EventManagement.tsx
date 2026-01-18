@@ -35,7 +35,6 @@ import {
   MapPin,
 } from 'lucide-react';
 import { EventStatusTracking } from './EventStatusTracking';
-import { EventVersionHistory } from './EventVersionHistory';
 import { ChangeNotifications } from './ChangeNotifications';
 import { EventDuplication } from './EventDuplication';
 import { EventDashboard } from './EventDashboard';
@@ -45,9 +44,11 @@ import { ContractorCommunication } from './ContractorCommunication';
 import { EventAnalytics } from './EventAnalytics';
 import { StatusTransition } from './StatusTransition';
 import { MilestoneTracker } from './MilestoneTracker';
+import { EventDocuments } from './EventDocuments';
 import { FeedbackCollection } from './FeedbackCollection';
 import { NotificationCenter } from './NotificationCenter';
 import { EventTimeline } from './EventTimeline';
+import { EventTasks } from './EventTasks';
 import { CreateEventModal } from '../CreateEventModal';
 import { EditEventModal } from '../EditEventModal';
 import { AddEventTeamMembersModal } from '../AddEventTeamMembersModal';
@@ -446,64 +447,75 @@ export function EventManagement({
 
       {/* Event Management Tabs */}
       {selectedEvent && (
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="contractors">Roles</TabsTrigger>
-            <TabsTrigger value="status">Status</TabsTrigger>
-            <TabsTrigger value="versions">Versions</TabsTrigger>
-            <TabsTrigger value="milestones">Milestones</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 mb-4">
+            <TabsTrigger
+              value="overview"
+              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="contractors"
+              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+            >
+              Roles
+            </TabsTrigger>
+            <TabsTrigger
+              value="tasks"
+              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+            >
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger
+              value="documents"
+              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+            >
+              Documents
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="overview" className="mt-4 space-y-4">
             <EventDashboard eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="status" className="space-y-4">
             <EventStatusTracking eventId={selectedEvent.id} />
             <StatusTransition eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="versions" className="space-y-4">
-            <EventVersionHistory eventId={selectedEvent.id} />
+          <TabsContent value="tasks" className="mt-4 space-y-4">
+            <EventTasks eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="milestones" className="space-y-4">
-            <ProgressTracking eventId={selectedEvent.id} />
-            <MilestoneTracker eventId={selectedEvent.id} />
+          <TabsContent value="documents" className="mt-4 space-y-4">
+            <EventDocuments eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-4">
+          <TabsContent value="notifications" className="mt-4 space-y-4">
             <ChangeNotifications eventId={selectedEvent.id} />
             <NotificationCenter eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="duplication" className="space-y-4">
+          <TabsContent value="duplication" className="mt-4 space-y-4">
             <EventDuplication eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="completion" className="space-y-4">
+          <TabsContent value="completion" className="mt-4 space-y-4">
             <EventCompletion eventId={selectedEvent.id} />
             <FeedbackCollection eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="communication" className="space-y-4">
+          <TabsContent value="communication" className="mt-4 space-y-4">
             <ContractorCommunication eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4">
+          <TabsContent value="analytics" className="mt-4 space-y-4">
             <EventAnalytics eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="timeline" className="space-y-4">
+          <TabsContent value="timeline" className="mt-4 space-y-4">
             <EventTimeline eventId={selectedEvent.id} />
           </TabsContent>
 
-          <TabsContent value="contractors" className="space-y-4">
+          <TabsContent value="contractors" className="mt-4 space-y-4">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">

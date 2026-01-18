@@ -19,14 +19,46 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
+    // Try to get user ID from header first (sent by client)
+    const userIdFromHeader = request.headers.get('x-user-id');
+    let supabase;
+    let user;
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+    if (userIdFromHeader) {
+      // Use admin client if we have user ID from header
+      const { supabaseAdmin } = await import('@/lib/supabase/server');
+      supabase = supabaseAdmin;
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role')
+        .eq('id', userIdFromHeader)
+        .single();
+
+      if (userData) {
+        user = {
+          id: userData.id,
+          email: userData.email || '',
+          role: userData.role,
+        } as any;
+      }
+    } else {
+      // Fallback to cookie-based auth
+      supabase = await createClient();
+      const {
+        data: { user: authUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = authUser;
+    }
+
+    if (!user) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
@@ -89,15 +121,20 @@ export async function GET(
     }
 
     // Check permissions
-    if (event.event_manager_id !== user.id) {
-      // Check if user is admin
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+    // event.event_manager_id might be null, check user_id instead
+    const { data: eventWithUserId } = await supabase
+      .from('events')
+      .select('user_id, event_manager_id')
+      .eq('id', eventId)
+      .single();
 
-      if (!userProfile || userProfile.role !== 'admin') {
+    const eventOwnerId =
+      eventWithUserId?.user_id || eventWithUserId?.event_manager_id;
+
+    if (eventOwnerId !== user.id) {
+      // Check if user is admin
+      const userRole = (user as any).role;
+      if (userRole !== 'admin') {
         return NextResponse.json(
           { success: false, message: 'Access denied' },
           { status: 403 }
