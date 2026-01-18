@@ -109,11 +109,11 @@ export default function UserProfileDropdown({
   // Get user avatar or default
   const getUserAvatar = () => {
     // Check for profile picture - user.profile.avatar_url (singular, not plural)
-    if (user?.profile?.avatar_url) {
+    if (user?.profile?.avatar_url && user.profile.avatar_url.trim()) {
       return user.profile.avatar_url;
     }
     // Fallback: check if profiles array exists (for backwards compatibility)
-    if (user?.profiles?.[0]?.avatar_url) {
+    if (user?.profiles?.[0]?.avatar_url && user.profiles[0].avatar_url.trim()) {
       return user.profiles[0].avatar_url;
     }
     // Return null if no profile picture - will show initials instead
@@ -139,7 +139,7 @@ export default function UserProfileDropdown({
       >
         {/* Profile Picture */}
         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border border-gray-300">
-          {avatarUrl ? (
+          {avatarUrl && avatarUrl.trim() ? (
             <img
               src={avatarUrl}
               alt="User avatar"

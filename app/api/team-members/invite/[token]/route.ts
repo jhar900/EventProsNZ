@@ -49,13 +49,23 @@ export async function GET(
     // Get event manager's profile information
     const { data: managerProfile, error: managerProfileError } = await supabase
       .from('profiles')
-      .select('first_name, last_name')
+      .select('first_name, last_name, avatar_url')
       .eq('user_id', invitation.event_manager_id)
       .single();
 
     const managerName = managerProfile
       ? `${managerProfile.first_name} ${managerProfile.last_name}`.trim()
       : null;
+
+    // Get event manager's business profile if it exists
+    const { data: businessProfile, error: businessProfileError } =
+      await supabase
+        .from('business_profiles')
+        .select('company_name')
+        .eq('user_id', invitation.event_manager_id)
+        .maybeSingle();
+
+    const companyName = businessProfile?.company_name || null;
 
     // Check if user exists by email
     const { data: existingUser, error: userError } = await supabase
@@ -66,8 +76,22 @@ export async function GET(
 
     const userExists = !!existingUser && !userError;
     let isOnboarded = false;
+    let alreadyAccepted = false;
 
     if (userExists && existingUser) {
+      // Check if user has already accepted this invitation (has a team_members record)
+      const { data: existingTeamMember } = await supabase
+        .from('team_members')
+        .select('id, accepted_at, status')
+        .eq('event_manager_id', invitation.event_manager_id)
+        .eq('team_member_id', existingUser.id)
+        .not('accepted_at', 'is', null)
+        .maybeSingle();
+
+      if (existingTeamMember) {
+        alreadyAccepted = true;
+      }
+
       // Check if user has profile with name and avatar
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -95,10 +119,13 @@ export async function GET(
         role: invitation.role,
         eventManagerId: invitation.event_manager_id,
         eventManagerName: managerName,
+        eventManagerAvatar: managerProfile?.avatar_url || null,
+        eventManagerCompanyName: companyName,
       },
       userExists,
       isOnboarded,
       userId: existingUser?.id || null,
+      alreadyAccepted,
     });
   } catch (error) {
     console.error('Error validating invitation:', error);

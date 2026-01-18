@@ -48,6 +48,7 @@ const createEventSchema = z.object({
     country: z.string().optional().nullable(),
   }),
   specialRequirements: z.string().optional().nullable(),
+  logoUrl: z.string().url().optional().nullable(),
   serviceRequirements: z
     .array(
       z.object({
@@ -300,6 +301,9 @@ export async function POST(request: NextRequest) {
     if (eventData.specialRequirements) {
       // Try requirements first (from original schema), then special_requirements
       eventInsertData.requirements = eventData.specialRequirements;
+    }
+    if (eventData.logoUrl) {
+      eventInsertData.logo_url = eventData.logoUrl;
     }
 
     console.log(

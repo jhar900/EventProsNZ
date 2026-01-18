@@ -49,7 +49,14 @@ export default function TeamInvitePage() {
     ) {
       // User is already logged in with matching email, accept invitation
       const acceptAndRedirect = async () => {
-        await acceptInvitation(token);
+        const success = await acceptInvitation(token, 3);
+
+        if (!success) {
+          setError(
+            'Failed to accept invitation. Please try refreshing the page or contact support.'
+          );
+          return;
+        }
 
         // Set flag in localStorage to indicate user came from team invitation
         if (typeof window !== 'undefined') {
@@ -101,33 +108,84 @@ export default function TeamInvitePage() {
     }
   };
 
-  const acceptInvitation = async (inviteToken: string) => {
-    try {
-      const response = await fetch('/api/team-members/accept', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ token: inviteToken }),
-      });
+  const acceptInvitation = async (
+    inviteToken: string,
+    retries: number = 3
+  ): Promise<boolean> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[Accept Invitation] Attempt ${attempt} of ${retries}...`);
+        const response = await fetch('/api/team-members/accept', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ token: inviteToken }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Failed to accept invitation:', error);
-        // Don't throw - we'll still redirect, the relationship might already exist
+        const data = await response.json();
+
+        if (!response.ok) {
+          // If it's a 404 (invitation not found) or 403 (email mismatch), don't retry
+          if (response.status === 404 || response.status === 403) {
+            console.error(
+              `[Accept Invitation] Non-retryable error:`,
+              data.error,
+              data.details
+            );
+            return false;
+          }
+
+          // For other errors, log and retry if attempts remain
+          console.error(
+            `[Accept Invitation] Attempt ${attempt} failed:`,
+            data.error,
+            data.details
+          );
+
+          if (attempt < retries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+
+          return false;
+        }
+
+        console.log(
+          `[Accept Invitation] Success on attempt ${attempt}:`,
+          data.message
+        );
+        return true;
+      } catch (err) {
+        console.error(`[Accept Invitation] Attempt ${attempt} exception:`, err);
+
+        if (attempt < retries) {
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+
+        return false;
       }
-    } catch (err) {
-      console.error('Error accepting invitation:', err);
-      // Don't throw - continue with redirect
     }
+
+    return false;
   };
 
   const handleLoginSuccess = async (loggedInUser: any) => {
     if (!invitationData || !token) return;
 
-    // Accept the invitation (link team member relationship)
-    await acceptInvitation(token);
+    // Accept the invitation (link team member relationship) with retry
+    const success = await acceptInvitation(token, 3);
+
+    if (!success) {
+      setError(
+        'Login successful, but we had trouble linking your team invitation. Please try refreshing the page or contact support.'
+      );
+      return;
+    }
 
     // Set flag in localStorage to indicate user came from team invitation
     if (typeof window !== 'undefined') {
@@ -164,25 +222,43 @@ export default function TeamInvitePage() {
   if (error) {
     return (
       <AuthGuard requireAuth={false}>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md w-full space-y-8 text-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Event Pros NZ
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                New Zealand&apos;s Event Ecosystem
-              </p>
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+          {/* Hero background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-amber-50">
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+              <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-pulse"></div>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-600">{error}</p>
+          </div>
+          <div className="relative z-10 max-w-md w-full">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-orange-100 space-y-8 text-center">
+              <div>
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <img
+                    src="/logo.png"
+                    alt="Event Pros NZ"
+                    className="h-16 sm:h-20 lg:h-20 w-auto object-contain"
+                  />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Event Pros NZ
+                </h1>
+                <p className="mt-2 text-sm text-gray-600">
+                  New Zealand&apos;s Event Ecosystem
+                </p>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+              <button
+                onClick={() => router.push('/')}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+              >
+                Home Page
+              </button>
             </div>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
-            >
-              Go to Login
-            </button>
           </div>
         </div>
       </AuthGuard>

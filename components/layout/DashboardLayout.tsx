@@ -518,7 +518,8 @@ export default function DashboardLayout({
               <div className="flex items-center space-x-3">
                 {/* Avatar */}
                 <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                  {user.profile?.avatar_url ? (
+                  {user.profile?.avatar_url &&
+                  user.profile.avatar_url.trim() ? (
                     <Image
                       src={user.profile.avatar_url}
                       alt={user.profile.first_name || user.email || 'User'}

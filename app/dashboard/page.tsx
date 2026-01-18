@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import RoleGuard from '@/components/features/auth/RoleGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { TeamInvitationModal } from '@/components/features/team/TeamInvitationModal';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import {
@@ -214,6 +215,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
+      <TeamInvitationModal />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         {user && (

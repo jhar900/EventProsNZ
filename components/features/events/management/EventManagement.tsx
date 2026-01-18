@@ -50,22 +50,44 @@ import { NotificationCenter } from './NotificationCenter';
 import { EventTimeline } from './EventTimeline';
 import { CreateEventModal } from '../CreateEventModal';
 import { EditEventModal } from '../EditEventModal';
+import { AddEventTeamMembersModal } from '../AddEventTeamMembersModal';
 import { useEventManagement } from '@/hooks/useEventManagement';
+import { useAuth } from '@/hooks/useAuth';
 import { Event, EVENT_STATUS } from '@/types/events';
+import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface EventManagementProps {
   eventId?: string;
   initialTab?: string;
 }
 
+interface EventTeamMember {
+  id: string;
+  eventId: string;
+  teamMemberId: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  status: string;
+  avatarUrl: string | null;
+}
+
 export function EventManagement({
   eventId,
   initialTab = 'overview',
 }: EventManagementProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [showAddTeamMembersModal, setShowAddTeamMembersModal] = useState(false);
+  const [eventTeamMembers, setEventTeamMembers] = useState<EventTeamMember[]>(
+    []
+  );
+  const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
 
   const {
     events,
@@ -102,6 +124,140 @@ export function EventManagement({
       }
     }
   }, [currentEvent, eventId, events]);
+
+  // Load event team members when tab is active and event is selected
+  useEffect(() => {
+    if (selectedEvent && activeTab === 'contractors') {
+      loadEventTeamMembers();
+    }
+  }, [selectedEvent?.id, activeTab]);
+
+  const loadEventTeamMembers = async () => {
+    if (!selectedEvent?.id || !user?.id) return;
+
+    setIsLoadingTeamMembers(true);
+    try {
+      const headers: HeadersInit = {};
+      if (user.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/events/${selectedEvent.id}/team-members`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load event team members');
+      }
+
+      setEventTeamMembers(data.teamMembers || []);
+    } catch (error) {
+      console.error('Error loading event team members:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to load event team members';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoadingTeamMembers(false);
+    }
+  };
+
+  const handleRemoveTeamMember = async (eventTeamMemberId: string) => {
+    if (
+      !confirm(
+        'Are you sure you want to remove this team member from the event?'
+      )
+    ) {
+      return;
+    }
+
+    if (!selectedEvent?.id || !user?.id) return;
+
+    try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (user.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/events/${selectedEvent.id}/team-members/${eventTeamMemberId}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || 'Failed to remove team member from event'
+        );
+      }
+
+      toast.success('Team member removed from event successfully');
+      loadEventTeamMembers();
+    } catch (error) {
+      console.error('Error removing team member from event:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to remove team member from event';
+      toast.error(errorMessage);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, string> = {
+      active: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200',
+      accepted:
+        'bg-green-100 text-green-700 border-green-200 hover:bg-green-200',
+      onboarding:
+        'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      invited: 'border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200',
+      declined:
+        'bg-destructive text-destructive-foreground hover:bg-destructive/80',
+      inactive:
+        'bg-destructive text-destructive-foreground hover:bg-destructive/80',
+    };
+
+    const labels: Record<string, string> = {
+      active: 'Active',
+      accepted: 'Accepted',
+      onboarding: 'Onboarding',
+      invited: 'Invited',
+      declined: 'Declined',
+      inactive: 'Declined',
+    };
+
+    const displayStatus = status === 'inactive' ? 'declined' : status;
+
+    return (
+      <Badge className={variants[displayStatus] || 'outline'}>
+        {labels[displayStatus] || status}
+      </Badge>
+    );
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -357,34 +513,92 @@ export function EventManagement({
                       Manage your event management team members and their roles
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddTeamMembersModal(true)}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Team Member
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center text-muted-foreground py-8"
-                      >
-                        No team members added yet
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                {isLoadingTeamMembers ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    Loading team members...
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8"></TableHead>
+                        <TableHead className="pl-2">Name</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {eventTeamMembers.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className="text-center text-muted-foreground py-8"
+                          >
+                            No team members added yet
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        eventTeamMembers.map(member => {
+                          const initials = getInitials(member.name);
+                          return (
+                            <TableRow key={member.id}>
+                              <TableCell className="pr-2">
+                                <Avatar className="h-8 w-8">
+                                  {member.avatarUrl &&
+                                  member.avatarUrl.trim() ? (
+                                    <AvatarImage
+                                      src={member.avatarUrl}
+                                      alt={member.name}
+                                    />
+                                  ) : null}
+                                  <AvatarFallback className="text-xs">
+                                    {initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </TableCell>
+                              <TableCell className="pl-2">
+                                <span className="font-medium">
+                                  {member.name}
+                                </span>
+                              </TableCell>
+                              <TableCell>{member.role}</TableCell>
+                              <TableCell>{member.email}</TableCell>
+                              <TableCell>{member.phone || 'N/A'}</TableCell>
+                              <TableCell>
+                                {getStatusBadge(member.status)}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleRemoveTeamMember(member.id)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -416,6 +630,18 @@ export function EventManagement({
           setShowEditEventModal(false);
         }}
       />
+
+      {/* Add Team Members Modal */}
+      {selectedEvent && (
+        <AddEventTeamMembersModal
+          isOpen={showAddTeamMembersModal}
+          onClose={() => setShowAddTeamMembersModal(false)}
+          eventId={selectedEvent.id}
+          onSuccess={() => {
+            loadEventTeamMembers();
+          }}
+        />
+      )}
     </div>
   );
 }

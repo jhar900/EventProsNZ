@@ -564,11 +564,22 @@ export function OnboardingWizard() {
       throw new Error(error.error || 'Failed to complete onboarding');
     }
 
-    // Small delay to ensure database update propagates
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Clear the completion status cache to force a fresh check
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('profile_completion_status');
+      // Set a flag to indicate onboarding was just completed
+      // This helps OnboardingGuard know to allow dashboard access
+      localStorage.setItem('onboarding_just_completed', Date.now().toString());
+      console.log(
+        '[OnboardingWizard] Cleared completion status cache and set completion flag'
+      );
+    }
 
-    // Redirect to dashboard
-    router.push('/dashboard');
+    // Wait a bit longer to ensure database update propagates
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Use replace instead of push to avoid history issues and prevent back button from going to onboarding
+    router.replace('/dashboard');
   };
 
   const handlePrevious = () => {

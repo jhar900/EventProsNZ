@@ -31,6 +31,7 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
 
   const {
     register,
@@ -59,6 +60,23 @@ export default function LoginForm({
       const result = await response.json();
 
       if (!response.ok) {
+        // Check if verification email was sent
+        if (result.verificationEmailSent) {
+          setVerificationEmailSent(true);
+          setError(null);
+          return; // Don't throw error, show success message instead
+        }
+
+        // If verification email failed to send, show the error
+        if (result.verificationEmailSent === false && result.emailError) {
+          setError(
+            result.details ||
+              result.error ||
+              'Failed to send verification email'
+          );
+          return;
+        }
+
         throw new Error(result.error || 'Login failed');
       }
 
@@ -129,11 +147,22 @@ export default function LoginForm({
             )}
           </div>
 
-          {error && (
+          {verificationEmailSent ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm font-medium text-blue-900 mb-1">
+                Verification Email Sent
+              </p>
+              <p className="text-sm text-blue-800">
+                A verification email has been sent to your email address. Please
+                check your inbox and click the verification link to verify your
+                account, then try logging in again.
+              </p>
+            </div>
+          ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-md p-3">
               <p className="text-sm text-red-600">{error}</p>
             </div>
-          )}
+          ) : null}
 
           <button
             type="submit"

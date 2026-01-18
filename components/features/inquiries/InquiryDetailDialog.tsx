@@ -226,7 +226,7 @@ export function InquiryDetailDialog({
     }
   };
 
-  const handleEdit = (message: InquiryResponse) => {
+  const handleEdit = (message: MessageResponse) => {
     setEditingMessageId(message.id);
     setEditMessageText(message.message);
   };
@@ -532,6 +532,8 @@ export function InquiryDetailDialog({
                         const canEdit =
                           isUserMessage(response) && !isOriginalMessage;
 
+                        const isCurrentUser = isUserMessage(response);
+
                         return (
                           <div
                             key={response.id}
@@ -539,18 +541,27 @@ export function InquiryDetailDialog({
                               isOriginalMessage
                                 ? 'bg-gray-50 border-gray-200'
                                 : 'bg-blue-50 border-blue-200'
+                            } ${
+                              !isOriginalMessage
+                                ? isCurrentUser
+                                  ? 'ml-auto max-w-[90%]'
+                                  : 'mr-auto max-w-[90%]'
+                                : ''
                             }`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
                                 {response.responder?.profiles ? (
                                   <Avatar className="h-6 w-6">
-                                    <AvatarImage
-                                      src={
-                                        response.responder.profiles
-                                          .avatar_url || undefined
-                                      }
-                                    />
+                                    {response.responder.profiles.avatar_url &&
+                                    response.responder.profiles.avatar_url.trim() ? (
+                                      <AvatarImage
+                                        src={
+                                          response.responder.profiles.avatar_url
+                                        }
+                                        alt={`${response.responder.profiles.first_name} ${response.responder.profiles.last_name}`.trim()}
+                                      />
+                                    ) : null}
                                     <AvatarFallback>
                                       {response.responder.profiles
                                         .first_name?.[0] ||
@@ -673,11 +684,13 @@ export function InquiryDetailDialog({
                         <div className="flex items-center space-x-2">
                           {eventManager?.profiles ? (
                             <Avatar className="h-6 w-6">
-                              <AvatarImage
-                                src={
-                                  eventManager.profiles.avatar_url || undefined
-                                }
-                              />
+                              {eventManager.profiles.avatar_url &&
+                              eventManager.profiles.avatar_url.trim() ? (
+                                <AvatarImage
+                                  src={eventManager.profiles.avatar_url}
+                                  alt={`${eventManager.profiles.first_name} ${eventManager.profiles.last_name}`.trim()}
+                                />
+                              ) : null}
                               <AvatarFallback>
                                 {eventManager.profiles.first_name?.[0] ||
                                   eventManager.profiles.last_name?.[0] ||

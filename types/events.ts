@@ -130,6 +130,7 @@ export interface EventFormData {
   attendeeCount?: number;
   location: EventLocation;
   specialRequirements?: string;
+  logoUrl?: string;
 
   // Step 2: Service Requirements
   serviceRequirements: ServiceRequirement[];
@@ -233,6 +234,7 @@ export interface CreateEventRequest {
   attendeeCount?: number;
   location: EventLocation;
   specialRequirements?: string;
+  logoUrl?: string;
   serviceRequirements: ServiceRequirement[];
   budgetPlan: BudgetPlan;
   isDraft?: boolean;
@@ -247,6 +249,7 @@ export interface UpdateEventRequest {
   attendeeCount?: number;
   location?: EventLocation;
   specialRequirements?: string;
+  logoUrl?: string;
   serviceRequirements?: ServiceRequirement[];
   budgetPlan?: BudgetPlan;
   status?: Event['status'];

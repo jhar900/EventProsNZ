@@ -36,13 +36,25 @@ export async function POST(request: NextRequest) {
 
     const { email, password, role, first_name, last_name } = validatedData;
 
+    // Check if user is signing up through a team invitation
+    // If they have a pending team invitation, we can auto-verify their email
+    // since they already clicked the link in their email
+    const { data: pendingInvitation } = await supabaseAdmin
+      .from('team_member_invitations')
+      .select('id, email, status')
+      .eq('email', email)
+      .eq('status', 'invited')
+      .maybeSingle();
+
+    const isFromInvite = !!pendingInvitation;
+
     // Create user in Supabase Auth
-    // Set email_confirm to false so user must verify their email
+    // Auto-verify email if signing up through invite (they already clicked the link)
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
-        email_confirm: false, // Require email verification
+        email_confirm: isFromInvite, // Auto-verify if from invite, otherwise require verification
       });
 
     if (authError) {
@@ -63,13 +75,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // If signing up through invite, update the auth user to mark email as confirmed
+    if (isFromInvite) {
+      await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
+        email_confirm: true,
+      });
+      console.log(
+        '[Register API] Auto-verified email for invite signup:',
+        email
+      );
+    }
+
     // Create user record in our users table
-    // Set is_verified to false - user must verify email first
+    // Auto-verify if signing up through invite
     const { error: userError } = await supabaseAdmin.from('users').insert({
       id: authData.user.id,
       email,
       role,
-      is_verified: false, // User must verify email
+      is_verified: isFromInvite, // Auto-verify if from invite
       last_login: new Date().toISOString(),
     });
 
@@ -123,25 +146,31 @@ export async function POST(request: NextRequest) {
       // Don't fail registration, but user will need to log in manually
     }
 
-    // Send email verification email (non-blocking - don't fail registration if email fails)
+    // Send email verification email only if NOT from invite (invite users are already verified)
     // Use dynamic import to avoid blocking route registration
-    import('@/lib/email/verification-email')
-      .then(({ sendVerificationEmail }) => {
-        sendVerificationEmail({
-          userId: authData.user.id,
-          email,
-          firstName: first_name,
-        }).catch(error => {
-          // Log error but don't throw - registration should succeed even if email fails
-          console.error(
-            'Failed to send verification email during registration:',
-            error
-          );
+    if (!isFromInvite) {
+      import('@/lib/email/verification-email')
+        .then(({ sendVerificationEmail }) => {
+          sendVerificationEmail({
+            userId: authData.user.id,
+            email,
+            firstName: first_name,
+          }).catch(error => {
+            // Log error but don't throw - registration should succeed even if email fails
+            console.error(
+              'Failed to send verification email during registration:',
+              error
+            );
+          });
+        })
+        .catch(() => {
+          // Silently fail if email module can't be loaded
         });
-      })
-      .catch(() => {
-        // Silently fail if email module can't be loaded
-      });
+    } else {
+      console.log(
+        '[Register API] Skipping verification email - user signed up through invite link'
+      );
+    }
 
     // Send welcome email (non-blocking - don't fail registration if email fails)
     // Use dynamic import to avoid blocking route registration

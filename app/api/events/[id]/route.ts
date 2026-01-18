@@ -37,6 +37,7 @@ const updateEventSchema = z.object({
     })
     .optional(),
   specialRequirements: z.string().optional(),
+  logoUrl: z.string().url().optional().nullable(),
   serviceRequirements: z
     .array(
       z.object({
@@ -300,6 +301,8 @@ export async function PUT(
     }
     if (updateData.specialRequirements !== undefined)
       eventUpdateData.special_requirements = updateData.specialRequirements;
+    if (updateData.logoUrl !== undefined)
+      eventUpdateData.logo_url = updateData.logoUrl;
     if (updateData.budgetPlan) {
       eventUpdateData.budget_total = updateData.budgetPlan.totalBudget;
       eventUpdateData.budget_min = updateData.budgetPlan.totalBudget * 0.8;

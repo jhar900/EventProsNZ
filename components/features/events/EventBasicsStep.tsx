@@ -5,6 +5,7 @@ import { useEventCreationStore, useEventData } from '@/stores/event-creation';
 import { EventTypeSelector } from './EventTypeSelector';
 import { EventDatePicker } from './EventDatePicker';
 import { EventLocationInput } from './EventLocationInput';
+import { EventLogoUpload } from './EventLogoUpload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -70,6 +71,12 @@ export function EventBasicsStep() {
           {(eventData.title || '').length}/200 characters
         </p>
       </div>
+
+      {/* Event Logo */}
+      <EventLogoUpload
+        value={eventData.logoUrl || null}
+        onChange={logoUrl => handleInputChange('logoUrl', logoUrl)}
+      />
 
       {/* Event Description */}
       <div className="space-y-2">

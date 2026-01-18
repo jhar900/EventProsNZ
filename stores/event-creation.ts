@@ -63,6 +63,7 @@ const initialEventData: Partial<EventFormData> = {
     coordinates: { lat: 0, lng: 0 },
   },
   specialRequirements: '',
+  logoUrl: undefined,
   serviceRequirements: [],
   budgetPlan: {
     totalBudget: 0,
@@ -353,6 +354,7 @@ export const useEventCreationStore = create<EventCreationState>()(
             payload.attendeeCount = eventData.attendeeCount;
           if (eventData.specialRequirements)
             payload.specialRequirements = eventData.specialRequirements;
+          if (eventData.logoUrl) payload.logoUrl = eventData.logoUrl;
 
           // Add optional location fields
           if (eventData.location?.placeId)
@@ -649,6 +651,7 @@ export const useEventCreationStore = create<EventCreationState>()(
                 },
             specialRequirements:
               event.requirements || event.special_requirements || '',
+            logoUrl: event.logo_url || undefined,
             serviceRequirements: [],
             budgetPlan: {
               totalBudget: event.budget || event.budget_total || 0,
@@ -729,6 +732,9 @@ export const useEventCreationStore = create<EventCreationState>()(
           }
           if (eventData.specialRequirements !== undefined) {
             payload.specialRequirements = eventData.specialRequirements;
+          }
+          if (eventData.logoUrl !== undefined) {
+            payload.logoUrl = eventData.logoUrl;
           }
 
           const response = await fetch(`/api/events/${eventId}`, {

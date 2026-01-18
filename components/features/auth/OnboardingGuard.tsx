@@ -157,6 +157,7 @@ function OnboardingGuard({
     // Only redirect if we have a status and it's confirmed incomplete
     // Don't redirect if status is null (might be an error, not incomplete)
     // Admins can bypass onboarding requirement
+    // Also check if we just completed onboarding (recent timestamp in cache)
     if (
       user &&
       user.role !== 'admin' &&
@@ -164,6 +165,39 @@ function OnboardingGuard({
       status && // Only redirect if we have a status (not null)
       !status.isComplete
     ) {
+      // Check if onboarding was just completed (within last 10 seconds)
+      const onboardingJustCompleted = (() => {
+        try {
+          const completionTime = localStorage.getItem(
+            'onboarding_just_completed'
+          );
+          if (completionTime) {
+            const timeSinceCompletion =
+              Date.now() - parseInt(completionTime, 10);
+            // If completed within last 10 seconds and we're on dashboard, allow access
+            if (timeSinceCompletion < 10000 && pathname === '/dashboard') {
+              return true;
+            } else if (timeSinceCompletion >= 10000) {
+              // Clean up old flag
+              localStorage.removeItem('onboarding_just_completed');
+            }
+          }
+        } catch (e) {
+          // Ignore
+        }
+        return false;
+      })();
+
+      // If onboarding was just completed and we're on dashboard, don't redirect
+      // This prevents the redirect loop after completing onboarding
+      if (onboardingJustCompleted) {
+        console.log(
+          '[OnboardingGuard] Onboarding just completed, allowing dashboard access'
+        );
+        setIsChecking(false);
+        return () => clearTimeout(timeout);
+      }
+
       // Determine the correct onboarding route based on user role
       let onboardingRoute = '/onboarding/event-manager';
       if (user.role === 'contractor') {

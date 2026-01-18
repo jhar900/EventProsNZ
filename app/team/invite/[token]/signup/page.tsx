@@ -69,41 +69,23 @@ export default function TeamInviteSignupPage() {
   const handleSignupSuccess = async (newUser: any) => {
     if (!invitationData || !token) return;
 
-    // Accept the invitation (link team member relationship)
-    await acceptInvitation(token);
-
-    // Set flag in localStorage to indicate user came from team invitation
+    // Store invitation token for later acceptance after onboarding
+    // This avoids timing issues with session cookies and provides better UX
     if (typeof window !== 'undefined') {
+      localStorage.setItem('pending-team-invitation-token', token);
       localStorage.setItem('from-team-invitation', 'true');
+      console.log(
+        '[Signup Success] Stored invitation token in localStorage:',
+        token
+      );
     }
 
     // New users always go to onboarding
+    // The invitation will be shown as a modal after onboarding completion
     if (newUser?.role === 'contractor') {
       router.push('/onboarding/contractor');
     } else {
       router.push('/onboarding/event-manager');
-    }
-  };
-
-  const acceptInvitation = async (inviteToken: string) => {
-    try {
-      const response = await fetch('/api/team-members/accept', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ token: inviteToken }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Failed to accept invitation:', error);
-        // Don't throw - we'll still redirect, the relationship might already exist
-      }
-    } catch (err) {
-      console.error('Error accepting invitation:', err);
-      // Don't throw - continue with redirect
     }
   };
 
@@ -140,24 +122,34 @@ export default function TeamInviteSignupPage() {
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-pulse"></div>
             </div>
           </div>
-          <div className="relative z-10 max-w-md w-full space-y-8 text-center px-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Event Pros NZ
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                New Zealand&apos;s Event Ecosystem
-              </p>
+          <div className="relative z-10 max-w-md w-full px-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-orange-100 space-y-8 text-center">
+              <div>
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <img
+                    src="/logo.png"
+                    alt="Event Pros NZ"
+                    className="h-16 sm:h-20 lg:h-20 w-auto object-contain"
+                  />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Event Pros NZ
+                </h1>
+                <p className="mt-2 text-sm text-gray-600">
+                  New Zealand&apos;s Event Ecosystem
+                </p>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+              <Link
+                href="/"
+                className="block w-full text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+              >
+                Home Page
+              </Link>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-            <Link
-              href="/login"
-              className="block w-full text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
-            >
-              Go to Login
-            </Link>
           </div>
         </div>
       </AuthGuard>
