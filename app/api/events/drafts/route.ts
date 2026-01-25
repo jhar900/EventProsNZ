@@ -30,10 +30,12 @@ const saveDraftSchema = z.object({
         city: z.string().optional().nullable(),
         region: z.string().optional().nullable(),
         country: z.string().optional().nullable(),
+        toBeConfirmed: z.boolean().optional().nullable(),
       })
       .optional()
       .nullable(),
     specialRequirements: z.string().optional().nullable(),
+    logoUrl: z.string().url().optional().nullable(),
     serviceRequirements: z
       .array(
         z.object({
@@ -171,6 +173,7 @@ export async function POST(request: NextRequest) {
       requirements: eventData.specialRequirements || null,
       budget: eventData.budgetPlan?.totalBudget || null,
       location: eventData.location?.address || null,
+      logo_url: eventData.logoUrl || null,
     };
 
     // Check if user already has a draft event

@@ -25,7 +25,7 @@ const updateEventSchema = z.object({
   attendeeCount: z.number().min(1).max(10000).optional(),
   location: z
     .object({
-      address: z.string().min(1, 'Address is required'),
+      address: z.string().optional().nullable(),
       coordinates: z.object({
         lat: z.number(),
         lng: z.number(),
@@ -34,7 +34,27 @@ const updateEventSchema = z.object({
       city: z.string().optional(),
       region: z.string().optional(),
       country: z.string().optional(),
+      toBeConfirmed: z.boolean().optional().nullable(),
     })
+    .refine(
+      data => {
+        // If toBeConfirmed is true, address and coordinates can be empty
+        if (data.toBeConfirmed) {
+          return true;
+        }
+        // Otherwise, address is required and coordinates must be valid
+        return (
+          data.address &&
+          data.address.trim() !== '' &&
+          data.coordinates.lat !== 0 &&
+          data.coordinates.lng !== 0
+        );
+      },
+      {
+        message:
+          'Please provide a valid location or mark it as "To Be Confirmed"',
+      }
+    )
     .optional(),
   specialRequirements: z.string().optional(),
   logoUrl: z.string().url().optional().nullable(),
@@ -161,6 +181,7 @@ export async function GET(
     const eventOwnerId =
       eventWithRelations.user_id ||
       (eventWithRelations as any).event_manager_id;
+
     if (eventOwnerId !== user.id) {
       // Check if user is admin
       const { data: userProfile } = await supabase
@@ -169,11 +190,40 @@ export async function GET(
         .eq('id', user.id)
         .single();
 
-      if (!userProfile || userProfile.role !== 'admin') {
-        return NextResponse.json(
-          { success: false, message: 'Access denied' },
-          { status: 403 }
-        );
+      if (userProfile?.role === 'admin') {
+        // Admins have access to all events
+      } else {
+        // Check if user is a team member of this event
+        // First, find team_members records where user is a team member
+        const { data: teamMemberRecords } = await supabaseAdmin
+          .from('team_members')
+          .select('id')
+          .eq('team_member_id', user.id)
+          .in('status', ['invited', 'active', 'onboarding']);
+
+        const teamMemberIds = teamMemberRecords?.map(tm => tm.id) || [];
+
+        if (teamMemberIds.length > 0) {
+          // Check if any of these team members are assigned to this event
+          const { data: eventTeamMemberRecords } = await supabaseAdmin
+            .from('event_team_members')
+            .select('id')
+            .eq('event_id', params.id)
+            .in('team_member_id', teamMemberIds)
+            .limit(1);
+
+          if (!eventTeamMemberRecords || eventTeamMemberRecords.length === 0) {
+            return NextResponse.json(
+              { success: false, message: 'Access denied' },
+              { status: 403 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { success: false, message: 'Access denied' },
+            { status: 403 }
+          );
+        }
       }
     }
 

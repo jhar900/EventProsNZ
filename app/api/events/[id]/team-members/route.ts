@@ -55,12 +55,43 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Verify user owns the event or is an admin
-    if (event.user_id !== user.id && (user as any).role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized to view this event' },
-        { status: 403 }
-      );
+    // Check if user is admin
+    if ((user as any).role === 'admin') {
+      // Admins have access to all events
+    } else if (event.user_id === user.id) {
+      // User owns the event
+    } else {
+      // Check if user is a team member of this event
+      // First, find team_members records where user is a team member
+      const { data: teamMemberRecords } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('team_member_id', user.id)
+        .in('status', ['invited', 'active', 'onboarding']);
+
+      const teamMemberIds = teamMemberRecords?.map(tm => tm.id) || [];
+
+      if (teamMemberIds.length > 0) {
+        // Check if any of these team members are assigned to this event
+        const { data: eventTeamMemberRecords } = await supabaseAdmin
+          .from('event_team_members')
+          .select('id')
+          .eq('event_id', eventId)
+          .in('team_member_id', teamMemberIds)
+          .limit(1);
+
+        if (!eventTeamMemberRecords || eventTeamMemberRecords.length === 0) {
+          return NextResponse.json(
+            { error: 'Unauthorized to view this event' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Unauthorized to view this event' },
+          { status: 403 }
+        );
+      }
     }
 
     // Fetch event team members with team member details
@@ -146,6 +177,49 @@ export async function GET(
         avatarUrl: profile?.avatar_url || null,
       };
     });
+
+    // Add event creator to the list
+    // Fetch event creator details
+    const { data: eventCreator, error: eventCreatorError } = await supabaseAdmin
+      .from('users')
+      .select(
+        `
+          id,
+          email,
+          profiles (
+            first_name,
+            last_name,
+            phone,
+            avatar_url
+          )
+        `
+      )
+      .eq('id', event.user_id)
+      .single();
+
+    if (!eventCreatorError && eventCreator) {
+      const profile = Array.isArray(eventCreator.profiles)
+        ? eventCreator.profiles[0]
+        : eventCreator.profiles;
+
+      const eventCreatorMember = {
+        id: `creator-${event.user_id}`, // Unique ID for the creator
+        eventId: eventId,
+        teamMemberId: null, // Not a team member record
+        name: profile
+          ? `${profile.first_name} ${profile.last_name}`.trim()
+          : eventCreator.email || 'Unknown',
+        role: 'Event Creator',
+        email: eventCreator.email || 'N/A',
+        phone: profile?.phone || 'N/A',
+        status: 'active', // Event creator is always active
+        avatarUrl: profile?.avatar_url || null,
+        isCreator: true, // Flag to identify the creator
+      };
+
+      // Add creator at the beginning of the list
+      teamMembers.unshift(eventCreatorMember);
+    }
 
     return NextResponse.json({
       success: true,

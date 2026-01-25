@@ -58,6 +58,7 @@ export function AddTaskModal({
 }: AddTaskModalProps) {
   const { user } = useAuth();
   const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [selectedTeamMemberIds, setSelectedTeamMemberIds] = useState<
     Set<string>
@@ -171,6 +172,7 @@ export function AddTaskModal({
 
       const taskData: any = {
         title: taskTitle.trim(),
+        description: taskDescription.trim() || null,
         due_date: dueDate ? dueDate.toISOString() : null,
       };
 
@@ -265,6 +267,7 @@ export function AddTaskModal({
 
   const handleClose = () => {
     setTaskTitle('');
+    setTaskDescription('');
     setDueDate(undefined);
     setSelectedTeamMemberIds(new Set());
     setSelectedContractorIds(new Set());
@@ -291,6 +294,18 @@ export function AddTaskModal({
               placeholder="Enter task title"
               value={taskTitle}
               onChange={e => setTaskTitle(e.target.value)}
+            />
+          </div>
+
+          {/* Task Description */}
+          <div className="space-y-2">
+            <Label htmlFor="task-description">Description</Label>
+            <Textarea
+              id="task-description"
+              placeholder="Enter task description (optional)"
+              value={taskDescription}
+              onChange={e => setTaskDescription(e.target.value)}
+              rows={4}
             />
           </div>
 

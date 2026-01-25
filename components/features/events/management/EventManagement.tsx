@@ -33,8 +33,17 @@ import {
   Copy,
   Trash2,
   MapPin,
+  ArrowLeft,
+  ArrowRight,
+  Info,
 } from 'lucide-react';
-import { EventStatusTracking } from './EventStatusTracking';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ChangeNotifications } from './ChangeNotifications';
 import { EventDuplication } from './EventDuplication';
 import { EventDashboard } from './EventDashboard';
@@ -42,7 +51,6 @@ import { ProgressTracking } from './ProgressTracking';
 import { EventCompletion } from './EventCompletion';
 import { ContractorCommunication } from './ContractorCommunication';
 import { EventAnalytics } from './EventAnalytics';
-import { StatusTransition } from './StatusTransition';
 import { MilestoneTracker } from './MilestoneTracker';
 import { EventDocuments } from './EventDocuments';
 import { FeedbackCollection } from './FeedbackCollection';
@@ -57,6 +65,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { Event, EVENT_STATUS } from '@/types/events';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface EventManagementProps {
   eventId?: string;
@@ -66,13 +87,14 @@ interface EventManagementProps {
 interface EventTeamMember {
   id: string;
   eventId: string;
-  teamMemberId: string;
+  teamMemberId: string | null;
   name: string;
   role: string;
   email: string;
   phone: string;
   status: string;
   avatarUrl: string | null;
+  isCreator?: boolean;
 }
 
 export function EventManagement({
@@ -89,6 +111,18 @@ export function EventManagement({
     []
   );
   const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
+  const [eventContractors, setEventContractors] = useState<any[]>([]);
+  const [isLoadingContractors, setIsLoadingContractors] = useState(false);
+  const [showStatusTooltip, setShowStatusTooltip] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showRemoveTeamMemberModal, setShowRemoveTeamMemberModal] =
+    useState(false);
+  const [teamMemberToRemove, setTeamMemberToRemove] = useState<string | null>(
+    null
+  );
+  const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [lastNotificationTime, setLastNotificationTime] = useState<number>(0);
 
   const {
     events,
@@ -126,12 +160,24 @@ export function EventManagement({
     }
   }, [currentEvent, eventId, events]);
 
-  // Load event team members when tab is active and event is selected
+  // Load event team members and contractors when tab is active and event is selected
   useEffect(() => {
-    if (selectedEvent && activeTab === 'contractors') {
+    if (
+      selectedEvent &&
+      activeTab === 'contractors' &&
+      selectedEvent.status !== 'draft'
+    ) {
       loadEventTeamMembers();
+      loadEventContractors();
     }
-  }, [selectedEvent?.id, activeTab]);
+  }, [selectedEvent?.id, activeTab, selectedEvent?.status]);
+
+  // Reset to overview tab if event is in draft status and user tries to access other tabs
+  useEffect(() => {
+    if (selectedEvent?.status === 'draft' && activeTab !== 'overview') {
+      setActiveTab('overview');
+    }
+  }, [selectedEvent?.status, activeTab]);
 
   const loadEventTeamMembers = async () => {
     if (!selectedEvent?.id || !user?.id) return;
@@ -171,15 +217,101 @@ export function EventManagement({
     }
   };
 
+  const loadEventContractors = async () => {
+    if (!selectedEvent?.id || !user?.id) return;
+
+    setIsLoadingContractors(true);
+    try {
+      const headers: HeadersInit = {};
+      if (user.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/events/${selectedEvent.id}/contractors`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setEventContractors(data.contractors || []);
+      } else {
+        setEventContractors([]);
+      }
+    } catch (error) {
+      console.error('Error loading event contractors:', error);
+      setEventContractors([]);
+    } finally {
+      setIsLoadingContractors(false);
+    }
+  };
+
   const handleRemoveTeamMember = async (eventTeamMemberId: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to remove this team member from the event?'
-      )
-    ) {
+    // Don't allow removing the event creator
+    const member = eventTeamMembers.find(m => m.id === eventTeamMemberId);
+    if (member?.isCreator) {
       return;
     }
 
+    if (!selectedEvent?.id || !user?.id) return;
+
+    // Check if team member has tasks assigned
+    setIsLoadingTasks(true);
+    try {
+      const headers: HeadersInit = {};
+      if (user.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(
+        `/api/events/${selectedEvent.id}/team-members/${eventTeamMemberId}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.tasks && data.tasks.length > 0) {
+        // Team member has tasks, show warning modal
+        setAssignedTasks(data.tasks);
+        setTeamMemberToRemove(eventTeamMemberId);
+        setShowRemoveTeamMemberModal(true);
+      } else {
+        // No tasks, proceed with normal confirmation
+        if (
+          !confirm(
+            'Are you sure you want to remove this team member from the event?'
+          )
+        ) {
+          return;
+        }
+        await performRemoveTeamMember(eventTeamMemberId);
+      }
+    } catch (error) {
+      console.error('Error checking team member tasks:', error);
+      // If check fails, proceed with normal confirmation
+      if (
+        !confirm(
+          'Are you sure you want to remove this team member from the event?'
+        )
+      ) {
+        return;
+      }
+      await performRemoveTeamMember(eventTeamMemberId);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+
+  const performRemoveTeamMember = async (eventTeamMemberId: string) => {
     if (!selectedEvent?.id || !user?.id) return;
 
     try {
@@ -209,6 +341,9 @@ export function EventManagement({
 
       toast.success('Team member removed from event successfully');
       loadEventTeamMembers();
+      setShowRemoveTeamMemberModal(false);
+      setTeamMemberToRemove(null);
+      setAssignedTasks([]);
     } catch (error) {
       console.error('Error removing team member from event:', error);
       const errorMessage =
@@ -290,6 +425,71 @@ export function EventManagement({
     }
   };
 
+  const getAllStatuses = (): string[] => {
+    // Return all possible statuses as shown in the tooltip
+    return [
+      'draft',
+      'planning',
+      'confirmed',
+      'in_progress',
+      'completed',
+      'cancelled',
+    ];
+  };
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!selectedEvent?.id || !user?.id || newStatus === selectedEvent.status) {
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      const headers: HeadersInit = {};
+      if (user.id) {
+        headers['x-user-id'] = user.id;
+      }
+
+      const response = await fetch(`/api/events/${selectedEvent.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update status');
+      }
+
+      // Update the selected event with new status
+      setSelectedEvent({
+        ...selectedEvent,
+        status: newStatus,
+      });
+
+      // Reload events list to reflect the change
+      loadEvents();
+
+      toast.success('Event status updated successfully');
+    } catch (error) {
+      console.error('Error updating event status:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update event status';
+
+      toast.error(errorMessage);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -300,154 +500,194 @@ export function EventManagement({
 
   return (
     <div className="space-y-6">
-      {/* Event Selection - Always show at top */}
-      <Card>
-        <CardHeader className={selectedEvent ? 'pb-3' : ''}>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className={selectedEvent ? 'text-lg' : ''}>
-                Select an Event
-              </CardTitle>
-              {!selectedEvent && (
-                <CardDescription>
-                  Choose an event to manage or view its details
-                </CardDescription>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateEventModal(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Event
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div
-            className={`grid gap-4 ${
-              selectedEvent
-                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                : 'md:grid-cols-2 lg:grid-cols-3'
-            }`}
-          >
-            {events.map(event => (
-              <Card
-                key={event.id}
-                className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                  selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
-                } ${selectedEvent ? 'p-2' : ''}`}
-                onClick={() => setSelectedEvent(event)}
+      {/* Event Selection - Only show when no event is selected */}
+      {!selectedEvent && (
+        <Card>
+          <CardHeader className={selectedEvent ? 'pb-3' : ''}>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={selectedEvent ? 'text-lg' : ''}>
+                  Select an Event
+                </CardTitle>
+                {!selectedEvent && (
+                  <CardDescription>
+                    Choose an event to manage or view its details
+                  </CardDescription>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateEventModal(true)}
               >
-                <CardContent className={selectedEvent ? 'p-3' : 'p-4'}>
-                  <div className="flex items-start justify-between">
-                    <div
-                      className={`flex-1 ${selectedEvent ? 'space-y-1' : 'space-y-2'}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className={
-                            selectedEvent
-                              ? 'font-medium text-sm line-clamp-1'
-                              : 'font-semibold'
-                          }
-                        >
-                          {event.title}
-                        </h3>
-                        {event.status === 'draft' && (
-                          <Badge
-                            variant="outline"
+                <Plus className="h-4 w-4 mr-2" />
+                New Event
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`grid gap-4 ${
+                selectedEvent
+                  ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                  : 'md:grid-cols-2 lg:grid-cols-3'
+              }`}
+            >
+              {events.map(event => (
+                <Card
+                  key={event.id}
+                  className={`cursor-pointer transition-colors hover:bg-gray-50 ${
+                    selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
+                  } ${selectedEvent ? 'p-2' : ''}`}
+                  onClick={() => setSelectedEvent(event)}
+                >
+                  <CardContent className={selectedEvent ? 'p-3' : 'p-4'}>
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={`flex-1 ${selectedEvent ? 'space-y-1' : 'space-y-2'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <h3
                             className={
-                              selectedEvent ? 'text-xs px-1 py-0' : 'text-xs'
+                              selectedEvent
+                                ? 'font-medium text-sm line-clamp-1'
+                                : 'font-semibold'
                             }
                           >
-                            Draft
-                          </Badge>
-                        )}
+                            {event.title}
+                          </h3>
+                          {event.status === 'draft' && (
+                            <Badge
+                              variant="outline"
+                              className={
+                                selectedEvent ? 'text-xs px-1 py-0' : 'text-xs'
+                              }
+                            >
+                              Draft
+                            </Badge>
+                          )}
+                        </div>
+                        <p
+                          className={
+                            selectedEvent
+                              ? 'text-xs text-muted-foreground'
+                              : 'text-sm text-muted-foreground'
+                          }
+                        >
+                          {event.event_date
+                            ? new Date(event.event_date).toLocaleDateString()
+                            : 'Date not set'}
+                        </p>
+                        <Badge
+                          className={`${getStatusColor(event.status)} ${
+                            selectedEvent ? 'text-xs' : ''
+                          }`}
+                        >
+                          {getStatusIcon(event.status)}
+                          <span className="ml-1 capitalize">
+                            {event.status.replace('_', ' ')}
+                          </span>
+                        </Badge>
                       </div>
-                      <p
-                        className={
-                          selectedEvent
-                            ? 'text-xs text-muted-foreground'
-                            : 'text-sm text-muted-foreground'
-                        }
-                      >
-                        {event.event_date
-                          ? new Date(event.event_date).toLocaleDateString()
-                          : 'Date not set'}
-                      </p>
-                      <Badge
-                        className={`${getStatusColor(event.status)} ${
-                          selectedEvent ? 'text-xs' : ''
-                        }`}
-                      >
-                        {getStatusIcon(event.status)}
-                        <span className="ml-1 capitalize">
-                          {event.status.replace('_', ' ')}
-                        </span>
-                      </Badge>
+                      {!selectedEvent && (
+                        <div className="flex items-center space-x-1">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     {!selectedEvent && (
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                      <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1" />$
+                          {event.budget_total?.toLocaleString() || '0'}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {event.attendee_count || 'N/A'}
+                        </div>
                       </div>
                     )}
-                  </div>
-                  {!selectedEvent && (
-                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />$
-                        {event.budget_total?.toLocaleString() || '0'}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {event.attendee_count || 'N/A'}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {selectedEvent ? selectedEvent.title : 'Event Management'}
-          </h1>
-          <p className="text-muted-foreground">
-            {selectedEvent
-              ? 'Manage your event details and progress'
-              : 'Manage your events throughout their lifecycle'}
-          </p>
+        <div className="flex items-center gap-3">
+          {selectedEvent && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedEvent(null)}
+              className="h-8 w-8 p-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <div className="flex items-center gap-4">
+            {selectedEvent && (selectedEvent as any).logo_url && (
+              <div className="flex-shrink-0">
+                <img
+                  src={(selectedEvent as any).logo_url}
+                  alt={`${selectedEvent.title} logo`}
+                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                />
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {selectedEvent ? selectedEvent.title : 'Event Management'}
+              </h1>
+              <p className="text-muted-foreground">
+                {selectedEvent
+                  ? 'Manage your event details and progress'
+                  : 'Manage your events throughout their lifecycle'}
+              </p>
+            </div>
+          </div>
         </div>
-        {selectedEvent && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowEditEventModal(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
       </div>
+
+      {/* Dashboard - Show when no event is selected */}
+      {!selectedEvent && (
+        <div className="mt-6">
+          <EventDashboard />
+        </div>
+      )}
 
       {/* Event Management Tabs */}
       {selectedEvent && (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={value => {
+            // Prevent switching to other tabs if event is in draft status
+            if (selectedEvent.status === 'draft' && value !== 'overview') {
+              // Prevent duplicate notifications (within 1 second)
+              const now = Date.now();
+              if (now - lastNotificationTime > 1000) {
+                toast.info(
+                  'Please complete all event details and move the event to planning stage to access this tab'
+                );
+                setLastNotificationTime(now);
+              }
+              return;
+            }
+            setActiveTab(value);
+          }}
+          className="w-full"
+        >
           <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 mb-4">
             <TabsTrigger
               value="overview"
@@ -457,28 +697,311 @@ export function EventManagement({
             </TabsTrigger>
             <TabsTrigger
               value="contractors"
-              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                selectedEvent.status === 'draft'
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
+              }`}
             >
               Roles
             </TabsTrigger>
             <TabsTrigger
               value="tasks"
-              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                selectedEvent.status === 'draft'
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
+              }`}
             >
               Tasks
             </TabsTrigger>
             <TabsTrigger
               value="documents"
-              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                selectedEvent.status === 'draft'
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
+              }`}
             >
               Documents
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
-            <EventDashboard eventId={selectedEvent.id} />
-            <EventStatusTracking eventId={selectedEvent.id} />
-            <StatusTransition eventId={selectedEvent.id} />
+            {/* Event Information Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Event Information</CardTitle>
+                    <CardDescription>
+                      Overview of the selected event details
+                    </CardDescription>
+                  </div>
+                  {selectedEvent && user?.id === selectedEvent.user_id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEditEventModal(true)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Title */}
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Title
+                    </div>
+                    <div className="text-base font-semibold">
+                      {selectedEvent.title}
+                    </div>
+                  </div>
+
+                  {/* Event Type */}
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Event Type
+                    </div>
+                    <div className="text-base capitalize">
+                      {selectedEvent.event_type || 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      Status
+                      <Popover
+                        open={showStatusTooltip}
+                        onOpenChange={setShowStatusTooltip}
+                      >
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center rounded-full hover:bg-gray-100 p-0.5 focus:outline-none transition-colors"
+                            onMouseEnter={() => setShowStatusTooltip(true)}
+                            onMouseLeave={() => setShowStatusTooltip(false)}
+                            onBlur={() => setShowStatusTooltip(false)}
+                          >
+                            <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-80 p-4"
+                          side="right"
+                          align="start"
+                          onMouseEnter={() => setShowStatusTooltip(true)}
+                          onMouseLeave={() => setShowStatusTooltip(false)}
+                        >
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-semibold text-sm mb-3">
+                                Status Transition Flow
+                              </h4>
+                            </div>
+                            <div className="flex items-start justify-evenly w-full">
+                              {[
+                                {
+                                  status: 'draft',
+                                  icon: <AlertCircle className="h-4 w-4" />,
+                                  color: 'text-gray-500',
+                                },
+                                {
+                                  status: 'planning',
+                                  icon: <Clock className="h-4 w-4" />,
+                                  color: 'text-blue-500',
+                                },
+                                {
+                                  status: 'confirmed',
+                                  icon: <CheckCircle className="h-4 w-4" />,
+                                  color: 'text-green-500',
+                                },
+                                {
+                                  status: 'in_progress',
+                                  icon: <Clock className="h-4 w-4" />,
+                                  color: 'text-yellow-500',
+                                },
+                                {
+                                  status: 'completed',
+                                  icon: <CheckCircle className="h-4 w-4" />,
+                                  color: 'text-green-500',
+                                },
+                              ].map((step, index, array) => (
+                                <React.Fragment key={step.status}>
+                                  <div className="flex flex-col items-center space-y-1.5 flex-1 min-w-0">
+                                    <div
+                                      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${step.color}`}
+                                    >
+                                      {step.icon}
+                                    </div>
+                                    <span className="text-[10px] font-medium capitalize text-center whitespace-nowrap">
+                                      {step.status.replace('_', ' ')}
+                                    </span>
+                                  </div>
+                                  {index < array.length - 1 && (
+                                    <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0 mt-3.5" />
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {user?.id === selectedEvent.user_id &&
+                    selectedEvent.status !== 'draft' ? (
+                      <Select
+                        value={selectedEvent.status || 'draft'}
+                        onValueChange={handleStatusUpdate}
+                        disabled={isUpdatingStatus}
+                      >
+                        <SelectTrigger className="w-[200px]">
+                          <SelectValue>
+                            <Badge
+                              className={getStatusColor(selectedEvent.status)}
+                            >
+                              {getStatusIcon(selectedEvent.status)}
+                              <span className="ml-1 capitalize">
+                                {selectedEvent.status?.replace('_', ' ') ||
+                                  'N/A'}
+                              </span>
+                            </Badge>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAllStatuses().map(status => (
+                            <SelectItem key={status} value={status}>
+                              <Badge className={getStatusColor(status)}>
+                                {getStatusIcon(status)}
+                                <span className="ml-1 capitalize">
+                                  {status.replace('_', ' ')}
+                                </span>
+                              </Badge>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge className={getStatusColor(selectedEvent.status)}>
+                        {getStatusIcon(selectedEvent.status)}
+                        <span className="ml-1 capitalize">
+                          {selectedEvent.status.replace('_', ' ')}
+                        </span>
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Event Date */}
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Event Date
+                    </div>
+                    <div className="text-base">
+                      {selectedEvent.event_date
+                        ? new Date(selectedEvent.event_date).toLocaleDateString(
+                            'en-US',
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          )
+                        : 'Not set'}
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  {selectedEvent.location && (
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-muted-foreground flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        Location
+                      </div>
+                      <div className="text-base">{selectedEvent.location}</div>
+                    </div>
+                  )}
+
+                  {/* Duration */}
+                  {selectedEvent.duration_hours && (
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-muted-foreground flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        Duration
+                      </div>
+                      <div className="text-base">
+                        {selectedEvent.duration_hours} hours
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Attendee Count */}
+                  {selectedEvent.attendee_count && (
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-muted-foreground flex items-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        Attendees
+                      </div>
+                      <div className="text-base">
+                        {selectedEvent.attendee_count.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Budget */}
+                  {(selectedEvent.budget_total ||
+                    selectedEvent.budget_min ||
+                    selectedEvent.budget_max) && (
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-muted-foreground flex items-center">
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        Budget
+                      </div>
+                      <div className="text-base">
+                        {selectedEvent.budget_total
+                          ? `$${selectedEvent.budget_total.toLocaleString()}`
+                          : selectedEvent.budget_min && selectedEvent.budget_max
+                            ? `$${selectedEvent.budget_min.toLocaleString()} - $${selectedEvent.budget_max.toLocaleString()}`
+                            : selectedEvent.budget_min
+                              ? `From $${selectedEvent.budget_min.toLocaleString()}`
+                              : selectedEvent.budget_max
+                                ? `Up to $${selectedEvent.budget_max.toLocaleString()}`
+                                : 'N/A'}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {selectedEvent.description && (
+                    <div className="space-y-1 md:col-span-2 lg:col-span-3">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Description
+                      </div>
+                      <div className="text-base text-muted-foreground">
+                        {selectedEvent.description}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Special Requirements */}
+                  {selectedEvent.special_requirements && (
+                    <div className="space-y-1 md:col-span-2 lg:col-span-3">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Special Requirements
+                      </div>
+                      <div className="text-base text-muted-foreground">
+                        {selectedEvent.special_requirements}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="tasks" className="mt-4 space-y-4">
@@ -521,18 +1044,36 @@ export function EventManagement({
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Event Management Team</CardTitle>
-                    <CardDescription>
-                      Manage your event management team members and their roles
-                    </CardDescription>
+                    {user?.id === selectedEvent.user_id ? (
+                      <CardDescription>
+                        Manage your event management team members and their
+                        roles
+                      </CardDescription>
+                    ) : (
+                      <CardDescription>
+                        <div className="space-y-1 mt-2">
+                          <div>
+                            The event management team is responsible for the
+                            planning, management and delivery for this event.
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Only the event creator can add / remove members on
+                            the event management team
+                          </div>
+                        </div>
+                      </CardDescription>
+                    )}
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowAddTeamMembersModal(true)}
-                    className="bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Team Member
-                  </Button>
+                  {user?.id === selectedEvent.user_id && (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowAddTeamMembersModal(true)}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Team Member
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -550,17 +1091,19 @@ export function EventManagement({
                         <TableHead>Email</TableHead>
                         <TableHead>Phone</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        {user?.id === selectedEvent.user_id && (
+                          <TableHead>Actions</TableHead>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {eventTeamMembers.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={7}
+                            colSpan={user?.id === selectedEvent.user_id ? 7 : 6}
                             className="text-center text-muted-foreground py-8"
                           >
-                            No team members added yet
+                            Loading team members...
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -593,16 +1136,143 @@ export function EventManagement({
                               <TableCell>
                                 {getStatusBadge(member.status)}
                               </TableCell>
+                              {user?.id === selectedEvent.user_id && (
+                                <TableCell>
+                                  {member.isCreator ? (
+                                    <span className="text-xs text-muted-foreground">
+                                      Creator
+                                    </span>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleRemoveTeamMember(member.id)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Contractors Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Contractors</CardTitle>
+                    <CardDescription>
+                      Contractors matched or assigned to this event
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingContractors ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    Loading contractors...
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8"></TableHead>
+                        <TableHead className="pl-2">Company Name</TableHead>
+                        <TableHead>Services</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {eventContractors.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-muted-foreground py-8"
+                          >
+                            No contractors matched yet
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        eventContractors.map(contractor => {
+                          const initials = contractor.company_name
+                            ? contractor.company_name
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase()
+                                .slice(0, 2)
+                            : 'N/A';
+                          return (
+                            <TableRow key={contractor.id}>
+                              <TableCell className="pr-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">
+                                    {initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </TableCell>
+                              <TableCell className="pl-2">
+                                <span className="font-medium">
+                                  {contractor.company_name}
+                                </span>
+                              </TableCell>
                               <TableCell>
-                                <Button
+                                <div className="flex flex-wrap gap-1">
+                                  {contractor.service_categories
+                                    ?.slice(0, 3)
+                                    .map((cat: string, idx: number) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {cat}
+                                      </Badge>
+                                    ))}
+                                  {contractor.service_categories?.length >
+                                    3 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      +
+                                      {contractor.service_categories.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>{contractor.email || 'N/A'}</TableCell>
+                              <TableCell>
+                                <Badge
                                   variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleRemoveTeamMember(member.id)
+                                  className={
+                                    contractor.status === 'hired'
+                                      ? 'bg-green-100 text-green-800'
+                                      : contractor.status === 'interested'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : contractor.status === 'declined'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-800'
                                   }
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                  {contractor.status
+                                    ? contractor.status
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                      contractor.status.slice(1)
+                                    : 'Pending'}
+                                </Badge>
                               </TableCell>
                             </TableRow>
                           );
@@ -654,6 +1324,60 @@ export function EventManagement({
           }}
         />
       )}
+
+      {/* Remove Team Member Warning Modal */}
+      <Dialog
+        open={showRemoveTeamMemberModal}
+        onOpenChange={setShowRemoveTeamMemberModal}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Team Member</DialogTitle>
+            <DialogDescription>
+              This team member has tasks assigned to them for this event. If you
+              continue, they will be removed from these tasks.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Assigned Tasks:</p>
+              {assignedTasks.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1">
+                  {assignedTasks.map(task => (
+                    <li key={task.id} className="text-sm text-muted-foreground">
+                      {task.title}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No tasks found</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRemoveTeamMemberModal(false);
+                setTeamMemberToRemove(null);
+                setAssignedTasks([]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (teamMemberToRemove) {
+                  performRemoveTeamMember(teamMemberToRemove);
+                }
+              }}
+            >
+              Continue and Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

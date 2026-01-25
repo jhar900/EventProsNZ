@@ -173,6 +173,7 @@ export interface Database {
           budget_total: number | null;
           location_data: any | null;
           special_requirements: string | null;
+          logo_url: string | null;
           status:
             | 'draft'
             | 'planning'
@@ -198,6 +199,7 @@ export interface Database {
           budget_total?: number | null;
           location_data?: any | null;
           special_requirements?: string | null;
+          logo_url?: string | null;
           status?:
             | 'draft'
             | 'planning'
@@ -223,6 +225,7 @@ export interface Database {
           budget_total?: number | null;
           location_data?: any | null;
           special_requirements?: string | null;
+          logo_url?: string | null;
           status?:
             | 'draft'
             | 'planning'

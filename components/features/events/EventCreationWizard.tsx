@@ -53,23 +53,29 @@ export function EventCreationWizard({
     clearValidationErrors,
     loadDrafts,
     resetWizard,
+    setIsEditMode,
   } = useEventCreationStore();
+
+  // Set edit mode in store when component mounts or isEditMode changes
+  useEffect(() => {
+    setIsEditMode(isEditMode);
+  }, [isEditMode, setIsEditMode]);
 
   const [showTemplates, setShowTemplates] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
 
-  // Load drafts on mount
+  // Load drafts on mount (only for new events, not edit mode)
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !isEditMode) {
       loadDrafts(user.id);
     }
-  }, [loadDrafts, user?.id]);
+  }, [loadDrafts, user?.id, isEditMode]);
 
-  // Auto-save draft every 30 seconds
+  // Auto-save draft every 30 seconds (only for new events, not edit mode)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isEditMode) return;
     const interval = setInterval(() => {
       if (eventData.title || eventData.eventType) {
         saveDraft(user.id);
@@ -77,10 +83,12 @@ export function EventCreationWizard({
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [eventData, saveDraft, user?.id]);
+  }, [eventData, saveDraft, user?.id, isEditMode]);
 
-  // Auto-save when data changes (debounced)
+  // Auto-save when data changes (debounced) - only for new events, not edit mode
   useEffect(() => {
+    if (isEditMode) return;
+
     if (autoSaveTimeout) {
       clearTimeout(autoSaveTimeout);
     }
@@ -96,12 +104,12 @@ export function EventCreationWizard({
     return () => {
       if (timeout) clearTimeout(timeout);
     };
-  }, [eventData, saveDraft]);
+  }, [eventData, saveDraft, isEditMode, user?.id]);
 
   const handleNext = async () => {
     clearValidationErrors();
 
-    if (validateStep(currentStep)) {
+    if (validateStep(currentStep, isEditMode)) {
       if (currentStep < 4) {
         nextStep();
       } else {
@@ -262,19 +270,6 @@ export function EventCreationWizard({
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Validation Errors */}
-          {validationErrors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                <ul className="list-disc list-inside space-y-1">
-                  {validationErrors.map((error, index) => (
-                    <li key={index}>{error.message}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-
           {/* Step Content */}
           {renderStep()}
 
@@ -296,29 +291,46 @@ export function EventCreationWizard({
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={handleSaveDraft}
-                disabled={isLoading}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Save Draft
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="flex-1">
+                  <Alert variant="destructive" className="py-2">
+                    <AlertDescription>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        {validationErrors.map((error, index) => (
+                          <li key={index}>{error.message}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
 
-              <Button
-                onClick={handleNext}
-                disabled={isLoading}
-                className="flex items-center gap-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-                {currentStep === 4 ? 'Create Event' : 'Next'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Draft
+                </Button>
+
+                <Button
+                  onClick={handleNext}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                  {currentStep === 4 ? 'Create Event' : 'Next'}
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

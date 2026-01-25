@@ -100,46 +100,34 @@ export function EventBasicsStep() {
         <EventDatePicker
           value={eventData.eventDate || ''}
           onChange={value => handleInputChange('eventDate', value)}
+          startTime={eventData.startTime}
+          endTime={eventData.endTime}
+          onStartTimeChange={value => handleInputChange('startTime', value)}
+          onEndTimeChange={value => handleInputChange('endTime', value)}
+          additionalDates={eventData.additionalDates || []}
+          onAdditionalDatesChange={dates =>
+            handleInputChange('additionalDates', dates)
+          }
         />
       </div>
 
-      {/* Duration and Attendees */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="durationHours">Duration (hours)</Label>
-          <Input
-            id="durationHours"
-            type="number"
-            placeholder="e.g., 4"
-            min="1"
-            max="168"
-            value={eventData.durationHours || ''}
-            onChange={e =>
-              handleInputChange(
-                'durationHours',
-                e.target.value ? parseInt(e.target.value) : undefined
-              )
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="attendeeCount">Expected Attendees</Label>
-          <Input
-            id="attendeeCount"
-            type="number"
-            placeholder="e.g., 50"
-            min="1"
-            max="10000"
-            value={eventData.attendeeCount || ''}
-            onChange={e =>
-              handleInputChange(
-                'attendeeCount',
-                e.target.value ? parseInt(e.target.value) : undefined
-              )
-            }
-          />
-        </div>
+      {/* Attendees */}
+      <div className="space-y-2">
+        <Label htmlFor="attendeeCount">Expected Attendees</Label>
+        <Input
+          id="attendeeCount"
+          type="number"
+          placeholder="e.g., 50"
+          min="1"
+          max="10000"
+          value={eventData.attendeeCount || ''}
+          onChange={e =>
+            handleInputChange(
+              'attendeeCount',
+              e.target.value ? parseInt(e.target.value) : undefined
+            )
+          }
+        />
       </div>
 
       {/* Location */}

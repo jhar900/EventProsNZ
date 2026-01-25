@@ -24,6 +24,7 @@ interface EventCreationState {
   templates: EventTemplate[];
   drafts: EventDraft[];
   isDraft: boolean;
+  isEditMode: boolean;
   isLoading: boolean;
   validationErrors: ValidationError[];
 
@@ -45,7 +46,8 @@ interface EventCreationState {
   submitEvent: (userId?: string) => Promise<void>;
   updateEvent: (eventId: string, userId?: string) => Promise<void>;
   loadEventData: (eventId: string, userId?: string) => Promise<void>;
-  validateStep: (step: number) => boolean;
+  setIsEditMode: (isEditMode: boolean) => void;
+  validateStep: (step: number, isEditMode?: boolean) => boolean;
   clearValidationErrors: () => void;
   resetWizard: () => void;
   loadTemplate: (template: EventTemplate) => void;
@@ -56,6 +58,7 @@ const initialEventData: Partial<EventFormData> = {
   title: '',
   description: '',
   eventDate: '',
+  additionalDates: [],
   durationHours: undefined,
   attendeeCount: undefined,
   location: {
@@ -91,13 +94,14 @@ export const useEventCreationStore = create<EventCreationState>()(
       templates: [],
       drafts: [],
       isDraft: true,
+      isEditMode: false,
       isLoading: false,
       validationErrors: [],
 
       // Actions
       nextStep: () => {
-        const { currentStep, validateStep } = get();
-        if (validateStep(currentStep) && currentStep < 4) {
+        const { currentStep, validateStep, isEditMode } = get();
+        if (validateStep(currentStep, isEditMode) && currentStep < 4) {
           set({ currentStep: currentStep + 1 });
         }
       },
@@ -218,7 +222,9 @@ export const useEventCreationStore = create<EventCreationState>()(
             ...eventData,
             location:
               eventData.location &&
-              (eventData.location.address || eventData.location.coordinates)
+              (eventData.location.address ||
+                eventData.location.coordinates ||
+                eventData.location.toBeConfirmed)
                 ? {
                     address: eventData.location.address || null,
                     coordinates: eventData.location.coordinates || null,
@@ -226,10 +232,12 @@ export const useEventCreationStore = create<EventCreationState>()(
                     city: eventData.location.city || null,
                     region: eventData.location.region || null,
                     country: eventData.location.country || null,
+                    toBeConfirmed: eventData.location.toBeConfirmed || false,
                   }
                 : null,
             serviceRequirements: eventData.serviceRequirements || null,
             budgetPlan: eventData.budgetPlan || null,
+            logoUrl: eventData.logoUrl || null, // Explicitly include logoUrl
           };
 
           const response = await fetch('/api/events/drafts', {
@@ -296,6 +304,7 @@ export const useEventCreationStore = create<EventCreationState>()(
                 lat: eventData.location?.coordinates?.lat ?? 0,
                 lng: eventData.location?.coordinates?.lng ?? 0,
               },
+              toBeConfirmed: eventData.location?.toBeConfirmed || false,
             },
             serviceRequirements: serviceRequirements || [],
             budgetPlan: (() => {
@@ -378,13 +387,17 @@ export const useEventCreationStore = create<EventCreationState>()(
           if (!cleanPayload.eventDate) {
             throw new Error('Event date is required');
           }
+          // Location is required unless "To Be Confirmed" is checked
           if (
-            !cleanPayload.location?.address ||
-            cleanPayload.location.address.trim() === ''
+            !cleanPayload.location?.toBeConfirmed &&
+            (!cleanPayload.location?.address ||
+              cleanPayload.location.address.trim() === '')
           ) {
             throw new Error('Event location is required');
           }
+          // Only validate coordinates if location is not "To Be Confirmed"
           if (
+            !cleanPayload.location?.toBeConfirmed &&
             cleanPayload.location.coordinates.lat === 0 &&
             cleanPayload.location.coordinates.lng === 0
           ) {
@@ -491,8 +504,18 @@ export const useEventCreationStore = create<EventCreationState>()(
         }
       },
 
-      validateStep: (step: number) => {
-        const { eventData, serviceRequirements, budgetPlan } = get();
+      validateStep: (step: number, isEditModeOverride?: boolean) => {
+        const {
+          eventData,
+          serviceRequirements,
+          budgetPlan,
+          isEditMode: storeIsEditMode,
+        } = get();
+        // Use override if provided, otherwise use store value
+        const isEditMode =
+          isEditModeOverride !== undefined
+            ? isEditModeOverride
+            : storeIsEditMode;
         const errors: ValidationError[] = [];
 
         switch (step) {
@@ -515,7 +538,11 @@ export const useEventCreationStore = create<EventCreationState>()(
                 message: 'Event date is required',
               });
             }
-            if (!eventData.location?.address?.trim()) {
+            // Location is required unless "To Be Confirmed" is checked
+            if (
+              !eventData.location?.toBeConfirmed &&
+              !eventData.location?.address?.trim()
+            ) {
               errors.push({
                 field: 'location',
                 message: 'Event location is required',
@@ -524,7 +551,8 @@ export const useEventCreationStore = create<EventCreationState>()(
             break;
 
           case 2:
-            if (serviceRequirements.length === 0) {
+            // Service requirements are optional when editing
+            if (!isEditMode && serviceRequirements.length === 0) {
               errors.push({
                 field: 'serviceRequirements',
                 message: 'At least one service requirement is needed',
@@ -543,9 +571,9 @@ export const useEventCreationStore = create<EventCreationState>()(
 
           case 4:
             // Final validation - all previous steps should be valid
-            const step1Valid = get().validateStep(1);
-            const step2Valid = get().validateStep(2);
-            const step3Valid = get().validateStep(3);
+            const step1Valid = get().validateStep(1, isEditMode);
+            const step2Valid = get().validateStep(2, isEditMode);
+            const step3Valid = get().validateStep(3, isEditMode);
 
             if (!step1Valid || !step2Valid || !step3Valid) {
               errors.push({
@@ -564,6 +592,10 @@ export const useEventCreationStore = create<EventCreationState>()(
         set({ validationErrors: [] });
       },
 
+      setIsEditMode: (isEditMode: boolean) => {
+        set({ isEditMode });
+      },
+
       resetWizard: () => {
         set({
           currentStep: 1,
@@ -572,6 +604,7 @@ export const useEventCreationStore = create<EventCreationState>()(
           budgetPlan: initialBudgetPlan,
           contractorMatches: [],
           isDraft: true,
+          isEditMode: false,
           validationErrors: [],
         });
       },
@@ -644,14 +677,21 @@ export const useEventCreationStore = create<EventCreationState>()(
                   city: event.location_data?.city || null,
                   region: event.location_data?.region || null,
                   country: event.location_data?.country || null,
+                  toBeConfirmed: event.location_data?.toBeConfirmed || false,
                 }
-              : {
-                  address: '',
-                  coordinates: { lat: 0, lng: 0 },
-                },
+              : event.location_data?.toBeConfirmed
+                ? {
+                    address: '',
+                    coordinates: { lat: 0, lng: 0 },
+                    toBeConfirmed: true,
+                  }
+                : {
+                    address: '',
+                    coordinates: { lat: 0, lng: 0 },
+                  },
             specialRequirements:
               event.requirements || event.special_requirements || '',
-            logoUrl: event.logo_url || undefined,
+            logoUrl: event.logo_url ? event.logo_url : undefined,
             serviceRequirements: [],
             budgetPlan: {
               totalBudget: event.budget || event.budget_total || 0,
@@ -712,6 +752,7 @@ export const useEventCreationStore = create<EventCreationState>()(
                 lat: eventData.location?.coordinates?.lat ?? 0,
                 lng: eventData.location?.coordinates?.lng ?? 0,
               },
+              toBeConfirmed: eventData.location?.toBeConfirmed || false,
             },
             serviceRequirements: serviceRequirements || [],
             budgetPlan: budgetPlan || {

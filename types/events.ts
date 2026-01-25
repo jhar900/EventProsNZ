@@ -118,6 +118,7 @@ export interface EventLocation {
   city?: string;
   region?: string;
   country?: string;
+  toBeConfirmed?: boolean;
 }
 
 export interface EventFormData {
@@ -126,6 +127,13 @@ export interface EventFormData {
   title: string;
   description?: string;
   eventDate: string;
+  startTime?: string;
+  endTime?: string;
+  additionalDates?: Array<{
+    date: string;
+    startTime?: string;
+    endTime?: string;
+  }>;
   durationHours?: number;
   attendeeCount?: number;
   location: EventLocation;

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 interface EventDashboardProps {
-  eventId: string;
+  eventId?: string;
 }
 
 interface DashboardData {

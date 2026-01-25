@@ -5,8 +5,11 @@ import { MapPin, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { EventLocation } from '@/types/events';
+import { LocationMap } from './LocationMap';
 
 interface EventLocationInputProps {
   value?: EventLocation;
@@ -38,15 +41,37 @@ export function EventLocationInput({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search
+  // Sync query with value prop when it changes (e.g., when event data is loaded)
+  useEffect(() => {
+    if (value?.address && value.address !== query) {
+      setQuery(value.address);
+      setShowSuggestions(false);
+    } else if (!value?.address && query) {
+      // If address is cleared from value prop, clear query too
+      setQuery('');
+    }
+  }, [value?.address]);
+
+  // Debounced search - only search if user is actively typing (query differs from saved value)
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    if (query.length < 3) {
+    // Don't auto-search if query matches the saved address (user hasn't changed it)
+    // But allow search if user is typing something different
+    if (query === value?.address && query.length > 0) {
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
+    }
+
+    if (query.length < 3) {
+      setSuggestions([]);
+      // Don't hide suggestions if user is actively typing (query is changing)
+      if (query.length === 0) {
+        setShowSuggestions(false);
+      }
       return;
     }
 
@@ -59,7 +84,7 @@ export function EventLocationInput({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [query]);
+  }, [query, value?.address]);
 
   const searchPlaces = async (searchQuery: string) => {
     setIsLoading(true);
@@ -96,6 +121,7 @@ export function EventLocationInput({
       city: suggestion.address?.city,
       region: suggestion.address?.state,
       country: suggestion.address?.country || 'New Zealand',
+      toBeConfirmed: false, // Clear toBeConfirmed when a location is selected
     };
 
     setQuery(suggestion.display_name);
@@ -106,9 +132,36 @@ export function EventLocationInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     if (!e.target.value) {
+      // When address is deleted, clear location but keep toBeConfirmed if it was already set
       onChange({
         address: '',
         coordinates: { lat: 0, lng: 0 },
+        toBeConfirmed: value?.toBeConfirmed || false,
+      });
+    } else {
+      // When user starts typing, clear toBeConfirmed
+      onChange({
+        ...value,
+        address: e.target.value,
+        toBeConfirmed: false,
+      });
+    }
+  };
+
+  const handleToBeConfirmedChange = (checked: boolean) => {
+    if (checked) {
+      // Clear location when "To Be Confirmed" is checked
+      setQuery('');
+      onChange({
+        address: '',
+        coordinates: { lat: 0, lng: 0 },
+        toBeConfirmed: true,
+      });
+    } else {
+      // Unchecking - keep current location or clear
+      onChange({
+        ...value,
+        toBeConfirmed: false,
       });
     }
   };
@@ -184,6 +237,7 @@ export function EventLocationInput({
             city: data.address?.city || data.address?.town,
             region: data.address?.state,
             country: data.address?.country || 'New Zealand',
+            toBeConfirmed: false, // Clear toBeConfirmed when current location is used
           };
 
           setQuery(data.display_name);
@@ -214,6 +268,7 @@ export function EventLocationInput({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             className="pl-10 pr-10"
+            disabled={value?.toBeConfirmed}
           />
           {isLoading && (
             <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -263,22 +318,37 @@ export function EventLocationInput({
       {/* Error Message */}
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* Selected Location Display */}
-      {value && value.address && (
-        <div className="p-3 bg-muted rounded-lg">
-          <div className="flex items-start space-x-2">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{value.address}</p>
-              {value.coordinates.lat !== 0 && value.coordinates.lng !== 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Coordinates: {value.coordinates.lat.toFixed(6)},{' '}
-                  {value.coordinates.lng.toFixed(6)}
-                </p>
-              )}
-            </div>
-          </div>
+      {/* To Be Confirmed Checkbox - Only show when address is empty or toBeConfirmed is true */}
+      {(!query || !value?.address || value.toBeConfirmed) && (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="locationToBeConfirmed"
+            checked={value?.toBeConfirmed || false}
+            onCheckedChange={handleToBeConfirmedChange}
+          />
+          <Label
+            htmlFor="locationToBeConfirmed"
+            className="text-sm font-normal cursor-pointer"
+          >
+            To Be Confirmed
+          </Label>
         </div>
+      )}
+
+      {/* Selected Location Display */}
+      {value && value.address && !value.toBeConfirmed && (
+        <LocationMap
+          coordinates={
+            value.coordinates.lat !== 0 && value.coordinates.lng !== 0
+              ? value.coordinates
+              : undefined
+          }
+          address={
+            value.coordinates.lat === 0 || value.coordinates.lng === 0
+              ? value.address
+              : undefined
+          }
+        />
       )}
     </div>
   );

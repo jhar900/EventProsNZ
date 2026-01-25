@@ -72,12 +72,38 @@ export async function PUT(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Verify user owns the event or is an admin
+    // Check if user can modify the event (owner, admin, or team member)
     if (event.user_id !== user.id && (user as any).role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized to modify this event' },
-        { status: 403 }
-      );
+      // Check if user is a team member of this event (including invited status)
+      const { data: teamMemberRecords } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('team_member_id', user.id)
+        .in('status', ['invited', 'active', 'onboarding']);
+
+      const teamMemberIds = teamMemberRecords?.map(tm => tm.id) || [];
+
+      if (teamMemberIds.length > 0) {
+        // Check if any of these team members are assigned to this event
+        const { data: eventTeamMemberRecords } = await supabaseAdmin
+          .from('event_team_members')
+          .select('id')
+          .eq('event_id', eventId)
+          .in('team_member_id', teamMemberIds)
+          .limit(1);
+
+        if (!eventTeamMemberRecords || eventTeamMemberRecords.length === 0) {
+          return NextResponse.json(
+            { error: 'Unauthorized to modify this event' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Unauthorized to modify this event' },
+          { status: 403 }
+        );
+      }
     }
 
     // Verify task exists and belongs to the event
@@ -268,12 +294,38 @@ export async function DELETE(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Verify user owns the event or is an admin
+    // Check if user can modify the event (owner, admin, or team member)
     if (event.user_id !== user.id && (user as any).role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized to modify this event' },
-        { status: 403 }
-      );
+      // Check if user is a team member of this event (including invited status)
+      const { data: teamMemberRecords } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('team_member_id', user.id)
+        .in('status', ['invited', 'active', 'onboarding']);
+
+      const teamMemberIds = teamMemberRecords?.map(tm => tm.id) || [];
+
+      if (teamMemberIds.length > 0) {
+        // Check if any of these team members are assigned to this event
+        const { data: eventTeamMemberRecords } = await supabaseAdmin
+          .from('event_team_members')
+          .select('id')
+          .eq('event_id', eventId)
+          .in('team_member_id', teamMemberIds)
+          .limit(1);
+
+        if (!eventTeamMemberRecords || eventTeamMemberRecords.length === 0) {
+          return NextResponse.json(
+            { error: 'Unauthorized to modify this event' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Unauthorized to modify this event' },
+          { status: 403 }
+        );
+      }
     }
 
     // Verify task exists and belongs to the event

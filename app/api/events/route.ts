@@ -28,25 +28,42 @@ const createEventSchema = z.object({
   ),
   durationHours: z.number().min(1).max(168).optional().nullable(), // Max 1 week
   attendeeCount: z.number().min(1).max(10000).optional().nullable(),
-  location: z.object({
-    address: z.string().min(1, 'Address is required'),
-    coordinates: z.object({
-      lat: z.number().refine(val => val !== 0, {
-        message: 'Please select a valid location',
+  location: z
+    .object({
+      address: z.string().optional().nullable(),
+      coordinates: z.object({
+        lat: z.number(),
+        lng: z.number(),
       }),
-      lng: z.number().refine(val => val !== 0, {
-        message: 'Please select a valid location',
-      }),
-    }),
-    placeId: z
-      .union([z.string(), z.number()])
-      .transform(val => String(val))
-      .optional()
-      .nullable(),
-    city: z.string().optional().nullable(),
-    region: z.string().optional().nullable(),
-    country: z.string().optional().nullable(),
-  }),
+      placeId: z
+        .union([z.string(), z.number()])
+        .transform(val => String(val))
+        .optional()
+        .nullable(),
+      city: z.string().optional().nullable(),
+      region: z.string().optional().nullable(),
+      country: z.string().optional().nullable(),
+      toBeConfirmed: z.boolean().optional().nullable(),
+    })
+    .refine(
+      data => {
+        // If toBeConfirmed is true, address and coordinates can be empty
+        if (data.toBeConfirmed) {
+          return true;
+        }
+        // Otherwise, address is required and coordinates must be valid
+        return (
+          data.address &&
+          data.address.trim() !== '' &&
+          data.coordinates.lat !== 0 &&
+          data.coordinates.lng !== 0
+        );
+      },
+      {
+        message:
+          'Please provide a valid location or mark it as "To Be Confirmed"',
+      }
+    ),
   specialRequirements: z.string().optional().nullable(),
   logoUrl: z.string().url().optional().nullable(),
   serviceRequirements: z
@@ -288,6 +305,7 @@ export async function POST(request: NextRequest) {
       event_date: eventData.eventDate,
       event_type: eventData.eventType,
       location: eventData.location?.address || '',
+      location_data: eventData.location || null,
       attendee_count: eventData.attendeeCount || null,
       duration_hours: eventData.durationHours || null,
       budget: eventData.budgetPlan?.totalBudget ?? 0,
@@ -516,19 +534,162 @@ export async function GET(request: NextRequest) {
     } = validationResult.data;
     const offset = (page - 1) * limit;
 
-    // Build query
+    // Build query to get events where user is owner OR team member
     // Note: events table uses user_id, not event_manager_id
-    let query = supabase
-      .from('events')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
 
+    // First, get event IDs where user is a team member
+    // We need to join: event_team_members -> team_members -> find where team_member_id = userId
+    // Use supabaseAdmin to bypass RLS for these queries
+    const { data: teamMemberRecords, error: teamMemberError } =
+      await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('team_member_id', userId)
+        .in('status', ['active', 'onboarding']); // Only active/onboarding team members
+
+    if (teamMemberError) {
+      console.error('Error fetching team member records:', teamMemberError);
+    }
+
+    const teamMemberIds = teamMemberRecords?.map(tm => tm.id) || [];
+
+    // Get event IDs where user is assigned as team member
+    let eventIdsFromTeamMembership: string[] = [];
+    if (teamMemberIds.length > 0) {
+      const { data: eventTeamMemberRecords, error: eventTeamMemberError } =
+        await supabaseAdmin
+          .from('event_team_members')
+          .select('event_id')
+          .in('team_member_id', teamMemberIds);
+
+      if (eventTeamMemberError) {
+        console.error(
+          'Error fetching event team member records:',
+          eventTeamMemberError
+        );
+      } else {
+        eventIdsFromTeamMembership =
+          eventTeamMemberRecords?.map(etm => etm.event_id) || [];
+      }
+    }
+
+    // Build query for events
     // Apply filters
     if (filterUserId) {
-      query = query.eq('user_id', filterUserId);
+      // If filtering by specific user, only show their events
+      let query = supabase
+        .from('events')
+        .select('*', { count: 'exact' })
+        .eq('user_id', filterUserId)
+        .order('created_at', { ascending: false });
+
+      // Apply status filter if provided
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      if (eventType) {
+        query = query.eq('event_type', eventType);
+      }
+
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1);
+
+      const { data: events, error: eventsError, count } = await query;
+
+      if (eventsError) {
+        console.error('Error fetching events:', eventsError);
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Failed to fetch events',
+            error: eventsError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        events: events || [],
+        total: count || 0,
+        page,
+        limit,
+      });
     } else {
-      // If no filterUserId specified, only show current user's own events
-      query = query.eq('user_id', userId);
+      // Show events where user is owner OR team member
+      // Fetch events owned by user
+      let ownedEventsQuery = supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (status) {
+        ownedEventsQuery = ownedEventsQuery.eq('status', status);
+      }
+
+      if (eventType) {
+        ownedEventsQuery = ownedEventsQuery.eq('event_type', eventType);
+      }
+
+      const { data: ownedEvents, error: ownedEventsError } =
+        await ownedEventsQuery;
+
+      if (ownedEventsError) {
+        console.error('Error fetching owned events:', ownedEventsError);
+      }
+
+      // Fetch events where user is a team member
+      let teamMemberEvents: any[] = [];
+      if (eventIdsFromTeamMembership.length > 0) {
+        let teamMemberEventsQuery = supabaseAdmin
+          .from('events')
+          .select('*')
+          .in('id', eventIdsFromTeamMembership);
+
+        if (status) {
+          teamMemberEventsQuery = teamMemberEventsQuery.eq('status', status);
+        }
+
+        if (eventType) {
+          teamMemberEventsQuery = teamMemberEventsQuery.eq(
+            'event_type',
+            eventType
+          );
+        }
+
+        const { data: tmEvents, error: tmEventsError } =
+          await teamMemberEventsQuery;
+
+        if (tmEventsError) {
+          console.error('Error fetching team member events:', tmEventsError);
+        } else {
+          teamMemberEvents = tmEvents || [];
+        }
+      }
+
+      // Combine and deduplicate events
+      const allEvents = [...(ownedEvents || []), ...teamMemberEvents].filter(
+        (event, index, self) => index === self.findIndex(e => e.id === event.id)
+      );
+
+      // Sort by created_at descending
+      allEvents.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      // Apply pagination manually
+      const total = allEvents.length;
+      const paginatedEvents = allEvents.slice(offset, offset + limit);
+
+      return NextResponse.json({
+        success: true,
+        events: paginatedEvents,
+        total,
+        page,
+        limit,
+      });
     }
 
     // If status filter is provided, filter by it; otherwise show all events including drafts
