@@ -43,7 +43,11 @@ export function EventRequirementAnalysis({
         throw new Error('Failed to fetch event details');
       }
       const data = await response.json();
-      setEventDetails(data);
+      // Map requirements to special_requirements for the component interface
+      setEventDetails({
+        ...data.event,
+        special_requirements: data.event?.requirements || '',
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to fetch event details'

@@ -43,6 +43,7 @@ export function EventCreationWizard({
     eventData,
     isLoading,
     validationErrors,
+    hasTimeErrors,
     nextStep,
     previousStep,
     goToStep,
@@ -109,6 +110,11 @@ export function EventCreationWizard({
   const handleNext = async () => {
     clearValidationErrors();
 
+    // Don't allow proceeding if there are time errors
+    if (hasTimeErrors) {
+      return;
+    }
+
     if (validateStep(currentStep, isEditMode)) {
       if (currentStep < 4) {
         nextStep();
@@ -161,9 +167,34 @@ export function EventCreationWizard({
 
   const handleSaveDraft = async () => {
     if (!user?.id) return;
+    // Don't allow saving if there are time errors
+    if (hasTimeErrors) {
+      return;
+    }
     try {
-      await saveDraft(user.id);
-    } catch (error) {}
+      // In edit mode, use updateEvent instead of saveDraft to properly update the event
+      if (isEditMode && eventId) {
+        const result = await updateEvent(eventId, user.id);
+        console.log('Update event result:', result);
+        // Only call onComplete if update was successful
+        // This will trigger a reload of the event data to show updated dates
+        if (result && result.success && onComplete) {
+          // Add a small delay to ensure the database update is complete before reloading
+          setTimeout(() => {
+            onComplete(eventId);
+          }, 500);
+        }
+      } else {
+        // For new events, use saveDraft
+        await saveDraft(user.id);
+        if (onCancel) {
+          onCancel();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving draft/updating event:', error);
+      // Don't reload if there was an error
+    }
   };
 
   const handleTemplateSelect = () => {
@@ -311,7 +342,7 @@ export function EventCreationWizard({
                 <Button
                   variant="outline"
                   onClick={handleSaveDraft}
-                  disabled={isLoading}
+                  disabled={isLoading || hasTimeErrors}
                   className="flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
@@ -320,7 +351,7 @@ export function EventCreationWizard({
 
                 <Button
                   onClick={handleNext}
-                  disabled={isLoading}
+                  disabled={isLoading || hasTimeErrors}
                   className="flex items-center gap-2"
                 >
                   {isLoading ? (

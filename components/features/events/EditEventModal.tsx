@@ -62,6 +62,14 @@ export function EditEventModal({
   };
 
   const handleCancel = () => {
+    // When canceling, check if we should reload the event (e.g., after saving draft)
+    // This ensures the overview tab shows updated data
+    if (eventId && onSuccess) {
+      // Small delay to ensure draft save is complete
+      setTimeout(() => {
+        onSuccess(eventId);
+      }, 100);
+    }
     onOpenChange(false);
   };
 

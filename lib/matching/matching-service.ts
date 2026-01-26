@@ -52,7 +52,7 @@ export class ContractorMatchingService {
       if (cachedMatches) {
         matches = cachedMatches;
         cacheHitRate = 1;
-        } else {
+      } else {
         // Get event details
         const event = await this.getEventDetails(event_id);
         if (!event) {
@@ -483,7 +483,7 @@ export class ContractorMatchingService {
       },
       budget_total: event.budget_total || 0,
       service_requirements: [], // Would be populated from event_service_requirements table
-      special_requirements: event.special_requirements,
+      special_requirements: event.requirements,
     };
   }
 

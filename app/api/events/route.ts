@@ -298,14 +298,72 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare event insert data - only include columns that exist in the events table
+    // Prepare event_date with startTime if provided
+    let eventDateValue = eventData.eventDate || null;
+    if (eventDateValue && eventData.startTime) {
+      // Combine date and startTime into event_date timestamp
+      const date = new Date(eventDateValue);
+      const startTime = new Date(eventData.startTime);
+      date.setHours(
+        startTime.getHours(),
+        startTime.getMinutes(),
+        startTime.getSeconds()
+      );
+      eventDateValue = date.toISOString();
+    }
+
+    // Prepare end_date with endTime if provided
+    let endDateValue = null;
+    if (eventDateValue && eventData.endTime) {
+      const date = new Date(eventDateValue);
+      const endTime = new Date(eventData.endTime);
+      date.setHours(
+        endTime.getHours(),
+        endTime.getMinutes(),
+        endTime.getSeconds()
+      );
+      endDateValue = date.toISOString();
+    }
+
+    // Determine if multi-day event (has additional dates)
+    const isMultiDay =
+      eventData.additionalDates && eventData.additionalDates.length > 0;
+
+    // Constraint: if is_multi_day is true, end_date must not be null
+    // Constraint: end_date must be > event_date (valid_end_date constraint)
+    // If we have additional dates but no end_date, set end_date to be later than event_date
+    if (isMultiDay && !endDateValue && eventDateValue) {
+      // Set end_date to 1 hour after event_date to satisfy valid_end_date constraint
+      const endDate = new Date(eventDateValue);
+      endDate.setHours(endDate.getHours() + 1);
+      endDateValue = endDate.toISOString();
+    }
+
+    // Ensure end_date is always greater than event_date (valid_end_date constraint)
+    if (
+      endDateValue &&
+      eventDateValue &&
+      new Date(endDateValue) <= new Date(eventDateValue)
+    ) {
+      // If end_date is not greater than event_date, add 1 hour to end_date
+      const endDate = new Date(endDateValue);
+      const eventDate = new Date(eventDateValue);
+      // If they're equal or end is before start, set end to 1 hour after start
+      if (endDate <= eventDate) {
+        const adjustedEndDate = new Date(eventDate);
+        adjustedEndDate.setHours(adjustedEndDate.getHours() + 1);
+        endDateValue = adjustedEndDate.toISOString();
+      }
+    }
+
     const eventInsertData: any = {
       user_id: user.id, // Events table uses user_id, not event_manager_id
       title: eventData.title,
-      event_date: eventData.eventDate,
+      event_date: eventDateValue,
+      end_date: endDateValue,
+      is_multi_day: isMultiDay,
       event_type: eventData.eventType,
       location: eventData.location?.address || '',
-      location_data: eventData.location || null,
       attendee_count: eventData.attendeeCount || null,
       duration_hours: eventData.durationHours || null,
       budget: eventData.budgetPlan?.totalBudget ?? 0,
@@ -358,6 +416,48 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Event created successfully:', event?.id);
+
+    // Save additional dates to event_dates table
+    if (eventData.additionalDates && eventData.additionalDates.length > 0) {
+      const eventDates = eventData.additionalDates
+        .filter(ad => ad.date && ad.date.trim())
+        .map((ad, index) => {
+          const dateObj = new Date(ad.date);
+          const startTimeObj = ad.startTime ? new Date(ad.startTime) : null;
+          const endTimeObj = ad.endTime ? new Date(ad.endTime) : null;
+
+          // Extract date part (YYYY-MM-DD)
+          const dateStr = dateObj.toISOString().split('T')[0];
+
+          // Extract time parts (HH:MM:SS)
+          const startTimeStr = startTimeObj
+            ? `${startTimeObj.getHours().toString().padStart(2, '0')}:${startTimeObj.getMinutes().toString().padStart(2, '0')}:00`
+            : '00:00:00';
+          const endTimeStr = endTimeObj
+            ? `${endTimeObj.getHours().toString().padStart(2, '0')}:${endTimeObj.getMinutes().toString().padStart(2, '0')}:00`
+            : '23:59:59';
+
+          return {
+            event_id: event.id,
+            date: dateStr,
+            start_time: startTimeStr,
+            end_time: endTimeStr,
+            display_order: index + 1,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+            description: null,
+          };
+        });
+
+      if (eventDates.length > 0) {
+        const { error: datesError } = await supabase
+          .from('event_dates')
+          .insert(eventDates);
+
+        if (datesError) {
+          console.error('Error saving event dates:', datesError);
+        }
+      }
+    }
 
     // Create service requirements if provided
     if (

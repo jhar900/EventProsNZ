@@ -106,6 +106,7 @@ export function EventManagement({
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [eventJustEdited, setEventJustEdited] = useState<string | null>(null);
   const [showAddTeamMembersModal, setShowAddTeamMembersModal] = useState(false);
   const [eventTeamMembers, setEventTeamMembers] = useState<EventTeamMember[]>(
     []
@@ -114,6 +115,7 @@ export function EventManagement({
   const [eventContractors, setEventContractors] = useState<any[]>([]);
   const [isLoadingContractors, setIsLoadingContractors] = useState(false);
   const [showStatusTooltip, setShowStatusTooltip] = useState(false);
+  const [showDraftTooltip, setShowDraftTooltip] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showRemoveTeamMemberModal, setShowRemoveTeamMemberModal] =
     useState(false);
@@ -142,6 +144,7 @@ export function EventManagement({
 
   useEffect(() => {
     if (eventId) {
+      console.log('Initial load: Loading event with eventId:', eventId);
       loadEvent(eventId);
     } else {
       loadEvents();
@@ -149,16 +152,94 @@ export function EventManagement({
   }, [eventId, loadEvent, loadEvents]);
 
   useEffect(() => {
+    // Always prioritize currentEvent (from loadEvent) as it includes full relations like event_dates
     if (currentEvent) {
-      setSelectedEvent(currentEvent);
-    } else if (eventId && events.length > 0) {
-      // If we have eventId but currentEvent is not set, try to find it in events list
+      // Always update selectedEvent from currentEvent to ensure event_dates are included
+      // This ensures that after a hard refresh, we get the full event data with event_dates
+      const eventDates = (currentEvent as any).event_dates;
+      console.log('Setting selectedEvent from currentEvent:', {
+        eventId: currentEvent.id,
+        hasEventDates: !!eventDates,
+        eventDates: eventDates,
+        eventDatesType: typeof eventDates,
+        eventDatesIsArray: Array.isArray(eventDates),
+        eventDatesLength: Array.isArray(eventDates)
+          ? eventDates.length
+          : 'not an array',
+        allKeys: Object.keys(currentEvent),
+      });
+
+      // Explicitly preserve event_dates when setting selectedEvent
+      // Ensure event_dates is always an array
+      const eventWithDates = {
+        ...currentEvent,
+        event_dates: Array.isArray(eventDates) ? eventDates : [],
+      };
+
+      // Only update if the event ID matches or if selectedEvent doesn't exist or doesn't have event_dates
+      const shouldUpdate =
+        !selectedEvent ||
+        selectedEvent.id !== currentEvent.id ||
+        !Array.isArray((selectedEvent as any).event_dates) ||
+        (selectedEvent as any).event_dates.length !==
+          eventWithDates.event_dates.length;
+
+      if (shouldUpdate) {
+        console.log(
+          'Updating selectedEvent with event_dates:',
+          eventWithDates.event_dates
+        );
+        setSelectedEvent(eventWithDates as any);
+        console.log(
+          'selectedEvent updated, event_dates count:',
+          eventWithDates.event_dates.length
+        );
+      } else {
+        console.log(
+          'Skipping update - selectedEvent already has correct event_dates'
+        );
+      }
+    } else if (eventId && !currentEvent) {
+      // If we have eventId but currentEvent is not set, always load the full event with event_dates
+      // This handles the case where the page loads with an eventId but currentEvent hasn't been set yet
+      console.log(
+        'No currentEvent but have eventId, loading full event to get event_dates:',
+        eventId
+      );
+      loadEvent(eventId);
+    }
+
+    // Separate check: if we have events list but no currentEvent and eventId matches
+    if (eventId && events.length > 0 && !currentEvent) {
+      // Fallback: If we have eventId and events list but no currentEvent, load the full event
       const foundEvent = events.find(e => e.id === eventId);
       if (foundEvent) {
-        setSelectedEvent(foundEvent);
+        // Always load the full event to get event_dates (events list doesn't have them)
+        console.log(
+          'Loading full event for eventId to get event_dates:',
+          eventId
+        );
+        loadEvent(eventId);
       }
     }
-  }, [currentEvent, eventId, events]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEvent, eventId, events, loadEvent]);
+
+  // Reload event when modal closes after edit
+  useEffect(() => {
+    if (
+      eventJustEdited &&
+      !showEditEventModal &&
+      eventJustEdited !== currentEvent?.id
+    ) {
+      console.log(
+        'Event was just edited, reloading with event_dates:',
+        eventJustEdited
+      );
+      loadEvent(eventJustEdited);
+      setEventJustEdited(null);
+    }
+  }, [eventJustEdited, showEditEventModal, loadEvent, currentEvent?.id]);
 
   // Load event team members and contractors when tab is active and event is selected
   useEffect(() => {
@@ -539,7 +620,10 @@ export function EventManagement({
                   className={`cursor-pointer transition-colors hover:bg-gray-50 ${
                     selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
                   } ${selectedEvent ? 'p-2' : ''}`}
-                  onClick={() => setSelectedEvent(event)}
+                  onClick={() => {
+                    // Load the full event to get event_dates instead of using the list event
+                    loadEvent(event.id);
+                  }}
                 >
                   <CardContent className={selectedEvent ? 'p-3' : 'p-4'}>
                     <div className="flex items-start justify-between">
@@ -887,12 +971,55 @@ export function EventManagement({
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge className={getStatusColor(selectedEvent.status)}>
-                        {getStatusIcon(selectedEvent.status)}
-                        <span className="ml-1 capitalize">
-                          {selectedEvent.status.replace('_', ' ')}
-                        </span>
-                      </Badge>
+                      <div className="space-y-1">
+                        {selectedEvent.status === 'draft' ? (
+                          <Popover
+                            open={showDraftTooltip}
+                            onOpenChange={setShowDraftTooltip}
+                          >
+                            <PopoverTrigger asChild>
+                              <div
+                                onMouseEnter={() => setShowDraftTooltip(true)}
+                                onMouseLeave={() => setShowDraftTooltip(false)}
+                                className="inline-block"
+                              >
+                                <Badge
+                                  className={getStatusColor(
+                                    selectedEvent.status
+                                  )}
+                                >
+                                  {getStatusIcon(selectedEvent.status)}
+                                  <span className="ml-1 capitalize">
+                                    {selectedEvent.status.replace('_', ' ')}
+                                  </span>
+                                </Badge>
+                              </div>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-80 p-3"
+                              side="bottom"
+                              align="start"
+                              onMouseEnter={() => setShowDraftTooltip(true)}
+                              onMouseLeave={() => setShowDraftTooltip(false)}
+                            >
+                              <p className="text-sm text-muted-foreground">
+                                To progress this event to the planning stage and
+                                have more functionality in your event dashboard,
+                                complete the event creation process
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Badge
+                            className={getStatusColor(selectedEvent.status)}
+                          >
+                            {getStatusIcon(selectedEvent.status)}
+                            <span className="ml-1 capitalize">
+                              {selectedEvent.status.replace('_', ' ')}
+                            </span>
+                          </Badge>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -900,30 +1027,214 @@ export function EventManagement({
                   <div className="space-y-1">
                     <div className="text-sm font-medium text-muted-foreground flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
-                      Event Date
+                      Event Dates
                     </div>
-                    <div className="text-base">
-                      {selectedEvent.event_date
-                        ? new Date(selectedEvent.event_date).toLocaleDateString(
-                            'en-US',
-                            {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
+                    <div className="text-base space-y-2">
+                      {selectedEvent.event_date ? (
+                        <>
+                          {/* Collect all dates including main event date */}
+                          {(() => {
+                            const allDates: Array<{
+                              date: Date;
+                              startTime: Date | null;
+                              endTime: Date | null;
+                            }> = [];
+
+                            // Add main event date
+                            const mainEventDate = new Date(
+                              selectedEvent.event_date
+                            );
+                            const mainEndDate = (selectedEvent as any).end_date
+                              ? new Date((selectedEvent as any).end_date)
+                              : null;
+
+                            allDates.push({
+                              date: mainEventDate,
+                              startTime: mainEventDate,
+                              endTime: mainEndDate,
+                            });
+
+                            // Add additional dates from event_dates table
+                            const eventDates = (selectedEvent as any)
+                              .event_dates;
+                            console.log(
+                              'Event dates from selectedEvent:',
+                              eventDates
+                            );
+                            console.log('Full selectedEvent structure:', {
+                              id: selectedEvent.id,
+                              title: selectedEvent.title,
+                              event_date: selectedEvent.event_date,
+                              end_date: (selectedEvent as any).end_date,
+                              event_dates: (selectedEvent as any).event_dates,
+                              event_datesType: typeof (selectedEvent as any)
+                                .event_dates,
+                              event_datesIsArray: Array.isArray(
+                                (selectedEvent as any).event_dates
+                              ),
+                              event_datesLength: Array.isArray(
+                                (selectedEvent as any).event_dates
+                              )
+                                ? (selectedEvent as any).event_dates.length
+                                : 'not an array',
+                              allKeys: Object.keys(selectedEvent),
+                            });
+
+                            // Ensure eventDates is an array
+                            const eventDatesArray = Array.isArray(eventDates)
+                              ? eventDates
+                              : [];
+                            console.log(
+                              'Processing eventDatesArray:',
+                              eventDatesArray
+                            );
+
+                            if (eventDatesArray.length > 0) {
+                              eventDatesArray.forEach((ed: any) => {
+                                try {
+                                  const dateStr = ed.date; // YYYY-MM-DD
+                                  const startTimeStr = ed.start_time; // HH:MM:SS
+                                  const endTimeStr = ed.end_time; // HH:MM:SS
+
+                                  console.log('Processing event date:', {
+                                    dateStr,
+                                    startTimeStr,
+                                    endTimeStr,
+                                  });
+
+                                  if (!dateStr) {
+                                    console.warn(
+                                      'Event date missing date string:',
+                                      ed
+                                    );
+                                    return;
+                                  }
+
+                                  const date = new Date(dateStr);
+                                  if (isNaN(date.getTime())) {
+                                    console.warn('Invalid date:', dateStr);
+                                    return;
+                                  }
+
+                                  const startTime = startTimeStr
+                                    ? new Date(`${dateStr}T${startTimeStr}`)
+                                    : null;
+                                  const endTime = endTimeStr
+                                    ? new Date(`${dateStr}T${endTimeStr}`)
+                                    : null;
+
+                                  if (startTime && isNaN(startTime.getTime())) {
+                                    console.warn(
+                                      'Invalid start time:',
+                                      `${dateStr}T${startTimeStr}`
+                                    );
+                                  }
+                                  if (endTime && isNaN(endTime.getTime())) {
+                                    console.warn(
+                                      'Invalid end time:',
+                                      `${dateStr}T${endTimeStr}`
+                                    );
+                                  }
+
+                                  allDates.push({
+                                    date,
+                                    startTime:
+                                      startTime && !isNaN(startTime.getTime())
+                                        ? startTime
+                                        : null,
+                                    endTime:
+                                      endTime && !isNaN(endTime.getTime())
+                                        ? endTime
+                                        : null,
+                                  });
+                                } catch (error) {
+                                  console.error(
+                                    'Error processing event date:',
+                                    ed,
+                                    error
+                                  );
+                                }
+                              });
                             }
-                          )
-                        : 'Not set'}
+
+                            console.log('All dates collected:', allDates);
+
+                            // Sort all dates chronologically
+                            allDates.sort(
+                              (a, b) => a.date.getTime() - b.date.getTime()
+                            );
+
+                            return (
+                              <>
+                                {allDates.map((dateInfo, index) => (
+                                  <div key={index} className="space-y-1">
+                                    <div className="font-medium">
+                                      {dateInfo.date.toLocaleDateString(
+                                        'en-US',
+                                        {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                        }
+                                      )}
+                                    </div>
+                                    {(dateInfo.startTime ||
+                                      dateInfo.endTime) && (
+                                      <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {dateInfo.startTime
+                                          ? dateInfo.startTime.toLocaleTimeString(
+                                              'en-US',
+                                              {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: true,
+                                              }
+                                            )
+                                          : 'TBD'}
+                                        {dateInfo.endTime && (
+                                          <>
+                                            {' - '}
+                                            {dateInfo.endTime.toLocaleTimeString(
+                                              'en-US',
+                                              {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: true,
+                                              }
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        'Not set'
+                      )}
                     </div>
                   </div>
 
                   {/* Location */}
-                  {selectedEvent.location && (
+                  {(selectedEvent.location ||
+                    (selectedEvent as any).location_data?.toBeConfirmed) && (
                     <div className="space-y-1">
                       <div className="text-sm font-medium text-muted-foreground flex items-center">
                         <MapPin className="h-4 w-4 mr-1" />
                         Location
                       </div>
-                      <div className="text-base">{selectedEvent.location}</div>
+                      <div className="text-base">
+                        {(selectedEvent as any).location_data?.toBeConfirmed ||
+                        (selectedEvent.location &&
+                          (selectedEvent.location.startsWith('{') ||
+                            selectedEvent.location.startsWith('[')))
+                          ? 'To Be Confirmed'
+                          : selectedEvent.location}
+                      </div>
                     </div>
                   )}
 
@@ -989,13 +1300,13 @@ export function EventManagement({
                   )}
 
                   {/* Special Requirements */}
-                  {selectedEvent.special_requirements && (
+                  {selectedEvent.requirements && (
                     <div className="space-y-1 md:col-span-2 lg:col-span-3">
                       <div className="text-sm font-medium text-muted-foreground">
                         Special Requirements
                       </div>
                       <div className="text-base text-muted-foreground">
-                        {selectedEvent.special_requirements}
+                        {selectedEvent.requirements}
                       </div>
                     </div>
                   )}
@@ -1303,13 +1614,60 @@ export function EventManagement({
         open={showEditEventModal}
         onOpenChange={setShowEditEventModal}
         eventId={selectedEvent?.id || null}
-        onSuccess={eventId => {
-          // Refresh events list after successful update
-          loadEvents();
-          if (selectedEvent) {
-            loadEvent(selectedEvent.id);
+        onSuccess={async eventId => {
+          if (selectedEvent?.id) {
+            setEventJustEdited(selectedEvent.id);
           }
           setShowEditEventModal(false);
+          // Reload the specific event to get updated data including event_dates
+          if (selectedEvent?.id) {
+            console.log('Reloading event after edit:', selectedEvent.id);
+            // Directly fetch the event to verify event_dates are in the response and update immediately
+            try {
+              const headers: HeadersInit = {};
+              if (user?.id) {
+                headers['x-user-id'] = user.id;
+              }
+              const response = await fetch(`/api/events/${selectedEvent.id}`, {
+                headers,
+                credentials: 'include',
+              });
+              const data = await response.json();
+              console.log('Direct API response:', {
+                success: data.success,
+                hasEvent: !!data.event,
+                hasEventDates: !!(data.event as any)?.event_dates,
+                eventDates: (data.event as any)?.event_dates,
+                eventDatesLength: Array.isArray(
+                  (data.event as any)?.event_dates
+                )
+                  ? (data.event as any).event_dates.length
+                  : 'not an array',
+              });
+
+              // If event_dates are in the response, manually update selectedEvent immediately
+              if (data.success && data.event) {
+                console.log(
+                  'Manually updating selectedEvent with full event data including event_dates'
+                );
+                const updatedEvent = {
+                  ...data.event,
+                  event_dates: (data.event as any).event_dates || [],
+                };
+                setSelectedEvent(updatedEvent as any);
+                console.log(
+                  'selectedEvent updated, event_dates:',
+                  (updatedEvent as any).event_dates
+                );
+              }
+            } catch (error) {
+              console.error('Error fetching event directly:', error);
+            }
+            // Also call loadEvent to update currentEvent for consistency
+            await loadEvent(selectedEvent.id);
+          }
+          // Refresh events list (but don't let it overwrite selectedEvent)
+          await loadEvents();
         }}
       />
 

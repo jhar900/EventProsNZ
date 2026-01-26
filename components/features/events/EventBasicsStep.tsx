@@ -9,6 +9,8 @@ import { EventLogoUpload } from './EventLogoUpload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { RotateCcw } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -36,7 +38,8 @@ const eventTypeLabels: Record<string, string> = {
 
 export function EventBasicsStep() {
   const eventData = useEventData();
-  const { updateEventData } = useEventCreationStore();
+  const { updateEventData, setTimeErrors } = useEventCreationStore();
+  const resetDatePickerRef = useRef<(() => void) | null>(null);
 
   const handleInputChange = (field: string, value: any) => {
     updateEventData({ [field]: value });
@@ -96,7 +99,19 @@ export function EventBasicsStep() {
 
       {/* Date and Time */}
       <div className="space-y-2">
-        <Label>Event Date & Time *</Label>
+        <div className="flex items-center justify-between">
+          <Label>Event Date & Time *</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => resetDatePickerRef.current?.()}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reset
+          </Button>
+        </div>
         <EventDatePicker
           value={eventData.eventDate || ''}
           onChange={value => handleInputChange('eventDate', value)}
@@ -108,6 +123,11 @@ export function EventBasicsStep() {
           onAdditionalDatesChange={dates =>
             handleInputChange('additionalDates', dates)
           }
+          onValidationChange={setTimeErrors}
+          onResetRef={resetFn => {
+            resetDatePickerRef.current = resetFn;
+          }}
+          showResetButton={false}
         />
       </div>
 

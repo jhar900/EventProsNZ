@@ -10,6 +10,18 @@ const saveDraftSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     description: z.string().optional().nullable(),
     eventDate: z.string().optional().nullable(),
+    startTime: z.string().optional().nullable(),
+    endTime: z.string().optional().nullable(),
+    additionalDates: z
+      .array(
+        z.object({
+          date: z.string(),
+          startTime: z.string().optional().nullable(),
+          endTime: z.string().optional().nullable(),
+        })
+      )
+      .optional()
+      .nullable(),
     durationHours: z.number().optional().nullable(),
     attendeeCount: z.number().optional().nullable(),
     location: z
@@ -161,13 +173,73 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prepare event_date with startTime if provided
+    let eventDateValue = eventData.eventDate || null;
+    if (eventDateValue && eventData.startTime) {
+      // Combine date and startTime into event_date timestamp
+      const date = new Date(eventDateValue);
+      const startTime = new Date(eventData.startTime);
+      date.setHours(
+        startTime.getHours(),
+        startTime.getMinutes(),
+        startTime.getSeconds()
+      );
+      eventDateValue = date.toISOString();
+    }
+
+    // Prepare end_date with endTime if provided
+    let endDateValue = null;
+    if (eventDateValue && eventData.endTime) {
+      const date = new Date(eventDateValue);
+      const endTime = new Date(eventData.endTime);
+      date.setHours(
+        endTime.getHours(),
+        endTime.getMinutes(),
+        endTime.getSeconds()
+      );
+      endDateValue = date.toISOString();
+    }
+
+    // Determine if multi-day event (has additional dates)
+    const isMultiDay =
+      eventData.additionalDates && eventData.additionalDates.length > 0;
+
+    // Constraint: if is_multi_day is true, end_date must not be null
+    // Constraint: end_date must be > event_date (valid_end_date constraint)
+    // If we have additional dates but no end_date, set end_date to be later than event_date
+    if (isMultiDay && !endDateValue && eventDateValue) {
+      // Set end_date to 1 hour after event_date to satisfy valid_end_date constraint
+      const endDate = new Date(eventDateValue);
+      endDate.setHours(endDate.getHours() + 1);
+      endDateValue = endDate.toISOString();
+    }
+
+    // Ensure end_date is always greater than event_date (valid_end_date constraint)
+    if (
+      endDateValue &&
+      eventDateValue &&
+      new Date(endDateValue) <= new Date(eventDateValue)
+    ) {
+      // If end_date is not greater than event_date, add 1 hour to end_date
+      const endDate = new Date(endDateValue);
+      const eventDate = new Date(eventDateValue);
+      // If they're equal or end is before start, set end to 1 hour after start
+      if (endDate <= eventDate) {
+        const adjustedEndDate = new Date(eventDate);
+        adjustedEndDate.setHours(adjustedEndDate.getHours() + 1);
+        endDateValue = adjustedEndDate.toISOString();
+      }
+    }
+
     const eventRecord: any = {
       user_id: userId,
       status: 'draft',
       title: eventData.title.trim(),
       event_type: eventData.eventType || null,
       description: eventData.description || null,
-      event_date: eventData.eventDate || null,
+      event_date: eventDateValue,
+      end_date: endDateValue,
+      is_multi_day: isMultiDay,
       duration_hours: eventData.durationHours || null,
       attendee_count: eventData.attendeeCount || null,
       requirements: eventData.specialRequirements || null,
@@ -341,6 +413,92 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Save additional dates to event_dates table
+    // Always delete existing event_dates first, then insert new ones if provided
+    // This handles the case where user removes all additional dates (empty array)
+    // Check if additionalDates is explicitly provided (including empty array)
+    const hasAdditionalDates =
+      eventData.additionalDates !== undefined &&
+      eventData.additionalDates !== null;
+
+    if (hasAdditionalDates) {
+      console.log('Processing additionalDates for draft:', {
+        eventId: draft.id,
+        additionalDates: eventData.additionalDates,
+        length: eventData.additionalDates?.length || 0,
+      });
+
+      // Delete existing event_dates for this draft
+      const { error: deleteError } = await supabase
+        .from('event_dates')
+        .delete()
+        .eq('event_id', draft.id);
+
+      if (deleteError) {
+        console.error('Error deleting existing event dates:', deleteError);
+      } else {
+        console.log(
+          `Successfully deleted existing event_dates for draft ${draft.id}`
+        );
+      }
+
+      // Insert new event_dates only if there are any
+      if (eventData.additionalDates && eventData.additionalDates.length > 0) {
+        const eventDates = eventData.additionalDates
+          .filter(ad => ad.date && ad.date.trim())
+          .map((ad, index) => {
+            const dateObj = new Date(ad.date);
+            const startTimeObj = ad.startTime ? new Date(ad.startTime) : null;
+            const endTimeObj = ad.endTime ? new Date(ad.endTime) : null;
+
+            // Extract date part (YYYY-MM-DD)
+            const dateStr = dateObj.toISOString().split('T')[0];
+
+            // Extract time parts (HH:MM:SS)
+            const startTimeStr = startTimeObj
+              ? `${startTimeObj.getHours().toString().padStart(2, '0')}:${startTimeObj.getMinutes().toString().padStart(2, '0')}:00`
+              : '00:00:00';
+            const endTimeStr = endTimeObj
+              ? `${endTimeObj.getHours().toString().padStart(2, '0')}:${endTimeObj.getMinutes().toString().padStart(2, '0')}:00`
+              : '23:59:59';
+
+            return {
+              event_id: draft.id,
+              date: dateStr,
+              start_time: startTimeStr,
+              end_time: endTimeStr,
+              display_order: index + 1,
+              timezone:
+                Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+              description: null,
+            };
+          });
+
+        if (eventDates.length > 0) {
+          const { error: datesError } = await supabase
+            .from('event_dates')
+            .insert(eventDates);
+
+          if (datesError) {
+            console.error('Error saving event dates:', datesError);
+          } else {
+            console.log(
+              `Inserted ${eventDates.length} new event_dates for draft ${draft.id}`
+            );
+          }
+        }
+      } else {
+        // Empty array means user removed all additional dates - deletion already happened above
+        console.log(
+          'No additional dates to insert (empty array) - all dates deleted'
+        );
+      }
+    } else {
+      console.log(
+        'additionalDates not provided in eventData, skipping event_dates update'
+      );
+    }
+
     // Save service requirements to event_service_requirements table
     if (
       eventData.serviceRequirements &&
@@ -500,6 +658,14 @@ export async function GET(request: NextRequest) {
     const draft = drafts?.[0];
 
     let transformedServiceRequirements = null;
+    let startTime: string | undefined = undefined;
+    let endTime: string | undefined = undefined;
+    let additionalDates: Array<{
+      date: string;
+      startTime?: string;
+      endTime?: string;
+    }> = [];
+
     if (draft) {
       // Fetch service requirements for the draft
       const { data: serviceRequirements } = await supabase
@@ -518,6 +684,59 @@ export async function GET(request: NextRequest) {
           estimatedBudget: req.estimated_budget,
           isRequired: req.is_required,
         })) || null;
+
+      // Extract startTime and endTime from event_date and end_date
+      if (draft.event_date) {
+        startTime = new Date(draft.event_date).toISOString();
+      }
+      if (draft.end_date) {
+        endTime = new Date(draft.end_date).toISOString();
+      }
+
+      // Fetch additional dates from event_dates table
+      // Use supabaseAdmin to bypass RLS in case event_dates table has RLS enabled
+      const { data: eventDates, error: eventDatesError } = await supabaseAdmin
+        .from('event_dates')
+        .select('*')
+        .eq('event_id', draft.id)
+        .order('display_order', { ascending: true });
+
+      if (eventDatesError) {
+        console.error(
+          'Error fetching event_dates in drafts GET:',
+          eventDatesError
+        );
+      }
+
+      if (eventDates && eventDates.length > 0) {
+        additionalDates = eventDates.map((ed: any) => {
+          const dateStr = ed.date; // YYYY-MM-DD
+          const startTimeStr = ed.start_time; // HH:MM:SS
+          const endTimeStr = ed.end_time; // HH:MM:SS
+
+          // Create ISO strings for the date with times
+          const dateWithStartTime = startTimeStr
+            ? new Date(`${dateStr}T${startTimeStr}`).toISOString()
+            : new Date(`${dateStr}T00:00:00`).toISOString();
+          const dateWithEndTime = endTimeStr
+            ? new Date(`${dateStr}T${endTimeStr}`).toISOString()
+            : new Date(`${dateStr}T23:59:59`).toISOString();
+
+          // Extract date portion for the date field
+          const dateOnly = new Date(dateStr);
+          const dateOnlyISO = new Date(
+            dateOnly.getFullYear(),
+            dateOnly.getMonth(),
+            dateOnly.getDate()
+          ).toISOString();
+
+          return {
+            date: dateOnlyISO,
+            startTime: dateWithStartTime,
+            endTime: dateWithEndTime,
+          };
+        });
+      }
     }
 
     const draftResponse = draft
@@ -529,6 +748,9 @@ export async function GET(request: NextRequest) {
             title: draft.title,
             description: draft.description,
             eventDate: draft.event_date,
+            startTime: startTime,
+            endTime: endTime,
+            additionalDates: additionalDates,
             durationHours: draft.duration_hours,
             attendeeCount: draft.attendee_count,
             location: draft.location

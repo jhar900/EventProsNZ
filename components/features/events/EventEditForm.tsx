@@ -63,6 +63,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
   const [validationErrors, setValidationErrors] = useState<
     { field: string; message: string }[]
   >([]);
+  const [hasTimeErrors, setHasTimeErrors] = useState(false);
 
   // Load event data
   useEffect(() => {
@@ -79,19 +80,91 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
         const eventData = data.event;
         setEvent(eventData);
 
+        // Extract eventDate (date portion only) and startTime/endTime from event_date and end_date
+        let eventDateValue: string | undefined = undefined;
+        let startTime: string | undefined = undefined;
+        let endTime: string | undefined = undefined;
+
+        if (eventData.event_date) {
+          const eventDateObj = new Date(eventData.event_date);
+          // Extract date portion (set to midnight for the date picker)
+          const dateOnly = new Date(
+            eventDateObj.getFullYear(),
+            eventDateObj.getMonth(),
+            eventDateObj.getDate()
+          );
+          eventDateValue = dateOnly.toISOString();
+          // Keep full timestamp for startTime (includes the time)
+          startTime = eventDateObj.toISOString();
+        }
+
+        if (eventData.end_date) {
+          const endDateObj = new Date(eventData.end_date);
+          // Keep full timestamp for endTime (includes the time)
+          endTime = endDateObj.toISOString();
+        }
+
+        // Load additional dates from event_dates table
+        const additionalDates: Array<{
+          date: string;
+          startTime?: string;
+          endTime?: string;
+        }> = [];
+
+        if (eventData.event_dates && Array.isArray(eventData.event_dates)) {
+          additionalDates.push(
+            ...eventData.event_dates.map((ed: any) => {
+              // Combine date and start_time
+              const dateStr = ed.date; // YYYY-MM-DD
+              const startTimeStr = ed.start_time; // HH:MM:SS
+              const endTimeStr = ed.end_time; // HH:MM:SS
+
+              // Create ISO strings for the date with times
+              const dateWithStartTime = startTimeStr
+                ? new Date(`${dateStr}T${startTimeStr}`).toISOString()
+                : new Date(`${dateStr}T00:00:00`).toISOString();
+              const dateWithEndTime = endTimeStr
+                ? new Date(`${dateStr}T${endTimeStr}`).toISOString()
+                : new Date(`${dateStr}T23:59:59`).toISOString();
+
+              // Extract date portion for the date field
+              const dateOnly = new Date(dateStr);
+              const dateOnlyISO = new Date(
+                dateOnly.getFullYear(),
+                dateOnly.getMonth(),
+                dateOnly.getDate()
+              ).toISOString();
+
+              return {
+                date: dateOnlyISO,
+                startTime: dateWithStartTime,
+                endTime: dateWithEndTime,
+              };
+            })
+          );
+        }
+
+        const locationData = eventData.location_data || {};
+
         // Map event data to form data
         setEventData({
           eventType: eventData.event_type,
           title: eventData.title,
           description: eventData.description,
-          eventDate: eventData.event_date,
+          eventDate: eventDateValue,
+          startTime: startTime,
+          endTime: endTime,
+          additionalDates: additionalDates,
           durationHours: eventData.duration_hours,
           attendeeCount: eventData.attendee_count,
-          location: eventData.location_data || {
-            address: eventData.location || '',
-            coordinates: { lat: 0, lng: 0 },
-          },
-          specialRequirements: eventData.special_requirements,
+          location:
+            locationData && Object.keys(locationData).length > 0
+              ? locationData
+              : {
+                  address: eventData.location || '',
+                  coordinates: { lat: 0, lng: 0 },
+                },
+          specialRequirements: eventData.requirements,
         });
 
         // Map service requirements
@@ -122,7 +195,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
       }
     } catch (err) {
       setError('Failed to load event');
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -189,6 +262,10 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
   };
 
   const handleSave = async () => {
+    // Don't allow saving if there are time errors
+    if (hasTimeErrors) {
+      return;
+    }
     if (!validateForm()) {
       return;
     }
@@ -224,7 +301,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
       }
     } catch (err) {
       setError('Failed to update event');
-      } finally {
+    } finally {
       setIsSaving(false);
     }
   };
@@ -326,6 +403,15 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
             <EventDatePicker
               value={eventData.eventDate || ''}
               onChange={value => handleInputChange('eventDate', value)}
+              startTime={eventData.startTime}
+              endTime={eventData.endTime}
+              onStartTimeChange={value => handleInputChange('startTime', value)}
+              onEndTimeChange={value => handleInputChange('endTime', value)}
+              additionalDates={eventData.additionalDates || []}
+              onAdditionalDatesChange={dates =>
+                handleInputChange('additionalDates', dates)
+              }
+              onValidationChange={setHasTimeErrors}
             />
           </div>
 
@@ -566,7 +652,7 @@ export function EventEditForm({ eventId }: EventEditFormProps) {
           Back
         </Button>
 
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || hasTimeErrors}>
           {isSaving ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

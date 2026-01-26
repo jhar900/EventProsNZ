@@ -93,3 +93,4 @@ CREATE POLICY "Event managers can delete event team member assignments" ON publi
     )
   );
 
+

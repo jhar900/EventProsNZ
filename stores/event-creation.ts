@@ -27,6 +27,7 @@ interface EventCreationState {
   isEditMode: boolean;
   isLoading: boolean;
   validationErrors: ValidationError[];
+  hasTimeErrors: boolean; // Track if there are time validation errors (end time before start time)
 
   // Actions
   nextStep: () => void;
@@ -51,6 +52,7 @@ interface EventCreationState {
   clearValidationErrors: () => void;
   resetWizard: () => void;
   loadTemplate: (template: EventTemplate) => void;
+  setTimeErrors: (hasErrors: boolean) => void;
 }
 
 const initialEventData: Partial<EventFormData> = {
@@ -97,6 +99,7 @@ export const useEventCreationStore = create<EventCreationState>()(
       isEditMode: false,
       isLoading: false,
       validationErrors: [],
+      hasTimeErrors: false,
 
       // Actions
       nextStep: () => {
@@ -120,9 +123,24 @@ export const useEventCreationStore = create<EventCreationState>()(
       },
 
       updateEventData: (data: Partial<EventFormData>) => {
-        set(state => ({
-          eventData: { ...state.eventData, ...data },
-        }));
+        set(state => {
+          const updatedEventData = { ...state.eventData, ...data };
+          // Log when additionalDates is being updated
+          if (data.additionalDates !== undefined) {
+            console.log('updateEventData: updating additionalDates:', {
+              oldLength: Array.isArray(state.eventData.additionalDates)
+                ? state.eventData.additionalDates.length
+                : 'not an array',
+              newLength: Array.isArray(data.additionalDates)
+                ? data.additionalDates.length
+                : 'not an array',
+              newDates: data.additionalDates,
+            });
+          }
+          return {
+            eventData: updatedEventData,
+          };
+        });
       },
 
       addServiceRequirement: (requirement: ServiceRequirement) => {
@@ -207,6 +225,7 @@ export const useEventCreationStore = create<EventCreationState>()(
       },
 
       saveDraft: async (userId?: string) => {
+        // Get fresh state - ensure we have the latest data
         const { eventData, currentStep } = get();
         set({ isLoading: true });
 
@@ -218,27 +237,105 @@ export const useEventCreationStore = create<EventCreationState>()(
             headers['x-user-id'] = userId;
           }
           // Clean up eventData before sending - remove undefined values and ensure proper structure
-          const cleanedEventData = {
+          // IMPORTANT: Always include additionalDates as an array (even if empty) when it exists in eventData
+          // This ensures that when user removes dates, the empty array triggers deletion in the API
+          const cleanedEventData: any = {
             ...eventData,
-            location:
-              eventData.location &&
-              (eventData.location.address ||
-                eventData.location.coordinates ||
-                eventData.location.toBeConfirmed)
-                ? {
-                    address: eventData.location.address || null,
-                    coordinates: eventData.location.coordinates || null,
-                    placeId: eventData.location.placeId || null,
-                    city: eventData.location.city || null,
-                    region: eventData.location.region || null,
-                    country: eventData.location.country || null,
-                    toBeConfirmed: eventData.location.toBeConfirmed || false,
-                  }
-                : null,
+            startTime: eventData.startTime || null,
+            endTime: eventData.endTime || null,
+            location: (() => {
+              // If no location data, send empty location with toBeConfirmed true
+              if (!eventData.location) {
+                return {
+                  address: '',
+                  coordinates: { lat: 0, lng: 0 },
+                  toBeConfirmed: true,
+                };
+              }
+
+              // Check if location is valid
+              const hasValidAddress =
+                eventData.location.address &&
+                eventData.location.address.trim() !== '';
+              const hasValidCoordinates =
+                eventData.location.coordinates &&
+                eventData.location.coordinates.lat !== 0 &&
+                eventData.location.coordinates.lng !== 0;
+
+              // Automatically set toBeConfirmed if location is empty/invalid
+              const isToBeConfirmed =
+                !hasValidAddress ||
+                !hasValidCoordinates ||
+                eventData.location.toBeConfirmed === true;
+
+              const location: any = {
+                address: eventData.location.address || '',
+                coordinates: eventData.location.coordinates || {
+                  lat: 0,
+                  lng: 0,
+                },
+                toBeConfirmed: isToBeConfirmed,
+              };
+
+              // Only include optional fields if they exist
+              if (eventData.location.placeId) {
+                location.placeId = eventData.location.placeId;
+              }
+              if (eventData.location.city) {
+                location.city = eventData.location.city;
+              }
+              if (eventData.location.region) {
+                location.region = eventData.location.region;
+              }
+              if (eventData.location.country) {
+                location.country = eventData.location.country;
+              }
+
+              return location;
+            })(),
             serviceRequirements: eventData.serviceRequirements || null,
-            budgetPlan: eventData.budgetPlan || null,
             logoUrl: eventData.logoUrl || null, // Explicitly include logoUrl
           };
+
+          // Only include budgetPlan if we're past step 1 (event basics)
+          // Step 1 is event basics, step 2 is service requirements, step 3 is budget planning
+          if (
+            currentStep > 1 &&
+            eventData.budgetPlan &&
+            eventData.budgetPlan.totalBudget > 0
+          ) {
+            cleanedEventData.budgetPlan = eventData.budgetPlan;
+          }
+
+          // Explicitly handle additionalDates - preserve empty arrays to trigger deletion
+          // Always create a new array reference to ensure React/API detects changes
+          // Filter out any dates with empty date strings before sending
+          if (eventData.additionalDates !== undefined) {
+            const filteredDates = Array.isArray(eventData.additionalDates)
+              ? eventData.additionalDates.filter(
+                  ad => ad.date && ad.date.trim()
+                )
+              : [];
+            cleanedEventData.additionalDates = filteredDates;
+          }
+
+          // Debug: Log what we're sending
+          console.log('Saving draft with eventData:', {
+            hasAdditionalDates: cleanedEventData.additionalDates !== undefined,
+            additionalDates: cleanedEventData.additionalDates,
+            additionalDatesLength: Array.isArray(
+              cleanedEventData.additionalDates
+            )
+              ? cleanedEventData.additionalDates.length
+              : 'not an array',
+            additionalDatesType: typeof cleanedEventData.additionalDates,
+            rawEventDataAdditionalDates: eventData.additionalDates,
+            rawEventDataAdditionalDatesLength: Array.isArray(
+              eventData.additionalDates
+            )
+              ? eventData.additionalDates.length
+              : 'not an array',
+          });
 
           const response = await fetch('/api/events/drafts', {
             method: 'POST',
@@ -298,6 +395,9 @@ export const useEventCreationStore = create<EventCreationState>()(
             eventType: eventData.eventType,
             title: eventData.title,
             eventDate: eventData.eventDate,
+            startTime: eventData.startTime,
+            endTime: eventData.endTime,
+            additionalDates: eventData.additionalDates || [],
             location: {
               address: eventData.location?.address || '',
               coordinates: {
@@ -592,6 +692,10 @@ export const useEventCreationStore = create<EventCreationState>()(
         set({ validationErrors: [] });
       },
 
+      setTimeErrors: (hasErrors: boolean) => {
+        set({ hasTimeErrors: hasErrors });
+      },
+
       setIsEditMode: (isEditMode: boolean) => {
         set({ isEditMode });
       },
@@ -606,6 +710,7 @@ export const useEventCreationStore = create<EventCreationState>()(
           isDraft: true,
           isEditMode: false,
           validationErrors: [],
+          hasTimeErrors: false,
         });
       },
 
@@ -657,29 +762,99 @@ export const useEventCreationStore = create<EventCreationState>()(
           const event = data.event;
 
           // Transform event data to wizard format
+          // Extract eventDate (date portion only) and startTime/endTime from event_date and end_date
+          let eventDateValue: string = '';
+          let startTime: string | undefined = undefined;
+          let endTime: string | undefined = undefined;
+
+          if (event.event_date) {
+            const eventDateObj = new Date(event.event_date);
+            // Extract date portion (set to midnight for the date picker)
+            const dateOnly = new Date(
+              eventDateObj.getFullYear(),
+              eventDateObj.getMonth(),
+              eventDateObj.getDate()
+            );
+            eventDateValue = dateOnly.toISOString();
+            // Keep full timestamp for startTime (includes the time)
+            startTime = eventDateObj.toISOString();
+          }
+
+          if (event.end_date) {
+            const endDateObj = new Date(event.end_date);
+            // Keep full timestamp for endTime (includes the time)
+            endTime = endDateObj.toISOString();
+          }
+
+          // Load additional dates from event_dates table
+          const additionalDates: Array<{
+            date: string;
+            startTime?: string;
+            endTime?: string;
+          }> = [];
+
+          if (
+            (event as any).event_dates &&
+            Array.isArray((event as any).event_dates)
+          ) {
+            additionalDates.push(
+              ...(event as any).event_dates.map((ed: any) => {
+                // Combine date and start_time
+                const dateStr = ed.date; // YYYY-MM-DD
+                const startTimeStr = ed.start_time; // HH:MM:SS
+                const endTimeStr = ed.end_time; // HH:MM:SS
+
+                // Create ISO strings for the date with times
+                const dateWithStartTime = startTimeStr
+                  ? new Date(`${dateStr}T${startTimeStr}`).toISOString()
+                  : new Date(`${dateStr}T00:00:00`).toISOString();
+                const dateWithEndTime = endTimeStr
+                  ? new Date(`${dateStr}T${endTimeStr}`).toISOString()
+                  : new Date(`${dateStr}T23:59:59`).toISOString();
+
+                // Extract date portion for the date field
+                const dateOnly = new Date(dateStr);
+                const dateOnlyISO = new Date(
+                  dateOnly.getFullYear(),
+                  dateOnly.getMonth(),
+                  dateOnly.getDate()
+                ).toISOString();
+
+                return {
+                  date: dateOnlyISO,
+                  startTime: dateWithStartTime,
+                  endTime: dateWithEndTime,
+                };
+              })
+            );
+          }
+
+          const locationData = (event as any).location_data || {};
+
           const eventData: Partial<EventFormData> = {
             eventType: event.event_type || '',
             title: event.title || '',
             description: event.description || '',
-            eventDate: event.event_date
-              ? new Date(event.event_date).toISOString()
-              : '',
+            eventDate: eventDateValue,
+            startTime: startTime,
+            endTime: endTime,
+            additionalDates: additionalDates,
             durationHours: event.duration_hours || undefined,
             attendeeCount: event.attendee_count || undefined,
             location: event.location
               ? {
                   address: event.location,
-                  coordinates: event.location_data?.coordinates || {
+                  coordinates: locationData.coordinates || {
                     lat: 0,
                     lng: 0,
                   },
-                  placeId: event.location_data?.placeId || null,
-                  city: event.location_data?.city || null,
-                  region: event.location_data?.region || null,
-                  country: event.location_data?.country || null,
-                  toBeConfirmed: event.location_data?.toBeConfirmed || false,
+                  placeId: locationData.placeId || null,
+                  city: locationData.city || null,
+                  region: locationData.region || null,
+                  country: locationData.country || null,
+                  toBeConfirmed: locationData.toBeConfirmed || false,
                 }
-              : event.location_data?.toBeConfirmed
+              : locationData.toBeConfirmed
                 ? {
                     address: '',
                     coordinates: { lat: 0, lng: 0 },
@@ -689,8 +864,7 @@ export const useEventCreationStore = create<EventCreationState>()(
                     address: '',
                     coordinates: { lat: 0, lng: 0 },
                   },
-            specialRequirements:
-              event.requirements || event.special_requirements || '',
+            specialRequirements: event.requirements || '',
             logoUrl: event.logo_url ? event.logo_url : undefined,
             serviceRequirements: [],
             budgetPlan: {
@@ -729,8 +903,19 @@ export const useEventCreationStore = create<EventCreationState>()(
       },
 
       updateEvent: async (eventId: string, userId?: string) => {
+        // Get fresh state right before processing to ensure we have the latest data
         const { eventData, serviceRequirements, budgetPlan } = get();
         set({ isLoading: true });
+
+        // Log the current state for debugging
+        console.log('updateEvent called with eventData:', {
+          eventId,
+          hasAdditionalDates: eventData.additionalDates !== undefined,
+          additionalDates: eventData.additionalDates,
+          additionalDatesLength: Array.isArray(eventData.additionalDates)
+            ? eventData.additionalDates.length
+            : 'not an array',
+        });
 
         try {
           const headers: HeadersInit = {
@@ -742,25 +927,139 @@ export const useEventCreationStore = create<EventCreationState>()(
           }
 
           // Prepare payload similar to submitEvent but for update
+          // Filter out any dates with empty date strings before sending
+          // IMPORTANT: Always include additionalDates (even if empty array) to ensure deletion works
+          // If additionalDates exists in eventData (even if empty array), we need to send it to trigger deletion
+          const hasAdditionalDates = eventData.additionalDates !== undefined;
+          const filteredAdditionalDates = hasAdditionalDates
+            ? Array.isArray(eventData.additionalDates)
+              ? eventData.additionalDates.filter(
+                  ad => ad.date && ad.date.trim()
+                )
+              : []
+            : [];
+
+          // Get current step to determine if we should include budget
+          const { currentStep } = get();
+
           const payload: any = {
             eventType: eventData.eventType,
             title: eventData.title,
-            eventDate: eventData.eventDate,
-            location: {
-              address: eventData.location?.address || '',
-              coordinates: {
-                lat: eventData.location?.coordinates?.lat ?? 0,
-                lng: eventData.location?.coordinates?.lng ?? 0,
-              },
-              toBeConfirmed: eventData.location?.toBeConfirmed || false,
-            },
-            serviceRequirements: serviceRequirements || [],
-            budgetPlan: budgetPlan || {
-              totalBudget: 0,
-              breakdown: {},
-              recommendations: [],
-            },
+            serviceRequirements: Array.isArray(serviceRequirements)
+              ? serviceRequirements
+              : [],
           };
+
+          // Only include date/time fields if they have values (not empty strings)
+          // The validation schema expects valid datetime strings or undefined, not empty strings
+          if (eventData.eventDate && eventData.eventDate.trim()) {
+            payload.eventDate = eventData.eventDate;
+          }
+          if (eventData.startTime && eventData.startTime.trim()) {
+            payload.startTime = eventData.startTime;
+          }
+          if (eventData.endTime && eventData.endTime.trim()) {
+            payload.endTime = eventData.endTime;
+          }
+
+          // Include description and specialRequirements if they exist
+          if (eventData.description !== undefined) {
+            payload.description = eventData.description;
+          }
+          if (eventData.specialRequirements !== undefined) {
+            payload.specialRequirements = eventData.specialRequirements;
+          }
+
+          // Only include budgetPlan if we're past step 1 (event basics)
+          // Step 1 is event basics, step 2 is service requirements, step 3 is budget planning
+          if (currentStep > 1 && budgetPlan && budgetPlan.totalBudget > 0) {
+            payload.budgetPlan = budgetPlan;
+          }
+
+          // Handle location - automatically set toBeConfirmed if location is empty
+          // Always send location object to ensure validation passes
+          const location = eventData.location || {};
+
+          // Check if address is a JSON string and parse it if needed
+          let addressString = '';
+          if (location.address) {
+            if (
+              typeof location.address === 'string' &&
+              (location.address.startsWith('{') ||
+                location.address.startsWith('['))
+            ) {
+              // Address is a JSON string, try to parse it
+              try {
+                const parsed = JSON.parse(location.address);
+                addressString = parsed.address || '';
+              } catch (e) {
+                // If parsing fails, use the string as-is (might be a regular address)
+                addressString = location.address;
+              }
+            } else {
+              addressString = location.address;
+            }
+          }
+
+          const hasValidAddress = addressString && addressString.trim() !== '';
+          const hasValidCoordinates =
+            location.coordinates &&
+            location.coordinates.lat !== 0 &&
+            location.coordinates.lng !== 0;
+
+          // If location is empty/invalid, automatically set toBeConfirmed to true
+          const isToBeConfirmed =
+            !hasValidAddress ||
+            !hasValidCoordinates ||
+            location.toBeConfirmed === true;
+
+          // Always send location, but mark as toBeConfirmed if invalid
+          payload.location = {
+            address: addressString,
+            coordinates: {
+              lat: location.coordinates?.lat ?? 0,
+              lng: location.coordinates?.lng ?? 0,
+            },
+            toBeConfirmed: isToBeConfirmed,
+          };
+
+          // Only include optional fields if they exist
+          if (location.placeId) {
+            payload.location.placeId = location.placeId;
+          }
+          if (location.city) {
+            payload.location.city = location.city;
+          }
+          if (location.region) {
+            payload.location.region = location.region;
+          }
+          if (location.country) {
+            payload.location.country = location.country;
+          }
+
+          // Always include additionalDates if it was defined in eventData (even if empty array)
+          // This ensures the API knows to delete all dates when array is empty
+          // If user has interacted with additional dates (added/removed them), we need to send the current state
+          // Empty array means user removed all additional dates - API will delete all from event_dates table
+          if (hasAdditionalDates) {
+            payload.additionalDates = filteredAdditionalDates; // Will be [] if all dates were removed
+          }
+
+          // Debug: Log what we're sending for update
+          console.log('Updating event with payload:', {
+            eventId,
+            hasAdditionalDates: payload.additionalDates !== undefined,
+            additionalDates: payload.additionalDates,
+            additionalDatesLength: Array.isArray(payload.additionalDates)
+              ? payload.additionalDates.length
+              : 'not an array',
+            rawEventDataAdditionalDates: eventData.additionalDates,
+            rawEventDataAdditionalDatesLength: Array.isArray(
+              eventData.additionalDates
+            )
+              ? eventData.additionalDates.length
+              : 'not an array',
+          });
 
           if (eventData.description !== undefined) {
             payload.description = eventData.description;
@@ -795,6 +1094,12 @@ export const useEventCreationStore = create<EventCreationState>()(
                 message: data.error,
               });
             }
+            console.error('Update event validation errors:', {
+              status: response.status,
+              errors: errors,
+              data: data,
+              payload: payload,
+            });
             set({ validationErrors: errors });
             throw new Error(data.message || 'Failed to update event');
           }

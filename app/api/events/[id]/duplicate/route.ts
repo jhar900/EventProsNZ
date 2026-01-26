@@ -104,7 +104,7 @@ export async function POST(
       attendee_count: originalEvent.attendee_count,
       location: originalEvent.location,
       location_data: originalEvent.location_data,
-      special_requirements: originalEvent.special_requirements,
+      requirements: originalEvent.requirements,
       budget_total: originalEvent.budget_total,
       budget_min: originalEvent.budget_min,
       budget_max: originalEvent.budget_max,

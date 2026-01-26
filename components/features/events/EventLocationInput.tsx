@@ -3,11 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
 import { EventLocation } from '@/types/events';
 import { LocationMap } from './LocationMap';
 
@@ -32,7 +28,19 @@ export function EventLocationInput({
   value,
   onChange,
 }: EventLocationInputProps) {
-  const [query, setQuery] = useState(value?.address || '');
+  const [query, setQuery] = useState(() => {
+    // If toBeConfirmed is true, always start with empty query
+    if (value?.toBeConfirmed) {
+      return '';
+    }
+    // Only use address if it's a valid string (not a JSON object string)
+    const address = value?.address || '';
+    // Check if address looks like a JSON object string and ignore it
+    if (address && (address.startsWith('{') || address.startsWith('['))) {
+      return '';
+    }
+    return address;
+  });
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -43,14 +51,34 @@ export function EventLocationInput({
 
   // Sync query with value prop when it changes (e.g., when event data is loaded)
   useEffect(() => {
-    if (value?.address && value.address !== query) {
-      setQuery(value.address);
-      setShowSuggestions(false);
-    } else if (!value?.address && query) {
-      // If address is cleared from value prop, clear query too
+    // If toBeConfirmed is true, always clear the query
+    if (value?.toBeConfirmed) {
       setQuery('');
+      setShowSuggestions(false);
+      return;
     }
-  }, [value?.address]);
+
+    // Only update query if address is a valid string (not a JSON object)
+    const address = value?.address || '';
+    if (address && (address.startsWith('{') || address.startsWith('['))) {
+      // Address is a JSON object string, ignore it
+      setQuery('');
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Use functional update to access current query state
+    setQuery(prevQuery => {
+      if (address && address !== prevQuery) {
+        return address;
+      } else if (!address && prevQuery) {
+        // If address is cleared from value prop, clear query too
+        return '';
+      }
+      return prevQuery;
+    });
+    setShowSuggestions(false);
+  }, [value?.address, value?.toBeConfirmed]);
 
   // Debounced search - only search if user is actively typing (query differs from saved value)
   useEffect(() => {
@@ -118,11 +146,17 @@ export function EventLocationInput({
         lng: parseFloat(suggestion.lon),
       },
       placeId: String(suggestion.place_id), // Convert to string as Nominatim returns number
-      city: suggestion.address?.city,
-      region: suggestion.address?.state,
       country: suggestion.address?.country || 'New Zealand',
       toBeConfirmed: false, // Clear toBeConfirmed when a location is selected
     };
+
+    // Only include optional fields if they have values
+    if (suggestion.address?.city) {
+      location.city = suggestion.address.city;
+    }
+    if (suggestion.address?.state) {
+      location.region = suggestion.address.state;
+    }
 
     setQuery(suggestion.display_name);
     setShowSuggestions(false);
@@ -131,38 +165,36 @@ export function EventLocationInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
-    if (!e.target.value) {
-      // When address is deleted, clear location but keep toBeConfirmed if it was already set
-      onChange({
-        address: '',
-        coordinates: { lat: 0, lng: 0 },
-        toBeConfirmed: value?.toBeConfirmed || false,
-      });
-    } else {
-      // When user starts typing, clear toBeConfirmed
-      onChange({
-        ...value,
-        address: e.target.value,
-        toBeConfirmed: false,
-      });
-    }
-  };
-
-  const handleToBeConfirmedChange = (checked: boolean) => {
-    if (checked) {
-      // Clear location when "To Be Confirmed" is checked
-      setQuery('');
+    if (!e.target.value || e.target.value.trim() === '') {
+      // When address is empty, automatically set toBeConfirmed to true
       onChange({
         address: '',
         coordinates: { lat: 0, lng: 0 },
         toBeConfirmed: true,
       });
     } else {
-      // Unchecking - keep current location or clear
-      onChange({
-        ...value,
+      // When user enters an address, clear toBeConfirmed
+      const updatedLocation: EventLocation = {
+        address: e.target.value,
+        coordinates: value?.coordinates || { lat: 0, lng: 0 },
         toBeConfirmed: false,
-      });
+      };
+
+      // Only include optional fields if they exist
+      if (value?.placeId) {
+        updatedLocation.placeId = value.placeId;
+      }
+      if (value?.city) {
+        updatedLocation.city = value.city;
+      }
+      if (value?.region) {
+        updatedLocation.region = value.region;
+      }
+      if (value?.country) {
+        updatedLocation.country = value.country;
+      }
+
+      onChange(updatedLocation);
     }
   };
 
@@ -203,57 +235,8 @@ export function EventLocationInput({
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
+    return undefined;
   }, [showSuggestions]);
-
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by this browser.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      async position => {
-        try {
-          const { latitude, longitude } = position.coords;
-
-          // Reverse geocode to get address
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
-          );
-
-          if (!response.ok) {
-            throw new Error('Failed to get address');
-          }
-
-          const data = await response.json();
-
-          const location: EventLocation = {
-            address: data.display_name,
-            coordinates: { lat: latitude, lng: longitude },
-            placeId: data.place_id,
-            city: data.address?.city || data.address?.town,
-            region: data.address?.state,
-            country: data.address?.country || 'New Zealand',
-            toBeConfirmed: false, // Clear toBeConfirmed when current location is used
-          };
-
-          setQuery(data.display_name);
-          onChange(location);
-        } catch (err) {
-          setError('Failed to get current location address.');
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      error => {
-        setError('Unable to get your current location.');
-        setIsLoading(false);
-      }
-    );
-  };
 
   return (
     <div className="space-y-2">
@@ -318,37 +301,23 @@ export function EventLocationInput({
       {/* Error Message */}
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* To Be Confirmed Checkbox - Only show when address is empty or toBeConfirmed is true */}
+      {/* Show "To Be Confirmed" message when location is empty */}
       {(!query || !value?.address || value.toBeConfirmed) && (
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="locationToBeConfirmed"
-            checked={value?.toBeConfirmed || false}
-            onCheckedChange={handleToBeConfirmedChange}
-          />
-          <Label
-            htmlFor="locationToBeConfirmed"
-            className="text-sm font-normal cursor-pointer"
-          >
-            To Be Confirmed
-          </Label>
-        </div>
+        <p className="text-sm text-muted-foreground italic">
+          Location will be marked as &quot;To Be Confirmed&quot; if location
+          inputs are left empty
+        </p>
       )}
 
       {/* Selected Location Display */}
-      {value && value.address && !value.toBeConfirmed && (
-        <LocationMap
-          coordinates={
-            value.coordinates.lat !== 0 && value.coordinates.lng !== 0
-              ? value.coordinates
-              : undefined
-          }
-          address={
-            value.coordinates.lat === 0 || value.coordinates.lng === 0
-              ? value.address
-              : undefined
-          }
-        />
+      {value && value.address && !value.toBeConfirmed && value.coordinates && (
+        <>
+          {value.coordinates.lat !== 0 && value.coordinates.lng !== 0 ? (
+            <LocationMap coordinates={value.coordinates} />
+          ) : (
+            <LocationMap address={value.address} />
+          )}
+        </>
       )}
     </div>
   );

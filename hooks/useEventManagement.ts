@@ -132,7 +132,32 @@ export function useEventManagement() {
         const data = await response.json();
 
         if (data.success) {
-          setState(prev => ({ ...prev, currentEvent: data.event }));
+          // Debug: Log event_dates to verify they're in the response
+          console.log('Event loaded from API:', {
+            eventId: data.event?.id,
+            hasEventDates: !!(data.event as any)?.event_dates,
+            eventDates: (data.event as any)?.event_dates,
+            eventDatesLength: Array.isArray((data.event as any)?.event_dates)
+              ? (data.event as any).event_dates.length
+              : 'not an array',
+          });
+          // Explicitly preserve event_dates when setting currentEvent
+          // TypeScript Event type doesn't include event_dates, so we need to preserve it
+          // Ensure event_dates is always an array
+          const eventWithDates = {
+            ...data.event,
+            event_dates: Array.isArray((data.event as any)?.event_dates)
+              ? (data.event as any).event_dates
+              : [],
+          };
+          console.log(
+            'Setting currentEvent with event_dates:',
+            (eventWithDates as any).event_dates
+          );
+          setState(prev => ({
+            ...prev,
+            currentEvent: eventWithDates as Event,
+          }));
         } else {
           setError(data.message || 'Failed to load event');
         }

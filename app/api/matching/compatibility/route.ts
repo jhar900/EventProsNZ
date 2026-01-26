@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       },
       budget_total: event.budget_total || 0,
       service_requirements: [], // Would be populated from event_service_requirements table
-      special_requirements: event.special_requirements,
+      special_requirements: event.requirements,
     };
 
     const contractorProfile = {
