@@ -46,9 +46,14 @@ const updateEventSchema = z.object({
       region: z.string().optional(),
       country: z.string().optional(),
       toBeConfirmed: z.boolean().optional().nullable(),
+      isVirtual: z.boolean().optional().nullable(),
     })
     .refine(
       data => {
+        // If isVirtual is true, location validation is skipped
+        if (data.isVirtual) {
+          return true;
+        }
         // If toBeConfirmed is true, address and coordinates can be empty
         if (data.toBeConfirmed) {
           return true;
@@ -465,12 +470,25 @@ export async function PUT(
       eventUpdateData.description = updateData.description;
 
     // Get existing event data once to avoid multiple queries
-    let existingEventData: { event_date?: string; end_date?: string } | null =
-      null;
-    if (updateData.eventDate || updateData.startTime || updateData.endTime) {
+    let existingEventData: {
+      event_date?: string;
+      end_date?: string;
+      status?: string;
+      attendee_count?: number;
+      duration_hours?: number;
+      location?: string;
+    } | null = null;
+    if (
+      updateData.eventDate ||
+      updateData.startTime ||
+      updateData.endTime ||
+      updateData.status
+    ) {
       const { data: existing } = await supabase
         .from('events')
-        .select('event_date, end_date')
+        .select(
+          'event_date, end_date, status, attendee_count, duration_hours, location'
+        )
         .eq('id', eventId)
         .single();
       existingEventData = existing || null;
@@ -688,7 +706,10 @@ export async function PUT(
     if (updateData.attendeeCount)
       eventUpdateData.attendee_count = updateData.attendeeCount;
     if (updateData.location) {
-      eventUpdateData.location = updateData.location.address;
+      eventUpdateData.location = updateData.location.isVirtual
+        ? 'Virtual Event'
+        : updateData.location.address;
+      eventUpdateData.location_data = updateData.location;
     }
     if (updateData.specialRequirements !== undefined)
       eventUpdateData.requirements = updateData.specialRequirements;
@@ -700,6 +721,41 @@ export async function PUT(
       eventUpdateData.budget = updateData.budgetPlan.totalBudget;
     }
     if (updateData.status) eventUpdateData.status = updateData.status;
+
+    // When transitioning from draft to another status, ensure required fields have valid values
+    // to satisfy database constraints
+    if (
+      existingEventData?.status === 'draft' &&
+      updateData.status &&
+      updateData.status !== 'draft'
+    ) {
+      // attendee_count constraint: must be > 0 when status is not 'draft'
+      if (
+        !eventUpdateData.attendee_count &&
+        (!existingEventData.attendee_count ||
+          existingEventData.attendee_count <= 0)
+      ) {
+        eventUpdateData.attendee_count = 50; // Default to 50 attendees
+        console.log(
+          'Setting default attendee_count=50 when transitioning from draft to',
+          updateData.status
+        );
+      }
+
+      // location constraint: must be non-empty when status is not 'draft'
+      // If location is not being updated and existing location is empty/null, set to "To Be Confirmed"
+      if (
+        !eventUpdateData.location &&
+        (!existingEventData.location ||
+          existingEventData.location.trim().length === 0)
+      ) {
+        eventUpdateData.location = 'To Be Confirmed';
+        console.log(
+          'Setting default location="To Be Confirmed" when transitioning from draft to',
+          updateData.status
+        );
+      }
+    }
 
     // Update event
     console.log('Updating event with data:', {

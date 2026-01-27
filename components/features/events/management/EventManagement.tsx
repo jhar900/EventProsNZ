@@ -36,6 +36,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Info,
+  Settings,
 } from 'lucide-react';
 import {
   Select,
@@ -48,6 +49,7 @@ import { ChangeNotifications } from './ChangeNotifications';
 import { EventDuplication } from './EventDuplication';
 import { EventDashboard } from './EventDashboard';
 import { ProgressTracking } from './ProgressTracking';
+import { LocationMap } from '../LocationMap';
 import { EventCompletion } from './EventCompletion';
 import { ContractorCommunication } from './ContractorCommunication';
 import { EventAnalytics } from './EventAnalytics';
@@ -59,6 +61,7 @@ import { EventTimeline } from './EventTimeline';
 import { EventTasks } from './EventTasks';
 import { CreateEventModal } from '../CreateEventModal';
 import { EditEventModal } from '../EditEventModal';
+import { AdvancedPlanningModal } from '../AdvancedPlanningModal';
 import { AddEventTeamMembersModal } from '../AddEventTeamMembersModal';
 import { useEventManagement } from '@/hooks/useEventManagement';
 import { useAuth } from '@/hooks/useAuth';
@@ -106,6 +109,8 @@ export function EventManagement({
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [showAdvancedPlanningModal, setShowAdvancedPlanningModal] =
+    useState(false);
   const [eventJustEdited, setEventJustEdited] = useState<string | null>(null);
   const [showAddTeamMembersModal, setShowAddTeamMembersModal] = useState(false);
   const [eventTeamMembers, setEventTeamMembers] = useState<EventTeamMember[]>(
@@ -507,15 +512,8 @@ export function EventManagement({
   };
 
   const getAllStatuses = (): string[] => {
-    // Return all possible statuses as shown in the tooltip
-    return [
-      'draft',
-      'planning',
-      'confirmed',
-      'in_progress',
-      'completed',
-      'cancelled',
-    ];
+    // Return all possible statuses (excluding draft which is only for initial creation)
+    return ['planning', 'confirmed', 'in_progress', 'completed', 'cancelled'];
   };
 
   const handleStatusUpdate = async (newStatus: string) => {
@@ -823,14 +821,24 @@ export function EventManagement({
                     </CardDescription>
                   </div>
                   {selectedEvent && user?.id === selectedEvent.user_id && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowEditEventModal(true)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowEditEventModal(true)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAdvancedPlanningModal(true)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Advanced Planning
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
@@ -1222,18 +1230,40 @@ export function EventManagement({
                   {/* Location */}
                   {(selectedEvent.location ||
                     (selectedEvent as any).location_data?.toBeConfirmed) && (
-                    <div className="space-y-1">
+                    <div className="space-y-2 col-span-2">
                       <div className="text-sm font-medium text-muted-foreground flex items-center">
                         <MapPin className="h-4 w-4 mr-1" />
                         Location
                       </div>
-                      <div className="text-base">
-                        {(selectedEvent as any).location_data?.toBeConfirmed ||
-                        (selectedEvent.location &&
-                          (selectedEvent.location.startsWith('{') ||
-                            selectedEvent.location.startsWith('[')))
-                          ? 'To Be Confirmed'
-                          : selectedEvent.location}
+                      <div className="space-y-3">
+                        <div className="text-base">
+                          {(selectedEvent as any).location_data
+                            ?.toBeConfirmed ||
+                          (selectedEvent.location &&
+                            (selectedEvent.location.startsWith('{') ||
+                              selectedEvent.location.startsWith('[')))
+                            ? 'To Be Confirmed'
+                            : selectedEvent.location}
+                        </div>
+                        {/* Show map if location has valid coordinates */}
+                        {(selectedEvent as any).location_data &&
+                          !(selectedEvent as any).location_data
+                            ?.toBeConfirmed &&
+                          !(selectedEvent as any).location_data?.isVirtual &&
+                          (selectedEvent as any).location_data?.coordinates &&
+                          (selectedEvent as any).location_data.coordinates
+                            .lat !== 0 &&
+                          (selectedEvent as any).location_data.coordinates
+                            .lng !== 0 && (
+                            <div className="w-full h-48">
+                              <LocationMap
+                                coordinates={
+                                  (selectedEvent as any).location_data
+                                    .coordinates
+                                }
+                              />
+                            </div>
+                          )}
                       </div>
                     </div>
                   )}
@@ -1679,6 +1709,20 @@ export function EventManagement({
           eventId={selectedEvent.id}
           onSuccess={() => {
             loadEventTeamMembers();
+          }}
+        />
+      )}
+
+      {/* Advanced Planning Modal */}
+      {selectedEvent && (
+        <AdvancedPlanningModal
+          open={showAdvancedPlanningModal}
+          onOpenChange={setShowAdvancedPlanningModal}
+          eventId={selectedEvent.id}
+          onSuccess={() => {
+            if (selectedEvent?.id) {
+              loadEvent(selectedEvent.id);
+            }
           }}
         />
       )}
