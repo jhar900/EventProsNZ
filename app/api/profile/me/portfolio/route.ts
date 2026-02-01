@@ -6,8 +6,18 @@ import { z } from 'zod';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  image_url: z.string().url().optional(),
-  video_url: z.string().url().optional(),
+  image_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
+  video_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
   video_platform: z.enum(['youtube', 'vimeo']).optional(),
   event_date: z.string().optional(),
   is_visible: z.boolean().default(true),

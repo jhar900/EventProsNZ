@@ -77,7 +77,7 @@ export default function ProfileCompletionTracker({
           key: 'portfolio',
           label: 'Portfolio',
           completed: completionStatus.portfolio,
-          description: 'At least 3 portfolio items',
+          description: 'At least 1 portfolio item',
         },
       ];
 

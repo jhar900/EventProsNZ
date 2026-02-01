@@ -10,8 +10,18 @@ import { useAuth } from '@/hooks/useAuth';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  image_url: z.string().url().optional(),
-  video_url: z.string().url().optional(),
+  image_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
+  video_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
   event_date: z.string().optional(),
 });
 
@@ -276,34 +286,40 @@ export function PortfolioUploadForm({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Photo Upload
                   </label>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleFileUpload(file, index);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {uploadingFiles[index] && (
-                    <p className="mt-1 text-sm text-blue-600">Uploading...</p>
-                  )}
-                  {portfolioItems[index]?.image_url && (
-                    <div className="mt-2">
-                      <img
-                        src={portfolioItems[index].image_url}
-                        alt="Portfolio preview"
-                        className="w-32 h-32 object-cover rounded-md"
+                  <div className="flex items-center gap-3">
+                    {portfolioItems[index]?.image_url && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={portfolioItems[index].image_url}
+                          alt="Portfolio preview"
+                          className="w-16 h-16 object-cover rounded-md border-2 border-green-500"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file, index);
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
+                      {uploadingFiles[index] && (
+                        <p className="mt-1 text-sm text-blue-600">
+                          Uploading...
+                        </p>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    YouTube Video URL
+                    YouTube Video URL (Optional)
                   </label>
                   <input
                     {...register(`portfolio_items.${index}.video_url`)}
@@ -317,7 +333,7 @@ export function PortfolioUploadForm({
                     }}
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Only YouTube URLs are supported
+                    Only YouTube URLs are supported (optional)
                   </p>
                 </div>
               </div>

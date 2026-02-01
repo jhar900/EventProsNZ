@@ -107,7 +107,7 @@ export function EventCreationWizard({
     };
   }, [eventData, saveDraft, isEditMode, user?.id]);
 
-  const handleNext = async () => {
+  const handleCreateEvent = async () => {
     clearValidationErrors();
 
     // Don't allow proceeding if there are time errors
@@ -115,46 +115,44 @@ export function EventCreationWizard({
       return;
     }
 
+    // Validate required fields for step 1
+    if (!eventData.title || !eventData.title.trim()) {
+      return; // Validation will show error
+    }
+    if (!eventData.eventDate) {
+      return; // Validation will show error
+    }
+
     if (validateStep(currentStep, isEditMode)) {
-      if (currentStep < 4) {
-        nextStep();
-      } else {
-        // Final step - submit or update event
-        try {
-          let result;
-          if (isEditMode && eventId) {
-            // Update existing event
-            result = await updateEvent(eventId, user?.id);
-            if (result?.event?.id) {
-              // If onComplete is provided, call it (modal usage)
-              // Otherwise, navigate to the event page (page usage)
-              if (onComplete) {
-                onComplete(result.event.id);
-              } else {
-                router.push(`/events/${result.event.id}`);
-              }
-            }
-          } else {
-            // Create new event
-            result = await submitEvent(user?.id);
-            if (result?.event?.id) {
-              // If onComplete is provided, call it (modal usage)
-              // Otherwise, navigate to the event page (page usage)
-              if (onComplete) {
-                onComplete(result.event.id);
-              } else {
-                router.push(`/events/${result.event.id}`);
-              }
+      // Submit/update event directly from step 1, setting status to 'planning'
+      try {
+        let result: any;
+        if (isEditMode && eventId) {
+          // Update existing event and set status to 'planning'
+          result = await updateEvent(eventId, user?.id, 'planning');
+          if (result?.event?.id) {
+            if (onComplete) {
+              onComplete(result.event.id);
+            } else {
+              router.push(`/events/${result.event.id}`);
             }
           }
-        } catch (error) {
-          console.error('Error submitting/updating event:', error);
-          // Error is already handled in the store and validationErrors are set
-          // The validation errors will be displayed in the Alert component
-          if (error instanceof Error) {
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
+        } else {
+          // Create new event with status 'planning'
+          result = await submitEvent(user?.id);
+          if (result?.event?.id) {
+            if (onComplete) {
+              onComplete(result.event.id);
+            } else {
+              router.push(`/events/${result.event.id}`);
+            }
           }
+        }
+      } catch (error) {
+        console.error('Error submitting/updating event:', error);
+        if (error instanceof Error) {
+          console.error('Error message:', error.message);
+          console.error('Error stack:', error.stack);
         }
       }
     }
@@ -162,7 +160,12 @@ export function EventCreationWizard({
 
   const handlePrevious = () => {
     clearValidationErrors();
-    previousStep();
+    // If on step 4 (review), go back to step 1 (we're skipping 2 and 3)
+    if (currentStep === 4) {
+      goToStep(1);
+    } else {
+      previousStep();
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -174,7 +177,8 @@ export function EventCreationWizard({
     try {
       // In edit mode, use updateEvent instead of saveDraft to properly update the event
       if (isEditMode && eventId) {
-        const result = await updateEvent(eventId, user.id);
+        // Keep status as 'draft'
+        const result = await updateEvent(eventId, user.id, 'draft');
         console.log('Update event result:', result);
         // Only call onComplete if update was successful
         // This will trigger a reload of the event data to show updated dates
@@ -271,74 +275,56 @@ export function EventCreationWizard({
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Create Your Event</h1>
+        <h1 className="text-3xl font-bold">
+          {isEditMode ? 'Edit Event' : 'Create Your Event'}
+        </h1>
         <p className="text-muted-foreground">
-          Follow our guided process to create your perfect event
+          Tell us about your event - what, when, where, and how many people.
         </p>
       </div>
 
-      {/* Progress Bar */}
-      <ProgressBar currentStep={currentStep} onStepClick={goToStep} />
-
       {/* Main Content */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl">{getStepTitle()}</CardTitle>
-              <CardDescription>{getStepDescription()}</CardDescription>
-            </div>
-            {currentStep === 1 && (
+      <div className="space-y-6">
+        {/* Step Content */}
+        {renderStep()}
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between pt-6 border-t">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            {currentStep > 1 && (
               <Button
                 variant="outline"
-                onClick={handleTemplateSelect}
+                onClick={handlePrevious}
                 className="flex items-center gap-2"
               >
-                <Save className="h-4 w-4" />
-                Use Template
+                <ArrowLeft className="h-4 w-4" />
+                Previous
               </Button>
             )}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Step Content */}
-          {renderStep()}
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between pt-6 border-t">
+          <div className="flex items-center gap-4">
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+              <div className="flex-1">
+                <Alert variant="destructive" className="py-2">
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error.message}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              {currentStep > 1 && (
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Validation Errors */}
-              {validationErrors.length > 0 && (
-                <div className="flex-1">
-                  <Alert variant="destructive" className="py-2">
-                    <AlertDescription>
-                      <ul className="list-disc list-inside space-y-1 text-sm">
-                        {validationErrors.map((error, index) => (
-                          <li key={index}>{error.message}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
+              {/* Show "Save Draft" or "Update Draft" button */}
+              {!isEditMode && (
                 <Button
                   variant="outline"
                   onClick={handleSaveDraft}
@@ -348,31 +334,54 @@ export function EventCreationWizard({
                   <Save className="h-4 w-4" />
                   Save Draft
                 </Button>
-
+              )}
+              {isEditMode && eventData.isDraft && (
                 <Button
-                  onClick={handleNext}
+                  variant="outline"
+                  onClick={handleSaveDraft}
                   disabled={isLoading || hasTimeErrors}
                   className="flex items-center gap-2"
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" />
-                  )}
-                  {currentStep === 4 ? 'Create Event' : 'Next'}
+                  <Save className="h-4 w-4" />
+                  Update Draft
                 </Button>
-              </div>
+              )}
+
+              {/* Show "Create Event" or "Update Event" button */}
+              <Button
+                onClick={handleCreateEvent}
+                disabled={
+                  isLoading ||
+                  hasTimeErrors ||
+                  !eventData.title?.trim() ||
+                  !eventData.eventDate
+                }
+                className="flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+                {isEditMode && !eventData.isDraft
+                  ? 'Update Event'
+                  : 'Create Event'}
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Auto-save indicator */}
       {isLoading && (
         <div className="fixed bottom-4 right-4 bg-background border rounded-lg p-3 shadow-lg">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {currentStep === 4 ? 'Creating event...' : 'Saving draft...'}
+            {isEditMode
+              ? 'Updating event...'
+              : eventData.isDraft
+                ? 'Saving draft...'
+                : 'Creating event...'}
           </div>
         </div>
       )}

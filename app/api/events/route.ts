@@ -44,9 +44,14 @@ const createEventSchema = z.object({
       region: z.string().optional().nullable(),
       country: z.string().optional().nullable(),
       toBeConfirmed: z.boolean().optional().nullable(),
+      isVirtual: z.boolean().optional().nullable(),
     })
     .refine(
       data => {
+        // If isVirtual is true, location validation is skipped
+        if (data.isVirtual) {
+          return true;
+        }
         // If toBeConfirmed is true, address and coordinates can be empty
         if (data.toBeConfirmed) {
           return true;
@@ -363,7 +368,10 @@ export async function POST(request: NextRequest) {
       end_date: endDateValue,
       is_multi_day: isMultiDay,
       event_type: eventData.eventType,
-      location: eventData.location?.address || '',
+      location: eventData.location?.isVirtual
+        ? 'Virtual Event'
+        : eventData.location?.address || '',
+      location_data: eventData.location || null,
       attendee_count: eventData.attendeeCount || null,
       duration_hours: eventData.durationHours || null,
       budget: eventData.budgetPlan?.totalBudget ?? 0,

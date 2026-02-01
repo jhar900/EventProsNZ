@@ -111,7 +111,7 @@ export function useProfile() {
         businessData?.company_name && businessData?.description
       );
       const services = servicesData.length > 0;
-      const portfolio = portfolioData.length >= 3;
+      const portfolio = portfolioData.length >= 1;
 
       // For event managers, exclude services and portfolio from completion calculation
       const isEventManager = user?.role === 'event_manager';

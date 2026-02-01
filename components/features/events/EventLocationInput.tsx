@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { EventLocation } from '@/types/events';
 import { LocationMap } from './LocationMap';
 
@@ -29,8 +31,8 @@ export function EventLocationInput({
   onChange,
 }: EventLocationInputProps) {
   const [query, setQuery] = useState(() => {
-    // If toBeConfirmed is true, always start with empty query
-    if (value?.toBeConfirmed) {
+    // If toBeConfirmed or isVirtual is true, always start with empty query
+    if (value?.toBeConfirmed || value?.isVirtual) {
       return '';
     }
     // Only use address if it's a valid string (not a JSON object string)
@@ -51,8 +53,8 @@ export function EventLocationInput({
 
   // Sync query with value prop when it changes (e.g., when event data is loaded)
   useEffect(() => {
-    // If toBeConfirmed is true, always clear the query
-    if (value?.toBeConfirmed) {
+    // If toBeConfirmed or isVirtual is true, always clear the query
+    if (value?.toBeConfirmed || value?.isVirtual) {
       setQuery('');
       setShowSuggestions(false);
       return;
@@ -78,7 +80,7 @@ export function EventLocationInput({
       return prevQuery;
     });
     setShowSuggestions(false);
-  }, [value?.address, value?.toBeConfirmed]);
+  }, [value?.address, value?.toBeConfirmed, value?.isVirtual]);
 
   // Debounced search - only search if user is actively typing (query differs from saved value)
   useEffect(() => {
@@ -148,6 +150,7 @@ export function EventLocationInput({
       placeId: String(suggestion.place_id), // Convert to string as Nominatim returns number
       country: suggestion.address?.country || 'New Zealand',
       toBeConfirmed: false, // Clear toBeConfirmed when a location is selected
+      isVirtual: false, // Clear isVirtual when a physical location is selected
     };
 
     // Only include optional fields if they have values
@@ -163,38 +166,41 @@ export function EventLocationInput({
     onChange(location);
   };
 
+  const handleVirtualEventChange = (checked: boolean) => {
+    if (checked) {
+      // When virtual event is checked, set isVirtual and clear location data
+      onChange({
+        address: 'Virtual Event',
+        coordinates: { lat: 0, lng: 0 },
+        isVirtual: true,
+        toBeConfirmed: false,
+      });
+      setQuery('');
+      setShowSuggestions(false);
+    } else {
+      // When unchecked, clear isVirtual and reset to empty location
+      onChange({
+        address: '',
+        coordinates: { lat: 0, lng: 0 },
+        isVirtual: false,
+        toBeConfirmed: true,
+      });
+      setQuery('');
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
+
+    // Only clear the location when input is completely empty
+    // Don't update the location while user is typing - wait for them to select from suggestions
     if (!e.target.value || e.target.value.trim() === '') {
-      // When address is empty, automatically set toBeConfirmed to true
       onChange({
         address: '',
         coordinates: { lat: 0, lng: 0 },
         toBeConfirmed: true,
+        isVirtual: false,
       });
-    } else {
-      // When user enters an address, clear toBeConfirmed
-      const updatedLocation: EventLocation = {
-        address: e.target.value,
-        coordinates: value?.coordinates || { lat: 0, lng: 0 },
-        toBeConfirmed: false,
-      };
-
-      // Only include optional fields if they exist
-      if (value?.placeId) {
-        updatedLocation.placeId = value.placeId;
-      }
-      if (value?.city) {
-        updatedLocation.city = value.city;
-      }
-      if (value?.region) {
-        updatedLocation.region = value.region;
-      }
-      if (value?.country) {
-        updatedLocation.country = value.country;
-      }
-
-      onChange(updatedLocation);
     }
   };
 
@@ -239,7 +245,7 @@ export function EventLocationInput({
   }, [showSuggestions]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -251,7 +257,7 @@ export function EventLocationInput({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             className="pl-10 pr-10"
-            disabled={value?.toBeConfirmed}
+            disabled={value?.isVirtual}
           />
           {isLoading && (
             <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -298,27 +304,52 @@ export function EventLocationInput({
         )}
       </div>
 
+      {/* Virtual Event Checkbox - only show when not typing */}
+      {!query && !showSuggestions && (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="virtual-event"
+            checked={value?.isVirtual || false}
+            onCheckedChange={handleVirtualEventChange}
+          />
+          <Label
+            htmlFor="virtual-event"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          >
+            Virtual Event
+          </Label>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* Show "To Be Confirmed" message when location is empty */}
-      {(!query || !value?.address || value.toBeConfirmed) && (
-        <p className="text-sm text-muted-foreground italic">
-          Location will be marked as &quot;To Be Confirmed&quot; if location
-          inputs are left empty
+      {/* Show "Virtual Event" message when virtual event is checked */}
+      {value?.isVirtual && (
+        <p className="text-sm text-green-600 italic">
+          This event is set as a virtual event. No physical location required.
         </p>
       )}
 
-      {/* Selected Location Display */}
-      {value && value.address && !value.toBeConfirmed && value.coordinates && (
-        <>
-          {value.coordinates.lat !== 0 && value.coordinates.lng !== 0 ? (
-            <LocationMap coordinates={value.coordinates} />
-          ) : (
-            <LocationMap address={value.address} />
-          )}
-        </>
-      )}
+      {/* Show "To Be Confirmed" message when location is empty and not virtual */}
+      {!value?.isVirtual &&
+        (!query || !value?.address || value.toBeConfirmed) && (
+          <p className="text-sm text-muted-foreground italic">
+            Location will be marked as &quot;To Be Confirmed&quot; if location
+            inputs are left empty
+          </p>
+        )}
+
+      {/* Selected Location Display - only show map if address picked from suggestions (has valid coordinates) */}
+      {value &&
+        value.address &&
+        !value.toBeConfirmed &&
+        !value.isVirtual &&
+        value.coordinates &&
+        value.coordinates.lat !== 0 &&
+        value.coordinates.lng !== 0 && (
+          <LocationMap coordinates={value.coordinates} />
+        )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEventCreationStore, useEventData } from '@/stores/event-creation';
 import { EventTypeSelector } from './EventTypeSelector';
 import { EventDatePicker } from './EventDatePicker';

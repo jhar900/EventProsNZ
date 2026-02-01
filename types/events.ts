@@ -119,6 +119,7 @@ export interface EventLocation {
   region?: string;
   country?: string;
   toBeConfirmed?: boolean;
+  isVirtual?: boolean;
 }
 
 export interface EventFormData {

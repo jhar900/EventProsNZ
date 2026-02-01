@@ -43,6 +43,7 @@ const saveDraftSchema = z.object({
         region: z.string().optional().nullable(),
         country: z.string().optional().nullable(),
         toBeConfirmed: z.boolean().optional().nullable(),
+        isVirtual: z.boolean().optional().nullable(),
       })
       .optional()
       .nullable(),
@@ -244,7 +245,10 @@ export async function POST(request: NextRequest) {
       attendee_count: eventData.attendeeCount || null,
       requirements: eventData.specialRequirements || null,
       budget: eventData.budgetPlan?.totalBudget || null,
-      location: eventData.location?.address || null,
+      location: eventData.location?.isVirtual
+        ? 'Virtual Event'
+        : eventData.location?.address || null,
+      location_data: eventData.location || null,
       logo_url: eventData.logoUrl || null,
     };
 
@@ -566,12 +570,14 @@ export async function POST(request: NextRequest) {
         eventDate: draft.event_date,
         durationHours: draft.duration_hours,
         attendeeCount: draft.attendee_count,
-        location: draft.location
-          ? {
-              address: draft.location,
-              coordinates: { lat: 0, lng: 0 }, // We don't have coordinates stored separately
-            }
-          : null,
+        location: draft.location_data
+          ? draft.location_data
+          : draft.location
+            ? {
+                address: draft.location,
+                coordinates: { lat: 0, lng: 0 },
+              }
+            : null,
         specialRequirements: draft.requirements,
         serviceRequirements: transformedServiceRequirements,
         budgetPlan: eventData.budgetPlan || null,
@@ -753,12 +759,14 @@ export async function GET(request: NextRequest) {
             additionalDates: additionalDates,
             durationHours: draft.duration_hours,
             attendeeCount: draft.attendee_count,
-            location: draft.location
-              ? {
-                  address: draft.location,
-                  coordinates: { lat: 0, lng: 0 }, // We don't have coordinates stored separately
-                }
-              : null,
+            location: draft.location_data
+              ? draft.location_data
+              : draft.location
+                ? {
+                    address: draft.location,
+                    coordinates: { lat: 0, lng: 0 },
+                  }
+                : null,
             specialRequirements: draft.requirements,
             serviceRequirements: transformedServiceRequirements,
             budgetPlan: draft.budget

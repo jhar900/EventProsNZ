@@ -45,7 +45,11 @@ interface EventCreationState {
   loadDrafts: (userId?: string) => Promise<void>;
   saveDraft: (userId?: string) => Promise<void>;
   submitEvent: (userId?: string) => Promise<void>;
-  updateEvent: (eventId: string, userId?: string) => Promise<void>;
+  updateEvent: (
+    eventId: string,
+    userId?: string,
+    status?: string
+  ) => Promise<void>;
   loadEventData: (eventId: string, userId?: string) => Promise<void>;
   setIsEditMode: (isEditMode: boolean) => void;
   validateStep: (step: number, isEditMode?: boolean) => boolean;
@@ -902,7 +906,11 @@ export const useEventCreationStore = create<EventCreationState>()(
         }
       },
 
-      updateEvent: async (eventId: string, userId?: string) => {
+      updateEvent: async (
+        eventId: string,
+        userId?: string,
+        status?: string
+      ) => {
         // Get fresh state right before processing to ensure we have the latest data
         const { eventData, serviceRequirements, budgetPlan } = get();
         set({ isLoading: true });
@@ -910,6 +918,7 @@ export const useEventCreationStore = create<EventCreationState>()(
         // Log the current state for debugging
         console.log('updateEvent called with eventData:', {
           eventId,
+          status,
           hasAdditionalDates: eventData.additionalDates !== undefined,
           additionalDates: eventData.additionalDates,
           additionalDatesLength: Array.isArray(eventData.additionalDates)
@@ -949,6 +958,11 @@ export const useEventCreationStore = create<EventCreationState>()(
               ? serviceRequirements
               : [],
           };
+
+          // Include status if provided
+          if (status) {
+            payload.status = status;
+          }
 
           // Only include date/time fields if they have values (not empty strings)
           // The validation schema expects valid datetime strings or undefined, not empty strings

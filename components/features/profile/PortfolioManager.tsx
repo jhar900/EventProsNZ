@@ -16,8 +16,18 @@ import { useAuth } from '@/hooks/useAuth';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  image_url: z.string().url().optional(),
-  video_url: z.string().url().optional(),
+  image_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
+  video_url: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => (val === '' ? undefined : val)),
   video_platform: z.enum(['youtube', 'vimeo']).optional(),
   event_date: z.string().optional(),
   is_visible: z.boolean().default(true),
@@ -157,7 +167,7 @@ export function PortfolioManager({
         headers['x-user-id'] = user.id;
       }
 
-      const response = await fetch(url, {
+      const response = await fetch(apiEndpoint, {
         method,
         credentials: 'include',
         headers,
@@ -481,39 +491,47 @@ export function PortfolioManager({
 
               <div>
                 <Label>Image Upload</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <Label htmlFor="image-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" asChild>
-                      <span>
-                        <Image className="h-4 w-4 mr-2" />
-                        {isUploading ? 'Uploading...' : 'Upload Image'}
-                      </span>
-                    </Button>
-                  </Label>
-                  <span className="text-sm text-gray-500">
-                    JPG, PNG or WebP. Max 5MB.
-                  </span>
-                </div>
-                {watch('image_url') && (
-                  <div className="mt-2">
-                    <img
-                      src={watch('image_url')}
-                      alt="Preview"
-                      className="w-32 h-20 object-cover rounded-md"
+                <div className="flex items-center gap-3">
+                  {watch('image_url') && (
+                    <div className="flex-shrink-0">
+                      <img
+                        src={watch('image_url')}
+                        alt="Preview"
+                        className="w-16 h-16 object-cover rounded-md border-2 border-green-500"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
                     />
+                    <Label htmlFor="image-upload" className="cursor-pointer">
+                      <Button type="button" variant="outline" asChild>
+                        <span>
+                          <Image className="h-4 w-4 mr-2" />
+                          {isUploading
+                            ? 'Uploading...'
+                            : watch('image_url')
+                              ? 'Change Image'
+                              : 'Upload Image'}
+                        </span>
+                      </Button>
+                    </Label>
+                    <span className="text-sm text-gray-500">
+                      JPG, PNG or WebP. Max 5MB.
+                    </span>
                   </div>
-                )}
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="video_url">Video URL (YouTube or Vimeo)</Label>
+                <Label htmlFor="video_url">
+                  Video URL (YouTube or Vimeo) (Optional)
+                </Label>
                 <Input
                   id="video_url"
                   {...register('video_url')}
@@ -525,11 +543,13 @@ export function PortfolioManager({
                     }
                   }}
                 />
-                {watchedVideoUrl && !validateVideoUrl(watchedVideoUrl) && (
-                  <p className="text-red-500 text-sm mt-1">
-                    Please enter a valid YouTube or Vimeo URL
-                  </p>
-                )}
+                {watchedVideoUrl &&
+                  watchedVideoUrl.trim() !== '' &&
+                  !validateVideoUrl(watchedVideoUrl) && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Please enter a valid YouTube or Vimeo URL
+                    </p>
+                  )}
               </div>
 
               <div className="flex items-center space-x-2">
