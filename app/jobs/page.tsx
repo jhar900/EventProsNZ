@@ -8,13 +8,8 @@ import { ApplicationHistory } from '@/components/features/jobs/ApplicationHistor
 import { ApplicationTemplates } from '@/components/features/jobs/ApplicationTemplates';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  BriefcaseIcon,
-  DocumentTextIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline';
+import { BriefcaseIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { FileText } from 'lucide-react';
 import { Job, JobApplicationWithDetails } from '@/types/jobs';
 import { useAuth, User } from '@/hooks/useAuth';
@@ -36,7 +31,7 @@ import {
 
 export default function JobsPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { status: completionStatus, isLoading: completionLoading } =
     useProfileCompletion();
   const prevUserRef = useRef<User | null>(null);
@@ -44,8 +39,6 @@ export default function JobsPage() {
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplicationWithDetails | null>(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
-  const [showApplicationHistory, setShowApplicationHistory] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [pendingJobForApplication, setPendingJobForApplication] =
     useState<Job | null>(null);
@@ -231,7 +224,7 @@ export default function JobsPage() {
 
                 {/* Main Content */}
                 <Tabs defaultValue="browse" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger
                       value="browse"
                       className="flex items-center space-x-2"
@@ -252,13 +245,6 @@ export default function JobsPage() {
                     >
                       <FileText className="h-4 w-4" />
                       <span>Templates</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="history"
-                      className="flex items-center space-x-2"
-                    >
-                      <ClockIcon className="h-4 w-4" />
-                      <span>History</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -301,24 +287,6 @@ export default function JobsPage() {
                       />
                     </ErrorBoundary>
                   </TabsContent>
-
-                  {/* History Tab */}
-                  <TabsContent value="history" className="space-y-6">
-                    <Card className="p-6">
-                      <div className="text-center">
-                        <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Application History
-                        </h3>
-                        <p className="text-gray-600 mb-4">
-                          Track your application performance and success rates
-                        </p>
-                        <Button onClick={() => setShowApplicationHistory(true)}>
-                          View Detailed History
-                        </Button>
-                      </div>
-                    </Card>
-                  </TabsContent>
                 </Tabs>
 
                 {/* Application Form Modal */}
@@ -348,31 +316,6 @@ export default function JobsPage() {
                             setShowApplicationForm(false);
                             setSelectedJob(null);
                           }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Application History Modal */}
-                {showApplicationHistory && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h2 className="text-xl font-semibold">
-                            Application History
-                          </h2>
-                          <Button
-                            variant="ghost"
-                            onClick={() => setShowApplicationHistory(false)}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                        <ApplicationHistory
-                          contractorId={user.id}
-                          onApplicationSelect={handleApplicationSelect}
                         />
                       </div>
                     </div>

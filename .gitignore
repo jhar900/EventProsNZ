@@ -38,3 +38,10 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# Claude
+.claude/
+
+# BMAD Method
+_bmad/
+nul

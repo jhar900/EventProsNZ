@@ -452,6 +452,46 @@ export class JobService {
     }
   }
 
+  async deleteJobApplication(
+    applicationId: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      // Verify ownership - only the contractor who submitted can delete
+      const { data: existingApplication, error: fetchError } =
+        await this.supabase
+          .from('job_applications')
+          .select('contractor_id, status')
+          .eq('id', applicationId)
+          .single();
+
+      if (fetchError || !existingApplication) {
+        throw new Error('Application not found');
+      }
+
+      if (existingApplication.contractor_id !== userId) {
+        throw new Error('Unauthorized to delete this application');
+      }
+
+      // Only allow deleting pending applications
+      if (existingApplication.status !== 'pending') {
+        throw new Error('Can only delete pending applications');
+      }
+
+      const { error } = await this.supabase
+        .from('job_applications')
+        .delete()
+        .eq('id', applicationId);
+
+      if (error) {
+        throw new Error(`Failed to delete application: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Delete job application error:', error);
+      throw error;
+    }
+  }
+
   async getJobApplications(filters: GetJobApplicationsRequest = {}): Promise<{
     applications: JobApplicationWithDetails[];
     total: number;

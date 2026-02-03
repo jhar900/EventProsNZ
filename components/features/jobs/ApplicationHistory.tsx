@@ -23,7 +23,19 @@ import {
   XCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
+  PencilIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -49,6 +61,16 @@ export function ApplicationHistory({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalApplications, setTotalApplications] = useState(0);
+
+  // Edit/Delete state
+  const [editingApplication, setEditingApplication] =
+    useState<JobApplicationWithDetails | null>(null);
+  const [deletingApplication, setDeletingApplication] =
+    useState<JobApplicationWithDetails | null>(null);
+  const [editMessage, setEditMessage] = useState('');
+  const [editBudget, setEditBudget] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load applications on mount and when filters change
   useEffect(() => {
@@ -138,6 +160,109 @@ export function ApplicationHistory({
     setCurrentPage(page);
   };
 
+  const handleEditClick = (
+    e: React.MouseEvent,
+    application: JobApplicationWithDetails
+  ) => {
+    e.stopPropagation();
+    setEditingApplication(application);
+    setEditMessage(application.application_message || '');
+    setEditBudget(application.proposed_budget?.toString() || '');
+  };
+
+  const handleDeleteClick = (
+    e: React.MouseEvent,
+    application: JobApplicationWithDetails
+  ) => {
+    e.stopPropagation();
+    setDeletingApplication(application);
+  };
+
+  const handleUpdateApplication = async () => {
+    if (!editingApplication) return;
+
+    try {
+      setIsUpdating(true);
+      const response = await fetch(
+        `/api/applications/${editingApplication.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            application_message: editMessage,
+            proposed_budget: editBudget ? parseFloat(editBudget) : undefined,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update application');
+      }
+
+      // Update the local state
+      setApplications(prev =>
+        prev.map(app =>
+          app.id === editingApplication.id
+            ? {
+                ...app,
+                application_message: editMessage,
+                proposed_budget: editBudget ? parseFloat(editBudget) : null,
+              }
+            : app
+        )
+      );
+
+      setEditingApplication(null);
+    } catch (error) {
+      console.error('Error updating application:', error);
+      alert(
+        error instanceof Error ? error.message : 'Failed to update application'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteApplication = async () => {
+    if (!deletingApplication) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await fetch(
+        `/api/applications/${deletingApplication.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete application');
+      }
+
+      // Remove from local state
+      setApplications(prev =>
+        prev.filter(app => app.id !== deletingApplication.id)
+      );
+      setTotalApplications(prev => prev - 1);
+      setDeletingApplication(null);
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      alert(
+        error instanceof Error ? error.message : 'Failed to delete application'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -179,8 +304,8 @@ export function ApplicationHistory({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header with Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
             Application History
@@ -190,46 +315,38 @@ export function ApplicationHistory({
             {totalApplications === 1 ? 'application' : 'applications'} found
           </p>
         </div>
-      </div>
 
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Search</label>
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by job title or cover letter..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10 w-full sm:w-64"
+            />
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Status</label>
-            <Select
-              value={statusFilter || undefined}
-              onValueChange={handleStatusFilter}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="reviewed">Reviewed</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={statusFilter || undefined}
+            onValueChange={handleStatusFilter}
+          >
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="reviewed">Reviewed</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </Card>
+      </div>
 
       {/* Loading State */}
       {isLoading && (
@@ -366,6 +483,30 @@ export function ApplicationHistory({
                         <span>This job is no longer active</span>
                       </div>
                     )}
+
+                    {/* Actions */}
+                    {application.status === 'pending' && (
+                      <div className="flex items-center justify-end space-x-2 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={e => handleEditClick(e, application)}
+                          className="flex items-center space-x-1"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                          <span>Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={e => handleDeleteClick(e, application)}
+                          className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          <span>Delete</span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}
@@ -400,6 +541,93 @@ export function ApplicationHistory({
           )}
         </>
       )}
+
+      {/* Edit Application Dialog */}
+      <Dialog
+        open={!!editingApplication}
+        onOpenChange={open => !open && setEditingApplication(null)}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Application</DialogTitle>
+            <DialogDescription>
+              Update your application for{' '}
+              {editingApplication?.job?.title || 'this job'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-message">Application Message</Label>
+              <Textarea
+                id="edit-message"
+                value={editMessage}
+                onChange={e => setEditMessage(e.target.value)}
+                placeholder="Enter your application message..."
+                rows={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-budget">Proposed Budget ($)</Label>
+              <Input
+                id="edit-budget"
+                type="number"
+                value={editBudget}
+                onChange={e => setEditBudget(e.target.value)}
+                placeholder="Enter your proposed budget"
+                min="0"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingApplication(null)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateApplication}
+              disabled={isUpdating || !editMessage.trim()}
+            >
+              {isUpdating ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deletingApplication}
+        onOpenChange={open => !open && setDeletingApplication(null)}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Application</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete your application for &quot;
+              {deletingApplication?.job?.title || 'this job'}&quot;? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingApplication(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteApplication}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

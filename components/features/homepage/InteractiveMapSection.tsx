@@ -35,7 +35,7 @@ export function InteractiveMapSection({
         <div className="text-center mt-12">
           <Link
             href="/contractors"
-            className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-300 transform hover:scale-105"
+            className="inline-block bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-300 transform hover:scale-105"
           >
             Explore All Contractors
           </Link>

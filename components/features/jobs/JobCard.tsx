@@ -10,8 +10,6 @@ import {
   ClockIcon,
   UserIcon,
   CalendarIcon,
-  PhoneIcon,
-  EnvelopeIcon,
   BookmarkIcon,
   EyeIcon,
 } from '@heroicons/react/24/outline';
@@ -30,21 +28,7 @@ interface JobCardProps {
   onSimpleApply?: () => void;
   showActions?: boolean;
   className?: string;
-  blurContactInfo?: boolean;
 }
-
-// Helper function to blur email/phone
-const blurText = (text: string): string => {
-  if (!text) return text;
-  // Show first 2 characters and last 2 characters, blur the middle
-  if (text.length <= 4) {
-    return '••••';
-  }
-  const start = text.substring(0, 2);
-  const end = text.substring(text.length - 2);
-  const middle = '•'.repeat(Math.max(3, text.length - 4));
-  return `${start}${middle}${end}`;
-};
 
 export function JobCard({
   job,
@@ -56,7 +40,6 @@ export function JobCard({
   onSimpleApply,
   showActions = true,
   className = '',
-  blurContactInfo = false,
 }: JobCardProps) {
   const { user } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -200,50 +183,6 @@ export function JobCard({
           <CalendarIcon className="h-4 w-4" />
           <span>{formatTimeline()}</span>
         </div>
-
-        {/* Contact Info */}
-        {(job.contact_email || job.contact_phone) && (
-          <div className="space-y-1">
-            {job.contact_email && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <EnvelopeIcon className="h-4 w-4" />
-                <span
-                  className={
-                    blurContactInfo
-                      ? 'filter blur-sm select-none pointer-events-none'
-                      : ''
-                  }
-                  title={
-                    blurContactInfo ? 'Sign in to view contact information' : ''
-                  }
-                >
-                  {blurContactInfo
-                    ? blurText(job.contact_email)
-                    : job.contact_email}
-                </span>
-              </div>
-            )}
-            {job.contact_phone && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <PhoneIcon className="h-4 w-4" />
-                <span
-                  className={
-                    blurContactInfo
-                      ? 'filter blur-sm select-none pointer-events-none'
-                      : ''
-                  }
-                  title={
-                    blurContactInfo ? 'Sign in to view contact information' : ''
-                  }
-                >
-                  {blurContactInfo
-                    ? blurText(job.contact_phone)
-                    : job.contact_phone}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Stats */}
         <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
