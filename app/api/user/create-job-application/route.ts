@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // contractor_id in job_applications references business_profiles(id)
     const contractorId = businessProfile.id;
     console.log(
       '[POST /api/user/create-job-application] Using contractor_id (business_profile.id):',

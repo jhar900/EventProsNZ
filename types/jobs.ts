@@ -104,8 +104,18 @@ export interface JobApplicationWithDetails extends JobApplication {
     id: string;
     first_name: string;
     last_name: string;
+    phone?: string;
+    bio?: string;
+    user_location?: string;
     company_name?: string;
+    company_description?: string;
+    website?: string;
+    company_location?: string;
+    service_categories?: string[];
+    is_verified?: boolean;
     profile_photo_url?: string;
+    avatar_url?: string;
+    logo_url?: string;
     average_rating: number;
     review_count: number;
   };

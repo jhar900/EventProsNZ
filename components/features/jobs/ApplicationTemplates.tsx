@@ -8,16 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  MagnifyingGlassIcon,
   PlusIcon,
   DocumentIcon,
   EyeIcon,
@@ -32,7 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { JOB_SERVICE_CATEGORIES } from '@/types/jobs';
 
 interface ApplicationTemplate {
   id: string;
@@ -71,9 +61,6 @@ export function ApplicationTemplates({
   const [templates, setTemplates] = useState<ApplicationTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [serviceCategoryFilter, setServiceCategoryFilter] = useState('');
-  const [showPublicOnly, setShowPublicOnly] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTemplate, setEditingTemplate] =
     useState<ApplicationTemplate | null>(null);
@@ -87,10 +74,10 @@ export function ApplicationTemplates({
     is_public: false,
   });
 
-  // Load templates on mount and when filters change
+  // Load templates on mount
   useEffect(() => {
     loadTemplates();
-  }, [serviceCategoryFilter, showPublicOnly, user?.id]);
+  }, [user?.id]);
 
   const loadTemplates = async () => {
     try {
@@ -101,14 +88,6 @@ export function ApplicationTemplates({
         page: '1',
         limit: '20',
       });
-
-      if (serviceCategoryFilter) {
-        params.append('service_category', serviceCategoryFilter);
-      }
-
-      if (showPublicOnly) {
-        params.append('is_public', 'true');
-      }
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -150,14 +129,6 @@ export function ApplicationTemplates({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleServiceCategoryFilter = (category: string) => {
-    setServiceCategoryFilter(category === 'all' ? '' : category);
   };
 
   const handleCreateTemplate = async () => {
@@ -465,16 +436,6 @@ export function ApplicationTemplates({
     resetForm();
   };
 
-  const filteredTemplates = templates.filter(template => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      template.name.toLowerCase().includes(query) ||
-      template.description?.toLowerCase().includes(query) ||
-      template.cover_letter_template.toLowerCase().includes(query)
-    );
-  });
-
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
@@ -495,63 +456,6 @@ export function ApplicationTemplates({
           <span>Create Template</span>
         </Button>
       </div>
-
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="space-y-2">
-            <Label>Search</Label>
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          {/* Service Category Filter */}
-          <div className="space-y-2">
-            <Label>Service Category</Label>
-            <Select
-              value={serviceCategoryFilter || undefined}
-              onValueChange={handleServiceCategoryFilter}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All categories</SelectItem>
-                {Object.entries(JOB_SERVICE_CATEGORIES).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
-                    {value.replace('_', ' ').toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Public Only Filter */}
-          <div className="space-y-2">
-            <Label>Show Public Only</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="public-only"
-                checked={showPublicOnly}
-                onCheckedChange={checked =>
-                  setShowPublicOnly(checked as boolean)
-                }
-              />
-              <Label htmlFor="public-only" className="text-sm">
-                Show only public templates
-              </Label>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* Create/Edit Form Modal */}
       <Dialog
@@ -659,7 +563,7 @@ export function ApplicationTemplates({
       {/* Templates Grid */}
       {!isLoading && !error && (
         <>
-          {filteredTemplates.length === 0 ? (
+          {templates.length === 0 ? (
             <Card className="p-12">
               <div className="text-center">
                 <div className="text-gray-400 mb-4">
@@ -669,9 +573,7 @@ export function ApplicationTemplates({
                   No templates found
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {searchQuery || serviceCategoryFilter
-                    ? 'Try adjusting your search criteria'
-                    : 'Create your first template to get started'}
+                  Create your first template to get started
                 </p>
                 <Button onClick={() => setShowCreateForm(true)}>
                   Create Template
@@ -680,7 +582,7 @@ export function ApplicationTemplates({
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTemplates.map(template => (
+              {templates.map(template => (
                 <Card
                   key={template.id}
                   className="p-6 hover:shadow-lg transition-shadow"

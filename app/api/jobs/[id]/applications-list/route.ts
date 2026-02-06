@@ -115,76 +115,98 @@ export async function GET(
       });
     }
 
-    // Fetch contractor details for each application
+    // contractor_id in job_applications references business_profiles(id)
     const contractorIds = [
       ...new Set(applications.map(app => app.contractor_id)),
     ];
-    const { data: contractors, error: contractorsError } = await supabaseAdmin
-      .from('business_profiles')
-      .select(
-        `
-        id,
-        company_name,
-        user_id
-      `
-      )
-      .in('id', contractorIds);
 
-    // Fetch user details separately
-    const userIds = contractors
-      ? [...new Set(contractors.map(c => c.user_id).filter(Boolean))]
-      : [];
-    const usersMap = new Map();
-    if (userIds.length > 0) {
-      const { data: users, error: usersError } = await supabaseAdmin
-        .from('users')
-        .select('id, first_name, last_name, email, avatar_url')
-        .in('id', userIds);
+    // Fetch business profiles with more details
+    const { data: businessProfiles, error: businessProfilesError } =
+      await supabaseAdmin
+        .from('business_profiles')
+        .select(
+          'id, company_name, user_id, logo_url, description, website, location, service_categories, average_rating, review_count, is_verified'
+        )
+        .in('id', contractorIds);
 
-      if (!usersError && users) {
-        users.forEach(user => {
-          usersMap.set(user.id, user);
-        });
-      }
-    }
-
-    if (contractorsError) {
+    if (businessProfilesError) {
       console.error(
-        '[GET /api/jobs/[id]/applications-list] Error fetching contractors:',
-        contractorsError
+        '[GET /api/jobs/[id]/applications-list] Error fetching business profiles:',
+        businessProfilesError
       );
-      // Continue without contractor details rather than failing
     }
 
-    // Map contractor data to applications
-    const contractorMap = new Map();
-    if (contractors) {
-      contractors.forEach(contractor => {
-        const user = contractor.user_id
-          ? usersMap.get(contractor.user_id)
-          : null;
-        contractorMap.set(contractor.id, {
-          id: contractor.id,
-          company_name: contractor.company_name,
-          user_id: contractor.user_id,
-          profile: user
-            ? {
-                id: user.id,
-                first_name: user.first_name,
-                last_name: user.last_name,
-                email: user.email,
-                avatar_url: user.avatar_url,
-              }
-            : null,
-        });
+    // Get user IDs from business profiles to fetch profile details
+    const userIds = businessProfiles
+      ? [...new Set(businessProfiles.map(bp => bp.user_id).filter(Boolean))]
+      : [];
+
+    // Fetch profile details (first_name, last_name, avatar_url, phone, bio, location are in profiles table)
+    // profiles.user_id references users.id, so we need to query by user_id
+    const { data: profiles, error: profilesError } =
+      userIds.length > 0
+        ? await supabaseAdmin
+            .from('profiles')
+            .select(
+              'user_id, first_name, last_name, avatar_url, phone, bio, location'
+            )
+            .in('user_id', userIds)
+        : { data: [], error: null };
+
+    if (profilesError) {
+      console.error(
+        '[GET /api/jobs/[id]/applications-list] Error fetching profiles:',
+        profilesError
+      );
+    }
+
+    // Create maps for easy lookup (keyed by user_id)
+    const usersMap = new Map();
+    if (profiles) {
+      profiles.forEach(profile => {
+        usersMap.set(profile.user_id, profile);
       });
     }
 
-    // Combine applications with contractor data
-    const applicationsWithContractors = applications.map(app => ({
-      ...app,
-      contractor: contractorMap.get(app.contractor_id) || null,
-    }));
+    const businessProfilesMap = new Map();
+    if (businessProfiles) {
+      businessProfiles.forEach(bp => {
+        businessProfilesMap.set(bp.id, bp);
+      });
+    }
+
+    // Combine applications with contractor data (flattened structure for component compatibility)
+    const applicationsWithContractors = applications.map(app => {
+      const businessProfile = businessProfilesMap.get(app.contractor_id);
+      const user = businessProfile
+        ? usersMap.get(businessProfile.user_id)
+        : null;
+      return {
+        ...app,
+        contractor: businessProfile
+          ? {
+              id: businessProfile.id,
+              company_name: businessProfile.company_name || null,
+              company_description: businessProfile.description || null,
+              website: businessProfile.website || null,
+              company_location: businessProfile.location || null,
+              service_categories: businessProfile.service_categories || [],
+              is_verified: businessProfile.is_verified || false,
+              first_name: user?.first_name || null,
+              last_name: user?.last_name || null,
+              phone: user?.phone || null,
+              bio: user?.bio || null,
+              user_location: user?.location || null,
+              profile_photo_url:
+                businessProfile.logo_url || user?.avatar_url || null,
+              avatar_url: user?.avatar_url || null,
+              logo_url: businessProfile.logo_url || null,
+              average_rating: businessProfile.average_rating || 0,
+              review_count: businessProfile.review_count || 0,
+            }
+          : null,
+      };
+    });
 
     console.log(
       `[GET /api/jobs/[id]/applications-list] Found ${applicationsWithContractors.length} applications`

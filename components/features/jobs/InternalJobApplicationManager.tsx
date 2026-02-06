@@ -42,12 +42,34 @@ import {
   Mail,
   FileText,
   Download,
+  MapPin,
+  Globe,
+  BadgeCheck,
+  Briefcase,
 } from 'lucide-react';
 import { JobApplicationWithDetails } from '@/types/jobs';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+
+interface ApplicationActivity {
+  id: string;
+  activity_type: 'status_change' | 'message_sent' | 'application_submitted';
+  old_value?: string;
+  new_value?: string;
+  message?: string;
+  created_at: string;
+  actor?: {
+    id: string;
+    email: string;
+    profiles?: {
+      first_name: string;
+      last_name: string;
+    };
+  };
+}
 
 interface InternalJobApplicationManagerProps {
   jobId: string;
+  userId?: string;
   applications?: JobApplicationWithDetails[];
   onApplicationUpdate?: (
     applicationId: string,
@@ -69,6 +91,7 @@ interface ApplicationFilters {
 
 export function InternalJobApplicationManager({
   jobId,
+  userId,
   applications: propApplications,
   onApplicationUpdate: propOnApplicationUpdate,
   onApplicationMessage: propOnApplicationMessage,
@@ -87,6 +110,10 @@ export function InternalJobApplicationManager({
   const [messageText, setMessageText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingApplications, setIsLoadingApplications] = useState(false);
+  const [messageSentConfirmation, setMessageSentConfirmation] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [activityLog, setActivityLog] = useState<ApplicationActivity[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   // Fetch applications if not provided as prop
   useEffect(() => {
@@ -170,6 +197,38 @@ export function InternalJobApplicationManager({
     }
   };
 
+  const fetchActivity = async (applicationId: string) => {
+    try {
+      setIsLoadingActivity(true);
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (userId) {
+        headers['x-user-id'] = userId;
+      }
+      const response = await fetch(
+        `/api/applications/${applicationId}/activity`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setActivityLog(result.activity || []);
+      } else {
+        setActivityLog([]);
+      }
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+      setActivityLog([]);
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -240,6 +299,23 @@ export function InternalJobApplicationManager({
       setIsLoading(true);
       if (propOnApplicationUpdate) {
         await propOnApplicationUpdate(applicationId, newStatus);
+        // Update selectedApplication locally to reflect the change immediately
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication({
+            ...selectedApplication,
+            status: newStatus as any,
+          });
+          // Refresh activity log to show the status change
+          await fetchActivity(applicationId);
+        }
+        // Also update in the applications list
+        setApplications(prev =>
+          prev.map(app =>
+            app.id === applicationId
+              ? { ...app, status: newStatus as any }
+              : app
+          )
+        );
       } else {
         // Default implementation if no handler provided
         const response = await fetch(`/api/applications/${applicationId}`, {
@@ -256,20 +332,24 @@ export function InternalJobApplicationManager({
           throw new Error(result.error || 'Failed to update application');
         }
 
-        // Refresh applications - use prop callback if available, otherwise fetch
-        if (propOnApplicationUpdate) {
-          // If using prop callback, parent should handle refresh
-          // But we can also refresh locally
-          if (propApplications) {
-            // If we have prop applications, we should let parent refresh
-            // For now, fetch locally as fallback
-            await fetchApplications();
-          } else {
-            await fetchApplications();
-          }
-        } else {
-          await fetchApplications();
+        // Update selectedApplication locally
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication({
+            ...selectedApplication,
+            status: newStatus as any,
+          });
+          // Refresh activity log to show the status change
+          await fetchActivity(applicationId);
         }
+
+        // Also update in the applications list
+        setApplications(prev =>
+          prev.map(app =>
+            app.id === applicationId
+              ? { ...app, status: newStatus as any }
+              : app
+          )
+        );
       }
     } catch (error) {
       // Log error for debugging
@@ -286,17 +366,44 @@ export function InternalJobApplicationManager({
 
     try {
       setIsLoading(true);
+      setMessageSentConfirmation(false);
+
+      // Call the prop handler if provided
       if (propOnApplicationMessage) {
         await propOnApplicationMessage(selectedApplication.id, messageText);
-      } else {
-        // Default implementation - could send via API if needed
-        console.log(
-          'Sending message to application:',
-          selectedApplication.id,
-          messageText
-        );
       }
+
+      // Try to log the message activity (non-blocking - don't fail if this doesn't work)
+      try {
+        const activityHeaders: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        if (userId) {
+          activityHeaders['x-user-id'] = userId;
+        }
+        await fetch(`/api/applications/${selectedApplication.id}/activity`, {
+          method: 'POST',
+          headers: activityHeaders,
+          credentials: 'include',
+          body: JSON.stringify({
+            activity_type: 'message_sent',
+            message: messageText,
+          }),
+        });
+        // Refresh activity log
+        await fetchActivity(selectedApplication.id);
+      } catch (activityError) {
+        // Activity logging failed, but message was sent - continue
+        console.log('Activity logging not available');
+      }
+
       setMessageText('');
+      setMessageSentConfirmation(true);
+      // Auto-hide confirmation and close dialog after 3 seconds
+      setTimeout(() => {
+        setMessageSentConfirmation(false);
+        setDetailsDialogOpen(false);
+      }, 3000);
     } catch (error) {
       // Log error for debugging
       if (process.env.NODE_ENV === 'development') {
@@ -530,26 +637,32 @@ export function InternalJobApplicationManager({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i <
-                                Math.floor(
-                                  application.contractor?.average_rating || 0
-                                )
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-600">
-                          ({application.contractor?.review_count || 0})
+                      {(application.contractor?.review_count || 0) === 0 ? (
+                        <span className="text-sm text-gray-500 italic">
+                          No testimonials received
                         </span>
-                      </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i <
+                                  Math.floor(
+                                    application.contractor?.average_rating || 0
+                                  )
+                                    ? 'text-yellow-400 fill-current'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            ({application.contractor?.review_count})
+                          </span>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       {formatDistanceToNow(new Date(application.created_at), {
@@ -558,189 +671,512 @@ export function InternalJobApplicationManager({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Dialog>
+                        <Dialog
+                          open={
+                            detailsDialogOpen &&
+                            selectedApplication?.id === application.id
+                          }
+                          onOpenChange={open => {
+                            setDetailsDialogOpen(open);
+                            if (open) {
+                              setSelectedApplication(application);
+                              fetchActivity(application.id);
+                            } else {
+                              setActivityLog([]);
+                            }
+                          }}
+                        >
                           <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setSelectedApplication(application)
-                              }
-                            >
+                            <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-[98vw] w-[1400px] max-h-[98vh] overflow-hidden">
                             <DialogHeader>
                               <DialogTitle>Application Details</DialogTitle>
                             </DialogHeader>
                             {selectedApplication && (
-                              <div className="space-y-4">
-                                {/* Contractor Info */}
-                                <div className="flex items-center space-x-4">
-                                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                                    {selectedApplication.contractor
-                                      ?.profile_photo_url ? (
-                                      <Image
-                                        src={
-                                          selectedApplication.contractor
-                                            .profile_photo_url
-                                        }
-                                        alt={
-                                          selectedApplication.contractor
-                                            .first_name
-                                        }
-                                        width={48}
-                                        height={48}
-                                        className="w-12 h-12 rounded-full"
-                                      />
-                                    ) : (
-                                      <span className="text-lg font-medium">
-                                        {selectedApplication.contractor?.first_name?.charAt(
-                                          0
+                              <div className="grid grid-cols-3 gap-6 overflow-y-auto max-h-[calc(92vh-80px)]">
+                                {/* Left Column - Applicant Details */}
+                                <div className="space-y-4 overflow-y-auto">
+                                  {/* Company Details */}
+                                  <div className="p-3 border rounded-lg space-y-3">
+                                    <Label className="font-medium text-sm flex items-center gap-1">
+                                      <Briefcase className="h-4 w-4" />
+                                      Company Details
+                                    </Label>
+                                    {/* Company Logo, Name and Verified */}
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        {selectedApplication.contractor
+                                          ?.logo_url ? (
+                                          <Image
+                                            src={
+                                              selectedApplication.contractor
+                                                .logo_url
+                                            }
+                                            alt={
+                                              selectedApplication.contractor
+                                                .company_name ||
+                                              selectedApplication.contractor
+                                                .first_name
+                                            }
+                                            width={48}
+                                            height={48}
+                                            className="w-12 h-12 rounded-lg object-cover"
+                                          />
+                                        ) : (
+                                          <Briefcase className="h-6 w-6 text-gray-400" />
                                         )}
-                                      </span>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1">
+                                          <h3 className="font-semibold text-sm truncate">
+                                            {selectedApplication.contractor
+                                              ?.company_name ||
+                                              'Independent Contractor'}
+                                          </h3>
+                                          {selectedApplication.contractor
+                                            ?.is_verified && (
+                                            <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                          )}
+                                        </div>
+                                        {/* Rating inline */}
+                                        {(selectedApplication.contractor
+                                          ?.review_count || 0) > 0 && (
+                                          <div className="flex items-center gap-1 mt-0.5">
+                                            <div className="flex items-center">
+                                              {[...Array(5)].map((_, i) => (
+                                                <Star
+                                                  key={i}
+                                                  className={`h-3 w-3 ${
+                                                    i <
+                                                    Math.floor(
+                                                      selectedApplication
+                                                        .contractor
+                                                        ?.average_rating || 0
+                                                    )
+                                                      ? 'text-yellow-400 fill-current'
+                                                      : 'text-gray-300'
+                                                  }`}
+                                                />
+                                              ))}
+                                            </div>
+                                            <span className="text-xs text-gray-500">
+                                              (
+                                              {
+                                                selectedApplication.contractor
+                                                  ?.review_count
+                                              }
+                                              )
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {selectedApplication.contractor
+                                      ?.company_description && (
+                                      <p className="text-xs text-gray-600 line-clamp-3">
+                                        {
+                                          selectedApplication.contractor
+                                            .company_description
+                                        }
+                                      </p>
+                                    )}
+                                    {selectedApplication.contractor
+                                      ?.company_location && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                                        <MapPin className="h-3 w-3" />
+                                        {
+                                          selectedApplication.contractor
+                                            .company_location
+                                        }
+                                      </div>
+                                    )}
+                                    {selectedApplication.contractor
+                                      ?.website && (
+                                      <div className="flex items-center gap-1 text-xs">
+                                        <Globe className="h-3 w-3 text-gray-500" />
+                                        <a
+                                          href={
+                                            selectedApplication.contractor.website.startsWith(
+                                              'http'
+                                            )
+                                              ? selectedApplication.contractor
+                                                  .website
+                                              : `https://${selectedApplication.contractor.website}`
+                                          }
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline truncate"
+                                        >
+                                          {selectedApplication.contractor.website.replace(
+                                            /^https?:\/\//,
+                                            ''
+                                          )}
+                                        </a>
+                                      </div>
+                                    )}
+                                    {selectedApplication.contractor
+                                      ?.service_categories &&
+                                      selectedApplication.contractor
+                                        .service_categories.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {selectedApplication.contractor.service_categories
+                                            .slice(0, 3)
+                                            .map((cat, i) => (
+                                              <Badge
+                                                key={i}
+                                                variant="secondary"
+                                                className="text-xs py-0"
+                                              >
+                                                {cat}
+                                              </Badge>
+                                            ))}
+                                          {selectedApplication.contractor
+                                            .service_categories.length > 3 && (
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-xs py-0"
+                                            >
+                                              +
+                                              {selectedApplication.contractor
+                                                .service_categories.length - 3}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      )}
+                                  </div>
+
+                                  {/* Personal/Contact Details */}
+                                  <div className="p-3 border rounded-lg space-y-3">
+                                    <Label className="font-medium text-sm flex items-center gap-1">
+                                      <Users className="h-4 w-4" />
+                                      Applicant Details
+                                    </Label>
+                                    {/* Applicant Photo and Name */}
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                        {selectedApplication.contractor
+                                          ?.avatar_url ? (
+                                          <Image
+                                            src={
+                                              selectedApplication.contractor
+                                                .avatar_url
+                                            }
+                                            alt={
+                                              selectedApplication.contractor
+                                                .first_name || 'Applicant'
+                                            }
+                                            width={40}
+                                            height={40}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                          />
+                                        ) : (
+                                          <span className="text-sm font-medium text-gray-500">
+                                            {selectedApplication.contractor?.first_name?.charAt(
+                                              0
+                                            ) || '?'}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="text-sm font-medium text-gray-800">
+                                        {
+                                          selectedApplication.contractor
+                                            ?.first_name
+                                        }{' '}
+                                        {
+                                          selectedApplication.contractor
+                                            ?.last_name
+                                        }
+                                      </p>
+                                    </div>
+                                    {selectedApplication.contractor?.phone && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                                        <Phone className="h-3 w-3" />
+                                        {selectedApplication.contractor.phone}
+                                      </div>
+                                    )}
+                                    {selectedApplication.contractor
+                                      ?.user_location && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                                        <MapPin className="h-3 w-3" />
+                                        {
+                                          selectedApplication.contractor
+                                            .user_location
+                                        }
+                                      </div>
+                                    )}
+                                    {selectedApplication.contractor?.bio && (
+                                      <p className="text-xs text-gray-600 line-clamp-3 italic">
+                                        &ldquo;
+                                        {selectedApplication.contractor.bio}
+                                        &rdquo;
+                                      </p>
                                     )}
                                   </div>
-                                  <div>
-                                    <h3 className="font-semibold">
-                                      {
-                                        selectedApplication.contractor
-                                          ?.first_name
-                                      }{' '}
-                                      {
-                                        selectedApplication.contractor
-                                          ?.last_name
-                                      }
-                                    </h3>
-                                    <p className="text-gray-600">
-                                      {
-                                        selectedApplication.contractor
-                                          ?.company_name
-                                      }
-                                    </p>
-                                    <div className="flex items-center space-x-2">
-                                      <div className="flex items-center">
-                                        {[...Array(5)].map((_, i) => (
-                                          <Star
-                                            key={i}
-                                            className={`h-4 w-4 ${
-                                              i <
-                                              Math.floor(
-                                                selectedApplication.contractor
-                                                  ?.average_rating || 0
-                                              )
-                                                ? 'text-yellow-400 fill-current'
-                                                : 'text-gray-300'
-                                            }`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <span className="text-sm text-gray-600">
-                                        (
-                                        {selectedApplication.contractor
-                                          ?.review_count || 0}{' '}
-                                        reviews)
+
+                                  {/* Application Status */}
+                                  <div className="p-3 border rounded-lg">
+                                    <Label className="font-medium text-sm">
+                                      Application Status
+                                    </Label>
+                                    <div className="mt-1 flex items-center justify-between">
+                                      <Badge
+                                        className={getStatusColor(
+                                          selectedApplication.status
+                                        )}
+                                      >
+                                        {getStatusIcon(
+                                          selectedApplication.status
+                                        )}
+                                        <span className="ml-1">
+                                          {selectedApplication.status
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                            selectedApplication.status.slice(1)}
+                                        </span>
+                                      </Badge>
+                                      <span className="text-xs text-gray-500">
+                                        {formatDistanceToNow(
+                                          new Date(
+                                            selectedApplication.created_at
+                                          ),
+                                          {
+                                            addSuffix: true,
+                                          }
+                                        )}
                                       </span>
                                     </div>
                                   </div>
                                 </div>
 
-                                {/* Cover Letter */}
-                                <div>
-                                  <Label className="font-medium">
-                                    Application Message
-                                  </Label>
-                                  <p className="text-sm text-gray-700 mt-1 p-3 bg-gray-50 rounded">
-                                    {selectedApplication.application_message}
-                                  </p>
-                                </div>
-
-                                {/* Proposed Budget */}
-                                {selectedApplication.proposed_budget && (
+                                {/* Middle Column - Application Content */}
+                                <div className="space-y-4">
+                                  {/* Application Message */}
                                   <div>
                                     <Label className="font-medium">
-                                      Proposed Budget
+                                      Application Message
                                     </Label>
-                                    <p className="text-sm text-gray-700 mt-1">
-                                      $
-                                      {selectedApplication.proposed_budget.toLocaleString()}
+                                    <p className="text-sm text-gray-700 mt-1 p-3 bg-gray-50 rounded max-h-40 overflow-y-auto">
+                                      {selectedApplication.application_message}
                                     </p>
                                   </div>
-                                )}
 
-                                {/* Availability */}
-                                {(selectedApplication.availability_start_date ||
-                                  selectedApplication.availability_end_date) && (
-                                  <div>
-                                    <Label className="font-medium">
-                                      Availability
-                                    </Label>
-                                    <p className="text-sm text-gray-700 mt-1">
-                                      {selectedApplication.availability_start_date && (
-                                        <span>
-                                          From:{' '}
-                                          {new Date(
-                                            selectedApplication.availability_start_date
-                                          ).toLocaleDateString()}
-                                        </span>
-                                      )}
-                                      {selectedApplication.availability_start_date &&
-                                        selectedApplication.availability_end_date &&
-                                        ' - '}
-                                      {selectedApplication.availability_end_date && (
-                                        <span>
-                                          To:{' '}
-                                          {new Date(
-                                            selectedApplication.availability_end_date
-                                          ).toLocaleDateString()}
-                                        </span>
-                                      )}
-                                    </p>
-                                  </div>
-                                )}
+                                  {/* Attachments */}
+                                  {selectedApplication.attachments &&
+                                    selectedApplication.attachments.length >
+                                      0 && (
+                                      <div>
+                                        <Label className="font-medium">
+                                          Attachments
+                                        </Label>
+                                        <div className="mt-2 space-y-1">
+                                          {selectedApplication.attachments.map(
+                                            (
+                                              attachment: string,
+                                              index: number
+                                            ) => {
+                                              const isImage =
+                                                /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(
+                                                  attachment
+                                                );
+                                              const isPdf = /\.pdf$/i.test(
+                                                attachment
+                                              );
+                                              return (
+                                                <div
+                                                  key={index}
+                                                  className="flex items-center space-x-2 group relative"
+                                                >
+                                                  <FileText className="h-4 w-4 text-gray-500" />
+                                                  <a
+                                                    href={attachment}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[150px]"
+                                                  >
+                                                    {attachment
+                                                      .split('/')
+                                                      .pop() || attachment}
+                                                  </a>
+                                                  {isImage && (
+                                                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50">
+                                                      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                                                        <img
+                                                          src={attachment}
+                                                          alt="Preview"
+                                                          className="max-w-[200px] max-h-[200px] object-contain rounded"
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                  {isPdf && (
+                                                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50">
+                                                      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                                                        <iframe
+                                                          src={attachment}
+                                                          title="PDF Preview"
+                                                          className="w-[300px] h-[400px] rounded"
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                      handleDownloadAttachment(
+                                                        attachment
+                                                      )
+                                                    }
+                                                  >
+                                                    <Download className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
 
-                                {/* Attachments */}
-                                {selectedApplication.attachments &&
-                                  selectedApplication.attachments.length >
-                                    0 && (
+                                  {/* Proposed Budget */}
+                                  {selectedApplication.proposed_budget && (
                                     <div>
                                       <Label className="font-medium">
-                                        Attachments
+                                        Proposed Budget
                                       </Label>
-                                      <div className="mt-2 space-y-2">
-                                        {selectedApplication.attachments.map(
-                                          (attachment, index) => (
-                                            <div
-                                              key={index}
-                                              className="flex items-center space-x-2"
-                                            >
-                                              <FileText className="h-4 w-4 text-gray-500" />
-                                              <span className="text-sm text-gray-700">
-                                                {attachment}
-                                              </span>
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                  handleDownloadAttachment(
-                                                    attachment
-                                                  )
-                                                }
-                                              >
-                                                <Download className="h-4 w-4" />
-                                              </Button>
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
+                                      <p className="text-sm text-gray-700 mt-1">
+                                        $
+                                        {selectedApplication.proposed_budget.toLocaleString()}
+                                      </p>
                                     </div>
                                   )}
 
-                                {/* Status Update */}
-                                <div className="flex items-center space-x-4">
-                                  <div className="flex-1">
+                                  {/* Availability */}
+                                  {(selectedApplication.availability_start_date ||
+                                    selectedApplication.availability_end_date) && (
+                                    <div>
+                                      <Label className="font-medium">
+                                        Availability
+                                      </Label>
+                                      <p className="text-sm text-gray-700 mt-1">
+                                        {selectedApplication.availability_start_date && (
+                                          <span>
+                                            From:{' '}
+                                            {new Date(
+                                              selectedApplication.availability_start_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                        {selectedApplication.availability_start_date &&
+                                          selectedApplication.availability_end_date &&
+                                          ' - '}
+                                        {selectedApplication.availability_end_date && (
+                                          <span>
+                                            To:{' '}
+                                            {new Date(
+                                              selectedApplication.availability_end_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Right Column - Activity & Actions */}
+                                <div className="space-y-4">
+                                  {/* Activity Log */}
+                                  <div>
+                                    <Label className="font-medium">
+                                      Activity Log
+                                    </Label>
+                                    <div className="mt-2 max-h-40 overflow-y-auto border rounded-lg">
+                                      {isLoadingActivity ? (
+                                        <div className="p-3 text-center text-sm text-gray-500">
+                                          Loading activity...
+                                        </div>
+                                      ) : activityLog.length === 0 ? (
+                                        <div className="p-3 text-center text-sm text-gray-500">
+                                          No activity yet
+                                        </div>
+                                      ) : (
+                                        <div className="divide-y">
+                                          {activityLog.map(activity => (
+                                            <div
+                                              key={activity.id}
+                                              className="p-2 text-xs"
+                                            >
+                                              <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                  {activity.activity_type ===
+                                                    'status_change' && (
+                                                    <p className="text-gray-700">
+                                                      <span className="font-medium">
+                                                        {activity.actor
+                                                          ?.profiles
+                                                          ?.first_name ||
+                                                          'User'}
+                                                      </span>{' '}
+                                                      changed status from{' '}
+                                                      <Badge
+                                                        className={`${getStatusColor(activity.old_value || '')} text-xs`}
+                                                      >
+                                                        {activity.old_value}
+                                                      </Badge>{' '}
+                                                      to{' '}
+                                                      <Badge
+                                                        className={`${getStatusColor(activity.new_value || '')} text-xs`}
+                                                      >
+                                                        {activity.new_value}
+                                                      </Badge>
+                                                    </p>
+                                                  )}
+                                                  {activity.activity_type ===
+                                                    'message_sent' && (
+                                                    <div>
+                                                      <p className="text-gray-700">
+                                                        <span className="font-medium">
+                                                          {activity.actor
+                                                            ?.profiles
+                                                            ?.first_name ||
+                                                            'User'}
+                                                        </span>{' '}
+                                                        sent a message:
+                                                      </p>
+                                                      <p className="mt-1 text-gray-600 italic bg-gray-50 p-1 rounded text-xs truncate">
+                                                        {activity.message}
+                                                      </p>
+                                                    </div>
+                                                  )}
+                                                  {activity.activity_type ===
+                                                    'application_submitted' && (
+                                                    <p className="text-gray-700">
+                                                      Application submitted
+                                                    </p>
+                                                  )}
+                                                </div>
+                                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                                  {format(
+                                                    new Date(
+                                                      activity.created_at
+                                                    ),
+                                                    'MMM d, h:mm a'
+                                                  )}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Status Update */}
+                                  <div>
                                     <Label className="font-medium">
                                       Update Status
                                     </Label>
@@ -753,7 +1189,7 @@ export function InternalJobApplicationManager({
                                         )
                                       }
                                     >
-                                      <SelectTrigger>
+                                      <SelectTrigger className="mt-1">
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -772,32 +1208,40 @@ export function InternalJobApplicationManager({
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                </div>
 
-                                {/* Message */}
-                                <div>
-                                  <Label className="font-medium">
-                                    Send Message
-                                  </Label>
-                                  <div className="mt-2 space-y-2">
-                                    <Textarea
-                                      value={messageText}
-                                      onChange={e =>
-                                        setMessageText(e.target.value)
-                                      }
-                                      placeholder="Type your message here..."
-                                      rows={3}
-                                    />
-                                    <Button
-                                      onClick={handleSendMessage}
-                                      disabled={
-                                        !messageText.trim() || isLoading
-                                      }
-                                      className="bg-orange-600 hover:bg-orange-700"
-                                    >
-                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                  {/* Message */}
+                                  <div>
+                                    <Label className="font-medium">
                                       Send Message
-                                    </Button>
+                                    </Label>
+                                    <div className="mt-1 space-y-2">
+                                      <Textarea
+                                        value={messageText}
+                                        onChange={e =>
+                                          setMessageText(e.target.value)
+                                        }
+                                        placeholder="Type your message here..."
+                                        rows={3}
+                                        className="text-sm"
+                                      />
+                                      <Button
+                                        onClick={handleSendMessage}
+                                        disabled={
+                                          !messageText.trim() || isLoading
+                                        }
+                                        className="w-full bg-orange-600 hover:bg-orange-700"
+                                        size="sm"
+                                      >
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        Send Message
+                                      </Button>
+                                      {messageSentConfirmation && (
+                                        <span className="text-xs text-green-600 flex items-center justify-center gap-1">
+                                          <CheckCircle className="h-3 w-3" />
+                                          Message sent successfully
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>

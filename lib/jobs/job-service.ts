@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, supabaseAdmin } from '@/lib/supabase/server';
 import {
   Job,
   JobInsert,
@@ -268,8 +268,38 @@ export class JobService {
       const total = count || 0;
       const total_pages = Math.ceil(total / limit);
 
+      // If we have jobs, fetch the actual application counts
+      let jobsWithCounts = jobs || [];
+      if (jobsWithCounts.length > 0) {
+        const jobIds = jobsWithCounts.map(job => job.id);
+
+        // Count applications for each job - use admin client to bypass RLS
+        const { data: applicationCounts, error: countError } =
+          await supabaseAdmin
+            .from('job_applications')
+            .select('job_id')
+            .in('job_id', jobIds);
+
+        if (!countError && applicationCounts) {
+          // Create a map of job_id to application count
+          const countMap = applicationCounts.reduce(
+            (acc, app) => {
+              acc[app.job_id] = (acc[app.job_id] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>
+          );
+
+          // Update jobs with actual application counts
+          jobsWithCounts = jobsWithCounts.map(job => ({
+            ...job,
+            application_count: countMap[job.id] || 0,
+          }));
+        }
+      }
+
       return {
-        jobs: jobs || [],
+        jobs: jobsWithCounts,
         total,
         page,
         limit,

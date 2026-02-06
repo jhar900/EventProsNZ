@@ -47,7 +47,6 @@ import { JobWithDetails, JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
 import { InternalJobApplicationManager } from './InternalJobApplicationManager';
 import { CreateJobModal } from './CreateJobModal';
-import { ApplicationsListModal } from './ApplicationsListModal';
 
 interface EventManagerJobManagementProps {
   userId: string;
@@ -89,9 +88,6 @@ export function EventManagerJobManagement({
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
-  const [showApplications2Modal, setShowApplications2Modal] = useState(false);
-  const [selectedJobForApplications2, setSelectedJobForApplications2] =
-    useState<JobWithDetails | null>(null);
 
   const fetchUserJobs = useCallback(async () => {
     try {
@@ -130,7 +126,7 @@ export function EventManagerJobManagement({
     try {
       setLoadingApplications(true);
       setError(null);
-      const url = `/api/jobs/${jobId}/applications`;
+      const url = `/api/jobs/${jobId}/applications-list`;
       console.log(
         '[EventManagerJobManagement] Fetching applications from:',
         url
@@ -140,6 +136,7 @@ export function EventManagerJobManagement({
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': userId,
         },
         credentials: 'include',
       });
@@ -222,11 +219,6 @@ export function EventManagerJobManagement({
     await fetchJobApplications(job.id);
   };
 
-  const handleViewApplications2 = (job: JobWithDetails) => {
-    setSelectedJobForApplications2(job);
-    setShowApplications2Modal(true);
-  };
-
   const handleApplicationUpdate = async (
     applicationId: string,
     status: string,
@@ -238,7 +230,9 @@ export function EventManagerJobManagement({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': userId,
         },
+        credentials: 'include',
         body: JSON.stringify({ status, notes }),
       });
 
@@ -601,14 +595,6 @@ export function EventManagerJobManagement({
                             Applications ({job.application_count || 0})
                           </Button>
                           <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleViewApplications2(job)}
-                          >
-                            <Users className="h-4 w-4 mr-1" />
-                            Applications 2
-                          </Button>
-                          <Button
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/jobs/${job.id}`)}
@@ -693,6 +679,7 @@ export function EventManagerJobManagement({
             <InternalJobApplicationManager
               key={selectedJob.id}
               jobId={selectedJob.id}
+              userId={userId}
               applications={selectedJobApplications}
               onApplicationUpdate={handleApplicationUpdate}
               onApplicationMessage={handleApplicationMessage}
@@ -710,20 +697,6 @@ export function EventManagerJobManagement({
           fetchUserJobs();
         }}
       />
-
-      {/* Applications 2 Modal */}
-      {selectedJobForApplications2 && (
-        <ApplicationsListModal
-          jobId={selectedJobForApplications2.id}
-          jobTitle={selectedJobForApplications2.title}
-          open={showApplications2Modal}
-          onClose={() => {
-            setShowApplications2Modal(false);
-            setSelectedJobForApplications2(null);
-          }}
-          userId={userId}
-        />
-      )}
     </div>
   );
 }

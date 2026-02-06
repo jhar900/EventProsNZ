@@ -37,24 +37,71 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  // CRITICAL: This log should appear in terminal if route is working
-  console.error('=== GET /api/jobs/[id]/applications ROUTE HANDLER CALLED ===');
-  console.error('Request URL:', request.url);
-
-  // Return immediately to test if route is registered
   try {
     const resolvedParams = params instanceof Promise ? await params : params;
-    console.error('Resolved params:', resolvedParams);
+    const { id: jobId } = resolvedParams;
 
-    // Return a simple test response first
+    if (!jobId) {
+      return NextResponse.json(
+        { success: false, error: 'Job ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const { supabase } = createClient(request);
+
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Parse query params
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') as
+      | 'pending'
+      | 'reviewed'
+      | 'accepted'
+      | 'rejected'
+      | null;
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+
+    // Get applications for this job
+    const result = await getJobService().getJobApplications({
+      job_id: jobId,
+      status: status || undefined,
+      page,
+      limit,
+    });
+
     return NextResponse.json({
       success: true,
-      message: 'Route is working',
-      jobId: resolvedParams.id,
+      applications: result.applications,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      total_pages: result.total_pages,
     });
   } catch (error) {
-    console.error('Error in GET handler:', error);
-    return NextResponse.json({ error: 'Route error' }, { status: 500 });
+    console.error('Error fetching job applications:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch applications',
+      },
+      { status: 500 }
+    );
   }
 }
 
