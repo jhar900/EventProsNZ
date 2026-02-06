@@ -110,7 +110,7 @@ export async function GET(
       const actorIds = [...new Set(activity.map(a => a.actor_id))];
       const { data: profiles } = await supabaseAdmin
         .from('profiles')
-        .select('user_id, first_name, last_name')
+        .select('user_id, first_name, last_name, avatar_url')
         .in('user_id', actorIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);

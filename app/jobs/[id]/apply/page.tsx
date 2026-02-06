@@ -234,7 +234,7 @@ export default function JobApplicationPage() {
                 )}
 
                 {/* Posted By */}
-                {job.posted_by_user && (
+                {job.posted_by_user?.profiles && (
                   <div className="flex items-start gap-2">
                     <User className="h-4 w-4 text-gray-500 mt-1" />
                     <div>
@@ -242,8 +242,8 @@ export default function JobApplicationPage() {
                         Posted By
                       </p>
                       <p className="text-sm text-gray-700">
-                        {job.posted_by_user.first_name}{' '}
-                        {job.posted_by_user.last_name}
+                        {job.posted_by_user.profiles.first_name}{' '}
+                        {job.posted_by_user.profiles.last_name}
                       </p>
                     </div>
                   </div>

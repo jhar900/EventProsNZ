@@ -308,14 +308,14 @@ export default function JobDetailsPage() {
               )}
 
               {/* Posted By */}
-              {job.posted_by_user && (
+              {job.posted_by_user?.profiles && (
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-gray-500 mt-1" />
                   <div>
                     <h4 className="font-medium text-gray-900">Posted By</h4>
                     <p className="text-gray-700">
-                      {job.posted_by_user.first_name}{' '}
-                      {job.posted_by_user.last_name}
+                      {job.posted_by_user.profiles.first_name}{' '}
+                      {job.posted_by_user.profiles.last_name}
                     </p>
                   </div>
                 </div>

@@ -81,9 +81,21 @@ export interface JobSearchParams {
 export interface JobWithDetails extends Job {
   posted_by_user?: {
     id: string;
-    first_name: string;
-    last_name: string;
     email: string;
+    profiles?: {
+      first_name: string;
+      last_name: string;
+      phone?: string | null;
+      avatar_url?: string | null;
+      bio?: string | null;
+    };
+    business_profiles?: {
+      company_name: string;
+      description?: string | null;
+      location?: string | null;
+      website?: string | null;
+      logo_url?: string | null;
+    }[];
   };
   event?: {
     id: string;
@@ -100,8 +112,11 @@ export interface JobWithDetails extends Job {
 }
 
 export interface JobApplicationWithDetails extends JobApplication {
+  id: string;
+  status: ApplicationStatus;
   contractor?: {
     id: string;
+    user_id?: string;
     first_name: string;
     last_name: string;
     phone?: string;

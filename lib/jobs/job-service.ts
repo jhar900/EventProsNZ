@@ -136,9 +136,21 @@ export class JobService {
           *,
           posted_by_user:users!jobs_posted_by_user_id_fkey(
             id,
-            first_name,
-            last_name,
-            email
+            email,
+            profiles(
+              first_name,
+              last_name,
+              phone,
+              avatar_url,
+              bio
+            ),
+            business_profiles(
+              company_name,
+              description,
+              location,
+              website,
+              logo_url
+            )
           ),
           event:events!jobs_event_id_fkey(
             id,

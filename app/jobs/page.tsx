@@ -22,6 +22,7 @@ import { HomepageFooter } from '@/components/features/homepage/HomepageFooter';
 import { EditJobModal } from '@/components/features/jobs/EditJobModal';
 import { InternalJobApplicationManager } from '@/components/features/jobs/InternalJobApplicationManager';
 import { SimpleJobApplicationModal } from '@/components/features/jobs/SimpleJobApplicationModal';
+import { ApplicantApplicationModal } from '@/components/features/jobs/ApplicantApplicationModal';
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,8 @@ export default function JobsPage() {
     useState(false);
   const [selectedJobForSimpleModal, setSelectedJobForSimpleModal] =
     useState<Job | null>(null);
+  const [showApplicantApplicationModal, setShowApplicantApplicationModal] =
+    useState(false);
 
   // Check onboarding status when user logs in
   useEffect(() => {
@@ -122,6 +125,7 @@ export default function JobsPage() {
 
   const handleApplicationSelect = (application: JobApplicationWithDetails) => {
     setSelectedApplication(application);
+    setShowApplicantApplicationModal(true);
   };
 
   const handleTemplateSelect = (template: any) => {
@@ -380,6 +384,17 @@ export default function JobsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Applicant Application Details Modal */}
+      <ApplicantApplicationModal
+        application={selectedApplication}
+        open={showApplicantApplicationModal}
+        onClose={() => {
+          setShowApplicantApplicationModal(false);
+          setSelectedApplication(null);
+        }}
+        userId={user?.id}
+      />
     </div>
   );
 }

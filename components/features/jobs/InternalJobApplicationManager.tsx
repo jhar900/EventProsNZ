@@ -46,6 +46,7 @@ import {
   Globe,
   BadgeCheck,
   Briefcase,
+  ExternalLink,
 } from 'lucide-react';
 import { JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -399,10 +400,9 @@ export function InternalJobApplicationManager({
 
       setMessageText('');
       setMessageSentConfirmation(true);
-      // Auto-hide confirmation and close dialog after 3 seconds
+      // Auto-hide confirmation after 3 seconds
       setTimeout(() => {
         setMessageSentConfirmation(false);
-        setDetailsDialogOpen(false);
       }, 3000);
     } catch (error) {
       // Log error for debugging
@@ -694,7 +694,24 @@ export function InternalJobApplicationManager({
                           </DialogTrigger>
                           <DialogContent className="max-w-[98vw] w-[1400px] max-h-[98vh] overflow-hidden">
                             <DialogHeader>
-                              <DialogTitle>Application Details</DialogTitle>
+                              <DialogTitle className="flex items-center gap-3">
+                                <span>Application Details</span>
+                                {selectedApplication && (
+                                  <Badge
+                                    className={getStatusColor(
+                                      selectedApplication.status
+                                    )}
+                                  >
+                                    {getStatusIcon(selectedApplication.status)}
+                                    <span className="ml-1">
+                                      {selectedApplication.status
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                        selectedApplication.status.slice(1)}
+                                    </span>
+                                  </Badge>
+                                )}
+                              </DialogTitle>
                             </DialogHeader>
                             {selectedApplication && (
                               <div className="grid grid-cols-3 gap-6 overflow-y-auto max-h-[calc(92vh-80px)]">
@@ -702,10 +719,29 @@ export function InternalJobApplicationManager({
                                 <div className="space-y-4 overflow-y-auto">
                                   {/* Company Details */}
                                   <div className="p-3 border rounded-lg space-y-3">
-                                    <Label className="font-medium text-sm flex items-center gap-1">
-                                      <Briefcase className="h-4 w-4" />
-                                      Company Details
-                                    </Label>
+                                    <div className="flex items-center justify-between">
+                                      <Label className="font-medium text-sm flex items-center gap-1">
+                                        <Briefcase className="h-4 w-4" />
+                                        Company Details
+                                      </Label>
+                                      {selectedApplication.contractor
+                                        ?.user_id && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() =>
+                                            window.open(
+                                              `/contractors/${selectedApplication.contractor?.user_id}`,
+                                              '_blank'
+                                            )
+                                          }
+                                          title="View full profile"
+                                        >
+                                          <ExternalLink className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                                        </Button>
+                                      )}
+                                    </div>
                                     {/* Company Logo, Name and Verified */}
                                     <div className="flex items-center gap-3">
                                       <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -916,49 +952,26 @@ export function InternalJobApplicationManager({
                                       </p>
                                     )}
                                   </div>
-
-                                  {/* Application Status */}
-                                  <div className="p-3 border rounded-lg">
-                                    <Label className="font-medium text-sm">
-                                      Application Status
-                                    </Label>
-                                    <div className="mt-1 flex items-center justify-between">
-                                      <Badge
-                                        className={getStatusColor(
-                                          selectedApplication.status
-                                        )}
-                                      >
-                                        {getStatusIcon(
-                                          selectedApplication.status
-                                        )}
-                                        <span className="ml-1">
-                                          {selectedApplication.status
-                                            .charAt(0)
-                                            .toUpperCase() +
-                                            selectedApplication.status.slice(1)}
-                                        </span>
-                                      </Badge>
-                                      <span className="text-xs text-gray-500">
-                                        {formatDistanceToNow(
-                                          new Date(
-                                            selectedApplication.created_at
-                                          ),
-                                          {
-                                            addSuffix: true,
-                                          }
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
                                 </div>
 
                                 {/* Middle Column - Application Content */}
                                 <div className="space-y-4">
                                   {/* Application Message */}
                                   <div>
-                                    <Label className="font-medium">
-                                      Application Message
-                                    </Label>
+                                    <div className="flex items-center justify-between">
+                                      <Label className="font-medium">
+                                        Application Message
+                                      </Label>
+                                      <span className="text-xs text-gray-500">
+                                        Applied{' '}
+                                        {format(
+                                          new Date(
+                                            selectedApplication.created_at
+                                          ),
+                                          'MMM d, yyyy h:mm a'
+                                        )}
+                                      </span>
+                                    </div>
                                     <p className="text-sm text-gray-700 mt-1 p-3 bg-gray-50 rounded max-h-40 overflow-y-auto">
                                       {selectedApplication.application_message}
                                     </p>
@@ -1088,7 +1101,7 @@ export function InternalJobApplicationManager({
                                 </div>
 
                                 {/* Right Column - Activity & Actions */}
-                                <div className="space-y-4">
+                                <div className="flex flex-col gap-4">
                                   {/* Activity Log */}
                                   <div>
                                     <Label className="font-medium">
@@ -1110,10 +1123,10 @@ export function InternalJobApplicationManager({
                                               key={activity.id}
                                               className="p-2 text-xs"
                                             >
-                                              <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                  {activity.activity_type ===
-                                                    'status_change' && (
+                                              {activity.activity_type ===
+                                              'message_sent' ? (
+                                                <div>
+                                                  <div className="flex items-start justify-between">
                                                     <p className="text-gray-700">
                                                       <span className="font-medium">
                                                         {activity.actor
@@ -1121,23 +1134,26 @@ export function InternalJobApplicationManager({
                                                           ?.first_name ||
                                                           'User'}
                                                       </span>{' '}
-                                                      changed status from{' '}
-                                                      <Badge
-                                                        className={`${getStatusColor(activity.old_value || '')} text-xs`}
-                                                      >
-                                                        {activity.old_value}
-                                                      </Badge>{' '}
-                                                      to{' '}
-                                                      <Badge
-                                                        className={`${getStatusColor(activity.new_value || '')} text-xs`}
-                                                      >
-                                                        {activity.new_value}
-                                                      </Badge>
+                                                      sent a message:
                                                     </p>
-                                                  )}
-                                                  {activity.activity_type ===
-                                                    'message_sent' && (
-                                                    <div>
+                                                    <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                                      {format(
+                                                        new Date(
+                                                          activity.created_at
+                                                        ),
+                                                        'MMM d, h:mm a'
+                                                      )}
+                                                    </span>
+                                                  </div>
+                                                  <p className="mt-1 text-gray-600 italic bg-gray-50 p-1 rounded text-xs whitespace-pre-wrap">
+                                                    {activity.message}
+                                                  </p>
+                                                </div>
+                                              ) : (
+                                                <div className="flex items-start justify-between">
+                                                  <div className="flex-1">
+                                                    {activity.activity_type ===
+                                                      'status_change' && (
                                                       <p className="text-gray-700">
                                                         <span className="font-medium">
                                                           {activity.actor
@@ -1145,29 +1161,37 @@ export function InternalJobApplicationManager({
                                                             ?.first_name ||
                                                             'User'}
                                                         </span>{' '}
-                                                        sent a message:
+                                                        changed status from{' '}
+                                                        <Badge
+                                                          className={`${getStatusColor(activity.old_value || '')} text-xs`}
+                                                        >
+                                                          {activity.old_value}
+                                                        </Badge>{' '}
+                                                        to{' '}
+                                                        <Badge
+                                                          className={`${getStatusColor(activity.new_value || '')} text-xs`}
+                                                        >
+                                                          {activity.new_value}
+                                                        </Badge>
                                                       </p>
-                                                      <p className="mt-1 text-gray-600 italic bg-gray-50 p-1 rounded text-xs truncate">
-                                                        {activity.message}
+                                                    )}
+                                                    {activity.activity_type ===
+                                                      'application_submitted' && (
+                                                      <p className="text-gray-700">
+                                                        Application submitted
                                                       </p>
-                                                    </div>
-                                                  )}
-                                                  {activity.activity_type ===
-                                                    'application_submitted' && (
-                                                    <p className="text-gray-700">
-                                                      Application submitted
-                                                    </p>
-                                                  )}
+                                                    )}
+                                                  </div>
+                                                  <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                                    {format(
+                                                      new Date(
+                                                        activity.created_at
+                                                      ),
+                                                      'MMM d, h:mm a'
+                                                    )}
+                                                  </span>
                                                 </div>
-                                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-                                                  {format(
-                                                    new Date(
-                                                      activity.created_at
-                                                    ),
-                                                    'MMM d, h:mm a'
-                                                  )}
-                                                </span>
-                                              </div>
+                                              )}
                                             </div>
                                           ))}
                                         </div>
@@ -1175,54 +1199,96 @@ export function InternalJobApplicationManager({
                                     </div>
                                   </div>
 
-                                  {/* Status Update */}
-                                  <div>
-                                    <Label className="font-medium">
-                                      Update Status
-                                    </Label>
-                                    <Select
-                                      value={selectedApplication.status}
-                                      onValueChange={value =>
-                                        handleStatusUpdate(
-                                          selectedApplication.id,
-                                          value
-                                        )
-                                      }
-                                    >
-                                      <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="pending">
-                                          Pending
-                                        </SelectItem>
-                                        <SelectItem value="reviewed">
-                                          Reviewed
-                                        </SelectItem>
-                                        <SelectItem value="accepted">
-                                          Accepted
-                                        </SelectItem>
-                                        <SelectItem value="rejected">
-                                          Rejected
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
                                   {/* Message */}
-                                  <div>
-                                    <Label className="font-medium">
-                                      Send Message
-                                    </Label>
-                                    <div className="mt-1 space-y-2">
+                                  <div className="flex-1 flex flex-col min-h-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <Label className="font-medium">
+                                        Send Message
+                                      </Label>
+                                      <Select
+                                        value={selectedApplication.status}
+                                        onValueChange={value =>
+                                          handleStatusUpdate(
+                                            selectedApplication.id,
+                                            value
+                                          )
+                                        }
+                                      >
+                                        <SelectTrigger className="w-auto h-7 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem
+                                            value="pending"
+                                            className="py-2"
+                                          >
+                                            <Badge
+                                              className={getStatusColor(
+                                                'pending'
+                                              )}
+                                            >
+                                              <Clock className="h-4 w-4" />
+                                              <span className="ml-1">
+                                                Pending
+                                              </span>
+                                            </Badge>
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="reviewed"
+                                            className="py-2"
+                                          >
+                                            <Badge
+                                              className={getStatusColor(
+                                                'reviewed'
+                                              )}
+                                            >
+                                              <Eye className="h-4 w-4" />
+                                              <span className="ml-1">
+                                                Reviewed
+                                              </span>
+                                            </Badge>
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="accepted"
+                                            className="py-2"
+                                          >
+                                            <Badge
+                                              className={getStatusColor(
+                                                'accepted'
+                                              )}
+                                            >
+                                              <CheckCircle className="h-4 w-4" />
+                                              <span className="ml-1">
+                                                Accepted
+                                              </span>
+                                            </Badge>
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="rejected"
+                                            className="py-2"
+                                          >
+                                            <Badge
+                                              className={getStatusColor(
+                                                'rejected'
+                                              )}
+                                            >
+                                              <XCircle className="h-4 w-4" />
+                                              <span className="ml-1">
+                                                Rejected
+                                              </span>
+                                            </Badge>
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="flex-1 flex flex-col gap-2 min-h-0">
                                       <Textarea
                                         value={messageText}
                                         onChange={e =>
                                           setMessageText(e.target.value)
                                         }
                                         placeholder="Type your message here..."
-                                        rows={3}
-                                        className="text-sm"
+                                        className="text-sm flex-1 min-h-[120px] resize-none"
                                       />
                                       <Button
                                         onClick={handleSendMessage}

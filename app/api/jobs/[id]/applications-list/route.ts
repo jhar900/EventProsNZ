@@ -186,6 +186,7 @@ export async function GET(
         contractor: businessProfile
           ? {
               id: businessProfile.id,
+              user_id: businessProfile.user_id || null,
               company_name: businessProfile.company_name || null,
               company_description: businessProfile.description || null,
               website: businessProfile.website || null,
