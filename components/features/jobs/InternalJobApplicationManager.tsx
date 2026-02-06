@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -115,6 +115,7 @@ export function InternalJobApplicationManager({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [activityLog, setActivityLog] = useState<ApplicationActivity[]>([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const activityLogRef = useRef<HTMLDivElement>(null);
 
   // Fetch applications if not provided as prop
   useEffect(() => {
@@ -140,6 +141,13 @@ export function InternalJobApplicationManager({
       fetchApplications();
     }
   }, [jobId, propApplications]);
+
+  // Auto-scroll activity log to bottom when messages change
+  useEffect(() => {
+    if (activityLogRef.current) {
+      activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
+    }
+  }, [activityLog]);
 
   const fetchApplications = async () => {
     try {
@@ -1107,7 +1115,10 @@ export function InternalJobApplicationManager({
                                     <Label className="font-medium">
                                       Activity Log
                                     </Label>
-                                    <div className="mt-2 max-h-40 overflow-y-auto border rounded-lg">
+                                    <div
+                                      ref={activityLogRef}
+                                      className="mt-2 max-h-40 overflow-y-auto border rounded-lg"
+                                    >
                                       {isLoadingActivity ? (
                                         <div className="p-3 text-center text-sm text-gray-500">
                                           Loading activity...
@@ -1118,24 +1129,78 @@ export function InternalJobApplicationManager({
                                         </div>
                                       ) : (
                                         <div className="divide-y">
-                                          {activityLog.map(activity => (
-                                            <div
-                                              key={activity.id}
-                                              className="p-2 text-xs"
-                                            >
-                                              {activity.activity_type ===
-                                              'message_sent' ? (
-                                                <div>
-                                                  <div className="flex items-start justify-between">
-                                                    <p className="text-gray-700">
-                                                      <span className="font-medium">
-                                                        {activity.actor
-                                                          ?.profiles
-                                                          ?.first_name ||
-                                                          'User'}
-                                                      </span>{' '}
-                                                      sent a message:
+                                          {[...activityLog]
+                                            .sort(
+                                              (a, b) =>
+                                                new Date(
+                                                  a.created_at
+                                                ).getTime() -
+                                                new Date(b.created_at).getTime()
+                                            )
+                                            .map(activity => (
+                                              <div
+                                                key={activity.id}
+                                                className="p-2 text-xs"
+                                              >
+                                                {activity.activity_type ===
+                                                'message_sent' ? (
+                                                  <div>
+                                                    <div className="flex items-start justify-between">
+                                                      <p className="text-gray-700">
+                                                        <span className="font-medium">
+                                                          {activity.actor
+                                                            ?.profiles
+                                                            ?.first_name ||
+                                                            'User'}
+                                                        </span>{' '}
+                                                        sent a message:
+                                                      </p>
+                                                      <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                                        {format(
+                                                          new Date(
+                                                            activity.created_at
+                                                          ),
+                                                          'MMM d, h:mm a'
+                                                        )}
+                                                      </span>
+                                                    </div>
+                                                    <p className="mt-1 text-gray-600 italic bg-gray-50 p-1 rounded text-xs whitespace-pre-wrap">
+                                                      {activity.message}
                                                     </p>
+                                                  </div>
+                                                ) : (
+                                                  <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                      {activity.activity_type ===
+                                                        'status_change' && (
+                                                        <p className="text-gray-700">
+                                                          <span className="font-medium">
+                                                            {activity.actor
+                                                              ?.profiles
+                                                              ?.first_name ||
+                                                              'User'}
+                                                          </span>{' '}
+                                                          changed status from{' '}
+                                                          <Badge
+                                                            className={`${getStatusColor(activity.old_value || '')} text-xs`}
+                                                          >
+                                                            {activity.old_value}
+                                                          </Badge>{' '}
+                                                          to{' '}
+                                                          <Badge
+                                                            className={`${getStatusColor(activity.new_value || '')} text-xs`}
+                                                          >
+                                                            {activity.new_value}
+                                                          </Badge>
+                                                        </p>
+                                                      )}
+                                                      {activity.activity_type ===
+                                                        'application_submitted' && (
+                                                        <p className="text-gray-700">
+                                                          Application submitted
+                                                        </p>
+                                                      )}
+                                                    </div>
                                                     <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
                                                       {format(
                                                         new Date(
@@ -1145,55 +1210,9 @@ export function InternalJobApplicationManager({
                                                       )}
                                                     </span>
                                                   </div>
-                                                  <p className="mt-1 text-gray-600 italic bg-gray-50 p-1 rounded text-xs whitespace-pre-wrap">
-                                                    {activity.message}
-                                                  </p>
-                                                </div>
-                                              ) : (
-                                                <div className="flex items-start justify-between">
-                                                  <div className="flex-1">
-                                                    {activity.activity_type ===
-                                                      'status_change' && (
-                                                      <p className="text-gray-700">
-                                                        <span className="font-medium">
-                                                          {activity.actor
-                                                            ?.profiles
-                                                            ?.first_name ||
-                                                            'User'}
-                                                        </span>{' '}
-                                                        changed status from{' '}
-                                                        <Badge
-                                                          className={`${getStatusColor(activity.old_value || '')} text-xs`}
-                                                        >
-                                                          {activity.old_value}
-                                                        </Badge>{' '}
-                                                        to{' '}
-                                                        <Badge
-                                                          className={`${getStatusColor(activity.new_value || '')} text-xs`}
-                                                        >
-                                                          {activity.new_value}
-                                                        </Badge>
-                                                      </p>
-                                                    )}
-                                                    {activity.activity_type ===
-                                                      'application_submitted' && (
-                                                      <p className="text-gray-700">
-                                                        Application submitted
-                                                      </p>
-                                                    )}
-                                                  </div>
-                                                  <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-                                                    {format(
-                                                      new Date(
-                                                        activity.created_at
-                                                      ),
-                                                      'MMM d, h:mm a'
-                                                    )}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-                                          ))}
+                                                )}
+                                              </div>
+                                            ))}
                                         </div>
                                       )}
                                     </div>

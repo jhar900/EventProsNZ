@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -26,10 +26,12 @@ import {
   Download,
   Building2,
   Globe,
+  MessageSquare,
 } from 'lucide-react';
 import { JobApplicationWithDetails, JobWithDetails } from '@/types/jobs';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ApplicationActivity {
   id: string;
@@ -67,14 +69,28 @@ export function ApplicantApplicationModal({
   const [isLoadingJob, setIsLoadingJob] = useState(false);
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [isCompanyBioExpanded, setIsCompanyBioExpanded] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [messageSentConfirmation, setMessageSentConfirmation] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open && application?.job?.id) {
       fetchJobDetails(application.job.id);
       fetchActivity(application.id);
       setIsCompanyBioExpanded(false);
+      setMessageText('');
+      setMessageSentConfirmation(false);
     }
   }, [open, application]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  }, [activityLog]);
 
   const fetchJobDetails = async (jobId: string) => {
     try {
@@ -127,6 +143,44 @@ export function ApplicantApplicationModal({
       setActivityLog([]);
     } finally {
       setIsLoadingActivity(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !application) return;
+
+    try {
+      setIsSendingMessage(true);
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (userId) {
+        headers['x-user-id'] = userId;
+      }
+
+      const response = await fetch(
+        `/api/applications/${application.id}/activity`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            activity_type: 'message_sent',
+            message: messageText.trim(),
+          }),
+        }
+      );
+
+      if (response.ok) {
+        setMessageText('');
+        setMessageSentConfirmation(true);
+        setTimeout(() => setMessageSentConfirmation(false), 3000);
+        await fetchActivity(application.id);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSendingMessage(false);
     }
   };
 
@@ -531,33 +585,16 @@ export function ApplicantApplicationModal({
                 </div>
               </div>
             )}
-
-            {/* Application Status Info */}
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <Label className="font-medium text-sm">Application Status</Label>
-              <div className="mt-2 flex items-center gap-2">
-                <Badge className={getStatusColor(application.status)}>
-                  {getStatusIcon(application.status)}
-                  <span className="ml-1">
-                    {application.status.charAt(0).toUpperCase() +
-                      application.status.slice(1)}
-                  </span>
-                </Badge>
-                <span className="text-xs text-gray-500">
-                  Last updated{' '}
-                  {formatDistanceToNow(new Date(application.updated_at), {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Messages */}
           <div className="flex flex-col gap-4">
             <div className="flex-1">
               <Label className="font-medium">Messages</Label>
-              <div className="mt-2 h-[calc(100%-2rem)] overflow-y-auto border rounded-lg">
+              <div
+                ref={messagesContainerRef}
+                className="mt-2 h-[calc(100%-2rem)] overflow-y-auto"
+              >
                 {isLoadingActivity ? (
                   <div className="p-3 text-center text-sm text-gray-500">
                     Loading messages...
@@ -568,10 +605,15 @@ export function ApplicantApplicationModal({
                     No messages yet
                   </div>
                 ) : (
-                  <div className="divide-y">
+                  <div>
                     {activityLog
                       .filter(
                         activity => activity.activity_type === 'message_sent'
+                      )
+                      .sort(
+                        (a, b) =>
+                          new Date(a.created_at).getTime() -
+                          new Date(b.created_at).getTime()
                       )
                       .map(activity => (
                         <div key={activity.id} className="p-2 text-xs">
@@ -614,6 +656,35 @@ export function ApplicantApplicationModal({
                 )}
               </div>
             </div>
+
+            {/* Message Input - only show when status is not pending */}
+            {application.status !== 'pending' && (
+              <div className="border-t pt-3">
+                <Label className="font-medium text-sm">Send Message</Label>
+                <div className="mt-2 flex flex-col gap-2">
+                  <Textarea
+                    value={messageText}
+                    onChange={e => setMessageText(e.target.value)}
+                    placeholder="Type your message here..."
+                    className="text-sm min-h-[100px] resize-none"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!messageText.trim() || isSendingMessage}
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    {isSendingMessage ? 'Sending...' : 'Send Message'}
+                  </Button>
+                  {messageSentConfirmation && (
+                    <span className="text-xs text-green-600 flex items-center justify-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Message sent successfully
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
