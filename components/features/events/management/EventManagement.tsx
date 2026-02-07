@@ -578,419 +578,481 @@ export function EventManagement({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Event Selection - Only show when no event is selected */}
-      {!selectedEvent && (
-        <Card>
-          <CardHeader className={selectedEvent ? 'pb-3' : ''}>
+    <div className="h-full">
+      {/* Main Content - Split View with Sliding Animation */}
+      <div className="flex" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        {/* Event List - Slides out when event selected */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            selectedEvent ? 'w-0 opacity-0' : 'w-full opacity-100'
+          }`}
+        >
+          <div className="w-full overflow-y-auto h-full space-y-6">
+            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={selectedEvent ? 'text-lg' : ''}>
-                  Select an Event
-                </CardTitle>
-                {!selectedEvent && (
-                  <CardDescription>
-                    Choose an event to manage or view its details
-                  </CardDescription>
-                )}
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Event Management
+                </h1>
+                <p className="text-muted-foreground">
+                  Manage your events throughout their lifecycle
+                </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCreateEventModal(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Event
-              </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`grid gap-4 ${
-                selectedEvent
-                  ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                  : 'md:grid-cols-2 lg:grid-cols-3'
-              }`}
-            >
-              {events.map(event => (
-                <Card
-                  key={event.id}
-                  className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedEvent?.id === event.id ? 'ring-2 ring-blue-500' : ''
-                  } ${selectedEvent ? 'p-2' : ''}`}
-                  onClick={() => {
-                    // Load the full event to get event_dates instead of using the list event
-                    loadEvent(event.id);
-                  }}
-                >
-                  <CardContent className={selectedEvent ? 'p-3' : 'p-4'}>
-                    <div className="flex items-start justify-between">
-                      <div
-                        className={`flex-1 ${selectedEvent ? 'space-y-1' : 'space-y-2'}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <h3
-                            className={
-                              selectedEvent
-                                ? 'font-medium text-sm line-clamp-1'
-                                : 'font-semibold'
-                            }
-                          >
-                            {event.title}
-                          </h3>
-                          {event.status === 'draft' && (
-                            <Badge
-                              variant="outline"
-                              className={
-                                selectedEvent ? 'text-xs px-1 py-0' : 'text-xs'
-                              }
-                            >
-                              Draft
-                            </Badge>
-                          )}
-                        </div>
-                        <p
-                          className={
-                            selectedEvent
-                              ? 'text-xs text-muted-foreground'
-                              : 'text-sm text-muted-foreground'
-                          }
-                        >
-                          {event.event_date
-                            ? new Date(event.event_date).toLocaleDateString()
-                            : 'Date not set'}
-                        </p>
-                        <Badge
-                          className={`${getStatusColor(event.status)} ${
-                            selectedEvent ? 'text-xs' : ''
-                          }`}
-                        >
-                          {getStatusIcon(event.status)}
-                          <span className="ml-1 capitalize">
-                            {event.status.replace('_', ' ')}
-                          </span>
-                        </Badge>
-                      </div>
-                      {!selectedEvent && (
-                        <div className="flex items-center space-x-1">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {!selectedEvent && (
-                      <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                          <DollarSign className="h-4 w-4 mr-1" />$
-                          {event.budget_total?.toLocaleString() || '0'}
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-1" />
-                          {event.attendee_count || 'N/A'}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {selectedEvent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedEvent(null)}
-              className="h-8 w-8 p-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <div className="flex items-center gap-4">
-            {selectedEvent && (selectedEvent as any).logo_url && (
-              <div className="flex-shrink-0">
-                <img
-                  src={(selectedEvent as any).logo_url}
-                  alt={`${selectedEvent.title} logo`}
-                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
-                />
-              </div>
-            )}
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {selectedEvent ? selectedEvent.title : 'Event Management'}
-              </h1>
-              <p className="text-muted-foreground">
-                {selectedEvent
-                  ? 'Manage your event details and progress'
-                  : 'Manage your events throughout their lifecycle'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Dashboard - Show when no event is selected */}
-      {!selectedEvent && (
-        <div className="mt-6">
-          <EventDashboard />
-        </div>
-      )}
-
-      {/* Event Management Tabs */}
-      {selectedEvent && (
-        <Tabs
-          value={activeTab}
-          onValueChange={value => {
-            // Prevent switching to other tabs if event is in draft status
-            if (selectedEvent.status === 'draft' && value !== 'overview') {
-              // Prevent duplicate notifications (within 1 second)
-              const now = Date.now();
-              if (now - lastNotificationTime > 1000) {
-                toast.info(
-                  'Please complete all event details and move the event to planning stage to access this tab'
-                );
-                setLastNotificationTime(now);
-              }
-              return;
-            }
-            setActiveTab(value);
-          }}
-          className="w-full"
-        >
-          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 mb-4">
-            <TabsTrigger
-              value="overview"
-              className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="contractors"
-              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
-                selectedEvent.status === 'draft'
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-              }`}
-            >
-              Roles
-            </TabsTrigger>
-            <TabsTrigger
-              value="tasks"
-              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
-                selectedEvent.status === 'draft'
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-              }`}
-            >
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger
-              value="documents"
-              className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
-                selectedEvent.status === 'draft'
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-              }`}
-            >
-              Documents
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            {/* Event Information Section */}
+            {/* Event Selection Card */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Event Information</CardTitle>
+                    <CardTitle>Select an Event</CardTitle>
                     <CardDescription>
-                      Overview of the selected event details
+                      Choose an event to manage or view its details
                     </CardDescription>
                   </div>
-                  {selectedEvent && user?.id === selectedEvent.user_id && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowEditEventModal(true)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowAdvancedPlanningModal(true)}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Advanced Planning
-                      </Button>
-                    </div>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCreateEventModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Event
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Title */}
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Title
-                    </div>
-                    <div className="text-base font-semibold">
-                      {selectedEvent.title}
-                    </div>
-                  </div>
-
-                  {/* Event Type */}
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Event Type
-                    </div>
-                    <div className="text-base capitalize">
-                      {selectedEvent.event_type || 'N/A'}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                      Status
-                      <Popover
-                        open={showStatusTooltip}
-                        onOpenChange={setShowStatusTooltip}
-                      >
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="inline-flex items-center justify-center rounded-full hover:bg-gray-100 p-0.5 focus:outline-none transition-colors"
-                            onMouseEnter={() => setShowStatusTooltip(true)}
-                            onMouseLeave={() => setShowStatusTooltip(false)}
-                            onBlur={() => setShowStatusTooltip(false)}
-                          >
-                            <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-80 p-4"
-                          side="right"
-                          align="start"
-                          onMouseEnter={() => setShowStatusTooltip(true)}
-                          onMouseLeave={() => setShowStatusTooltip(false)}
-                        >
-                          <div className="space-y-3">
-                            <div>
-                              <h4 className="font-semibold text-sm mb-3">
-                                Status Transition Flow
-                              </h4>
-                            </div>
-                            <div className="flex items-start justify-evenly w-full">
-                              {[
-                                {
-                                  status: 'draft',
-                                  icon: <AlertCircle className="h-4 w-4" />,
-                                  color: 'text-gray-500',
-                                },
-                                {
-                                  status: 'planning',
-                                  icon: <Clock className="h-4 w-4" />,
-                                  color: 'text-blue-500',
-                                },
-                                {
-                                  status: 'confirmed',
-                                  icon: <CheckCircle className="h-4 w-4" />,
-                                  color: 'text-green-500',
-                                },
-                                {
-                                  status: 'in_progress',
-                                  icon: <Clock className="h-4 w-4" />,
-                                  color: 'text-yellow-500',
-                                },
-                                {
-                                  status: 'completed',
-                                  icon: <CheckCircle className="h-4 w-4" />,
-                                  color: 'text-green-500',
-                                },
-                              ].map((step, index, array) => (
-                                <React.Fragment key={step.status}>
-                                  <div className="flex flex-col items-center space-y-1.5 flex-1 min-w-0">
-                                    <div
-                                      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${step.color}`}
-                                    >
-                                      {step.icon}
-                                    </div>
-                                    <span className="text-[10px] font-medium capitalize text-center whitespace-nowrap">
-                                      {step.status.replace('_', ' ')}
-                                    </span>
-                                  </div>
-                                  {index < array.length - 1 && (
-                                    <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0 mt-3.5" />
-                                  )}
-                                </React.Fragment>
-                              ))}
-                            </div>
+                <div className="space-y-2">
+                  {events.map(event => (
+                    <Card
+                      key={event.id}
+                      className="cursor-pointer transition-all hover:shadow-md hover:bg-gray-50"
+                      onClick={() => {
+                        // Load the full event to get event_dates instead of using the list event
+                        loadEvent(event.id);
+                      }}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start space-x-3">
+                          {/* Event Logo or Icon */}
+                          <div className="flex-shrink-0">
+                            {(event as any).logo_url ? (
+                              <img
+                                src={(event as any).logo_url}
+                                alt={event.title}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                <Calendar className="h-5 w-5 text-orange-600" />
+                              </div>
+                            )}
                           </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    {user?.id === selectedEvent.user_id &&
-                    selectedEvent.status !== 'draft' ? (
-                      <Select
-                        value={selectedEvent.status || 'draft'}
-                        onValueChange={handleStatusUpdate}
-                        disabled={isUpdatingStatus}
-                      >
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue>
-                            <Badge
-                              className={getStatusColor(selectedEvent.status)}
-                            >
-                              {getStatusIcon(selectedEvent.status)}
-                              <span className="ml-1 capitalize">
-                                {selectedEvent.status?.replace('_', ' ') ||
-                                  'N/A'}
-                              </span>
-                            </Badge>
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAllStatuses().map(status => (
-                            <SelectItem key={status} value={status}>
-                              <Badge className={getStatusColor(status)}>
-                                {getStatusIcon(status)}
-                                <span className="ml-1 capitalize">
-                                  {status.replace('_', ' ')}
-                                </span>
-                              </Badge>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="space-y-1">
-                        {selectedEvent.status === 'draft' ? (
-                          <Popover
-                            open={showDraftTooltip}
-                            onOpenChange={setShowDraftTooltip}
-                          >
-                            <PopoverTrigger asChild>
-                              <div
-                                onMouseEnter={() => setShowDraftTooltip(true)}
-                                onMouseLeave={() => setShowDraftTooltip(false)}
-                                className="inline-block"
+                          {/* Event Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">
+                                {event.title}
+                              </h3>
+                              <Badge
+                                className={`ml-2 flex-shrink-0 ${getStatusColor(event.status)}`}
                               >
+                                {event.status.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center space-x-3 text-xs text-gray-600 mb-1">
+                              <div className="flex items-center">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                <span>
+                                  {event.event_date
+                                    ? new Date(
+                                        event.event_date
+                                      ).toLocaleDateString()
+                                    : 'Date not set'}
+                                </span>
+                              </div>
+                              {event.attendee_count && (
+                                <div className="flex items-center">
+                                  <Users className="h-3 w-3 mr-1" />
+                                  <span>{event.attendee_count}</span>
+                                </div>
+                              )}
+                              {event.budget_total && (
+                                <div className="flex items-center">
+                                  <DollarSign className="h-3 w-3 mr-1" />
+                                  <span>
+                                    ${event.budget_total.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                <span className="truncate">
+                                  {event.location.startsWith('{') ||
+                                  event.location.startsWith('[')
+                                    ? 'To Be Confirmed'
+                                    : event.location}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Dashboard */}
+            <div className="mt-6">
+              <EventDashboard />
+            </div>
+          </div>
+        </div>
+
+        {/* Event Detail - Slides in when event selected */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            selectedEvent ? 'w-full opacity-100' : 'w-0 opacity-0'
+          }`}
+        >
+          <div className="w-full h-full space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedEvent(null)}
+                  className="h-8 w-8 p-0"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center gap-4">
+                  {selectedEvent && (selectedEvent as any).logo_url && (
+                    <div className="flex-shrink-0">
+                      <img
+                        src={(selectedEvent as any).logo_url}
+                        alt={`${selectedEvent?.title} logo`}
+                        className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                      {selectedEvent?.title}
+                    </h1>
+                    <p className="text-muted-foreground">
+                      Manage your event details and progress
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Event Management Tabs */}
+            {selectedEvent && (
+              <Tabs
+                value={activeTab}
+                onValueChange={value => {
+                  // Prevent switching to other tabs if event is in draft status
+                  if (
+                    selectedEvent.status === 'draft' &&
+                    value !== 'overview'
+                  ) {
+                    // Prevent duplicate notifications (within 1 second)
+                    const now = Date.now();
+                    if (now - lastNotificationTime > 1000) {
+                      toast.info(
+                        'Please complete all event details and move the event to planning stage to access this tab'
+                      );
+                      setLastNotificationTime(now);
+                    }
+                    return;
+                  }
+                  setActiveTab(value);
+                }}
+                className="w-full"
+              >
+                <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 mb-4">
+                  <TabsTrigger
+                    value="overview"
+                    className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap"
+                  >
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="contractors"
+                    className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                      selectedEvent.status === 'draft'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
+                  >
+                    Roles
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="tasks"
+                    className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                      selectedEvent.status === 'draft'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
+                  >
+                    Tasks
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="documents"
+                    className={`text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap ${
+                      selectedEvent.status === 'draft'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
+                  >
+                    Documents
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview" className="mt-4 space-y-4">
+                  {/* Event Information Section */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Event Information</CardTitle>
+                          <CardDescription>
+                            Overview of the selected event details
+                          </CardDescription>
+                        </div>
+                        {selectedEvent &&
+                          user?.id === selectedEvent.user_id && (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowEditEventModal(true)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setShowAdvancedPlanningModal(true)
+                                }
+                              >
+                                <Settings className="h-4 w-4 mr-2" />
+                                Advanced Planning
+                              </Button>
+                            </div>
+                          )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Title */}
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">
+                            Title
+                          </div>
+                          <div className="text-base font-semibold">
+                            {selectedEvent.title}
+                          </div>
+                        </div>
+
+                        {/* Event Type */}
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">
+                            Event Type
+                          </div>
+                          <div className="text-base capitalize">
+                            {selectedEvent.event_type || 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                            Status
+                            <Popover
+                              open={showStatusTooltip}
+                              onOpenChange={setShowStatusTooltip}
+                            >
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center rounded-full hover:bg-gray-100 p-0.5 focus:outline-none transition-colors"
+                                  onMouseEnter={() =>
+                                    setShowStatusTooltip(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setShowStatusTooltip(false)
+                                  }
+                                  onBlur={() => setShowStatusTooltip(false)}
+                                >
+                                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-80 p-4"
+                                side="right"
+                                align="start"
+                                onMouseEnter={() => setShowStatusTooltip(true)}
+                                onMouseLeave={() => setShowStatusTooltip(false)}
+                              >
+                                <div className="space-y-3">
+                                  <div>
+                                    <h4 className="font-semibold text-sm mb-3">
+                                      Status Transition Flow
+                                    </h4>
+                                  </div>
+                                  <div className="flex items-start justify-evenly w-full">
+                                    {[
+                                      {
+                                        status: 'draft',
+                                        icon: (
+                                          <AlertCircle className="h-4 w-4" />
+                                        ),
+                                        color: 'text-gray-500',
+                                      },
+                                      {
+                                        status: 'planning',
+                                        icon: <Clock className="h-4 w-4" />,
+                                        color: 'text-blue-500',
+                                      },
+                                      {
+                                        status: 'confirmed',
+                                        icon: (
+                                          <CheckCircle className="h-4 w-4" />
+                                        ),
+                                        color: 'text-green-500',
+                                      },
+                                      {
+                                        status: 'in_progress',
+                                        icon: <Clock className="h-4 w-4" />,
+                                        color: 'text-yellow-500',
+                                      },
+                                      {
+                                        status: 'completed',
+                                        icon: (
+                                          <CheckCircle className="h-4 w-4" />
+                                        ),
+                                        color: 'text-green-500',
+                                      },
+                                    ].map((step, index, array) => (
+                                      <React.Fragment key={step.status}>
+                                        <div className="flex flex-col items-center space-y-1.5 flex-1 min-w-0">
+                                          <div
+                                            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${step.color}`}
+                                          >
+                                            {step.icon}
+                                          </div>
+                                          <span className="text-[10px] font-medium capitalize text-center whitespace-nowrap">
+                                            {step.status.replace('_', ' ')}
+                                          </span>
+                                        </div>
+                                        {index < array.length - 1 && (
+                                          <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0 mt-3.5" />
+                                        )}
+                                      </React.Fragment>
+                                    ))}
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          {user?.id === selectedEvent.user_id &&
+                          selectedEvent.status !== 'draft' ? (
+                            <Select
+                              value={selectedEvent.status || 'draft'}
+                              onValueChange={handleStatusUpdate}
+                              disabled={isUpdatingStatus}
+                            >
+                              <SelectTrigger className="w-[200px]">
+                                <SelectValue>
+                                  <Badge
+                                    className={getStatusColor(
+                                      selectedEvent.status
+                                    )}
+                                  >
+                                    {getStatusIcon(selectedEvent.status)}
+                                    <span className="ml-1 capitalize">
+                                      {selectedEvent.status?.replace(
+                                        '_',
+                                        ' '
+                                      ) || 'N/A'}
+                                    </span>
+                                  </Badge>
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAllStatuses().map(status => (
+                                  <SelectItem key={status} value={status}>
+                                    <Badge className={getStatusColor(status)}>
+                                      {getStatusIcon(status)}
+                                      <span className="ml-1 capitalize">
+                                        {status.replace('_', ' ')}
+                                      </span>
+                                    </Badge>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <div className="space-y-1">
+                              {selectedEvent.status === 'draft' ? (
+                                <Popover
+                                  open={showDraftTooltip}
+                                  onOpenChange={setShowDraftTooltip}
+                                >
+                                  <PopoverTrigger asChild>
+                                    <div
+                                      onMouseEnter={() =>
+                                        setShowDraftTooltip(true)
+                                      }
+                                      onMouseLeave={() =>
+                                        setShowDraftTooltip(false)
+                                      }
+                                      className="inline-block"
+                                    >
+                                      <Badge
+                                        className={getStatusColor(
+                                          selectedEvent.status
+                                        )}
+                                      >
+                                        {getStatusIcon(selectedEvent.status)}
+                                        <span className="ml-1 capitalize">
+                                          {selectedEvent.status.replace(
+                                            '_',
+                                            ' '
+                                          )}
+                                        </span>
+                                      </Badge>
+                                    </div>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-80 p-3"
+                                    side="bottom"
+                                    align="start"
+                                    onMouseEnter={() =>
+                                      setShowDraftTooltip(true)
+                                    }
+                                    onMouseLeave={() =>
+                                      setShowDraftTooltip(false)
+                                    }
+                                  >
+                                    <p className="text-sm text-muted-foreground">
+                                      To progress this event to the planning
+                                      stage and have more functionality in your
+                                      event dashboard, complete the event
+                                      creation process
+                                    </p>
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
                                 <Badge
                                   className={getStatusColor(
                                     selectedEvent.status
@@ -1001,632 +1063,653 @@ export function EventManagement({
                                     {selectedEvent.status.replace('_', ' ')}
                                   </span>
                                 </Badge>
-                              </div>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-80 p-3"
-                              side="bottom"
-                              align="start"
-                              onMouseEnter={() => setShowDraftTooltip(true)}
-                              onMouseLeave={() => setShowDraftTooltip(false)}
-                            >
-                              <p className="text-sm text-muted-foreground">
-                                To progress this event to the planning stage and
-                                have more functionality in your event dashboard,
-                                complete the event creation process
-                              </p>
-                            </PopoverContent>
-                          </Popover>
-                        ) : (
-                          <Badge
-                            className={getStatusColor(selectedEvent.status)}
-                          >
-                            {getStatusIcon(selectedEvent.status)}
-                            <span className="ml-1 capitalize">
-                              {selectedEvent.status.replace('_', ' ')}
-                            </span>
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Event Date */}
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Event Dates
-                    </div>
-                    <div className="text-base space-y-2">
-                      {selectedEvent.event_date ? (
-                        <>
-                          {/* Collect all dates including main event date */}
-                          {(() => {
-                            const allDates: Array<{
-                              date: Date;
-                              startTime: Date | null;
-                              endTime: Date | null;
-                            }> = [];
-
-                            // Add main event date
-                            const mainEventDate = new Date(
-                              selectedEvent.event_date
-                            );
-                            const mainEndDate = (selectedEvent as any).end_date
-                              ? new Date((selectedEvent as any).end_date)
-                              : null;
-
-                            allDates.push({
-                              date: mainEventDate,
-                              startTime: mainEventDate,
-                              endTime: mainEndDate,
-                            });
-
-                            // Add additional dates from event_dates table
-                            const eventDates = (selectedEvent as any)
-                              .event_dates;
-                            console.log(
-                              'Event dates from selectedEvent:',
-                              eventDates
-                            );
-                            console.log('Full selectedEvent structure:', {
-                              id: selectedEvent.id,
-                              title: selectedEvent.title,
-                              event_date: selectedEvent.event_date,
-                              end_date: (selectedEvent as any).end_date,
-                              event_dates: (selectedEvent as any).event_dates,
-                              event_datesType: typeof (selectedEvent as any)
-                                .event_dates,
-                              event_datesIsArray: Array.isArray(
-                                (selectedEvent as any).event_dates
-                              ),
-                              event_datesLength: Array.isArray(
-                                (selectedEvent as any).event_dates
-                              )
-                                ? (selectedEvent as any).event_dates.length
-                                : 'not an array',
-                              allKeys: Object.keys(selectedEvent),
-                            });
-
-                            // Ensure eventDates is an array
-                            const eventDatesArray = Array.isArray(eventDates)
-                              ? eventDates
-                              : [];
-                            console.log(
-                              'Processing eventDatesArray:',
-                              eventDatesArray
-                            );
-
-                            if (eventDatesArray.length > 0) {
-                              eventDatesArray.forEach((ed: any) => {
-                                try {
-                                  const dateStr = ed.date; // YYYY-MM-DD
-                                  const startTimeStr = ed.start_time; // HH:MM:SS
-                                  const endTimeStr = ed.end_time; // HH:MM:SS
-
-                                  console.log('Processing event date:', {
-                                    dateStr,
-                                    startTimeStr,
-                                    endTimeStr,
-                                  });
-
-                                  if (!dateStr) {
-                                    console.warn(
-                                      'Event date missing date string:',
-                                      ed
-                                    );
-                                    return;
-                                  }
-
-                                  const date = new Date(dateStr);
-                                  if (isNaN(date.getTime())) {
-                                    console.warn('Invalid date:', dateStr);
-                                    return;
-                                  }
-
-                                  const startTime = startTimeStr
-                                    ? new Date(`${dateStr}T${startTimeStr}`)
-                                    : null;
-                                  const endTime = endTimeStr
-                                    ? new Date(`${dateStr}T${endTimeStr}`)
-                                    : null;
-
-                                  if (startTime && isNaN(startTime.getTime())) {
-                                    console.warn(
-                                      'Invalid start time:',
-                                      `${dateStr}T${startTimeStr}`
-                                    );
-                                  }
-                                  if (endTime && isNaN(endTime.getTime())) {
-                                    console.warn(
-                                      'Invalid end time:',
-                                      `${dateStr}T${endTimeStr}`
-                                    );
-                                  }
-
-                                  allDates.push({
-                                    date,
-                                    startTime:
-                                      startTime && !isNaN(startTime.getTime())
-                                        ? startTime
-                                        : null,
-                                    endTime:
-                                      endTime && !isNaN(endTime.getTime())
-                                        ? endTime
-                                        : null,
-                                  });
-                                } catch (error) {
-                                  console.error(
-                                    'Error processing event date:',
-                                    ed,
-                                    error
-                                  );
-                                }
-                              });
-                            }
-
-                            console.log('All dates collected:', allDates);
-
-                            // Sort all dates chronologically
-                            allDates.sort(
-                              (a, b) => a.date.getTime() - b.date.getTime()
-                            );
-
-                            return (
-                              <>
-                                {allDates.map((dateInfo, index) => (
-                                  <div key={index} className="space-y-1">
-                                    <div className="font-medium">
-                                      {dateInfo.date.toLocaleDateString(
-                                        'en-US',
-                                        {
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric',
-                                        }
-                                      )}
-                                    </div>
-                                    {(dateInfo.startTime ||
-                                      dateInfo.endTime) && (
-                                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {dateInfo.startTime
-                                          ? dateInfo.startTime.toLocaleTimeString(
-                                              'en-US',
-                                              {
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                                hour12: true,
-                                              }
-                                            )
-                                          : 'TBD'}
-                                        {dateInfo.endTime && (
-                                          <>
-                                            {' - '}
-                                            {dateInfo.endTime.toLocaleTimeString(
-                                              'en-US',
-                                              {
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                                hour12: true,
-                                              }
-                                            )}
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </>
-                            );
-                          })()}
-                        </>
-                      ) : (
-                        'Not set'
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  {(selectedEvent.location ||
-                    (selectedEvent as any).location_data?.toBeConfirmed) && (
-                    <div className="space-y-2 col-span-2">
-                      <div className="text-sm font-medium text-muted-foreground flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        Location
-                      </div>
-                      <div className="space-y-3">
-                        <div className="text-base">
-                          {(selectedEvent as any).location_data
-                            ?.toBeConfirmed ||
-                          (selectedEvent.location &&
-                            (selectedEvent.location.startsWith('{') ||
-                              selectedEvent.location.startsWith('[')))
-                            ? 'To Be Confirmed'
-                            : selectedEvent.location}
-                        </div>
-                        {/* Show map if location has valid coordinates */}
-                        {(selectedEvent as any).location_data &&
-                          !(selectedEvent as any).location_data
-                            ?.toBeConfirmed &&
-                          !(selectedEvent as any).location_data?.isVirtual &&
-                          (selectedEvent as any).location_data?.coordinates &&
-                          (selectedEvent as any).location_data.coordinates
-                            .lat !== 0 &&
-                          (selectedEvent as any).location_data.coordinates
-                            .lng !== 0 && (
-                            <div className="w-full h-48">
-                              <LocationMap
-                                coordinates={
-                                  (selectedEvent as any).location_data
-                                    .coordinates
-                                }
-                              />
+                              )}
                             </div>
                           )}
-                      </div>
-                    </div>
-                  )}
+                        </div>
 
-                  {/* Duration */}
-                  {selectedEvent.duration_hours && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-muted-foreground flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Duration
-                      </div>
-                      <div className="text-base">
-                        {selectedEvent.duration_hours} hours
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Attendee Count */}
-                  {selectedEvent.attendee_count && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-muted-foreground flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        Attendees
-                      </div>
-                      <div className="text-base">
-                        {selectedEvent.attendee_count.toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Budget */}
-                  {(selectedEvent.budget_total ||
-                    selectedEvent.budget_min ||
-                    selectedEvent.budget_max) && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-muted-foreground flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        Budget
-                      </div>
-                      <div className="text-base">
-                        {selectedEvent.budget_total
-                          ? `$${selectedEvent.budget_total.toLocaleString()}`
-                          : selectedEvent.budget_min && selectedEvent.budget_max
-                            ? `$${selectedEvent.budget_min.toLocaleString()} - $${selectedEvent.budget_max.toLocaleString()}`
-                            : selectedEvent.budget_min
-                              ? `From $${selectedEvent.budget_min.toLocaleString()}`
-                              : selectedEvent.budget_max
-                                ? `Up to $${selectedEvent.budget_max.toLocaleString()}`
-                                : 'N/A'}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Description */}
-                  {selectedEvent.description && (
-                    <div className="space-y-1 md:col-span-2 lg:col-span-3">
-                      <div className="text-sm font-medium text-muted-foreground">
-                        Description
-                      </div>
-                      <div className="text-base text-muted-foreground">
-                        {selectedEvent.description}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Special Requirements */}
-                  {selectedEvent.requirements && (
-                    <div className="space-y-1 md:col-span-2 lg:col-span-3">
-                      <div className="text-sm font-medium text-muted-foreground">
-                        Special Requirements
-                      </div>
-                      <div className="text-base text-muted-foreground">
-                        {selectedEvent.requirements}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="tasks" className="mt-4 space-y-4">
-            <EventTasks eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-4 space-y-4">
-            <EventDocuments eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="mt-4 space-y-4">
-            <ChangeNotifications eventId={selectedEvent.id} />
-            <NotificationCenter eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="duplication" className="mt-4 space-y-4">
-            <EventDuplication eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="completion" className="mt-4 space-y-4">
-            <EventCompletion eventId={selectedEvent.id} />
-            <FeedbackCollection eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="communication" className="mt-4 space-y-4">
-            <ContractorCommunication eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-4 space-y-4">
-            <EventAnalytics eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="timeline" className="mt-4 space-y-4">
-            <EventTimeline eventId={selectedEvent.id} />
-          </TabsContent>
-
-          <TabsContent value="contractors" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Event Management Team</CardTitle>
-                    {user?.id === selectedEvent.user_id ? (
-                      <CardDescription>
-                        Manage your event management team members and their
-                        roles
-                      </CardDescription>
-                    ) : (
-                      <CardDescription>
-                        <div className="space-y-1 mt-2">
-                          <div>
-                            The event management team is responsible for the
-                            planning, management and delivery for this event.
+                        {/* Event Date */}
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Event Dates
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            Only the event creator can add / remove members on
-                            the event management team
+                          <div className="text-base space-y-2">
+                            {selectedEvent.event_date ? (
+                              <>
+                                {/* Collect all dates including main event date */}
+                                {(() => {
+                                  const allDates: Array<{
+                                    date: Date;
+                                    startTime: Date | null;
+                                    endTime: Date | null;
+                                  }> = [];
+
+                                  // Add main event date
+                                  const mainEventDate = new Date(
+                                    selectedEvent.event_date
+                                  );
+                                  const mainEndDate = (selectedEvent as any)
+                                    .end_date
+                                    ? new Date((selectedEvent as any).end_date)
+                                    : null;
+
+                                  allDates.push({
+                                    date: mainEventDate,
+                                    startTime: mainEventDate,
+                                    endTime: mainEndDate,
+                                  });
+
+                                  // Add additional dates from event_dates table
+                                  const eventDates = (selectedEvent as any)
+                                    .event_dates;
+                                  console.log(
+                                    'Event dates from selectedEvent:',
+                                    eventDates
+                                  );
+                                  console.log('Full selectedEvent structure:', {
+                                    id: selectedEvent.id,
+                                    title: selectedEvent.title,
+                                    event_date: selectedEvent.event_date,
+                                    end_date: (selectedEvent as any).end_date,
+                                    event_dates: (selectedEvent as any)
+                                      .event_dates,
+                                    event_datesType: typeof (
+                                      selectedEvent as any
+                                    ).event_dates,
+                                    event_datesIsArray: Array.isArray(
+                                      (selectedEvent as any).event_dates
+                                    ),
+                                    event_datesLength: Array.isArray(
+                                      (selectedEvent as any).event_dates
+                                    )
+                                      ? (selectedEvent as any).event_dates
+                                          .length
+                                      : 'not an array',
+                                    allKeys: Object.keys(selectedEvent),
+                                  });
+
+                                  // Ensure eventDates is an array
+                                  const eventDatesArray = Array.isArray(
+                                    eventDates
+                                  )
+                                    ? eventDates
+                                    : [];
+                                  console.log(
+                                    'Processing eventDatesArray:',
+                                    eventDatesArray
+                                  );
+
+                                  if (eventDatesArray.length > 0) {
+                                    eventDatesArray.forEach((ed: any) => {
+                                      try {
+                                        const dateStr = ed.date; // YYYY-MM-DD
+                                        const startTimeStr = ed.start_time; // HH:MM:SS
+                                        const endTimeStr = ed.end_time; // HH:MM:SS
+
+                                        console.log('Processing event date:', {
+                                          dateStr,
+                                          startTimeStr,
+                                          endTimeStr,
+                                        });
+
+                                        if (!dateStr) {
+                                          console.warn(
+                                            'Event date missing date string:',
+                                            ed
+                                          );
+                                          return;
+                                        }
+
+                                        const date = new Date(dateStr);
+                                        if (isNaN(date.getTime())) {
+                                          console.warn(
+                                            'Invalid date:',
+                                            dateStr
+                                          );
+                                          return;
+                                        }
+
+                                        const startTime = startTimeStr
+                                          ? new Date(
+                                              `${dateStr}T${startTimeStr}`
+                                            )
+                                          : null;
+                                        const endTime = endTimeStr
+                                          ? new Date(`${dateStr}T${endTimeStr}`)
+                                          : null;
+
+                                        if (
+                                          startTime &&
+                                          isNaN(startTime.getTime())
+                                        ) {
+                                          console.warn(
+                                            'Invalid start time:',
+                                            `${dateStr}T${startTimeStr}`
+                                          );
+                                        }
+                                        if (
+                                          endTime &&
+                                          isNaN(endTime.getTime())
+                                        ) {
+                                          console.warn(
+                                            'Invalid end time:',
+                                            `${dateStr}T${endTimeStr}`
+                                          );
+                                        }
+
+                                        allDates.push({
+                                          date,
+                                          startTime:
+                                            startTime &&
+                                            !isNaN(startTime.getTime())
+                                              ? startTime
+                                              : null,
+                                          endTime:
+                                            endTime && !isNaN(endTime.getTime())
+                                              ? endTime
+                                              : null,
+                                        });
+                                      } catch (error) {
+                                        console.error(
+                                          'Error processing event date:',
+                                          ed,
+                                          error
+                                        );
+                                      }
+                                    });
+                                  }
+
+                                  console.log('All dates collected:', allDates);
+
+                                  // Sort all dates chronologically
+                                  allDates.sort(
+                                    (a, b) =>
+                                      a.date.getTime() - b.date.getTime()
+                                  );
+
+                                  return (
+                                    <>
+                                      {allDates.map((dateInfo, index) => (
+                                        <div key={index} className="space-y-1">
+                                          <div className="font-medium">
+                                            {dateInfo.date.toLocaleDateString(
+                                              'en-US',
+                                              {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                              }
+                                            )}
+                                          </div>
+                                          {(dateInfo.startTime ||
+                                            dateInfo.endTime) && (
+                                            <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                              <Clock className="h-3 w-3" />
+                                              {dateInfo.startTime
+                                                ? dateInfo.startTime.toLocaleTimeString(
+                                                    'en-US',
+                                                    {
+                                                      hour: '2-digit',
+                                                      minute: '2-digit',
+                                                      hour12: true,
+                                                    }
+                                                  )
+                                                : 'TBD'}
+                                              {dateInfo.endTime && (
+                                                <>
+                                                  {' - '}
+                                                  {dateInfo.endTime.toLocaleTimeString(
+                                                    'en-US',
+                                                    {
+                                                      hour: '2-digit',
+                                                      minute: '2-digit',
+                                                      hour12: true,
+                                                    }
+                                                  )}
+                                                </>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </>
+                                  );
+                                })()}
+                              </>
+                            ) : (
+                              'Not set'
+                            )}
                           </div>
                         </div>
-                      </CardDescription>
-                    )}
-                  </div>
-                  {user?.id === selectedEvent.user_id && (
-                    <Button
-                      size="sm"
-                      onClick={() => setShowAddTeamMembersModal(true)}
-                      className="bg-orange-600 hover:bg-orange-700"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Team Member
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoadingTeamMembers ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    Loading team members...
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead className="pl-2">Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
-                        {user?.id === selectedEvent.user_id && (
-                          <TableHead>Actions</TableHead>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {eventTeamMembers.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={user?.id === selectedEvent.user_id ? 7 : 6}
-                            className="text-center text-muted-foreground py-8"
-                          >
-                            Loading team members...
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        eventTeamMembers.map(member => {
-                          const initials = getInitials(member.name);
-                          return (
-                            <TableRow key={member.id}>
-                              <TableCell className="pr-2">
-                                <Avatar className="h-8 w-8">
-                                  {member.avatarUrl &&
-                                  member.avatarUrl.trim() ? (
-                                    <AvatarImage
-                                      src={member.avatarUrl}
-                                      alt={member.name}
-                                    />
-                                  ) : null}
-                                  <AvatarFallback className="text-xs">
-                                    {initials}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </TableCell>
-                              <TableCell className="pl-2">
-                                <span className="font-medium">
-                                  {member.name}
-                                </span>
-                              </TableCell>
-                              <TableCell>{member.role}</TableCell>
-                              <TableCell>{member.email}</TableCell>
-                              <TableCell>{member.phone || 'N/A'}</TableCell>
-                              <TableCell>
-                                {getStatusBadge(member.status)}
-                              </TableCell>
-                              {user?.id === selectedEvent.user_id && (
-                                <TableCell>
-                                  {member.isCreator ? (
-                                    <span className="text-xs text-muted-foreground">
-                                      Creator
-                                    </span>
-                                  ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleRemoveTeamMember(member.id)
+
+                        {/* Location */}
+                        {(selectedEvent.location ||
+                          (selectedEvent as any).location_data
+                            ?.toBeConfirmed) && (
+                          <div className="space-y-2 col-span-2">
+                            <div className="text-sm font-medium text-muted-foreground flex items-center">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              Location
+                            </div>
+                            <div className="space-y-3">
+                              <div className="text-base">
+                                {(selectedEvent as any).location_data
+                                  ?.toBeConfirmed ||
+                                (selectedEvent.location &&
+                                  (selectedEvent.location.startsWith('{') ||
+                                    selectedEvent.location.startsWith('[')))
+                                  ? 'To Be Confirmed'
+                                  : selectedEvent.location}
+                              </div>
+                              {/* Show map if location has valid coordinates */}
+                              {(selectedEvent as any).location_data &&
+                                !(selectedEvent as any).location_data
+                                  ?.toBeConfirmed &&
+                                !(selectedEvent as any).location_data
+                                  ?.isVirtual &&
+                                (selectedEvent as any).location_data
+                                  ?.coordinates &&
+                                (selectedEvent as any).location_data.coordinates
+                                  .lat !== 0 &&
+                                (selectedEvent as any).location_data.coordinates
+                                  .lng !== 0 && (
+                                  <div className="w-full h-48">
+                                    <LocationMap
+                                      coordinates={
+                                        (selectedEvent as any).location_data
+                                          .coordinates
                                       }
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </TableCell>
+                                    />
+                                  </div>
+                                )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Duration */}
+                        {selectedEvent.duration_hours && (
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground flex items-center">
+                              <Clock className="h-4 w-4 mr-1" />
+                              Duration
+                            </div>
+                            <div className="text-base">
+                              {selectedEvent.duration_hours} hours
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Attendee Count */}
+                        {selectedEvent.attendee_count && (
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground flex items-center">
+                              <Users className="h-4 w-4 mr-1" />
+                              Attendees
+                            </div>
+                            <div className="text-base">
+                              {selectedEvent.attendee_count.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Budget */}
+                        {(selectedEvent.budget_total ||
+                          selectedEvent.budget_min ||
+                          selectedEvent.budget_max) && (
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground flex items-center">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Budget
+                            </div>
+                            <div className="text-base">
+                              {selectedEvent.budget_total
+                                ? `$${selectedEvent.budget_total.toLocaleString()}`
+                                : selectedEvent.budget_min &&
+                                    selectedEvent.budget_max
+                                  ? `$${selectedEvent.budget_min.toLocaleString()} - $${selectedEvent.budget_max.toLocaleString()}`
+                                  : selectedEvent.budget_min
+                                    ? `From $${selectedEvent.budget_min.toLocaleString()}`
+                                    : selectedEvent.budget_max
+                                      ? `Up to $${selectedEvent.budget_max.toLocaleString()}`
+                                      : 'N/A'}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Description */}
+                        {selectedEvent.description && (
+                          <div className="space-y-1 md:col-span-2 lg:col-span-3">
+                            <div className="text-sm font-medium text-muted-foreground">
+                              Description
+                            </div>
+                            <div className="text-base text-muted-foreground">
+                              {selectedEvent.description}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Special Requirements */}
+                        {selectedEvent.requirements && (
+                          <div className="space-y-1 md:col-span-2 lg:col-span-3">
+                            <div className="text-sm font-medium text-muted-foreground">
+                              Special Requirements
+                            </div>
+                            <div className="text-base text-muted-foreground">
+                              {selectedEvent.requirements}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="tasks" className="mt-4 space-y-4">
+                  <EventTasks eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="documents" className="mt-4 space-y-4">
+                  <EventDocuments eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="notifications" className="mt-4 space-y-4">
+                  <ChangeNotifications eventId={selectedEvent.id} />
+                  <NotificationCenter eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="duplication" className="mt-4 space-y-4">
+                  <EventDuplication eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="completion" className="mt-4 space-y-4">
+                  <EventCompletion eventId={selectedEvent.id} />
+                  <FeedbackCollection eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="communication" className="mt-4 space-y-4">
+                  <ContractorCommunication eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="analytics" className="mt-4 space-y-4">
+                  <EventAnalytics eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="timeline" className="mt-4 space-y-4">
+                  <EventTimeline eventId={selectedEvent.id} />
+                </TabsContent>
+
+                <TabsContent value="contractors" className="mt-4 space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Event Management Team</CardTitle>
+                          {user?.id === selectedEvent.user_id ? (
+                            <CardDescription>
+                              Manage your event management team members and
+                              their roles
+                            </CardDescription>
+                          ) : (
+                            <CardDescription>
+                              <div className="space-y-1 mt-2">
+                                <div>
+                                  The event management team is responsible for
+                                  the planning, management and delivery for this
+                                  event.
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Only the event creator can add / remove
+                                  members on the event management team
+                                </div>
+                              </div>
+                            </CardDescription>
+                          )}
+                        </div>
+                        {user?.id === selectedEvent.user_id && (
+                          <Button
+                            size="sm"
+                            onClick={() => setShowAddTeamMembersModal(true)}
+                            className="bg-orange-600 hover:bg-orange-700"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Team Member
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {isLoadingTeamMembers ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          Loading team members...
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8"></TableHead>
+                              <TableHead className="pl-2">Name</TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Phone</TableHead>
+                              <TableHead>Status</TableHead>
+                              {user?.id === selectedEvent.user_id && (
+                                <TableHead>Actions</TableHead>
                               )}
                             </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Contractors Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Contractors</CardTitle>
-                    <CardDescription>
-                      Contractors matched or assigned to this event
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoadingContractors ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    Loading contractors...
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead className="pl-2">Company Name</TableHead>
-                        <TableHead>Services</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {eventContractors.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center text-muted-foreground py-8"
-                          >
-                            No contractors matched yet
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        eventContractors.map(contractor => {
-                          const initials = contractor.company_name
-                            ? contractor.company_name
-                                .split(' ')
-                                .map(n => n[0])
-                                .join('')
-                                .toUpperCase()
-                                .slice(0, 2)
-                            : 'N/A';
-                          return (
-                            <TableRow key={contractor.id}>
-                              <TableCell className="pr-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback className="text-xs">
-                                    {initials}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </TableCell>
-                              <TableCell className="pl-2">
-                                <span className="font-medium">
-                                  {contractor.company_name}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {contractor.service_categories
-                                    ?.slice(0, 3)
-                                    .map((cat: string, idx: number) => (
-                                      <Badge
-                                        key={idx}
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {cat}
-                                      </Badge>
-                                    ))}
-                                  {contractor.service_categories?.length >
-                                    3 && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      +
-                                      {contractor.service_categories.length - 3}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>{contractor.email || 'N/A'}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={
-                                    contractor.status === 'hired'
-                                      ? 'bg-green-100 text-green-800'
-                                      : contractor.status === 'interested'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : contractor.status === 'declined'
-                                          ? 'bg-red-100 text-red-800'
-                                          : 'bg-gray-100 text-gray-800'
+                          </TableHeader>
+                          <TableBody>
+                            {eventTeamMembers.length === 0 ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={
+                                    user?.id === selectedEvent.user_id ? 7 : 6
                                   }
+                                  className="text-center text-muted-foreground py-8"
                                 >
-                                  {contractor.status
-                                    ? contractor.status
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                      contractor.status.slice(1)
-                                    : 'Pending'}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
+                                  Loading team members...
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              eventTeamMembers.map(member => {
+                                const initials = getInitials(member.name);
+                                return (
+                                  <TableRow key={member.id}>
+                                    <TableCell className="pr-2">
+                                      <Avatar className="h-8 w-8">
+                                        {member.avatarUrl &&
+                                        member.avatarUrl.trim() ? (
+                                          <AvatarImage
+                                            src={member.avatarUrl}
+                                            alt={member.name}
+                                          />
+                                        ) : null}
+                                        <AvatarFallback className="text-xs">
+                                          {initials}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    </TableCell>
+                                    <TableCell className="pl-2">
+                                      <span className="font-medium">
+                                        {member.name}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>{member.role}</TableCell>
+                                    <TableCell>{member.email}</TableCell>
+                                    <TableCell>
+                                      {member.phone || 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {getStatusBadge(member.status)}
+                                    </TableCell>
+                                    {user?.id === selectedEvent.user_id && (
+                                      <TableCell>
+                                        {member.isCreator ? (
+                                          <span className="text-xs text-muted-foreground">
+                                            Creator
+                                          </span>
+                                        ) : (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleRemoveTeamMember(member.id)
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                      </TableCell>
+                                    )}
+                                  </TableRow>
+                                );
+                              })
+                            )}
+                          </TableBody>
+                        </Table>
                       )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Contractors Section */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Contractors</CardTitle>
+                          <CardDescription>
+                            Contractors matched or assigned to this event
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {isLoadingContractors ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          Loading contractors...
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8"></TableHead>
+                              <TableHead className="pl-2">
+                                Company Name
+                              </TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead>Services</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {eventContractors.length === 0 ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={7}
+                                  className="text-center text-muted-foreground py-8"
+                                >
+                                  No contractors assigned yet
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              eventContractors.map(contractor => {
+                                const initials = contractor.company_name
+                                  ? contractor.company_name
+                                      .split(' ')
+                                      .map(n => n[0])
+                                      .join('')
+                                      .toUpperCase()
+                                      .slice(0, 2)
+                                  : 'N/A';
+                                return (
+                                  <TableRow key={contractor.id}>
+                                    <TableCell className="pr-2">
+                                      <Avatar className="h-8 w-8">
+                                        <AvatarFallback className="text-xs">
+                                          {initials}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    </TableCell>
+                                    <TableCell className="pl-2">
+                                      <span className="font-medium">
+                                        {contractor.company_name}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>
+                                      {contractor.role || '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex flex-wrap gap-1">
+                                        {contractor.service_categories
+                                          ?.slice(0, 3)
+                                          .map((cat: string, idx: number) => (
+                                            <Badge
+                                              key={idx}
+                                              variant="outline"
+                                              className="text-xs"
+                                            >
+                                              {cat}
+                                            </Badge>
+                                          ))}
+                                        {contractor.service_categories?.length >
+                                          3 && (
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                          >
+                                            +
+                                            {contractor.service_categories
+                                              .length - 3}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      {contractor.email || 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge
+                                        variant="outline"
+                                        className={
+                                          contractor.status === 'hired' ||
+                                          contractor.status === 'confirmed'
+                                            ? 'bg-green-100 text-green-800'
+                                            : contractor.status ===
+                                                  'interested' ||
+                                                contractor.status === 'invited'
+                                              ? 'bg-blue-100 text-blue-800'
+                                              : contractor.status ===
+                                                    'declined' ||
+                                                  contractor.status ===
+                                                    'cancelled'
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-gray-100 text-gray-800'
+                                        }
+                                      >
+                                        {contractor.status
+                                          ? contractor.status
+                                              .charAt(0)
+                                              .toUpperCase() +
+                                            contractor.status.slice(1)
+                                          : 'Pending'}
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })
+                            )}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Create Event Modal */}
       <CreateEventModal

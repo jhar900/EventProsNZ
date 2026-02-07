@@ -661,6 +661,41 @@ export interface Database {
           updated_at?: string;
         };
       };
+      event_contractors: {
+        Row: {
+          id: string;
+          event_id: string;
+          contractor_id: string;
+          status: 'invited' | 'confirmed' | 'declined' | 'cancelled';
+          role: string | null;
+          notes: string | null;
+          added_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          contractor_id: string;
+          status?: 'invited' | 'confirmed' | 'declined' | 'cancelled';
+          role?: string | null;
+          notes?: string | null;
+          added_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          contractor_id?: string;
+          status?: 'invited' | 'confirmed' | 'declined' | 'cancelled';
+          role?: string | null;
+          notes?: string | null;
+          added_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       event_notifications: {
         Row: {
           id: string;

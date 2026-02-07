@@ -92,7 +92,7 @@ export async function GET(
       }
     }
 
-    // Fetch contractors from event_contractor_matches with full details
+    // Fetch contractors from event_contractor_matches (algorithmic matches)
     // Note: contractor_id in event_contractor_matches references users.id
     const { data: contractorMatches, error: matchesError } = await supabaseAdmin
       .from('event_contractor_matches')
@@ -110,34 +110,52 @@ export async function GET(
 
     if (matchesError) {
       console.error('Error fetching contractor matches:', matchesError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to fetch contractors',
-          details: matchesError.message,
-        },
-        { status: 500 }
-      );
     }
 
-    // Get unique contractor IDs (these are user_ids)
-    const contractorUserIds = [
-      ...new Set(
-        (contractorMatches || []).map((match: any) => match.contractor_id)
-      ),
+    // Fetch contractors from event_contractors (manual assignments/invites)
+    const { data: manualAssignments, error: assignmentsError } =
+      await supabaseAdmin
+        .from('event_contractors')
+        .select(
+          `
+        id,
+        contractor_id,
+        status,
+        role,
+        notes,
+        added_by,
+        created_at
+      `
+        )
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
+
+    if (assignmentsError) {
+      console.error('Error fetching manual assignments:', assignmentsError);
+    }
+
+    // Collect all unique contractor IDs from both sources
+    const matchedContractorIds = (contractorMatches || []).map(
+      (m: any) => m.contractor_id
+    );
+    const assignedContractorIds = (manualAssignments || []).map(
+      (a: any) => a.contractor_id
+    );
+    const allContractorUserIds = [
+      ...new Set([...matchedContractorIds, ...assignedContractorIds]),
     ];
 
-    // Fetch business profiles and user emails for these contractors
+    // Fetch business profiles and user emails for all contractors
     const businessProfilesMap: Record<string, any> = {};
     const userEmailsMap: Record<string, string> = {};
 
-    if (contractorUserIds.length > 0) {
+    if (allContractorUserIds.length > 0) {
       // Fetch business profiles
       const { data: businessProfiles, error: profilesError } =
         await supabaseAdmin
           .from('business_profiles')
           .select('id, user_id, company_name, service_categories')
-          .in('user_id', contractorUserIds);
+          .in('user_id', allContractorUserIds);
 
       if (!profilesError && businessProfiles) {
         businessProfiles.forEach((profile: any) => {
@@ -149,7 +167,7 @@ export async function GET(
       const { data: users, error: usersError } = await supabaseAdmin
         .from('users')
         .select('id, email')
-        .in('id', contractorUserIds);
+        .in('id', allContractorUserIds);
 
       if (!usersError && users) {
         users.forEach((u: any) => {
@@ -158,19 +176,42 @@ export async function GET(
       }
     }
 
-    // Transform the data to a more usable format
-    const contractors = (contractorMatches || []).map((match: any) => {
-      const businessProfile = businessProfilesMap[match.contractor_id];
+    // Build contractors map - manual assignments take priority over matches
+    const contractorsMap: Record<string, any> = {};
 
-      return {
+    // First, add algorithmic matches
+    (contractorMatches || []).forEach((match: any) => {
+      const businessProfile = businessProfilesMap[match.contractor_id];
+      contractorsMap[match.contractor_id] = {
         id: match.contractor_id,
         company_name: businessProfile?.company_name || 'Unknown',
         email: userEmailsMap[match.contractor_id] || 'N/A',
         service_categories: businessProfile?.service_categories || [],
         match_score: match.match_score || 0,
         status: match.status || 'pending',
+        source: 'match',
       };
     });
+
+    // Then, add/override with manual assignments (these take priority)
+    (manualAssignments || []).forEach((assignment: any) => {
+      const businessProfile = businessProfilesMap[assignment.contractor_id];
+      const existing = contractorsMap[assignment.contractor_id];
+      contractorsMap[assignment.contractor_id] = {
+        id: assignment.contractor_id,
+        company_name: businessProfile?.company_name || 'Unknown',
+        email: userEmailsMap[assignment.contractor_id] || 'N/A',
+        service_categories: businessProfile?.service_categories || [],
+        match_score: existing?.match_score || 0,
+        status: assignment.status || 'invited',
+        role: assignment.role,
+        notes: assignment.notes,
+        source: 'assigned',
+      };
+    });
+
+    // Convert map to array
+    const contractors = Object.values(contractorsMap);
 
     return NextResponse.json({
       success: true,

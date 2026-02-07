@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -13,19 +12,16 @@ import {
   User,
   MapPin,
   Clock,
-  Eye,
   AlertCircle,
   Search,
-  UserCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import { Inquiry } from '@/types/inquiries';
-import { InquiryDetailDialog } from '../inquiries/InquiryDetailDialog';
-import { QuickResponseDialog } from '../inquiries/QuickResponseDialog';
-import Link from 'next/link';
+import { ContactDetailsPanel } from './ContactDetailsPanel';
+import { ConversationDetailPanel } from './ConversationDetailPanel';
 
 interface EventManagerConversationsListProps {
   className?: string;
-  compact?: boolean;
 }
 
 export interface ConversationWithRelations extends Inquiry {
@@ -52,7 +48,6 @@ export interface ConversationWithRelations extends Inquiry {
 
 export default function EventManagerConversationsList({
   className = '',
-  compact = false,
 }: EventManagerConversationsListProps) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<
@@ -63,11 +58,6 @@ export default function EventManagerConversationsList({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationWithRelations | null>(null);
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  const [isResponseDialogOpen, setIsResponseDialogOpen] = useState(false);
-  const [responseInquiryId, setResponseInquiryId] = useState<string>('');
-  const [responseInquirySubject, setResponseInquirySubject] =
-    useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -177,22 +167,16 @@ export default function EventManagerConversationsList({
     return filtered;
   }, [conversations, searchQuery]);
 
-  const handleViewDetails = (conv: ConversationWithRelations) => {
+  const handleSelectConversation = (conv: ConversationWithRelations) => {
     setSelectedConversation(conv);
-    setIsDetailDialogOpen(true);
   };
 
-  const handleRespond = (conv: ConversationWithRelations) => {
-    setResponseInquiryId(conv.id);
-    setResponseInquirySubject(conv.subject);
-    setIsResponseDialogOpen(true);
+  const handleCloseDetail = () => {
+    setSelectedConversation(null);
   };
 
-  const [responseSentTrigger, setResponseSentTrigger] = useState(0);
-
-  const handleResponseSuccess = () => {
-    fetchConversations();
-    setResponseSentTrigger(prev => prev + 1);
+  const handleResponseSubmitted = () => {
+    fetchConversations(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -210,16 +194,6 @@ export default function EventManagerConversationsList({
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   if (loading) {
@@ -251,7 +225,7 @@ export default function EventManagerConversationsList({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`h-full ${className}`}>
       {/* Header with Search */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Conversations</h1>
@@ -267,190 +241,163 @@ export default function EventManagerConversationsList({
         </div>
       </div>
 
-      {/* Conversations List */}
-      {filteredAndSortedConversations.length === 0 ? (
-        <Card className="p-12 text-center">
-          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {conversations.length === 0
-              ? 'No Conversations Yet'
-              : 'No Conversations Match Your Filters'}
-          </h3>
-          <p className="text-gray-600">
-            {conversations.length === 0
-              ? "You haven't started any conversations yet. When you contact contractors, they'll appear here."
-              : 'Try adjusting your search criteria.'}
-          </p>
-        </Card>
-      ) : (
-        <div className={compact ? 'space-y-2' : 'space-y-4'}>
-          {filteredAndSortedConversations.map(conv => {
-            const contractor = conv.contractor as any;
-            const profile = contractor?.profiles;
-            const businessProfile = contractor?.business_profiles;
-            let contractorName = 'Unknown';
-            if (profile && (profile.first_name || profile.last_name)) {
-              const fullName =
-                `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-              contractorName =
-                fullName ||
-                businessProfile?.company_name ||
-                contractor?.email ||
-                'Unknown';
-            } else if (businessProfile?.company_name) {
-              contractorName = businessProfile.company_name;
-            } else if (contractor?.email) {
-              contractorName = contractor.email;
-            }
+      {/* Main Content - Split View */}
+      <div className="flex" style={{ height: 'calc(100vh - 180px)' }}>
+        {/* Conversations List - Slides out when conversation selected */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            selectedConversation ? 'w-0 opacity-0' : 'w-full opacity-100'
+          }`}
+        >
+          <div className="w-full overflow-y-auto h-full pr-6">
+            {filteredAndSortedConversations.length === 0 ? (
+              <Card className="p-12 text-center">
+                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {conversations.length === 0
+                    ? 'No Conversations Yet'
+                    : 'No Conversations Match Your Filters'}
+                </h3>
+                <p className="text-gray-600">
+                  {conversations.length === 0
+                    ? "You haven't started any conversations yet. When you contact contractors, they'll appear here."
+                    : 'Try adjusting your search criteria.'}
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {filteredAndSortedConversations.map(conv => {
+                  const contractor = conv.contractor as any;
+                  const profile = contractor?.profiles;
+                  const businessProfile = contractor?.business_profiles;
+                  let contractorName = 'Unknown';
+                  if (profile && (profile.first_name || profile.last_name)) {
+                    const fullName =
+                      `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+                    contractorName =
+                      fullName ||
+                      businessProfile?.company_name ||
+                      contractor?.email ||
+                      'Unknown';
+                  } else if (businessProfile?.company_name) {
+                    contractorName = businessProfile.company_name;
+                  } else if (contractor?.email) {
+                    contractorName = contractor.email;
+                  }
 
-            return (
-              <Card
-                key={conv.id}
-                className={
-                  compact
-                    ? 'p-3 hover:shadow-md transition-shadow'
-                    : 'p-6 hover:shadow-md transition-shadow'
-                }
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div
-                      className={`flex items-start space-x-3 ${compact ? 'mb-2' : 'mb-4'}`}
+                  const isSelected = selectedConversation?.id === conv.id;
+
+                  return (
+                    <Card
+                      key={conv.id}
+                      onClick={() => handleSelectConversation(conv)}
+                      className={`p-3 cursor-pointer transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-orange-500 bg-orange-50'
+                          : 'hover:shadow-md hover:bg-gray-50'
+                      }`}
                     >
-                      <Avatar className={compact ? 'h-8 w-8' : 'h-12 w-12'}>
-                        <AvatarImage src={profile?.avatar_url} />
-                        <AvatarFallback>
-                          {contractorName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div
-                          className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'}`}
-                        >
-                          <h3
-                            className={
-                              compact
-                                ? 'text-base font-semibold text-gray-900'
-                                : 'text-lg font-semibold text-gray-900'
-                            }
-                          >
-                            {conv.subject}
-                          </h3>
-                          <div className="flex items-center space-x-2">
-                            <Badge className={getStatusColor(conv.status)}>
+                      <div className="flex items-start space-x-3">
+                        <Avatar className="h-10 w-10 flex-shrink-0">
+                          <AvatarImage src={profile?.avatar_url} />
+                          <AvatarFallback>
+                            {contractorName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="text-sm font-semibold text-gray-900 truncate">
+                              {conv.subject}
+                            </h3>
+                            <Badge
+                              className={`ml-2 flex-shrink-0 ${getStatusColor(conv.status)}`}
+                            >
                               {conv.status}
                             </Badge>
                           </div>
-                        </div>
-                        <div
-                          className={`flex items-center space-x-4 text-xs text-gray-600 ${compact ? 'mb-1' : 'mb-3'}`}
-                        >
-                          <div className="flex items-center">
-                            <User className="h-3 w-3 mr-1" />
-                            <span>{contractorName}</span>
-                            {businessProfile?.company_name && (
-                              <span className="ml-1 text-gray-500">
-                                ({businessProfile.company_name})
+                          <div className="flex items-center space-x-2 text-xs text-gray-600 mb-1">
+                            <div className="flex items-center truncate">
+                              <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{contractorName}</span>
+                            </div>
+                            <div className="flex items-center flex-shrink-0">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              <span>
+                                {new Date(conv.created_at).toLocaleDateString(
+                                  'en-NZ'
+                                )}
                               </span>
-                            )}
+                            </div>
                           </div>
-                          <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            <span>{formatDate(conv.created_at)}</span>
-                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2">
+                            {conv.message}
+                          </p>
                           {conv.event && (
-                            <div className="flex items-center">
+                            <div className="flex items-center text-xs text-gray-500 mt-1">
                               <MapPin className="h-3 w-3 mr-1" />
-                              <span>{conv.event.title}</span>
+                              <span className="truncate">
+                                {conv.event.title}
+                              </span>
+                              {conv.event.event_date && (
+                                <span className="ml-1 flex-shrink-0">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  {new Date(
+                                    conv.event.event_date
+                                  ).toLocaleDateString('en-NZ')}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
-                        <p
-                          className={`text-gray-700 ${compact ? 'mb-2 line-clamp-2 text-sm' : 'mb-4 line-clamp-3'}`}
-                        >
-                          {conv.message}
-                        </p>
-                        {conv.event && conv.event.event_date && (
-                          <div
-                            className={`flex items-center text-xs text-gray-600 ${compact ? 'mb-1' : 'mb-2'}`}
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span>
-                              Event Date:{' '}
-                              {new Date(
-                                conv.event.event_date
-                              ).toLocaleDateString('en-NZ', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </span>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`flex items-center justify-end space-x-2 ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} border-t border-gray-200`}
-                >
-                  {conv.contractor?.id && (
-                    <Link href={`/contractors/${conv.contractor.id}`}>
-                      <Button
-                        variant="outline"
-                        size={compact ? 'sm' : 'sm'}
-                        className={compact ? 'h-7 text-xs px-2' : ''}
-                      >
-                        <UserCircle
-                          className={compact ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}
-                        />
-                        View Profile
-                      </Button>
-                    </Link>
-                  )}
-                  <Button
-                    variant="outline"
-                    size={compact ? 'sm' : 'sm'}
-                    onClick={() => handleViewDetails(conv)}
-                    className={compact ? 'h-7 text-xs px-2' : ''}
-                  >
-                    <Eye
-                      className={compact ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}
-                    />
-                    View Details
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Dialogs */}
-      <InquiryDetailDialog
-        inquiry={selectedConversation as any}
-        isOpen={isDetailDialogOpen}
-        onClose={() => {
-          setIsDetailDialogOpen(false);
-          setSelectedConversation(null);
-        }}
-        onResponseSent={responseSentTrigger}
-        onResponseSubmitted={() => {
-          fetchConversations(true);
-        }}
-      />
+        {/* Detail Panel - Slides in when conversation selected */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            selectedConversation ? 'w-full opacity-100' : 'w-0 opacity-0'
+          }`}
+        >
+          <div className="w-full h-full flex gap-4 pl-6">
+            {/* Contact Details - Left Column */}
+            <Card className="w-1/3 h-full overflow-hidden flex flex-col">
+              <div className="flex items-center p-3 border-b bg-gray-50">
+                <button
+                  onClick={handleCloseDetail}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors mr-2"
+                >
+                  <ArrowLeft className="h-4 w-4 text-gray-500" />
+                </button>
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Contact Details
+                </h3>
+              </div>
+              {selectedConversation && (
+                <ContactDetailsPanel
+                  contractor={selectedConversation.contractor as any}
+                  event={selectedConversation.event ?? null}
+                  inquiryStatus={selectedConversation.status}
+                  inquiryDate={selectedConversation.created_at}
+                />
+              )}
+            </Card>
 
-      <QuickResponseDialog
-        inquiryId={responseInquiryId}
-        inquirySubject={responseInquirySubject}
-        isOpen={isResponseDialogOpen}
-        onClose={() => {
-          setIsResponseDialogOpen(false);
-          setResponseInquiryId('');
-          setResponseInquirySubject('');
-        }}
-        onSuccess={handleResponseSuccess}
-      />
+            {/* Conversation Log - Right Column */}
+            <Card className="w-2/3 overflow-hidden">
+              <ConversationDetailPanel
+                inquiry={selectedConversation}
+                onResponseSubmitted={handleResponseSubmitted}
+              />
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
