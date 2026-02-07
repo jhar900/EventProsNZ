@@ -5,26 +5,31 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase } = createClient(request);
+    let user: any = null;
+    let cookieUserId: string | null = null;
 
-    // Get current user - use getSession() first to avoid refresh token errors
+    // Get x-user-id header (if provided)
+    const userIdFromHeader =
+      request.headers.get('x-user-id') ||
+      request.headers.get('X-User-Id') ||
+      request.headers.get('X-USER-ID');
+
+    // STEP 1: Always check cookie-based auth first to get the authenticated session
+    const { supabase } = createClient(request);
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession();
 
-    let user = session?.user;
-
-    // If no session, try getUser (but handle refresh token errors)
-    if (!user) {
+    if (session?.user) {
+      cookieUserId = session.user.id;
+    } else {
+      // Try getUser as fallback
       const {
         data: { user: getUserUser },
         error: authError,
       } = await supabase.auth.getUser();
 
-      // Handle refresh token errors gracefully
       if (authError) {
-        // Only return early for refresh token errors - other errors will fall through to header check
         if (
           authError.message?.includes('refresh_token_not_found') ||
           authError.message?.includes('Invalid Refresh Token') ||
@@ -38,39 +43,35 @@ export async function GET(request: NextRequest) {
             { status: 401 }
           );
         }
-        // Don't return here - continue to header fallback check
-      } else {
-        user = getUserUser;
+      } else if (getUserUser) {
+        cookieUserId = getUserUser.id;
       }
     }
 
-    // Fallback: Try to get user ID from header if cookies aren't working
-    if (!user) {
-      const userIdFromHeader =
-        request.headers.get('x-user-id') ||
-        request.headers.get('X-User-Id') ||
-        request.headers.get('X-USER-ID');
+    // STEP 2: Determine which user ID to use
+    // Priority: cookie session (authoritative) > header (fallback for server-to-server)
+    // If cookie exists, it's the authenticated source of truth - use it
+    // Header is only used when no cookie session exists
+    const effectiveUserId = cookieUserId || userIdFromHeader;
 
-      if (userIdFromHeader) {
-        // Verify the user exists - use admin client to bypass RLS
-        const { createClient: createServerClient } = await import(
-          '@/lib/supabase/server'
-        );
-        const adminSupabase = createServerClient();
-        const { data: userData, error: userError } = await adminSupabase
-          .from('users')
-          .select('id, email, role')
-          .eq('id', userIdFromHeader)
-          .single();
+    if (effectiveUserId) {
+      // Verify the user exists and get their data
+      const { createClient: createServerClient } = await import(
+        '@/lib/supabase/server'
+      );
+      const adminSupabase = createServerClient();
+      const { data: userData, error: userError } = await adminSupabase
+        .from('users')
+        .select('id, email, role')
+        .eq('id', effectiveUserId)
+        .single();
 
-        if (!userError && userData) {
-          // Create a minimal user object
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
-        }
+      if (!userError && userData) {
+        user = {
+          id: userData.id,
+          email: userData.email || '',
+          role: userData.role,
+        };
       }
     }
 
@@ -86,49 +87,39 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify user is an event manager
-    let userRole: string | undefined = (user as any).role;
+    // Always fetch role from the users table - don't use auth JWT role which is just "authenticated"
+    const { createClient: createServerClient } = await import(
+      '@/lib/supabase/server'
+    );
+    const adminSupabase = createServerClient();
 
-    if (!userRole) {
-      // Use admin client to bypass RLS if needed
-      const { createClient: createServerClient } = await import(
-        '@/lib/supabase/server'
+    const { data: userData, error: userDataError } = await adminSupabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userDataError) {
+      return NextResponse.json(
+        {
+          error: 'Failed to verify user role',
+          details: userDataError.message,
+        },
+        { status: 500 }
       );
-      const adminSupabase = createServerClient();
-
-      const { data: userData, error: userDataError } = await adminSupabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userDataError) {
-        return NextResponse.json(
-          {
-            error: 'Failed to verify user role',
-            details: userDataError.message,
-          },
-          { status: 500 }
-        );
-      }
-
-      userRole = userData?.role;
     }
+
+    const userRole = userData?.role;
 
     if (userRole !== 'event_manager') {
       return NextResponse.json(
-        {
-          error: 'Only event managers can view team members',
-          userRole: userRole,
-        },
+        { error: 'Only event managers can view team members' },
         { status: 403 }
       );
     }
 
     // Fetch team members from both tables
-    const { createClient: createServerClient } = await import(
-      '@/lib/supabase/server'
-    );
-    const adminSupabase = createServerClient();
+    // (reusing adminSupabase from above)
 
     // Fetch team members (from team_members table) - include all statuses
     // Once an invitation is accepted, the record is in team_members table with accepted_at set

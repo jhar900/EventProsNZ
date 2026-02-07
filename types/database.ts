@@ -1094,6 +1094,7 @@ export interface Database {
         special_requirements: string | null;
         contact_email: string | null;
         contact_phone: string | null;
+        contact_person_id: string | null;
         response_preferences: 'email' | 'phone' | 'platform' | null;
         timeline_start_date: string | null;
         timeline_end_date: string | null;
@@ -1119,6 +1120,7 @@ export interface Database {
         special_requirements?: string | null;
         contact_email?: string | null;
         contact_phone?: string | null;
+        contact_person_id?: string | null;
         response_preferences?: 'email' | 'phone' | 'platform' | null;
         timeline_start_date?: string | null;
         timeline_end_date?: string | null;
@@ -1144,6 +1146,7 @@ export interface Database {
         special_requirements?: string | null;
         contact_email?: string | null;
         contact_phone?: string | null;
+        contact_person_id?: string | null;
         response_preferences?: 'email' | 'phone' | 'platform' | null;
         timeline_start_date?: string | null;
         timeline_end_date?: string | null;

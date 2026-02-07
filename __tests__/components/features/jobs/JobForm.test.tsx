@@ -205,4 +205,109 @@ describe('JobForm', () => {
 
     expect(mockOnCancel).toHaveBeenCalled();
   });
+
+  it('auto-populates timeline dates from event data', async () => {
+    const user = userEvent.setup();
+    const eventData = {
+      id: 'event-1',
+      title: 'Test Event',
+      event_type: 'wedding',
+      event_date: '2024-12-31T14:00:00Z',
+      end_date: '2025-01-01T02:00:00Z',
+      location: 'Auckland, New Zealand',
+      description: 'Test event description',
+    };
+
+    render(
+      <JobForm
+        onSuccess={mockOnSuccess}
+        onCancel={mockOnCancel}
+        eventData={eventData}
+      />
+    );
+
+    // Check the "Use from My Events" checkbox
+    const useEventDataCheckbox = screen.getByLabelText(/use details from/i);
+    await user.click(useEventDataCheckbox);
+
+    await waitFor(() => {
+      // Check that timeline dates are populated
+      const startDateInput = screen.getByLabelText(/start date/i);
+      const endDateInput = screen.getByLabelText(/end date/i);
+      expect(startDateInput).toHaveValue('2024-12-31');
+      expect(endDateInput).toHaveValue('2025-01-01');
+    });
+  });
+
+  it('shows "From event" badge on auto-populated fields', async () => {
+    const user = userEvent.setup();
+    const eventData = {
+      id: 'event-1',
+      title: 'Test Event',
+      event_type: 'wedding',
+      event_date: '2024-12-31T14:00:00Z',
+      location: 'Auckland, New Zealand',
+      description: 'Test event description',
+    };
+
+    render(
+      <JobForm
+        onSuccess={mockOnSuccess}
+        onCancel={mockOnCancel}
+        eventData={eventData}
+      />
+    );
+
+    // Check the "Use from My Events" checkbox
+    const useEventDataCheckbox = screen.getByLabelText(/use details from/i);
+    await user.click(useEventDataCheckbox);
+
+    await waitFor(() => {
+      // Check that "From event" badges appear
+      const fromEventBadges = screen.getAllByText(/from event/i);
+      expect(fromEventBadges.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('clears "From event" badge when user modifies a field', async () => {
+    const user = userEvent.setup();
+    const eventData = {
+      id: 'event-1',
+      title: 'Test Event',
+      event_type: 'wedding',
+      event_date: '2024-12-31T14:00:00Z',
+      location: 'Auckland, New Zealand',
+      description: 'Test event description',
+    };
+
+    render(
+      <JobForm
+        onSuccess={mockOnSuccess}
+        onCancel={mockOnCancel}
+        eventData={eventData}
+      />
+    );
+
+    // Check the "Use from My Events" checkbox
+    const useEventDataCheckbox = screen.getByLabelText(/use details from/i);
+    await user.click(useEventDataCheckbox);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/from event/i).length).toBeGreaterThan(0);
+    });
+
+    // Get initial badge count
+    const initialBadgeCount = screen.getAllByText(/from event/i).length;
+
+    // Modify the title field
+    const titleInput = screen.getByLabelText(/job title/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Custom Job Title');
+
+    // The number of "From event" badges should decrease by 1
+    await waitFor(() => {
+      const remainingBadges = screen.queryAllByText(/from event/i);
+      expect(remainingBadges.length).toBe(initialBadgeCount - 1);
+    });
+  });
 });

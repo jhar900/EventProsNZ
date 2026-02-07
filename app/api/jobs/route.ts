@@ -34,6 +34,7 @@ const createJobSchema = z
       .optional(),
     contact_email: z.string().email('Invalid email').optional(),
     contact_phone: z.string().max(50, 'Phone number too long').optional(),
+    contact_person_id: z.string().uuid().optional(),
     response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
     timeline_start_date: z.string().optional(),
     timeline_end_date: z.string().optional(),
@@ -406,6 +407,12 @@ export async function POST(request: NextRequest) {
       validationResult.data.contact_phone.trim()
     ) {
       jobData.contact_phone = validationResult.data.contact_phone;
+    }
+    if (
+      validationResult.data.contact_person_id &&
+      validationResult.data.contact_person_id.trim()
+    ) {
+      jobData.contact_person_id = validationResult.data.contact_person_id;
     }
     if (validationResult.data.response_preferences) {
       jobData.response_preferences = validationResult.data.response_preferences;

@@ -14,11 +14,24 @@ import {
   User,
   Building,
   Globe,
+  Link2,
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { JobFormData } from '@/types/jobs';
+import { EventData } from '@/components/features/jobs/EventSelector';
+
+interface ContactPersonData {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  avatar_url?: string | null;
+}
 
 interface JobPreviewProps {
   jobData: JobFormData;
+  eventData?: EventData;
+  contactPerson?: ContactPersonData;
   onEdit?: () => void;
   onSubmit?: () => void;
   isEditing?: boolean;
@@ -27,11 +40,21 @@ interface JobPreviewProps {
 
 export function JobPreview({
   jobData,
+  eventData,
+  contactPerson,
   onEdit,
   onSubmit,
   isEditing = false,
   isSubmitting = false,
 }: JobPreviewProps) {
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not specified';
     return new Date(dateString).toLocaleDateString('en-NZ', {
@@ -42,14 +65,60 @@ export function JobPreview({
   };
 
   const formatBudget = () => {
-    const { budget_range_min, budget_range_max } = jobData;
-    if (!budget_range_min && !budget_range_max) return 'Budget not specified';
-    if (budget_range_min && budget_range_max) {
-      return `$${budget_range_min.toLocaleString()} - $${budget_range_max.toLocaleString()}`;
+    const {
+      budget_type,
+      budget_range_min,
+      budget_range_max,
+      budget_fixed,
+      hourly_rate,
+      daily_rate,
+    } = jobData as any;
+
+    switch (budget_type) {
+      case 'fixed':
+        return budget_fixed
+          ? `$${budget_fixed.toLocaleString()} (Fixed)`
+          : 'Fixed budget not specified';
+      case 'hourly':
+        return hourly_rate
+          ? `$${hourly_rate.toLocaleString()}/hour`
+          : 'Hourly rate not specified';
+      case 'daily':
+        return daily_rate
+          ? `$${daily_rate.toLocaleString()}/day`
+          : 'Daily rate not specified';
+      case 'open':
+        return 'Open to offers';
+      case 'range':
+      default:
+        if (!budget_range_min && !budget_range_max)
+          return 'Budget not specified';
+        if (budget_range_min && budget_range_max) {
+          return `$${budget_range_min.toLocaleString()} - $${budget_range_max.toLocaleString()}`;
+        }
+        if (budget_range_min)
+          return `From $${budget_range_min.toLocaleString()}`;
+        if (budget_range_max)
+          return `Up to $${budget_range_max.toLocaleString()}`;
+        return 'Budget not specified';
     }
-    if (budget_range_min) return `From $${budget_range_min.toLocaleString()}`;
-    if (budget_range_max) return `Up to $${budget_range_max.toLocaleString()}`;
-    return 'Budget not specified';
+  };
+
+  const getBudgetLabel = () => {
+    const { budget_type } = jobData as any;
+    switch (budget_type) {
+      case 'fixed':
+        return 'Fixed Budget';
+      case 'hourly':
+        return 'Hourly Rate';
+      case 'daily':
+        return 'Daily Rate';
+      case 'open':
+        return 'Budget';
+      case 'range':
+      default:
+        return 'Budget Range';
+    }
   };
 
   const getJobTypeLabel = (jobType: string) => {
@@ -100,13 +169,41 @@ export function JobPreview({
             </p>
           </div>
 
+          {/* Linked Event Info */}
+          {eventData && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Link2 className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-blue-900">
+                    {eventData.title}
+                  </h3>
+                  <div className="text-sm text-blue-700 mt-1 space-y-1">
+                    <p>
+                      {eventData.event_type} •{' '}
+                      {formatDate(eventData.event_date)}
+                    </p>
+                    {eventData.location && (
+                      <p className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {eventData.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Key Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Budget */}
             <div className="flex items-start gap-3">
               <DollarSign className="h-5 w-5 text-green-600 mt-1" />
               <div>
-                <h4 className="font-medium text-gray-900">Budget Range</h4>
+                <h4 className="font-medium text-gray-900">
+                  {getBudgetLabel()}
+                </h4>
                 <p className="text-gray-700">{formatBudget()}</p>
               </div>
             </div>
@@ -137,29 +234,75 @@ export function JobPreview({
               </div>
             )}
 
-            {/* Contact Information */}
-            {(jobData.contact_email || jobData.contact_phone) && (
+            {/* Contact Person */}
+            {contactPerson && (
               <div className="flex items-start gap-3">
-                <div className="flex flex-col gap-2">
-                  {jobData.contact_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">
-                        {jobData.contact_email}
-                      </span>
+                <User className="h-5 w-5 text-orange-600 mt-1" />
+                <div>
+                  <h4 className="font-medium text-gray-900">Contact Person</h4>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Avatar className="h-10 w-10">
+                      {contactPerson.avatar_url ? (
+                        <AvatarImage
+                          src={contactPerson.avatar_url}
+                          alt={contactPerson.name}
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-gray-100 text-gray-600">
+                        {getInitials(contactPerson.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {contactPerson.name}
+                      </p>
+                      <div className="flex flex-col gap-1">
+                        {contactPerson.email && (
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Mail className="h-3 w-3" />
+                            <span>{contactPerson.email}</span>
+                          </div>
+                        )}
+                        {contactPerson.phone && (
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Phone className="h-3 w-3" />
+                            <span>{contactPerson.phone}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {jobData.contact_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">
-                        {jobData.contact_phone}
-                      </span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
+            {/* Fallback to old contact info if no contact person */}
+            {!contactPerson &&
+              (jobData.contact_email || jobData.contact_phone) && (
+                <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 text-orange-600 mt-1" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Contact</h4>
+                    <div className="flex flex-col gap-1 mt-1">
+                      {jobData.contact_email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-700">
+                            {jobData.contact_email}
+                          </span>
+                        </div>
+                      )}
+                      {jobData.contact_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-700">
+                            {jobData.contact_phone}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* Special Requirements */}

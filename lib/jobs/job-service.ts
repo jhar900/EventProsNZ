@@ -152,11 +152,22 @@ export class JobService {
               logo_url
             )
           ),
+          contact_person:users!jobs_contact_person_id_fkey(
+            id,
+            email,
+            profiles(
+              first_name,
+              last_name,
+              phone,
+              avatar_url
+            )
+          ),
           event:events!jobs_event_id_fkey(
             id,
             title,
             event_type,
-            event_date
+            event_date,
+            location
           )
         `
         )
@@ -190,8 +201,26 @@ export class JobService {
         .eq('job_id', jobId)
         .order('created_at', { ascending: false });
 
+      // Transform contact_person data to flatten the nested profile
+      let contactPersonFlat = undefined;
+      if (job.contact_person) {
+        const cp = job.contact_person;
+        const profile = Array.isArray(cp.profiles)
+          ? cp.profiles[0]
+          : cp.profiles;
+        contactPersonFlat = {
+          id: cp.id,
+          email: cp.email,
+          first_name: profile?.first_name || '',
+          last_name: profile?.last_name || '',
+          phone: profile?.phone || null,
+          avatar_url: profile?.avatar_url || null,
+        };
+      }
+
       return {
         ...job,
+        contact_person: contactPersonFlat,
         applications: applications || [],
         analytics: {
           view_count: job.view_count || 0,
@@ -235,7 +264,7 @@ export class JobService {
       let query = this.supabase
         .from('jobs')
         .select(
-          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
           { count: 'exact' }
         );
 
@@ -353,7 +382,7 @@ export class JobService {
       let query = this.supabase
         .from('jobs')
         .select(
-          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
           { count: 'exact' }
         );
 

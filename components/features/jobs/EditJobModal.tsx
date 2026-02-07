@@ -11,15 +11,19 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { JobForm } from '@/components/features/jobs/JobForm';
 import { JobPreview } from '@/components/features/jobs/JobPreview';
-import { JobFormData } from '@/types/jobs';
-import { Job } from '@/types/jobs';
+import {
+  EventSelector,
+  EventData,
+} from '@/components/features/jobs/EventSelector';
+import { ContactPerson } from '@/components/features/jobs/ContactPersonSelector';
+import { JobFormData, JobWithDetails } from '@/types/jobs';
 import { Edit, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface EditJobModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  job: Job | null;
+  job: JobWithDetails | null;
   onSuccess?: (jobId: string) => void;
 }
 
@@ -33,6 +37,9 @@ export function EditJobModal({
   const { user } = useAuth();
   const [step, setStep] = useState<'form' | 'preview'>('form');
   const [jobData, setJobData] = useState<JobFormData | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+  const [selectedContactPerson, setSelectedContactPerson] =
+    useState<ContactPerson | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +48,8 @@ export function EditJobModal({
     if (!open) {
       setStep('form');
       setJobData(null);
+      setSelectedEvent(null);
+      setSelectedContactPerson(null);
       setError(null);
       setIsSubmitting(false);
     } else if (job) {
@@ -57,11 +66,38 @@ export function EditJobModal({
         special_requirements: job.special_requirements || '',
         contact_email: job.contact_email || '',
         contact_phone: job.contact_phone || '',
+        contact_person_id: job.contact_person_id || undefined,
         response_preferences: job.response_preferences || '',
         timeline_start_date: job.timeline_start_date || '',
         timeline_end_date: job.timeline_end_date || '',
         event_id: job.event_id,
       });
+
+      // Pre-select existing event if job has one
+      if (job.event) {
+        setSelectedEvent({
+          id: job.event.id,
+          title: job.event.title,
+          event_type: job.event.event_type,
+          event_date: job.event.event_date,
+          location: job.event.location || '',
+        });
+      } else {
+        setSelectedEvent(null);
+      }
+
+      // Pre-select contact person if job has one
+      if (job.contact_person) {
+        setSelectedContactPerson({
+          id: job.contact_person.id,
+          name: `${job.contact_person.first_name} ${job.contact_person.last_name}`.trim(),
+          email: job.contact_person.email,
+          phone: job.contact_person.phone,
+          avatar_url: job.contact_person.avatar_url,
+        });
+      } else {
+        setSelectedContactPerson(null);
+      }
     }
   }, [open, job]);
 
@@ -74,6 +110,17 @@ export function EditJobModal({
   // Handle preview submission
   const handlePreviewSubmit = async () => {
     if (!jobData || !job) return;
+
+    // If jobData has updated_at, the job was already updated by JobForm
+    // Just close the modal and call onSuccess
+    if ((jobData as any).updated_at) {
+      onOpenChange(false);
+      if (onSuccess) {
+        onSuccess((jobData as any).id || job.id);
+      }
+      router.refresh();
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -184,17 +231,42 @@ export function EditJobModal({
 
         {/* Content */}
         {step === 'form' ? (
-          <JobForm
-            initialData={jobData || undefined}
-            onSuccess={handleFormSubmit}
-            onCancel={handleCancel}
-            isEditing={true}
-            jobId={job.id}
-          />
+          <div className="space-y-6">
+            {/* Event Selector */}
+            {user?.id && (
+              <EventSelector
+                userId={user.id}
+                selectedEventId={selectedEvent?.id}
+                onSelect={setSelectedEvent}
+              />
+            )}
+
+            <JobForm
+              initialData={jobData || undefined}
+              onSuccess={handleFormSubmit}
+              onCancel={handleCancel}
+              onContactPersonChange={setSelectedContactPerson}
+              isEditing={true}
+              jobId={job.id}
+              eventData={selectedEvent || undefined}
+            />
+          </div>
         ) : (
           jobData && (
             <JobPreview
               jobData={jobData}
+              eventData={selectedEvent || undefined}
+              contactPerson={
+                selectedContactPerson
+                  ? {
+                      id: selectedContactPerson.id,
+                      name: selectedContactPerson.name,
+                      email: selectedContactPerson.email,
+                      phone: selectedContactPerson.phone,
+                      avatar_url: selectedContactPerson.avatar_url,
+                    }
+                  : undefined
+              }
               onEdit={handleEdit}
               onSubmit={handlePreviewSubmit}
               isEditing={true}

@@ -19,19 +19,26 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Loader2,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Phone,
-  Mail,
-} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { ContactPersonSelector, ContactPerson } from './ContactPersonSelector';
 import {
   JOB_TYPES,
   JOB_SERVICE_CATEGORIES,
   RESPONSE_PREFERENCES,
+  BUDGET_TYPES,
+  BudgetType,
 } from '@/types/jobs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+// Helper to convert NaN to undefined for optional number fields
+const optionalNumber = z.preprocess(
+  val =>
+    val === '' || val === undefined || val === null || Number.isNaN(val)
+      ? undefined
+      : val,
+  z.number().min(0).optional()
+);
 
 // Form validation schema
 const jobFormSchema = z
@@ -42,8 +49,14 @@ const jobFormSchema = z
       .min(1, 'Description is required')
       .max(5000, 'Description too long'),
     service_category: z.string().min(1, 'Service category is required'),
-    budget_range_min: z.number().min(0).optional(),
-    budget_range_max: z.number().min(0).optional(),
+    budget_type: z
+      .enum(['range', 'fixed', 'open', 'hourly', 'daily'])
+      .default('range'),
+    budget_range_min: optionalNumber,
+    budget_range_max: optionalNumber,
+    budget_fixed: optionalNumber,
+    hourly_rate: optionalNumber,
+    daily_rate: optionalNumber,
     location: z
       .string()
       .min(1, 'Location is required')
@@ -59,12 +72,21 @@ const jobFormSchema = z
       .string()
       .max(2000, 'Special requirements too long')
       .optional(),
-    contact_email: z.string().email('Invalid email').optional(),
+    contact_email: z.preprocess(
+      val => (val === '' ? undefined : val),
+      z.string().email('Invalid email').optional()
+    ),
     contact_phone: z.string().max(50, 'Phone number too long').optional(),
+    contact_person_id: z.string().uuid().optional(),
     response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
     timeline_start_date: z.string().optional(),
     timeline_end_date: z.string().optional(),
-    event_id: z.string().uuid().optional(),
+    event_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(''))
+      .transform(val => (val === '' ? undefined : val)),
   })
   .refine(
     data => {
@@ -78,13 +100,14 @@ const jobFormSchema = z
     },
     {
       message: 'Start date must be before or equal to end date',
-      path: ['timeline_end_date'], // This will show the error on the end_date field
+      path: ['timeline_end_date'],
     }
   )
   .refine(
     data => {
-      // If both budget values are provided, min must be less than or equal to max
+      // Only validate budget range if budget_type is 'range' and both values are provided
       if (
+        data.budget_type === 'range' &&
         data.budget_range_min !== undefined &&
         data.budget_range_max !== undefined
       ) {
@@ -104,6 +127,7 @@ interface JobFormProps {
   initialData?: Partial<JobFormData>;
   onSuccess?: (job: any) => void;
   onCancel?: () => void;
+  onContactPersonChange?: (contactPerson: ContactPerson | null) => void;
   isEditing?: boolean;
   jobId?: string;
   eventData?: {
@@ -111,6 +135,7 @@ interface JobFormProps {
     title: string;
     event_type: string;
     event_date: string;
+    end_date?: string;
     location: string;
     description?: string;
   };
@@ -120,6 +145,7 @@ export function JobForm({
   initialData,
   onSuccess,
   onCancel,
+  onContactPersonChange,
   isEditing = false,
   jobId,
   eventData,
@@ -128,6 +154,11 @@ export function JobForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useEventData, setUseEventData] = useState(false);
+  const [autoPopulatedFields, setAutoPopulatedFields] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedContactPerson, setSelectedContactPerson] =
+    useState<ContactPerson | null>(null);
 
   const {
     register,
@@ -141,19 +172,54 @@ export function JobForm({
     defaultValues: {
       service_category: 'catering',
       is_remote: false,
+      budget_type: 'range',
       ...initialData,
     },
   });
 
   const watchedIsRemote = watch('is_remote');
+  const watchedBudgetType = watch('budget_type');
 
-  // Pre-populate form with event data if available
+  // Always link to event when eventData is provided (regardless of useEventData checkbox)
+  useEffect(() => {
+    if (eventData) {
+      setValue('event_id', eventData.id);
+    } else {
+      setValue('event_id', undefined);
+    }
+  }, [eventData, setValue]);
+
+  // Pre-populate form fields with event data when checkbox is checked
   useEffect(() => {
     if (eventData && useEventData) {
+      const fieldsToPopulate = new Set<string>();
+
       setValue('title', `Event Manager for ${eventData.title}`);
-      setValue('description', eventData.description || '');
+      fieldsToPopulate.add('title');
+
+      if (eventData.description) {
+        setValue('description', eventData.description);
+        fieldsToPopulate.add('description');
+      }
+
       setValue('location', eventData.location);
-      setValue('event_id', eventData.id);
+      fieldsToPopulate.add('location');
+
+      // Auto-populate timeline dates from event
+      if (eventData.event_date) {
+        const startDate = eventData.event_date.split('T')[0];
+        setValue('timeline_start_date', startDate);
+        fieldsToPopulate.add('timeline_start_date');
+      }
+      if (eventData.end_date) {
+        const endDate = eventData.end_date.split('T')[0];
+        setValue('timeline_end_date', endDate);
+        fieldsToPopulate.add('timeline_end_date');
+      }
+
+      setAutoPopulatedFields(fieldsToPopulate);
+    } else if (!useEventData) {
+      setAutoPopulatedFields(new Set());
     }
   }, [eventData, useEventData, setValue]);
 
@@ -171,6 +237,9 @@ export function JobForm({
         headers['x-user-id'] = user.id;
       }
 
+      // Log the data being sent for debugging
+      console.log('Submitting job data:', JSON.stringify(data, null, 2));
+
       const url = isEditing && jobId ? `/api/jobs/${jobId}` : '/api/jobs';
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -180,9 +249,16 @@ export function JobForm({
       });
 
       const result = await response.json();
+      console.log('API response:', result);
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to save job');
+        // Include more details in the error message
+        const errorMessage =
+          result.error || result.message || 'Failed to save job';
+        const errorDetails = result.errors
+          ? `: ${result.errors.map((e: any) => `${e.field}: ${e.message}`).join(', ')}`
+          : '';
+        throw new Error(errorMessage + errorDetails);
       }
 
       onSuccess?.(result.job);
@@ -199,7 +275,34 @@ export function JobForm({
     if (!checked) {
       // Reset form to initial data when unchecking
       reset(initialData);
+      setAutoPopulatedFields(new Set());
     }
+  };
+
+  // Clear auto-populated status when user manually edits a field
+  const handleFieldChange = (fieldName: string) => {
+    if (autoPopulatedFields.has(fieldName)) {
+      setAutoPopulatedFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldName);
+        return newSet;
+      });
+    }
+  };
+
+  // Helper to render "From event" badge
+  const renderFromEventBadge = (fieldName: string) => {
+    if (autoPopulatedFields.has(fieldName)) {
+      return (
+        <Badge
+          variant="secondary"
+          className="ml-2 text-xs bg-blue-100 text-blue-700"
+        >
+          From event
+        </Badge>
+      );
+    }
+    return null;
   };
 
   return (
@@ -211,7 +314,14 @@ export function JobForm({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit, validationErrors => {
+            console.error('Form validation errors:', validationErrors);
+            const errorFields = Object.keys(validationErrors).join(', ');
+            setError(`Please fix the following fields: ${errorFields}`);
+          })}
+          className="space-y-6"
+        >
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -246,10 +356,15 @@ export function JobForm({
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Job Title *</Label>
+            <div className="flex items-center">
+              <Label htmlFor="title">Job Title *</Label>
+              {renderFromEventBadge('title')}
+            </div>
             <Input
               id="title"
-              {...register('title')}
+              {...register('title', {
+                onChange: () => handleFieldChange('title'),
+              })}
               placeholder="e.g., Wedding Coordinator for 150-guest event"
               className={errors.title ? 'border-red-500' : ''}
             />
@@ -260,10 +375,15 @@ export function JobForm({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Job Description *</Label>
+            <div className="flex items-center">
+              <Label htmlFor="description">Job Description *</Label>
+              {renderFromEventBadge('description')}
+            </div>
             <Textarea
               id="description"
-              {...register('description')}
+              {...register('description', {
+                onChange: () => handleFieldChange('description'),
+              })}
               placeholder="Provide detailed information about the job, requirements, and expectations..."
               rows={6}
               className={errors.description ? 'border-red-500' : ''}
@@ -302,54 +422,195 @@ export function JobForm({
             )}
           </div>
 
-          {/* Budget Range */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="budget_range_min">Minimum Budget (NZD)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="budget_range_min"
-                  type="number"
-                  {...register('budget_range_min', { valueAsNumber: true })}
-                  placeholder="0"
-                  className="pl-10"
-                />
+          {/* Budget Section */}
+          <div className="space-y-4">
+            <Label>Budget Type</Label>
+            <RadioGroup
+              value={watchedBudgetType || 'range'}
+              onValueChange={value =>
+                setValue('budget_type', value as BudgetType)
+              }
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="range" id="budget-range" />
+                <Label
+                  htmlFor="budget-range"
+                  className="font-normal cursor-pointer"
+                >
+                  Budget Range
+                </Label>
               </div>
-              {errors.budget_range_min && (
-                <p className="text-sm text-red-600">
-                  {errors.budget_range_min.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="budget_range_max">Maximum Budget (NZD)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="budget_range_max"
-                  type="number"
-                  {...register('budget_range_max', { valueAsNumber: true })}
-                  placeholder="10000"
-                  className="pl-10"
-                />
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="fixed" id="budget-fixed" />
+                <Label
+                  htmlFor="budget-fixed"
+                  className="font-normal cursor-pointer"
+                >
+                  Fixed Budget
+                </Label>
               </div>
-              {errors.budget_range_max && (
-                <p className="text-sm text-red-600">
-                  {errors.budget_range_max.message}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="open" id="budget-open" />
+                <Label
+                  htmlFor="budget-open"
+                  className="font-normal cursor-pointer"
+                >
+                  Open to Offers
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="hourly" id="budget-hourly" />
+                <Label
+                  htmlFor="budget-hourly"
+                  className="font-normal cursor-pointer"
+                >
+                  Hourly Rate
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="daily" id="budget-daily" />
+                <Label
+                  htmlFor="budget-daily"
+                  className="font-normal cursor-pointer"
+                >
+                  Daily Rate
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {/* Budget Range Fields */}
+            {watchedBudgetType === 'range' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget_range_min">Minimum Budget (NZD)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="budget_range_min"
+                      type="number"
+                      {...register('budget_range_min', { valueAsNumber: true })}
+                      placeholder="0"
+                      className="pl-10"
+                    />
+                  </div>
+                  {errors.budget_range_min && (
+                    <p className="text-sm text-red-600">
+                      {errors.budget_range_min.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget_range_max">Maximum Budget (NZD)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="budget_range_max"
+                      type="number"
+                      {...register('budget_range_max', { valueAsNumber: true })}
+                      placeholder="10000"
+                      className="pl-10"
+                    />
+                  </div>
+                  {errors.budget_range_max && (
+                    <p className="text-sm text-red-600">
+                      {errors.budget_range_max.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Fixed Budget Field */}
+            {watchedBudgetType === 'fixed' && (
+              <div className="space-y-2">
+                <Label htmlFor="budget_fixed">Fixed Budget (NZD)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="budget_fixed"
+                    type="number"
+                    {...register('budget_fixed', { valueAsNumber: true })}
+                    placeholder="5000"
+                    className="pl-10"
+                  />
+                </div>
+                {errors.budget_fixed && (
+                  <p className="text-sm text-red-600">
+                    {errors.budget_fixed.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Open to Offers - No input needed */}
+            {watchedBudgetType === 'open' && (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  Contractors will be able to propose their own pricing when
+                  applying for this job.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Hourly Rate Field */}
+            {watchedBudgetType === 'hourly' && (
+              <div className="space-y-2">
+                <Label htmlFor="hourly_rate">Hourly Rate (NZD/hour)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="hourly_rate"
+                    type="number"
+                    {...register('hourly_rate', { valueAsNumber: true })}
+                    placeholder="50"
+                    className="pl-10"
+                  />
+                </div>
+                {errors.hourly_rate && (
+                  <p className="text-sm text-red-600">
+                    {errors.hourly_rate.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Daily Rate Field */}
+            {watchedBudgetType === 'daily' && (
+              <div className="space-y-2">
+                <Label htmlFor="daily_rate">Daily Rate (NZD/day)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="daily_rate"
+                    type="number"
+                    {...register('daily_rate', { valueAsNumber: true })}
+                    placeholder="400"
+                    className="pl-10"
+                  />
+                </div>
+                {errors.daily_rate && (
+                  <p className="text-sm text-red-600">
+                    {errors.daily_rate.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location">Location *</Label>
+            <div className="flex items-center">
+              <Label htmlFor="location">Location *</Label>
+              {renderFromEventBadge('location')}
+            </div>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 id="location"
-                {...register('location')}
+                {...register('location', {
+                  onChange: () => handleFieldChange('location'),
+                })}
                 placeholder="e.g., Auckland, New Zealand"
                 className="pl-10"
               />
@@ -374,11 +635,16 @@ export function JobForm({
           {/* Timeline */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="timeline_start_date">Start Date</Label>
+              <div className="flex items-center">
+                <Label htmlFor="timeline_start_date">Start Date</Label>
+                {renderFromEventBadge('timeline_start_date')}
+              </div>
               <Input
                 id="timeline_start_date"
                 type="date"
-                {...register('timeline_start_date')}
+                {...register('timeline_start_date', {
+                  onChange: () => handleFieldChange('timeline_start_date'),
+                })}
               />
               {errors.timeline_start_date && (
                 <p className="text-sm text-red-600">
@@ -387,11 +653,16 @@ export function JobForm({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeline_end_date">End Date</Label>
+              <div className="flex items-center">
+                <Label htmlFor="timeline_end_date">End Date</Label>
+                {renderFromEventBadge('timeline_end_date')}
+              </div>
               <Input
                 id="timeline_end_date"
                 type="date"
-                {...register('timeline_end_date')}
+                {...register('timeline_end_date', {
+                  onChange: () => handleFieldChange('timeline_end_date'),
+                })}
               />
               {errors.timeline_end_date && (
                 <p className="text-sm text-red-600">
@@ -417,80 +688,33 @@ export function JobForm({
             )}
           </div>
 
-          {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Contact Information</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    {...register('contact_email')}
-                    placeholder="your@email.com"
-                    className="pl-10"
-                  />
-                </div>
-                {errors.contact_email && (
-                  <p className="text-sm text-red-600">
-                    {errors.contact_email.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact_phone">Contact Phone</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="contact_phone"
-                    type="tel"
-                    {...register('contact_phone')}
-                    placeholder="+64 21 123 4567"
-                    className="pl-10"
-                  />
-                </div>
-                {errors.contact_phone && (
-                  <p className="text-sm text-red-600">
-                    {errors.contact_phone.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="response_preferences">
-                Preferred Response Method
-              </Label>
-              <Select
-                onValueChange={value =>
-                  setValue(
-                    'response_preferences',
-                    value as 'email' | 'phone' | 'platform'
-                  )
+          {/* Contact Person */}
+          {user?.id && (
+            <ContactPersonSelector
+              userId={user.id}
+              userProfile={user.profile}
+              userEmail={user.email}
+              selectedEventId={eventData?.id}
+              selectedContactPersonId={selectedContactPerson?.id || user.id}
+              onSelect={person => {
+                setSelectedContactPerson(person);
+                onContactPersonChange?.(person);
+                if (person) {
+                  setValue('contact_person_id', person.id);
+                  setValue('contact_email', person.email);
+                  setValue('contact_phone', person.phone || '');
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select preferred response method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="phone">Phone</SelectItem>
-                  <SelectItem value="platform">Platform Messages</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.response_preferences && (
-                <p className="text-sm text-red-600">
-                  {errors.response_preferences.message}
-                </p>
-              )}
-            </div>
-          </div>
+              }}
+            />
+          )}
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-6">
+          <div className="flex items-center justify-end gap-4 pt-6">
+            {error && (
+              <p className="text-sm text-red-600 max-w-md text-right flex-1">
+                {error}
+              </p>
+            )}
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel

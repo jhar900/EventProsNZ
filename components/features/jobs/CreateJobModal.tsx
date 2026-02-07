@@ -10,6 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { JobForm } from '@/components/features/jobs/JobForm';
 import { JobPreview } from '@/components/features/jobs/JobPreview';
+import {
+  EventSelector,
+  EventData,
+} from '@/components/features/jobs/EventSelector';
+import { ContactPerson } from '@/components/features/jobs/ContactPersonSelector';
 import { JobFormData } from '@/types/jobs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +36,9 @@ export function CreateJobModal({
   const { user } = useAuth();
   const [step, setStep] = useState<'form' | 'preview'>('form');
   const [jobData, setJobData] = useState<JobFormData | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+  const [selectedContactPerson, setSelectedContactPerson] =
+    useState<ContactPerson | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +48,8 @@ export function CreateJobModal({
       // Reset state when closing
       setStep('form');
       setJobData(null);
+      setSelectedEvent(null);
+      setSelectedContactPerson(null);
       setError(null);
       setIsSubmitting(false);
     }
@@ -55,6 +65,18 @@ export function CreateJobModal({
   // Handle preview submission
   const handlePreviewSubmit = async () => {
     if (!jobData) return;
+
+    // If jobData has an id, the job was already created by JobForm
+    // Just close the modal and call onSuccess
+    if ((jobData as any).id) {
+      handleOpenChange(false);
+      if (onSuccess) {
+        onSuccess((jobData as any).id);
+      } else {
+        router.push(`/jobs/${(jobData as any).id}`);
+      }
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -168,18 +190,43 @@ export function CreateJobModal({
 
         {/* Content */}
         {step === 'form' ? (
-          <JobForm
-            onSuccess={handleFormSubmit}
-            onCancel={handleCancel}
-            initialData={{
-              contact_email: user?.email || '',
-              contact_phone: user?.profile?.phone || '',
-            }}
-          />
+          <div className="space-y-6">
+            {/* Event Selector */}
+            {user?.id && (
+              <EventSelector
+                userId={user.id}
+                selectedEventId={selectedEvent?.id}
+                onSelect={setSelectedEvent}
+              />
+            )}
+
+            <JobForm
+              onSuccess={handleFormSubmit}
+              onCancel={handleCancel}
+              onContactPersonChange={setSelectedContactPerson}
+              initialData={{
+                contact_email: user?.email || '',
+                contact_phone: user?.profile?.phone || '',
+              }}
+              eventData={selectedEvent || undefined}
+            />
+          </div>
         ) : (
           jobData && (
             <JobPreview
               jobData={jobData}
+              eventData={selectedEvent || undefined}
+              contactPerson={
+                selectedContactPerson
+                  ? {
+                      id: selectedContactPerson.id,
+                      name: selectedContactPerson.name,
+                      email: selectedContactPerson.email,
+                      phone: selectedContactPerson.phone,
+                      avatar_url: selectedContactPerson.avatar_url,
+                    }
+                  : undefined
+              }
               onEdit={handleEdit}
               onSubmit={handlePreviewSubmit}
               isEditing={false}

@@ -21,8 +21,12 @@ export interface JobFormData {
   title: string;
   description: string;
   service_category: string;
+  budget_type?: BudgetType;
   budget_range_min?: number;
   budget_range_max?: number;
+  budget_fixed?: number;
+  hourly_rate?: number;
+  daily_rate?: number;
   location: string;
   coordinates?: {
     lat: number;
@@ -32,6 +36,7 @@ export interface JobFormData {
   special_requirements?: string;
   contact_email?: string;
   contact_phone?: string;
+  contact_person_id?: string;
   response_preferences?: 'email' | 'phone' | 'platform';
   timeline_start_date?: string;
   timeline_end_date?: string;
@@ -97,11 +102,20 @@ export interface JobWithDetails extends Job {
       logo_url?: string | null;
     }[];
   };
+  contact_person?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone?: string | null;
+    avatar_url?: string | null;
+  };
   event?: {
     id: string;
     title: string;
     event_type: string;
     event_date: string;
+    location: string;
   };
   applications?: JobApplicationWithDetails[];
   analytics?: {
@@ -205,6 +219,17 @@ export const WORK_ARRANGEMENTS = {
 export type WorkArrangement =
   (typeof WORK_ARRANGEMENTS)[keyof typeof WORK_ARRANGEMENTS];
 
+// Budget types
+export const BUDGET_TYPES = {
+  RANGE: 'range',
+  FIXED: 'fixed',
+  OPEN: 'open',
+  HOURLY: 'hourly',
+  DAILY: 'daily',
+} as const;
+
+export type BudgetType = (typeof BUDGET_TYPES)[keyof typeof BUDGET_TYPES];
+
 // Service categories enum (reusing from events)
 export const JOB_SERVICE_CATEGORIES = {
   CATERING: 'catering',
@@ -254,8 +279,12 @@ export interface CreateJobRequest {
   description: string;
   job_type?: JobType; // Optional - will be set automatically based on user role
   service_category: JobServiceCategory;
+  budget_type?: BudgetType;
   budget_range_min?: number;
   budget_range_max?: number;
+  budget_fixed?: number;
+  hourly_rate?: number;
+  daily_rate?: number;
   location: string;
   coordinates?: {
     lat: number;
@@ -265,6 +294,7 @@ export interface CreateJobRequest {
   special_requirements?: string;
   contact_email?: string;
   contact_phone?: string;
+  contact_person_id?: string;
   response_preferences?: ResponsePreference;
   timeline_start_date?: string;
   timeline_end_date?: string;
@@ -275,8 +305,12 @@ export interface UpdateJobRequest {
   title?: string;
   description?: string;
   service_category?: JobServiceCategory;
+  budget_type?: BudgetType;
   budget_range_min?: number;
   budget_range_max?: number;
+  budget_fixed?: number;
+  hourly_rate?: number;
+  daily_rate?: number;
   location?: string;
   coordinates?: {
     lat: number;
@@ -286,6 +320,7 @@ export interface UpdateJobRequest {
   special_requirements?: string;
   contact_email?: string;
   contact_phone?: string;
+  contact_person_id?: string;
   response_preferences?: ResponsePreference;
   timeline_start_date?: string;
   timeline_end_date?: string;

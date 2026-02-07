@@ -23,6 +23,7 @@ import {
   Edit,
   Share,
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function JobDetailsPage() {
   const params = useParams();
@@ -46,6 +47,11 @@ export default function JobDetailsPage() {
     const end = text.substring(text.length - 2);
     const middle = '•'.repeat(Math.max(3, text.length - 4));
     return `${start}${middle}${end}`;
+  };
+
+  // Helper function to get initials
+  const getInitials = (firstName: string, lastName: string): string => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   // Fetch job details
@@ -258,6 +264,12 @@ export default function JobDetailsPage() {
                   <p className="text-blue-700 text-sm mt-1">
                     {job.event.event_type} • {formatDate(job.event.event_date)}
                   </p>
+                  {job.event.location && (
+                    <p className="text-blue-700 text-sm mt-1 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {job.event.location}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -332,62 +344,122 @@ export default function JobDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Contact Information */}
-          {(job.contact_email || job.contact_phone) && (
+          {/* Contact Person */}
+          {(job.contact_person || job.contact_email || job.contact_phone) && (
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>Contact Person</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {job.contact_email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    {user ? (
-                      <a
-                        href={`mailto:${job.contact_email}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {job.contact_email}
-                      </a>
-                    ) : (
-                      <span
-                        className="filter blur-sm select-none pointer-events-none text-gray-600"
-                        title="Sign in to view contact information"
-                      >
-                        {blurText(job.contact_email)}
-                      </span>
-                    )}
+              <CardContent className="space-y-4">
+                {job.contact_person && (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      {job.contact_person.avatar_url ? (
+                        <AvatarImage
+                          src={job.contact_person.avatar_url}
+                          alt={`${job.contact_person.first_name} ${job.contact_person.last_name}`}
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-gray-100 text-gray-600">
+                        {getInitials(
+                          job.contact_person.first_name,
+                          job.contact_person.last_name
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {job.contact_person.first_name}{' '}
+                        {job.contact_person.last_name}
+                      </p>
+                      <div className="flex flex-col gap-1">
+                        {job.contact_person.email && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3 w-3 text-gray-500" />
+                            {user ? (
+                              <a
+                                href={`mailto:${job.contact_person.email}`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {job.contact_person.email}
+                              </a>
+                            ) : (
+                              <span className="filter blur-sm select-none pointer-events-none text-gray-600">
+                                {blurText(job.contact_person.email)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {job.contact_person.phone && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Phone className="h-3 w-3 text-gray-500" />
+                            {user ? (
+                              <a
+                                href={`tel:${job.contact_person.phone}`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {job.contact_person.phone}
+                              </a>
+                            ) : (
+                              <span className="filter blur-sm select-none pointer-events-none text-gray-600">
+                                {blurText(job.contact_person.phone)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
-                {job.contact_phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    {user ? (
-                      <a
-                        href={`tel:${job.contact_phone}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {job.contact_phone}
-                      </a>
-                    ) : (
-                      <span
-                        className="filter blur-sm select-none pointer-events-none text-gray-600"
-                        title="Sign in to view contact information"
-                      >
-                        {blurText(job.contact_phone)}
-                      </span>
+                {/* Fallback to old contact info if no contact person */}
+                {!job.contact_person && (
+                  <>
+                    {job.contact_email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                        {user ? (
+                          <a
+                            href={`mailto:${job.contact_email}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {job.contact_email}
+                          </a>
+                        ) : (
+                          <span
+                            className="filter blur-sm select-none pointer-events-none text-gray-600"
+                            title="Sign in to view contact information"
+                          >
+                            {blurText(job.contact_email)}
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
+                    {job.contact_phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        {user ? (
+                          <a
+                            href={`tel:${job.contact_phone}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {job.contact_phone}
+                          </a>
+                        ) : (
+                          <span
+                            className="filter blur-sm select-none pointer-events-none text-gray-600"
+                            title="Sign in to view contact information"
+                          >
+                            {blurText(job.contact_phone)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
                 {!user && (
                   <p className="text-sm text-gray-500 italic mt-2">
                     Sign in to view full contact information
                   </p>
-                )}
-                {job.response_preferences && (
-                  <div className="text-sm text-gray-600">
-                    Preferred response method: {job.response_preferences}
-                  </div>
                 )}
               </CardContent>
             </Card>
