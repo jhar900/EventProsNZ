@@ -13,6 +13,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { RESPONSE_TYPES } from '@/types/inquiries';
 import { PremiumBadge } from './PremiumBadge';
 import {
   StarIcon,
@@ -73,6 +82,26 @@ export function ContractorProfileDisplay({
     React.useState<any>(null);
   const [loadingConversation, setLoadingConversation] = React.useState(false);
   const [loadingDetails, setLoadingDetails] = React.useState(false);
+  const [replyMessage, setReplyMessage] = React.useState('');
+  const [replyType, setReplyType] = React.useState<string>('reply');
+  const [isSubmittingReply, setIsSubmittingReply] = React.useState(false);
+  const conversationMessagesRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when conversation details load
+  React.useEffect(() => {
+    if (
+      !loadingDetails &&
+      conversationDetails &&
+      conversationMessagesRef.current
+    ) {
+      setTimeout(() => {
+        if (conversationMessagesRef.current) {
+          conversationMessagesRef.current.scrollTop =
+            conversationMessagesRef.current.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [loadingDetails, conversationDetails]);
 
   // Fetch existing conversation with this contractor
   React.useEffect(() => {
@@ -329,6 +358,53 @@ export function ContractorProfileDisplay({
 
   const displayName = contractor.companyName || contractor.name;
   const location = contractor.location || 'Location not specified';
+
+  const formatResponseType = (responseType: string) => {
+    return responseType
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const handleSubmitReply = async () => {
+    if (!existingConversation || !replyMessage.trim() || !user) return;
+
+    try {
+      setIsSubmittingReply(true);
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'x-user-id': user.id,
+      };
+
+      const response = await fetch(
+        `/api/inquiries/${existingConversation.id}/respond`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            message: replyMessage.trim(),
+            response_type: replyType,
+            user_id: user.id,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setReplyMessage('');
+        setReplyType('reply');
+        // Refresh conversation details
+        fetchConversationDetails(existingConversation.id);
+      }
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -706,136 +782,193 @@ export function ContractorProfileDisplay({
               {/* Get In Touch Form or Continue Conversation */}
               {(!isPreview && user) || isPreview ? (
                 <div ref={getInTouchFormRef}>
-                  <Card className="p-6">
+                  <Card className="p-5">
                     {loadingConversation ? (
                       <div className="flex items-center justify-center py-4">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                       </div>
                     ) : existingConversation ? (
-                      <>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Continue Conversation
-                        </h3>
+                      <div className="flex flex-col h-[400px]">
+                        {/* Header */}
+                        <div className="pb-3 border-b border-gray-200 flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Continue Conversation
+                          </h3>
+                          <Link href="/conversations">
+                            <Button variant="outline" size="sm">
+                              View All Conversations
+                            </Button>
+                          </Link>
+                        </div>
+
                         {loadingDetails ? (
-                          <div className="flex items-center justify-center py-4">
+                          <div className="flex-1 flex items-center justify-center">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                           </div>
                         ) : (
-                          <div className="space-y-4">
-                            {/* Original Message */}
-                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900 mb-1">
-                                    {existingConversation.subject ||
-                                      'No subject'}
-                                  </h4>
-                                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                          <>
+                            {/* Messages */}
+                            <div
+                              ref={conversationMessagesRef}
+                              className="flex-1 overflow-y-auto py-4 space-y-3"
+                            >
+                              {/* Original Message - always from current user */}
+                              <div className="flex justify-end">
+                                <div className="max-w-[85%] p-3 rounded-lg bg-orange-50 border border-orange-200">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-2">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarImage
+                                          src={
+                                            user?.profile?.avatar_url ||
+                                            undefined
+                                          }
+                                        />
+                                        <AvatarFallback>
+                                          {user?.profile?.first_name?.[0] ||
+                                            user?.email?.[0]?.toUpperCase() ||
+                                            'Y'}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span className="text-sm font-medium text-gray-900">
+                                        You
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      {new Date(
+                                        existingConversation.created_at
+                                      ).toLocaleDateString('en-NZ', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
                                     {existingConversation.message}
                                   </p>
                                 </div>
-                                <Badge
-                                  className={`ml-2 ${
-                                    existingConversation.status === 'responded'
-                                      ? 'bg-green-100 text-green-800'
-                                      : existingConversation.status === 'viewed'
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-blue-100 text-blue-800'
-                                  }`}
-                                >
-                                  {existingConversation.status}
-                                </Badge>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <span className="text-xs text-gray-500">
-                                  {new Date(
-                                    existingConversation.created_at
-                                  ).toLocaleDateString('en-NZ', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </span>
-                              </div>
-                            </div>
 
-                            {/* Responses */}
-                            {conversationDetails?.responses &&
-                              conversationDetails.responses.length > 0 && (
-                                <div className="space-y-3">
-                                  {conversationDetails.responses.map(
-                                    (response: any) => (
+                              {/* Responses */}
+                              {conversationDetails?.responses?.map(
+                                (response: any) => {
+                                  const isCurrentUser =
+                                    response.responder_id === user?.id;
+                                  const responderName = response.responder
+                                    ?.profiles
+                                    ? `${response.responder.profiles.first_name || ''} ${response.responder.profiles.last_name || ''}`.trim()
+                                    : response.responder?.email || 'Unknown';
+
+                                  return (
+                                    <div
+                                      key={response.id}
+                                      className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                                    >
                                       <div
-                                        key={response.id}
-                                        className="border border-gray-200 rounded-lg p-4 bg-white"
+                                        className={`max-w-[85%] p-3 rounded-lg ${
+                                          isCurrentUser
+                                            ? 'bg-orange-50 border border-orange-200'
+                                            : 'bg-blue-50 border border-blue-200'
+                                        }`}
                                       >
-                                        <div className="flex items-start justify-between mb-2">
-                                          <div className="flex-1">
-                                            <div className="flex items-center mb-1">
-                                              <span className="text-sm font-medium text-gray-900">
-                                                {response.responder?.profiles
-                                                  ? `${response.responder.profiles.first_name || ''} ${response.responder.profiles.last_name || ''}`.trim() ||
-                                                    response.responder.email
-                                                  : response.responder?.email ||
-                                                    'Unknown'}
-                                              </span>
-                                              <Badge
-                                                variant="outline"
-                                                className="ml-2 text-xs"
-                                              >
-                                                {response.response_type
-                                                  ? response.response_type
-                                                      .split('_')
-                                                      .map(
-                                                        (word: string) =>
-                                                          word
-                                                            .charAt(0)
-                                                            .toUpperCase() +
-                                                          word
-                                                            .slice(1)
-                                                            .toLowerCase()
-                                                      )
-                                                      .join(' ')
-                                                  : 'Reply'}
-                                              </Badge>
-                                            </div>
-                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                              {response.message}
-                                            </p>
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center space-x-2">
+                                            <Avatar className="h-6 w-6">
+                                              <AvatarImage
+                                                src={
+                                                  response.responder?.profiles
+                                                    ?.avatar_url || undefined
+                                                }
+                                              />
+                                              <AvatarFallback>
+                                                {responderName[0]?.toUpperCase() ||
+                                                  'U'}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-sm font-medium text-gray-900">
+                                              {isCurrentUser
+                                                ? 'You'
+                                                : responderName}
+                                            </span>
                                           </div>
-                                        </div>
-                                        <div className="mt-2">
-                                          <span className="text-xs text-gray-500">
+                                          <span className="text-xs text-gray-500 ml-2">
                                             {new Date(
                                               response.created_at
                                             ).toLocaleDateString('en-NZ', {
-                                              year: 'numeric',
-                                              month: 'long',
+                                              month: 'short',
                                               day: 'numeric',
                                               hour: '2-digit',
                                               minute: '2-digit',
                                             })}
                                           </span>
                                         </div>
+                                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                          {response.message}
+                                        </p>
                                       </div>
-                                    )
-                                  )}
-                                </div>
+                                    </div>
+                                  );
+                                }
                               )}
-
-                            {/* Link to conversations page */}
-                            <div className="pt-2">
-                              <Link href="/conversations">
-                                <Button variant="outline" className="w-full">
-                                  View All Conversations
-                                </Button>
-                              </Link>
                             </div>
-                          </div>
+
+                            {/* Reply Section */}
+                            <div className="pt-3 border-t border-gray-200 space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <Label
+                                  htmlFor="reply-type"
+                                  className="text-sm whitespace-nowrap"
+                                >
+                                  Type:
+                                </Label>
+                                <Select
+                                  value={replyType}
+                                  onValueChange={setReplyType}
+                                >
+                                  <SelectTrigger
+                                    id="reply-type"
+                                    className="w-32 h-8"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.values(RESPONSE_TYPES).map(type => (
+                                      <SelectItem key={type} value={type}>
+                                        {formatResponseType(type)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-end space-x-2">
+                                <Textarea
+                                  placeholder="Type your reply..."
+                                  value={replyMessage}
+                                  onChange={e =>
+                                    setReplyMessage(e.target.value)
+                                  }
+                                  className="min-h-[60px] flex-1"
+                                />
+                                <Button
+                                  onClick={handleSubmitReply}
+                                  disabled={
+                                    !replyMessage.trim() || isSubmittingReply
+                                  }
+                                  className="bg-orange-600 hover:bg-orange-700"
+                                >
+                                  {isSubmittingReply ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  ) : (
+                                    <Send className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </>
                         )}
-                      </>
+                      </div>
                     ) : (
                       <>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">

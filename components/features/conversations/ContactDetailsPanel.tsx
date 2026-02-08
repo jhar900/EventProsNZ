@@ -118,13 +118,6 @@ export function ContactDetailsPanel({
               )}
           </div>
         </div>
-        {inquiryStatus && (
-          <div className="mt-4">
-            <Badge className={getStatusColor(inquiryStatus)}>
-              {inquiryStatus}
-            </Badge>
-          </div>
-        )}
       </div>
 
       {/* Contact Details */}

@@ -229,7 +229,13 @@ export default function EventManagerConversationsList({
       {/* Header with Search */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Conversations</h1>
-        <div className="relative w-full max-w-md">
+        <div
+          className={`relative w-full max-w-md transition-all duration-300 ease-in-out ${
+            selectedConversation
+              ? 'opacity-0 pointer-events-none'
+              : 'opacity-100 pointer-events-auto'
+          }`}
+        >
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
           <Input
             type="text"
@@ -237,6 +243,7 @@ export default function EventManagerConversationsList({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pl-10 border-0 bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none focus:bg-gray-100"
+            disabled={!!selectedConversation}
           />
         </div>
       </div>
@@ -364,7 +371,7 @@ export default function EventManagerConversationsList({
             selectedConversation ? 'w-full opacity-100' : 'w-0 opacity-0'
           }`}
         >
-          <div className="w-full h-full flex gap-4 pl-6">
+          <div className="w-full h-full flex gap-4">
             {/* Contact Details - Left Column */}
             <Card className="w-1/3 h-full overflow-hidden flex flex-col">
               <div className="flex items-center p-3 border-b bg-gray-50">
