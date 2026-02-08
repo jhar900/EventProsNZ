@@ -447,37 +447,50 @@ export async function GET(request: NextRequest) {
     ];
 
     // Fetch all related data in parallel
-    const [businessProfilesResult, sendersResult, eventsResult] =
-      await Promise.all([
-        contractorIds.length > 0
-          ? adminSupabase
-              .from('business_profiles')
-              .select('id, user_id, company_name')
-              .in('id', contractorIds)
-          : Promise.resolve({ data: [], error: null }),
-        senderIds.length > 0
-          ? adminSupabase
-              .from('users')
-              .select(
-                `
+    const [
+      businessProfilesResult,
+      sendersResult,
+      eventsResult,
+      senderBusinessProfilesResult,
+    ] = await Promise.all([
+      contractorIds.length > 0
+        ? adminSupabase
+            .from('business_profiles')
+            .select('id, user_id, company_name')
+            .in('id', contractorIds)
+        : Promise.resolve({ data: [], error: null }),
+      senderIds.length > 0
+        ? adminSupabase
+            .from('users')
+            .select(
+              `
                 id,
                 email,
                 profiles (
                   first_name,
                   last_name,
-                  avatar_url
+                  avatar_url,
+                  phone
                 )
               `
-              )
-              .in('id', senderIds)
-          : Promise.resolve({ data: [], error: null }),
-        eventIds.length > 0
-          ? adminSupabase
-              .from('events')
-              .select('id, title, event_type, event_date, location, user_id')
-              .in('id', eventIds)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
+            )
+            .in('id', senderIds)
+        : Promise.resolve({ data: [], error: null }),
+      eventIds.length > 0
+        ? adminSupabase
+            .from('events')
+            .select('id, title, event_type, event_date, location, user_id')
+            .in('id', eventIds)
+        : Promise.resolve({ data: [], error: null }),
+      // Fetch business profiles for senders (to check if they have published contractor profiles)
+      senderIds.length > 0
+        ? adminSupabase
+            .from('business_profiles')
+            .select('id, user_id, is_published')
+            .in('user_id', senderIds)
+            .eq('is_published', true)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
     // Get contractor user IDs from business profiles
     const contractorUserIds = [
@@ -512,11 +525,20 @@ export async function GET(request: NextRequest) {
       (businessProfilesResult.data || []).map((bp: any) => [bp.id, bp])
     );
 
+    // Create a map of sender user IDs to their published business profile IDs
+    const senderBusinessProfileMap = new Map(
+      (senderBusinessProfilesResult.data || []).map((bp: any) => [
+        bp.user_id,
+        bp.id,
+      ])
+    );
+
     const senderMap = new Map(
       (sendersResult.data || []).map((sender: any) => {
         const profile = Array.isArray(sender.profiles)
           ? sender.profiles[0]
           : sender.profiles;
+        const publishedProfileId = senderBusinessProfileMap.get(sender.id);
         return [
           sender.id,
           {
@@ -528,8 +550,10 @@ export async function GET(request: NextRequest) {
                     first_name: profile.first_name || '',
                     last_name: profile.last_name || '',
                     avatar_url: profile.avatar_url || null,
+                    phone: profile.phone || null,
                   }
                 : null,
+            published_profile_id: publishedProfileId || null,
           },
         ];
       })
@@ -594,6 +618,7 @@ export async function GET(request: NextRequest) {
           id: enquiry.sender_id || 'unknown',
           email: 'Unknown Sender',
           profiles: null,
+          published_profile_id: null,
         };
       }
 

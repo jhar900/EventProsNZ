@@ -288,7 +288,9 @@ export function EventManagerJobManagement({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': userId,
         },
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       });
 
@@ -314,6 +316,10 @@ export function EventManagerJobManagement({
     try {
       const response = await fetch(`/api/jobs/${jobId}`, {
         method: 'DELETE',
+        headers: {
+          'x-user-id': userId,
+        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

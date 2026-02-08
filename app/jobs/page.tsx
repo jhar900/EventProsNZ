@@ -128,6 +128,11 @@ export default function JobsPage() {
     setShowApplicantApplicationModal(true);
   };
 
+  const handleViewMyApplication = (application: JobApplicationWithDetails) => {
+    setSelectedApplication(application);
+    setShowApplicantApplicationModal(true);
+  };
+
   const handleTemplateSelect = (template: any) => {
     // Handle template selection
     console.log('Template selected:', template);
@@ -260,6 +265,7 @@ export default function JobsPage() {
                       onJobEdit={handleJobEdit}
                       onJobViewApplications={handleJobViewApplications}
                       onSimpleJobApply={handleSimpleJobApply}
+                      onViewMyApplication={handleViewMyApplication}
                       showFilters={true}
                       showSearch={true}
                     />

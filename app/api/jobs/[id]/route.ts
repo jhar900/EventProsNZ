@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { JobService } from '@/lib/jobs/job-service';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/middleware';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 const jobService = new JobService();
 
@@ -32,17 +35,16 @@ const updateJobSchema = z.object({
 // GET /api/jobs/[id] - Get a specific job
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const { id } = await params;
+    const { supabase } = createClient(request);
 
     // Get current user (optional for public job viewing)
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
-    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -95,25 +97,39 @@ export async function GET(
 // PUT /api/jobs/[id] - Update a job
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const { id } = await params;
 
-    // Get current user
+    // Try cookie-based auth first
+    const { supabase } = createClient(request);
+    let userId: string | null = null;
+
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (user) {
+      userId = user.id;
+    } else {
+      // Fallback to header-based auth
+      const headerUserId = request.headers.get('x-user-id');
+      if (headerUserId) {
+        const { data: userData, error: userError } =
+          await supabaseAdmin.auth.admin.getUserById(headerUserId);
+        if (!userError && userData) {
+          userId = headerUserId;
+        }
+      }
+    }
+
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -142,7 +158,7 @@ export async function PUT(
       );
     }
 
-    const job = await jobService.updateJob(id, validationResult.data, user.id);
+    const job = await jobService.updateJob(id, validationResult.data, userId);
 
     return NextResponse.json({
       success: true,
@@ -164,25 +180,39 @@ export async function PUT(
 // DELETE /api/jobs/[id] - Delete a job
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const { id } = await params;
 
-    // Get current user
+    // Try cookie-based auth first
+    const { supabase } = createClient(request);
+    let userId: string | null = null;
+
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (user) {
+      userId = user.id;
+    } else {
+      // Fallback to header-based auth
+      const headerUserId = request.headers.get('x-user-id');
+      if (headerUserId) {
+        const { data: userData, error: userError } =
+          await supabaseAdmin.auth.admin.getUserById(headerUserId);
+        if (!userError && userData) {
+          userId = headerUserId;
+        }
+      }
+    }
+
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -191,7 +221,7 @@ export async function DELETE(
       );
     }
 
-    await jobService.deleteJob(id, user.id);
+    await jobService.deleteJob(id, userId);
 
     return NextResponse.json({
       success: true,

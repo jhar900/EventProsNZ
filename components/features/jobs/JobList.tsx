@@ -19,6 +19,7 @@ import {
   Job,
   JobSearchParams,
   JobFilters as JobFiltersType,
+  JobApplicationWithDetails,
 } from '@/types/jobs';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -32,8 +33,8 @@ interface JobListProps {
   onJobApply?: (job: Job) => void;
   onJobEdit?: (job: Job) => void;
   onJobViewApplications?: (job: Job) => void;
-  onJobViewApplications2?: (job: Job) => void;
   onSimpleJobApply?: (job: Job) => void;
+  onViewMyApplication?: (application: JobApplicationWithDetails) => void;
   blurContactInfo?: boolean;
 }
 
@@ -47,8 +48,8 @@ export function JobList({
   onJobApply,
   onJobEdit,
   onJobViewApplications,
-  onJobViewApplications2,
   onSimpleJobApply,
+  onViewMyApplication,
   blurContactInfo,
 }: JobListProps) {
   const { user } = useAuth();
@@ -64,6 +65,45 @@ export function JobList({
   const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [userApplications, setUserApplications] = useState<
+    Map<string, JobApplicationWithDetails>
+  >(new Map());
+
+  // Fetch user's applications to check which jobs they've applied to
+  useEffect(() => {
+    const fetchUserApplications = async () => {
+      if (!user?.id) {
+        setUserApplications(new Map());
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/contractors/${user.id}/applications?limit=1000`,
+          {
+            credentials: 'include',
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const applicationsMap = new Map<string, JobApplicationWithDetails>();
+          (data.applications || []).forEach(
+            (app: JobApplicationWithDetails) => {
+              if (app.job?.id) {
+                applicationsMap.set(app.job.id, app);
+              }
+            }
+          );
+          setUserApplications(applicationsMap);
+        }
+      } catch (error) {
+        console.error('Error fetching user applications:', error);
+      }
+    };
+
+    fetchUserApplications();
+  }, [user?.id]);
 
   // Load jobs on mount and when filters change
   useEffect(() => {
@@ -77,6 +117,7 @@ export function JobList({
 
       const searchParams: JobSearchParams = {
         ...filters,
+        status: 'active',
         q: searchQuery,
         page: currentPage,
         limit: 12,
@@ -316,9 +357,13 @@ export function JobList({
                   onApply={() => onJobApply?.(job)}
                   onEdit={() => onJobEdit?.(job)}
                   onViewApplications={() => onJobViewApplications?.(job)}
-                  onViewApplications2={() => onJobViewApplications2?.(job)}
                   onSimpleApply={() => onSimpleJobApply?.(job)}
-                  blurContactInfo={shouldBlur}
+                  userApplication={userApplications.get(job.id)}
+                  onViewMyApplication={
+                    onViewMyApplication
+                      ? app => onViewMyApplication(app)
+                      : undefined
+                  }
                 />
               ))}
             </div>

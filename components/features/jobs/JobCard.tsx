@@ -10,11 +10,8 @@ import {
   ClockIcon,
   UserIcon,
   CalendarIcon,
-  BookmarkIcon,
-  EyeIcon,
 } from '@heroicons/react/24/outline';
-import { BookmarkIcon as BookmarkSolidIcon } from '@heroicons/react/24/solid';
-import { Job } from '@/types/jobs';
+import { Job, JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,8 +21,9 @@ interface JobCardProps {
   onApply?: () => void;
   onEdit?: () => void;
   onViewApplications?: () => void;
-  onViewApplications2?: () => void;
   onSimpleApply?: () => void;
+  userApplication?: JobApplicationWithDetails | undefined;
+  onViewMyApplication?: (application: JobApplicationWithDetails) => void;
   showActions?: boolean;
   className?: string;
 }
@@ -36,22 +34,17 @@ export function JobCard({
   onApply,
   onEdit,
   onViewApplications,
-  onViewApplications2,
   onSimpleApply,
+  userApplication,
+  onViewMyApplication,
   showActions = true,
   className = '',
 }: JobCardProps) {
   const { user } = useAuth();
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
   // Check if current user is the job creator
   const isJobCreator = user?.id && job.posted_by_user_id === user.id;
-
-  const handleBookmark = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
-  };
 
   const handleApply = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,67 +80,35 @@ export function JobCard({
     return 'Timeline not specified';
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'filled':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getJobTypeColor = (jobType: string) => {
-    switch (jobType) {
-      case 'event_manager':
-        return 'bg-purple-100 text-purple-800';
-      case 'contractor_internal':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const extractCity = (location: string) => {
+    if (!location) return 'Location not specified';
+    // Split by comma and find the city (usually second-to-last or last non-postal-code segment)
+    const parts = location.split(',').map(p => p.trim());
+    // Filter out parts that look like postal codes (numbers only or "New Zealand")
+    const filtered = parts.filter(
+      p =>
+        p &&
+        !/^\d+$/.test(p) &&
+        p.toLowerCase() !== 'new zealand' &&
+        p.toLowerCase() !== 'nz'
+    );
+    // Return the last meaningful part (typically the city)
+    return filtered.length > 0 ? filtered[filtered.length - 1] : location;
   };
 
   return (
     <Card
-      className={`p-6 hover:shadow-lg transition-shadow cursor-pointer ${className}`}
+      className={`p-6 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col ${className}`}
       onClick={onSelect}
     >
-      <div className="space-y-4">
+      <div className="flex flex-col flex-1 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
               {job.title}
             </h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge className={getStatusColor(job.status)}>
-                {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-              </Badge>
-              <Badge className={getJobTypeColor(job.job_type)}>
-                {job.job_type.replace('_', ' ').toUpperCase()}
-              </Badge>
-            </div>
           </div>
-          {user && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBookmark}
-              className="p-1"
-            >
-              {isBookmarked ? (
-                <BookmarkSolidIcon className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <BookmarkIcon className="h-5 w-5 text-gray-400" />
-              )}
-            </Button>
-          )}
         </div>
 
         {/* Description */}
@@ -164,7 +125,7 @@ export function JobCard({
         {/* Location */}
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <MapPinIcon className="h-4 w-4" />
-          <span>{job.location}</span>
+          <span>{extractCity(job.location)}</span>
           {job.is_remote && (
             <Badge variant="secondary" className="text-xs">
               Remote OK
@@ -184,25 +145,31 @@ export function JobCard({
           <span>{formatTimeline()}</span>
         </div>
 
+        {/* Special Requirements */}
+        {job.special_requirements && (
+          <div className="text-sm">
+            <span className="font-medium text-gray-700">
+              Special Requirements:
+            </span>
+            <p className="text-gray-600 mt-1 line-clamp-2">
+              {job.special_requirements}
+            </p>
+          </div>
+        )}
+
+        {/* Spacer to push stats and actions to bottom */}
+        <div className="flex-grow" />
+
         {/* Stats */}
         <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              <EyeIcon className="h-4 w-4" />
-              <span>
-                {job.view_count || 0}{' '}
-                {(job.view_count || 0) === 1 ? 'view' : 'views'}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <UserIcon className="h-4 w-4" />
-              <span>
-                {job.application_count || 0}{' '}
-                {(job.application_count || 0) === 1
-                  ? 'application'
-                  : 'applications'}
-              </span>
-            </div>
+          <div className="flex items-center space-x-1">
+            <UserIcon className="h-4 w-4" />
+            <span>
+              {job.application_count || 0}{' '}
+              {(job.application_count || 0) === 1
+                ? 'application'
+                : 'applications'}
+            </span>
           </div>
           <div className="flex items-center space-x-1">
             <ClockIcon className="h-4 w-4" />
@@ -216,7 +183,7 @@ export function JobCard({
 
         {/* Actions */}
         {showActions && (
-          <div className="flex items-center space-x-2 pt-4">
+          <div className="flex items-center space-x-2 pt-2">
             {isJobCreator ? (
               <>
                 <Button
@@ -240,20 +207,18 @@ export function JobCard({
                 >
                   View Applications
                 </Button>
-                {onViewApplications2 && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onViewApplications2();
-                    }}
-                    className="flex-1"
-                  >
-                    Applications 2
-                  </Button>
-                )}
               </>
+            ) : userApplication ? (
+              <Button
+                size="sm"
+                onClick={e => {
+                  e.stopPropagation();
+                  onViewMyApplication?.(userApplication);
+                }}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                View My Application
+              </Button>
             ) : (
               <>
                 <Button
@@ -267,17 +232,8 @@ export function JobCard({
                 >
                   View Details
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={handleApply}
-                  disabled={isApplying || job.status !== 'active'}
-                  className="flex-1"
-                >
-                  {isApplying ? 'Applying...' : 'Apply Now'}
-                </Button>
                 {onSimpleApply && (
                   <Button
-                    variant="secondary"
                     size="sm"
                     onClick={e => {
                       e.stopPropagation();
@@ -288,27 +244,13 @@ export function JobCard({
                       onSimpleApply();
                     }}
                     disabled={job.status !== 'active'}
-                    className="flex-1"
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                   >
                     Quick Apply
                   </Button>
                 )}
               </>
             )}
-          </div>
-        )}
-
-        {/* Special Requirements */}
-        {job.special_requirements && (
-          <div className="pt-2 border-t">
-            <div className="text-sm">
-              <span className="font-medium text-gray-700">
-                Special Requirements:
-              </span>
-              <p className="text-gray-600 mt-1 line-clamp-2">
-                {job.special_requirements}
-              </p>
-            </div>
           </div>
         )}
       </div>
