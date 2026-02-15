@@ -11,6 +11,10 @@ if (!supabaseServiceKey) {
   throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
 }
 
+// Custom fetch that bypasses Next.js Data Cache
+const uncachedFetch: typeof fetch = (url, init) =>
+  fetch(url, { ...init, cache: 'no-store' });
+
 export const supabaseAdmin = createSupabaseClient(
   supabaseUrl,
   supabaseServiceKey,
@@ -18,6 +22,9 @@ export const supabaseAdmin = createSupabaseClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+    },
+    global: {
+      fetch: uncachedFetch,
     },
   }
 );
@@ -28,6 +35,9 @@ export const createClient = () => {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+    },
+    global: {
+      fetch: uncachedFetch,
     },
   });
 };
