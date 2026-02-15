@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,41 @@ import TeamSection from './TeamSection';
 import CompanyValuesSection from './CompanyValuesSection';
 import { AboutContent } from '@/types/about';
 
+function AboutCTA() {
+  const modalContext = useContext(HomepageModalContext);
+  const { user } = useAuth();
+  const router = useRouter();
+
+  return (
+    <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-6">
+          Ready to Plan Your Next Event?
+        </h2>
+        <p className="text-xl text-gray-600 mb-8">
+          Join the many event managers who trust Event Pros NZ for their event
+          planning needs.
+        </p>
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            className="px-8 py-3"
+            onClick={() => {
+              if (user) {
+                router.push('/dashboard');
+              } else {
+                modalContext?.onRegisterClick();
+              }
+            }}
+          >
+            {user ? 'Go To My Dashboard' : 'Get Started Today'}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 interface AboutPageProps {
   className?: string;
 }
@@ -23,9 +59,6 @@ interface AboutPageProps {
 export default function AboutPage({ className }: AboutPageProps) {
   const [content, setContent] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
-  const modalContext = useContext(HomepageModalContext);
-  const { user } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -230,32 +263,7 @@ export default function AboutPage({ className }: AboutPageProps) {
         </section>
 
         {/* Call to Action */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">
-              Ready to Plan Your Next Event?
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Join the many event managers who trust Event Pros NZ for their
-              event planning needs.
-            </p>
-            <div className="flex justify-center">
-              <Button
-                size="lg"
-                className="px-8 py-3"
-                onClick={() => {
-                  if (user) {
-                    router.push('/dashboard');
-                  } else {
-                    modalContext?.onRegisterClick();
-                  }
-                }}
-              >
-                {user ? 'Go To My Dashboard' : 'Get Started Today'}
-              </Button>
-            </div>
-          </div>
-        </section>
+        <AboutCTA />
       </div>
 
       {/* Footer */}

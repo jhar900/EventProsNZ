@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, createContext, useEffect, Suspense } from 'react';
+import React, {
+  useState,
+  createContext,
+  useEffect,
+  useCallback,
+  Suspense,
+} from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { HomepageNavigation } from './HomepageNavigation';
 import LoginModal from '@/components/features/auth/LoginModal';
@@ -21,27 +27,15 @@ interface HomepageLayoutProps {
   className?: string;
 }
 
-// Component that uses useSearchParams - needs to be wrapped in Suspense
-function HomepageLayoutContent({
-  children,
-  className = '',
-}: HomepageLayoutProps) {
+// Isolated component for useSearchParams - needs Suspense boundary
+function SearchParamsHandler({
+  onResetPassword,
+}: {
+  onResetPassword: (token: string) => void;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
-    useState(false);
-  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
-    useState(false);
-  const [resetPasswordToken, setResetPasswordToken] = useState<string | null>(
-    null
-  );
-  const [registerModalRole, setRegisterModalRole] = useState<
-    'event_manager' | 'contractor' | undefined
-  >(undefined);
 
-  // Check for reset password token in URL on mount
   useEffect(() => {
     const checkForRecoveryLink = async () => {
       // Check query params for token
@@ -74,8 +68,7 @@ function HomepageLayoutContent({
           if (sessionData?.session || token) {
             // Session exists from recovery link, or we have a token
             // Use token if available, otherwise use 'recovery' as placeholder
-            setResetPasswordToken(token || 'recovery');
-            setIsResetPasswordModalOpen(true);
+            onResetPassword(token || 'recovery');
 
             // Clean up URL - remove token from query params
             if (token) {
@@ -114,17 +107,45 @@ function HomepageLayoutContent({
     };
 
     checkForRecoveryLink();
-  }, [searchParams, router]);
+  }, [searchParams, router, onResetPassword]);
 
-  const handleRegisterClick = (role?: 'event_manager' | 'contractor') => {
-    setRegisterModalRole(role);
-    setIsRegisterModalOpen(true);
-  };
+  return null;
+}
+
+export function HomepageLayout({
+  children,
+  className = '',
+}: HomepageLayoutProps) {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
+    useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
+    useState(false);
+  const [resetPasswordToken, setResetPasswordToken] = useState<string | null>(
+    null
+  );
+  const [registerModalRole, setRegisterModalRole] = useState<
+    'event_manager' | 'contractor' | undefined
+  >(undefined);
+
+  const handleRegisterClick = useCallback(
+    (role?: 'event_manager' | 'contractor') => {
+      setRegisterModalRole(role);
+      setIsRegisterModalOpen(true);
+    },
+    []
+  );
 
   const handleRegisterModalClose = () => {
     setIsRegisterModalOpen(false);
     setRegisterModalRole(undefined);
   };
+
+  const handleResetPassword = useCallback((token: string) => {
+    setResetPasswordToken(token);
+    setIsResetPasswordModalOpen(true);
+  }, []);
 
   const modalContextValue: HomepageModalContextType = {
     onRegisterClick: handleRegisterClick,
@@ -140,7 +161,12 @@ function HomepageLayoutContent({
         />
         {children}
 
-        {/* Login Modal - rendered outside of navigation */}
+        {/* Search params handler for reset password - isolated in Suspense */}
+        <Suspense fallback={null}>
+          <SearchParamsHandler onResetPassword={handleResetPassword} />
+        </Suspense>
+
+        {/* Login Modal */}
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
@@ -153,7 +179,7 @@ function HomepageLayoutContent({
           }}
         />
 
-        {/* Register Modal - rendered outside of navigation */}
+        {/* Register Modal */}
         <RegisterModal
           isOpen={isRegisterModalOpen}
           onClose={handleRegisterModalClose}
@@ -164,7 +190,7 @@ function HomepageLayoutContent({
           initialRole={registerModalRole}
         />
 
-        {/* Forgot Password Modal - rendered outside of navigation */}
+        {/* Forgot Password Modal */}
         <ForgotPasswordModal
           isOpen={isForgotPasswordModalOpen}
           onClose={() => setIsForgotPasswordModalOpen(false)}
@@ -174,7 +200,7 @@ function HomepageLayoutContent({
           }}
         />
 
-        {/* Reset Password Modal - rendered outside of navigation */}
+        {/* Reset Password Modal */}
         {resetPasswordToken && (
           <ResetPasswordModal
             isOpen={isResetPasswordModalOpen}
@@ -192,29 +218,5 @@ function HomepageLayoutContent({
         )}
       </div>
     </HomepageModalContext.Provider>
-  );
-}
-
-// Wrapper component with Suspense boundary
-export function HomepageLayout({
-  children,
-  className = '',
-}: HomepageLayoutProps) {
-  return (
-    <Suspense
-      fallback={
-        <div className={className}>
-          <HomepageNavigation
-            onLoginClick={() => {}}
-            onRegisterClick={() => {}}
-          />
-          {children}
-        </div>
-      }
-    >
-      <HomepageLayoutContent className={className}>
-        {children}
-      </HomepageLayoutContent>
-    </Suspense>
   );
 }

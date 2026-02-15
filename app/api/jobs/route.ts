@@ -15,8 +15,14 @@ const createJobSchema = z
       .min(1, 'Description is required')
       .max(5000, 'Description too long'),
     service_category: z.string().min(1, 'Service category is required'),
+    budget_type: z
+      .enum(['range', 'fixed', 'open', 'hourly', 'daily'])
+      .default('range'),
     budget_range_min: z.number().min(0).optional(),
     budget_range_max: z.number().min(0).optional(),
+    budget_fixed: z.number().min(0).optional(),
+    hourly_rate: z.number().min(0).optional(),
+    daily_rate: z.number().min(0).optional(),
     location: z
       .string()
       .min(1, 'Location is required')
@@ -375,6 +381,7 @@ export async function POST(request: NextRequest) {
       location: validationResult.data.location,
       is_remote: validationResult.data.is_remote,
       job_type: jobType,
+      budget_type: validationResult.data.budget_type || 'range',
     };
 
     // Only add optional fields if they have meaningful values
@@ -383,6 +390,15 @@ export async function POST(request: NextRequest) {
     }
     if (typeof validationResult.data.budget_range_max === 'number') {
       jobData.budget_range_max = validationResult.data.budget_range_max;
+    }
+    if (typeof validationResult.data.budget_fixed === 'number') {
+      jobData.budget_fixed = validationResult.data.budget_fixed;
+    }
+    if (typeof validationResult.data.hourly_rate === 'number') {
+      jobData.hourly_rate = validationResult.data.hourly_rate;
+    }
+    if (typeof validationResult.data.daily_rate === 'number') {
+      jobData.daily_rate = validationResult.data.daily_rate;
     }
     if (
       validationResult.data.coordinates &&

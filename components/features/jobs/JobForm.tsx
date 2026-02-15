@@ -61,12 +61,15 @@ const jobFormSchema = z
       .string()
       .min(1, 'Location is required')
       .max(200, 'Location too long'),
-    coordinates: z
-      .object({
-        lat: z.number(),
-        lng: z.number(),
-      })
-      .optional(),
+    coordinates: z.preprocess(
+      val => (val === null ? undefined : val),
+      z
+        .object({
+          lat: z.number(),
+          lng: z.number(),
+        })
+        .optional()
+    ),
     is_remote: z.boolean().default(false),
     special_requirements: z
       .string()
@@ -78,7 +81,10 @@ const jobFormSchema = z
     ),
     contact_phone: z.string().max(50, 'Phone number too long').optional(),
     contact_person_id: z.string().uuid().optional(),
-    response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
+    response_preferences: z.preprocess(
+      val => (val === '' || val === null ? undefined : val),
+      z.enum(['email', 'phone', 'platform']).optional()
+    ),
     timeline_start_date: z.string().optional(),
     timeline_end_date: z.string().optional(),
     event_id: z

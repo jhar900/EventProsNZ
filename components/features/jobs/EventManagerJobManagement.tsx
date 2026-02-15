@@ -47,6 +47,7 @@ import { JobWithDetails, JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow } from 'date-fns';
 import { InternalJobApplicationManager } from './InternalJobApplicationManager';
 import { CreateJobModal } from './CreateJobModal';
+import { EditJobModal } from './EditJobModal';
 
 interface EventManagerJobManagementProps {
   userId: string;
@@ -88,6 +89,8 @@ export function EventManagerJobManagement({
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const [showEditJobModal, setShowEditJobModal] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<JobWithDetails | null>(null);
 
   const fetchUserJobs = useCallback(async () => {
     try {
@@ -334,10 +337,9 @@ export function EventManagerJobManagement({
     }
   };
 
-  const handleEditJob = (jobId: string) => {
-    // For now, redirect to job details page where edit functionality can be added
-    // Or redirect to create page with edit mode
-    router.push(`/jobs/${jobId}`);
+  const handleEditJob = (job: JobWithDetails) => {
+    setJobToEdit(job);
+    setShowEditJobModal(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -547,51 +549,21 @@ export function EventManagerJobManagement({
                 <div className="space-y-4">
                   {jobs.map(job => (
                     <div key={job.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {job.title}
-                            </h3>
-                            <Badge className={getStatusColor(job.status)}>
-                              {getStatusIcon(job.status)}
-                              <span className="ml-1">
-                                {job.status.charAt(0).toUpperCase() +
-                                  job.status.slice(1)}
-                              </span>
-                            </Badge>
-                          </div>
-                          <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                            {job.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {job.timeline_start_date &&
-                                new Date(
-                                  job.timeline_start_date
-                                ).toLocaleDateString()}
+                      {/* Header: Title + Badge and Actions */}
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-gray-900">
+                            {job.title}
+                          </h3>
+                          <Badge className={getStatusColor(job.status)}>
+                            {getStatusIcon(job.status)}
+                            <span className="ml-1">
+                              {job.status.charAt(0).toUpperCase() +
+                                job.status.slice(1)}
                             </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
-                              {job.budget_range_min &&
-                                `$${job.budget_range_min.toLocaleString()}`}
-                              {job.budget_range_max &&
-                                ` - $${job.budget_range_max.toLocaleString()}`}
-                            </span>
-                            <span>
-                              {job.application_count || 0} applications
-                            </span>
-                            <span>{job.view_count || 0} views</span>
-                            <span>
-                              Posted{' '}
-                              {formatDistanceToNow(new Date(job.created_at), {
-                                addSuffix: true,
-                              })}
-                            </span>
-                          </div>
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Button
                             variant="outline"
                             size="sm"
@@ -603,15 +575,7 @@ export function EventManagerJobManagement({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/jobs/${job.id}`)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditJob(job.id)}
+                            onClick={() => handleEditJob(job)}
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
@@ -645,6 +609,37 @@ export function EventManagerJobManagement({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {job.description}
+                      </p>
+
+                      {/* Details - Full width */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {job.timeline_start_date &&
+                            new Date(
+                              job.timeline_start_date
+                            ).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="h-4 w-4" />
+                          {job.budget_range_min &&
+                            `$${job.budget_range_min.toLocaleString()}`}
+                          {job.budget_range_max &&
+                            ` - $${job.budget_range_max.toLocaleString()}`}
+                        </span>
+                        <span>{job.application_count || 0} applications</span>
+                        <span>{job.view_count || 0} views</span>
+                        <span>
+                          Posted{' '}
+                          {formatDistanceToNow(new Date(job.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -700,6 +695,16 @@ export function EventManagerJobManagement({
         onOpenChange={setShowCreateJobModal}
         onSuccess={() => {
           // Refresh jobs list after successful creation
+          fetchUserJobs();
+        }}
+      />
+
+      {/* Edit Job Modal */}
+      <EditJobModal
+        open={showEditJobModal}
+        onOpenChange={setShowEditJobModal}
+        job={jobToEdit}
+        onSuccess={() => {
           fetchUserJobs();
         }}
       />

@@ -8,27 +8,61 @@ export const dynamic = 'force-dynamic';
 
 const jobService = new JobService();
 
+// Helper to convert empty strings to undefined
+const emptyToUndefined = (val: unknown) =>
+  val === '' || val === null ? undefined : val;
+
 // Validation schemas
 const updateJobSchema = z.object({
-  title: z.string().min(10).max(200).optional(),
-  description: z.string().min(50).max(5000).optional(),
-  service_category: z.string().optional(),
-  budget_range_min: z.number().min(0).optional(),
-  budget_range_max: z.number().min(0).optional(),
-  location: z.string().max(200).optional(),
-  coordinates: z
-    .object({
-      lat: z.number(),
-      lng: z.number(),
-    })
-    .optional(),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().min(1).max(5000).optional(),
+  service_category: z.preprocess(emptyToUndefined, z.string().optional()),
+  budget_type: z.preprocess(
+    emptyToUndefined,
+    z.enum(['range', 'fixed', 'open', 'hourly', 'daily']).optional()
+  ),
+  budget_range_min: z.preprocess(
+    emptyToUndefined,
+    z.number().min(0).optional()
+  ),
+  budget_range_max: z.preprocess(
+    emptyToUndefined,
+    z.number().min(0).optional()
+  ),
+  budget_fixed: z.preprocess(emptyToUndefined, z.number().min(0).optional()),
+  hourly_rate: z.preprocess(emptyToUndefined, z.number().min(0).optional()),
+  daily_rate: z.preprocess(emptyToUndefined, z.number().min(0).optional()),
+  location: z.preprocess(emptyToUndefined, z.string().max(200).optional()),
+  coordinates: z.preprocess(
+    emptyToUndefined,
+    z
+      .object({
+        lat: z.number(),
+        lng: z.number(),
+      })
+      .optional()
+  ),
   is_remote: z.boolean().optional(),
-  special_requirements: z.string().max(2000).optional(),
-  contact_email: z.string().email().max(255).optional(),
-  contact_phone: z.string().max(50).optional(),
-  response_preferences: z.enum(['email', 'phone', 'platform']).optional(),
-  timeline_start_date: z.string().optional(),
-  timeline_end_date: z.string().optional(),
+  special_requirements: z.preprocess(
+    emptyToUndefined,
+    z.string().max(2000).optional()
+  ),
+  contact_email: z.preprocess(
+    emptyToUndefined,
+    z.string().email().max(255).optional()
+  ),
+  contact_phone: z.preprocess(emptyToUndefined, z.string().max(50).optional()),
+  contact_person_id: z.preprocess(
+    emptyToUndefined,
+    z.string().uuid().optional()
+  ),
+  response_preferences: z.preprocess(
+    emptyToUndefined,
+    z.enum(['email', 'phone', 'platform']).optional()
+  ),
+  timeline_start_date: z.preprocess(emptyToUndefined, z.string().optional()),
+  timeline_end_date: z.preprocess(emptyToUndefined, z.string().optional()),
+  event_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   status: z.enum(['active', 'filled', 'completed', 'cancelled']).optional(),
 });
 
@@ -144,12 +178,16 @@ export async function PUT(
     // Validate request body
     const validationResult = updateJobSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error(
+        'Job update validation failed:',
+        validationResult.error.issues
+      );
       return NextResponse.json(
         {
           success: false,
           message: 'Invalid request data',
           errors:
-            validationResult.error.errors?.map(err => ({
+            validationResult.error.issues?.map(err => ({
               field: err.path.join('.'),
               message: err.message,
             })) || [],
