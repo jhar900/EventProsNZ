@@ -65,7 +65,7 @@ export function useAuth() {
               supabase
                 .from('profiles')
                 .select(
-                  'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
+                  'first_name, last_name, avatar_url, timezone, phone, address, bio, location, linkedin_url, website_url'
                 )
                 .eq('user_id', userData.id)
                 .single(),
@@ -111,7 +111,7 @@ export function useAuth() {
         supabase
           .from('profiles')
           .select(
-            'first_name, last_name, avatar_url, timezone, phone, address, bio, location'
+            'first_name, last_name, avatar_url, timezone, phone, address, bio, location, linkedin_url, website_url'
           )
           .eq('user_id', session.user.id)
           .single(),
