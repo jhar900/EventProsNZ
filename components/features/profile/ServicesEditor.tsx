@@ -275,6 +275,7 @@ export function ServicesEditor({
 
     try {
       setIsLoading(true);
+      setError(null);
 
       // If viewing another user (admin), use admin API endpoint
       const apiEndpoint = propUserId
@@ -358,6 +359,7 @@ export function ServicesEditor({
 
     try {
       setIsLoading(true);
+      setError(null);
 
       // If viewing another user (admin), use admin API endpoint
       const apiEndpoint = propUserId

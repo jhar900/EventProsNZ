@@ -150,6 +150,7 @@ export function PortfolioManager({
 
     try {
       setIsLoading(true);
+      setError(null);
 
       // If viewing another user (admin), use admin API endpoint
       const apiEndpoint = propUserId

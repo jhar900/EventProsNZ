@@ -186,6 +186,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         ...validatedData,
+        event_date: validatedData.event_date || null,
       })
       .select()
       .single();
@@ -294,7 +295,7 @@ export async function PUT(request: NextRequest) {
         image_url: validatedData.image_url,
         video_url: validatedData.video_url,
         video_platform: validatedData.video_platform,
-        event_date: validatedData.event_date,
+        event_date: validatedData.event_date || null,
         is_visible: validatedData.is_visible,
         updated_at: new Date().toISOString(),
       })
