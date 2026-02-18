@@ -98,6 +98,22 @@ function OnboardingGuard({
       // We have cached data, show content immediately
       // Only redirect if cached status says incomplete
       if (user.role !== 'admin' && !cachedIsComplete) {
+        // Don't redirect if onboarding was just completed — cache may be stale
+        try {
+          const completionTime = localStorage.getItem(
+            'onboarding_just_completed'
+          );
+          if (completionTime) {
+            const elapsed = Date.now() - parseInt(completionTime, 10);
+            if (elapsed < 30000) {
+              setIsChecking(false);
+              return;
+            }
+          }
+        } catch (e) {
+          // Ignore
+        }
+
         let onboardingRoute = '/onboarding/event-manager';
         if (user.role === 'contractor') {
           onboardingRoute = '/onboarding/contractor';
@@ -174,10 +190,10 @@ function OnboardingGuard({
           if (completionTime) {
             const timeSinceCompletion =
               Date.now() - parseInt(completionTime, 10);
-            // If completed within last 10 seconds and we're on dashboard, allow access
-            if (timeSinceCompletion < 10000 && pathname === '/dashboard') {
+            // If completed within last 30 seconds, allow access
+            if (timeSinceCompletion < 30000) {
               return true;
-            } else if (timeSinceCompletion >= 10000) {
+            } else if (timeSinceCompletion >= 30000) {
               // Clean up old flag
               localStorage.removeItem('onboarding_just_completed');
             }

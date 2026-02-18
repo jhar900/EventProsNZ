@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
         status,
       });
 
-      response.headers.set(
-        'Cache-Control',
-        'private, max-age=120, stale-while-revalidate=60'
-      );
+      response.headers.set('Cache-Control', 'no-store');
 
       return response;
     }
@@ -42,17 +39,12 @@ export async function GET(request: NextRequest) {
     const completionService = new ProfileCompletionService(supabaseAdmin);
     const status = await completionService.getProfileCompletionStatus(userId);
 
-    // Add cache headers to reduce unnecessary requests
-    // Cache for 2 minutes on client, but allow revalidation
     const response = NextResponse.json({
       success: true,
       status,
     });
 
-    response.headers.set(
-      'Cache-Control',
-      'private, max-age=120, stale-while-revalidate=60'
-    );
+    response.headers.set('Cache-Control', 'no-store');
 
     return response;
   } catch (error) {

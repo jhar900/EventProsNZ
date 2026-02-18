@@ -61,6 +61,16 @@ export function useProfileCompletion() {
             })
             .then(data => {
               if (data?.status) {
+                // Don't overwrite with stale incomplete data if onboarding just completed
+                const justCompleted = localStorage.getItem(
+                  'onboarding_just_completed'
+                );
+                if (justCompleted && !data.status.isComplete) {
+                  const elapsed = Date.now() - parseInt(justCompleted, 10);
+                  if (elapsed < 30000) {
+                    return; // Skip stale write
+                  }
+                }
                 setStatus(data.status);
                 // Update cache
                 localStorage.setItem(
