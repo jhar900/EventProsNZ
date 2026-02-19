@@ -138,10 +138,7 @@ export function ContractorCard({
   };
 
   return (
-    <Card
-      className={`${cardClasses} ${viewMode === 'grid' ? 'cursor-pointer' : ''}`}
-      onClick={viewMode === 'grid' ? handleCardClick : undefined}
-    >
+    <Card className={`${cardClasses} cursor-pointer`} onClick={handleCardClick}>
       <div
         className={
           viewMode === 'grid'

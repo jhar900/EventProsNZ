@@ -57,7 +57,7 @@ const BUDGET_RANGES = [
   { label: '$1,000 - $2,500', min: 1000, max: 2500 },
   { label: '$2,500 - $5,000', min: 2500, max: 5000 },
   { label: '$5,000 - $10,000', min: 5000, max: 10000 },
-  { label: 'Over $10,000', min: 10000, max: 100000 },
+  { label: 'Over $10,000', min: 10000, max: undefined },
 ];
 
 export function JobFilters({
@@ -81,10 +81,15 @@ export function JobFilters({
     onFiltersChange(newFilters);
   };
 
+  const handleMultipleFilterChanges = (changes: Partial<JobFiltersType>) => {
+    const newFilters = { ...localFilters, ...changes };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
+
   const handleBudgetRangeChange = (value: number[]) => {
     setBudgetRange([value[0], value[1]]);
-    handleFilterChange('budget_min', value[0]);
-    handleFilterChange('budget_max', value[1]);
+    handleMultipleFilterChanges({ budget_min: value[0], budget_max: value[1] });
   };
 
   const clearFilters = () => {
@@ -130,9 +135,9 @@ export function JobFilters({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Job Type */}
+          {/* Job Posted By */}
           <div className="space-y-2">
-            <Label htmlFor="job_type">Job Type</Label>
+            <Label htmlFor="job_type">Job Posted By</Label>
             <Select
               value={localFilters.job_type || 'all'}
               onValueChange={value =>
@@ -143,14 +148,12 @@ export function JobFilters({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="All job types" />
+                <SelectValue placeholder="Anyone" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All job types</SelectItem>
+                <SelectItem value="all">Anyone</SelectItem>
                 <SelectItem value="event_manager">Event Manager</SelectItem>
-                <SelectItem value="contractor_internal">
-                  Contractor Internal
-                </SelectItem>
+                <SelectItem value="contractor_internal">Contractor</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -225,47 +228,6 @@ export function JobFilters({
               </div>
             </div>
           </div>
-
-          {/* Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={localFilters.status || 'all'}
-              onValueChange={value =>
-                handleFilterChange(
-                  'status',
-                  value === 'all' ? undefined : value
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="filled">Filled</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Posted By */}
-          <div className="space-y-2">
-            <Label htmlFor="posted_by_user_id">Posted By</Label>
-            <Input
-              id="posted_by_user_id"
-              placeholder="User ID"
-              value={localFilters.posted_by_user_id || ''}
-              onChange={e =>
-                handleFilterChange(
-                  'posted_by_user_id',
-                  e.target.value || undefined
-                )
-              }
-            />
-          </div>
         </div>
 
         {/* Budget Range */}
@@ -333,60 +295,36 @@ export function JobFilters({
         <div className="space-y-2">
           <Label>Quick Budget Filters</Label>
           <div className="flex flex-wrap gap-2">
-            {BUDGET_RANGES.map(range => (
-              <Button
-                key={range.label}
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  handleFilterChange('budget_min', range.min);
-                  handleFilterChange('budget_max', range.max);
-                  setBudgetRange([range.min, range.max]);
-                }}
-                className="text-xs"
-              >
-                {range.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Pagination */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="page">Page</Label>
-            <Input
-              id="page"
-              type="number"
-              min="1"
-              placeholder="Page"
-              value={localFilters.page || ''}
-              onChange={e =>
-                handleFilterChange(
-                  'page',
-                  e.target.value ? Number(e.target.value) : undefined
-                )
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="limit">Results per page</Label>
-            <Select
-              value={localFilters.limit?.toString() || '12'}
-              onValueChange={value =>
-                handleFilterChange('limit', Number(value))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="6">6 per page</SelectItem>
-                <SelectItem value="12">12 per page</SelectItem>
-                <SelectItem value="24">24 per page</SelectItem>
-                <SelectItem value="48">48 per page</SelectItem>
-              </SelectContent>
-            </Select>
+            {BUDGET_RANGES.map(range => {
+              const isSelected =
+                localFilters.budget_min === range.min &&
+                localFilters.budget_max === range.max;
+              return (
+                <Button
+                  key={range.label}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (isSelected) {
+                      handleMultipleFilterChanges({
+                        budget_min: undefined,
+                        budget_max: undefined,
+                      });
+                      setBudgetRange([0, 10000]);
+                    } else {
+                      handleMultipleFilterChanges({
+                        budget_min: range.min,
+                        budget_max: range.max,
+                      });
+                      setBudgetRange([range.min, range.max ?? 10000]);
+                    }
+                  }}
+                  className={`text-xs ${isSelected ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700' : ''}`}
+                >
+                  {range.label}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>

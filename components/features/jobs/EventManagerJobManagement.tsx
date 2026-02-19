@@ -477,7 +477,7 @@ export function EventManagerJobManagement({
             {/* Recent Jobs */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Jobs</CardTitle>
+                <CardTitle>Active Jobs</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

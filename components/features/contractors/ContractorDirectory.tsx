@@ -141,26 +141,26 @@ export function ContractorDirectory({
       // Fetch with empty filters
       await fetchContractors({});
     } else {
-      // Clean up the filters object - remove undefined values and empty arrays
+      // Clean up the filters object - normalize empty arrays to undefined
       const cleanedFilters: Partial<ContractorFilters> = {};
       Object.entries(newFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (key === 'serviceTypes' && Array.isArray(value)) {
-            if (value.length > 0) {
-              cleanedFilters.serviceTypes = value;
-            }
-          } else if (key === 'serviceType') {
-            // Skip legacy serviceType if serviceTypes is present
-            if (
-              !newFilters.serviceTypes ||
-              (Array.isArray(newFilters.serviceTypes) &&
-                newFilters.serviceTypes.length === 0)
-            ) {
-              cleanedFilters.serviceType = value as string;
-            }
+        if (key === 'serviceTypes') {
+          if (Array.isArray(value) && value.length > 0) {
+            cleanedFilters.serviceTypes = value;
           } else {
+            cleanedFilters.serviceTypes = undefined;
+          }
+        } else if (key === 'serviceType') {
+          // Skip legacy serviceType if serviceTypes is present
+          if (
+            !newFilters.serviceTypes ||
+            (Array.isArray(newFilters.serviceTypes) &&
+              newFilters.serviceTypes.length === 0)
+          ) {
             (cleanedFilters as any)[key] = value;
           }
+        } else {
+          (cleanedFilters as any)[key] = value;
         }
       });
 

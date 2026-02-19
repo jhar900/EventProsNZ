@@ -98,17 +98,10 @@ export function ContractorFilters({
   };
 
   const clearFilters = () => {
-    // Explicitly clear all filter properties
-    const clearedFilters: ContractorFiltersType = {
-      q: undefined,
-      serviceType: undefined,
-      serviceTypes: undefined,
-      location: undefined,
-    };
-    setLocalFilters(clearedFilters);
+    setLocalFilters({});
     setLocalSearchQuery('');
-    onSearch('');
-    // Pass empty object to completely replace filters
+    // Pass empty object to completely replace filters and refetch
+    // This also clears searchQuery in the parent — no need to call onSearch separately
     onFilterChange({});
   };
 
