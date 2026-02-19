@@ -204,7 +204,7 @@ export function JobList({
             {totalJobs} {totalJobs === 1 ? 'job' : 'jobs'} found
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -219,6 +219,41 @@ export function JobList({
               </Badge>
             )}
           </Button>
+          {hasActiveFilters && (
+            <>
+              {searchQuery && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center space-x-1"
+                >
+                  <MagnifyingGlassIcon className="h-3 w-3" />
+                  <span>{searchQuery}</span>
+                </Badge>
+              )}
+              {filters.service_category && (
+                <Badge variant="secondary">
+                  Service: {filters.service_category}
+                </Badge>
+              )}
+              {filters.location && (
+                <Badge variant="secondary">Location: {filters.location}</Badge>
+              )}
+              {filters.budget_min !== undefined && (
+                <Badge variant="secondary">Min: ${filters.budget_min}</Badge>
+              )}
+              {filters.budget_max !== undefined && (
+                <Badge variant="secondary">Max: ${filters.budget_max}</Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Clear all
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -251,52 +286,6 @@ export function JobList({
                 onSearch={handleSearch}
                 onClear={handleClearFilters}
               />
-            )}
-
-            {/* Active Filters Display */}
-            {hasActiveFilters && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Active filters:</span>
-                  {searchQuery && (
-                    <Badge
-                      variant="secondary"
-                      className="flex items-center space-x-1"
-                    >
-                      <MagnifyingGlassIcon className="h-3 w-3" />
-                      <span>{searchQuery}</span>
-                    </Badge>
-                  )}
-                  {filters.service_category && (
-                    <Badge variant="secondary">
-                      Service: {filters.service_category}
-                    </Badge>
-                  )}
-                  {filters.location && (
-                    <Badge variant="secondary">
-                      Location: {filters.location}
-                    </Badge>
-                  )}
-                  {filters.budget_min && (
-                    <Badge variant="secondary">
-                      Min: ${filters.budget_min}
-                    </Badge>
-                  )}
-                  {filters.budget_max && (
-                    <Badge variant="secondary">
-                      Max: ${filters.budget_max}
-                    </Badge>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Clear all
-                </Button>
-              </div>
             )}
           </div>
         </Card>

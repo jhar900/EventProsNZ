@@ -114,11 +114,73 @@ export function JobFilters({
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center flex-wrap gap-2">
             <FunnelIcon className="h-5 w-5 text-gray-600" />
             <h3 className="text-lg font-medium text-gray-900">Filters</h3>
-            {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary">{getActiveFilterCount()} active</Badge>
+            {localFilters.job_type && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Posted By:{' '}
+                {localFilters.job_type === 'event_manager'
+                  ? 'Event Manager'
+                  : 'Contractor'}
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() => handleFilterChange('job_type', undefined)}
+                />
+              </Badge>
+            )}
+            {localFilters.service_category && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Service: {localFilters.service_category}
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() =>
+                    handleFilterChange('service_category', undefined)
+                  }
+                />
+              </Badge>
+            )}
+            {localFilters.location && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Location: {localFilters.location}
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() => handleFilterChange('location', undefined)}
+                />
+              </Badge>
+            )}
+            {localFilters.is_remote && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Remote only
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() => handleFilterChange('is_remote', undefined)}
+                />
+              </Badge>
+            )}
+            {localFilters.budget_min !== undefined && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Min: ${localFilters.budget_min.toLocaleString()}
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() => {
+                    handleFilterChange('budget_min', undefined);
+                    setBudgetRange([0, budgetRange[1]]);
+                  }}
+                />
+              </Badge>
+            )}
+            {localFilters.budget_max !== undefined && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Max: ${localFilters.budget_max.toLocaleString()}
+                <XMarkIcon
+                  className="h-3 w-3 cursor-pointer hover:text-gray-900"
+                  onClick={() => {
+                    handleFilterChange('budget_max', undefined);
+                    setBudgetRange([budgetRange[0], 10000]);
+                  }}
+                />
+              </Badge>
             )}
           </div>
           {hasActiveFilters && (
