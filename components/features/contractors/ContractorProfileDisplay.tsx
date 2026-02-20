@@ -864,7 +864,7 @@ export function ContractorProfileDisplay({
                                   return (
                                     <div
                                       key={response.id}
-                                      className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                                      className={`flex ${isCurrentUser ? 'justify-start' : 'justify-end'}`}
                                     >
                                       <div
                                         className={`max-w-[85%] p-3 rounded-lg ${

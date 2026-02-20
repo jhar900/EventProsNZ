@@ -47,6 +47,11 @@ import {
   BadgeCheck,
   Briefcase,
   ExternalLink,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter,
+  Youtube,
 } from 'lucide-react';
 import { JobApplicationWithDetails } from '@/types/jobs';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -115,6 +120,8 @@ export function InternalJobApplicationManager({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [activityLog, setActivityLog] = useState<ApplicationActivity[]>([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const [expandedCompanyDesc, setExpandedCompanyDesc] = useState(false);
+  const [expandedBio, setExpandedBio] = useState(false);
   const activityLogRef = useRef<HTMLDivElement>(null);
 
   // Fetch applications if not provided as prop
@@ -691,6 +698,8 @@ export function InternalJobApplicationManager({
                               fetchActivity(application.id);
                             } else {
                               setActivityLog([]);
+                              setExpandedCompanyDesc(false);
+                              setExpandedBio(false);
                             }
                           }}
                         >
@@ -737,16 +746,16 @@ export function InternalJobApplicationManager({
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-6 w-6 p-0"
+                                          className="h-auto py-1 px-2 text-xs text-gray-500 hover:text-gray-700"
                                           onClick={() =>
                                             window.open(
                                               `/contractors/${selectedApplication.contractor?.user_id}`,
                                               '_blank'
                                             )
                                           }
-                                          title="View full profile"
                                         >
-                                          <ExternalLink className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                                          View Profile Page
+                                          <ExternalLink className="h-3 w-3 ml-1" />
                                         </Button>
                                       )}
                                     </div>
@@ -819,9 +828,46 @@ export function InternalJobApplicationManager({
                                         )}
                                       </div>
                                     </div>
+                                    {/* Service Categories */}
+                                    {selectedApplication.contractor
+                                      ?.service_categories &&
+                                      selectedApplication.contractor
+                                        .service_categories.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {selectedApplication.contractor.service_categories
+                                            .slice(0, 3)
+                                            .map((cat, i) => (
+                                              <Badge
+                                                key={i}
+                                                variant="secondary"
+                                                className="text-xs py-0"
+                                              >
+                                                {cat}
+                                              </Badge>
+                                            ))}
+                                          {selectedApplication.contractor
+                                            .service_categories.length > 3 && (
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-xs py-0"
+                                            >
+                                              +
+                                              {selectedApplication.contractor
+                                                .service_categories.length - 3}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      )}
                                     {selectedApplication.contractor
                                       ?.company_description && (
-                                      <p className="text-xs text-gray-600 line-clamp-3">
+                                      <p
+                                        className={`text-xs text-gray-600 cursor-pointer hover:text-gray-800 ${expandedCompanyDesc ? '' : 'line-clamp-3'}`}
+                                        onClick={() =>
+                                          setExpandedCompanyDesc(
+                                            !expandedCompanyDesc
+                                          )
+                                        }
+                                      >
                                         {
                                           selectedApplication.contractor
                                             .company_description
@@ -862,35 +908,95 @@ export function InternalJobApplicationManager({
                                         </a>
                                       </div>
                                     )}
-                                    {selectedApplication.contractor
-                                      ?.service_categories &&
+                                    {/* Social Media Links */}
+                                    {(selectedApplication.contractor
+                                      ?.facebook_url ||
                                       selectedApplication.contractor
-                                        .service_categories.length > 0 && (
-                                        <div className="flex flex-wrap gap-1">
-                                          {selectedApplication.contractor.service_categories
-                                            .slice(0, 3)
-                                            .map((cat, i) => (
-                                              <Badge
-                                                key={i}
-                                                variant="secondary"
-                                                className="text-xs py-0"
-                                              >
-                                                {cat}
-                                              </Badge>
-                                            ))}
-                                          {selectedApplication.contractor
-                                            .service_categories.length > 3 && (
-                                            <Badge
-                                              variant="secondary"
-                                              className="text-xs py-0"
-                                            >
-                                              +
-                                              {selectedApplication.contractor
-                                                .service_categories.length - 3}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      )}
+                                        ?.instagram_url ||
+                                      selectedApplication.contractor
+                                        ?.linkedin_url ||
+                                      selectedApplication.contractor
+                                        ?.twitter_url ||
+                                      selectedApplication.contractor
+                                        ?.youtube_url) && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {selectedApplication.contractor
+                                          ?.facebook_url && (
+                                          <a
+                                            href={
+                                              selectedApplication.contractor
+                                                .facebook_url
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-blue-600 transition-colors"
+                                            aria-label="Facebook"
+                                          >
+                                            <Facebook className="h-4 w-4" />
+                                          </a>
+                                        )}
+                                        {selectedApplication.contractor
+                                          ?.instagram_url && (
+                                          <a
+                                            href={
+                                              selectedApplication.contractor
+                                                .instagram_url
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-pink-600 transition-colors"
+                                            aria-label="Instagram"
+                                          >
+                                            <Instagram className="h-4 w-4" />
+                                          </a>
+                                        )}
+                                        {selectedApplication.contractor
+                                          ?.linkedin_url && (
+                                          <a
+                                            href={
+                                              selectedApplication.contractor
+                                                .linkedin_url
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-blue-700 transition-colors"
+                                            aria-label="LinkedIn"
+                                          >
+                                            <Linkedin className="h-4 w-4" />
+                                          </a>
+                                        )}
+                                        {selectedApplication.contractor
+                                          ?.twitter_url && (
+                                          <a
+                                            href={
+                                              selectedApplication.contractor
+                                                .twitter_url
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-blue-400 transition-colors"
+                                            aria-label="Twitter"
+                                          >
+                                            <Twitter className="h-4 w-4" />
+                                          </a>
+                                        )}
+                                        {selectedApplication.contractor
+                                          ?.youtube_url && (
+                                          <a
+                                            href={
+                                              selectedApplication.contractor
+                                                .youtube_url
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-red-600 transition-colors"
+                                            aria-label="YouTube"
+                                          >
+                                            <Youtube className="h-4 w-4" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Personal/Contact Details */}
@@ -953,7 +1059,12 @@ export function InternalJobApplicationManager({
                                       </div>
                                     )}
                                     {selectedApplication.contractor?.bio && (
-                                      <p className="text-xs text-gray-600 line-clamp-3 italic">
+                                      <p
+                                        className={`text-xs text-gray-600 italic cursor-pointer hover:text-gray-800 ${expandedBio ? '' : 'line-clamp-3'}`}
+                                        onClick={() =>
+                                          setExpandedBio(!expandedBio)
+                                        }
+                                      >
                                         &ldquo;
                                         {selectedApplication.contractor.bio}
                                         &rdquo;

@@ -7,10 +7,10 @@ import LoginForm from '@/components/features/auth/LoginForm';
 import RegisterForm from '@/components/features/auth/RegisterForm';
 import AuthGuard from '@/components/features/auth/AuthGuard';
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup'>('signup');
   const [error, setError] = useState<string | null>(null);
 
   // If user is already logged in, redirect to dashboard

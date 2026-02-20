@@ -1118,8 +1118,12 @@ export interface Database {
         description: string;
         job_type: 'event_manager' | 'contractor_internal';
         service_category: string;
+        budget_type: 'range' | 'fixed' | 'open' | 'hourly' | 'daily' | null;
         budget_range_min: number | null;
         budget_range_max: number | null;
+        budget_fixed: number | null;
+        hourly_rate: number | null;
+        daily_rate: number | null;
         location: string;
         coordinates: any | null;
         is_remote: boolean;
@@ -1144,8 +1148,12 @@ export interface Database {
         description: string;
         job_type: 'event_manager' | 'contractor_internal';
         service_category: string;
+        budget_type?: 'range' | 'fixed' | 'open' | 'hourly' | 'daily' | null;
         budget_range_min?: number | null;
         budget_range_max?: number | null;
+        budget_fixed?: number | null;
+        hourly_rate?: number | null;
+        daily_rate?: number | null;
         location: string;
         coordinates?: any | null;
         is_remote?: boolean;
@@ -1170,8 +1178,12 @@ export interface Database {
         description?: string;
         job_type?: 'event_manager' | 'contractor_internal';
         service_category?: string;
+        budget_type?: 'range' | 'fixed' | 'open' | 'hourly' | 'daily' | null;
         budget_range_min?: number | null;
         budget_range_max?: number | null;
+        budget_fixed?: number | null;
+        hourly_rate?: number | null;
+        daily_rate?: number | null;
         location?: string;
         coordinates?: any | null;
         is_remote?: boolean;

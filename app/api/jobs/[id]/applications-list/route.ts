@@ -125,7 +125,7 @@ export async function GET(
       await supabaseAdmin
         .from('business_profiles')
         .select(
-          'id, company_name, user_id, logo_url, description, website, location, service_categories, average_rating, review_count, is_verified'
+          'id, company_name, user_id, logo_url, description, website, location, service_categories, average_rating, review_count, is_verified, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, tiktok_url'
         )
         .in('id', contractorIds);
 
@@ -204,6 +204,12 @@ export async function GET(
               logo_url: businessProfile.logo_url || null,
               average_rating: businessProfile.average_rating || 0,
               review_count: businessProfile.review_count || 0,
+              facebook_url: businessProfile.facebook_url || null,
+              instagram_url: businessProfile.instagram_url || null,
+              linkedin_url: businessProfile.linkedin_url || null,
+              twitter_url: businessProfile.twitter_url || null,
+              youtube_url: businessProfile.youtube_url || null,
+              tiktok_url: businessProfile.tiktok_url || null,
             }
           : null,
       };

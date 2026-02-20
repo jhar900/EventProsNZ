@@ -201,6 +201,47 @@ export class JobService {
         .eq('job_id', jobId)
         .order('created_at', { ascending: false });
 
+      // Fetch social links from business_profiles for each contractor
+      const contractorIds = (applications || [])
+        .map((app: any) => app.contractor?.id)
+        .filter(Boolean);
+
+      const socialLinksMap: Record<string, any> = {};
+      if (contractorIds.length > 0) {
+        const { data: businessProfiles } = await this.supabase
+          .from('business_profiles')
+          .select(
+            'user_id, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, tiktok_url'
+          )
+          .in('user_id', contractorIds);
+
+        if (businessProfiles) {
+          for (const bp of businessProfiles) {
+            socialLinksMap[bp.user_id] = bp;
+          }
+        }
+      }
+
+      // Merge social links into contractor data
+      const enrichedApplications = (applications || []).map((app: any) => {
+        if (app.contractor?.id && socialLinksMap[app.contractor.id]) {
+          const bp = socialLinksMap[app.contractor.id];
+          return {
+            ...app,
+            contractor: {
+              ...app.contractor,
+              facebook_url: bp.facebook_url || null,
+              instagram_url: bp.instagram_url || null,
+              linkedin_url: bp.linkedin_url || null,
+              twitter_url: bp.twitter_url || null,
+              youtube_url: bp.youtube_url || null,
+              tiktok_url: bp.tiktok_url || null,
+            },
+          };
+        }
+        return app;
+      });
+
       // Transform contact_person data to flatten the nested profile
       let contactPersonFlat = undefined;
       if (job.contact_person) {
@@ -221,7 +262,7 @@ export class JobService {
       return {
         ...job,
         contact_person: contactPersonFlat,
-        applications: applications || [],
+        applications: enrichedApplications,
         analytics: {
           view_count: job.view_count || 0,
           application_count: job.application_count || 0,
@@ -264,7 +305,7 @@ export class JobService {
       let query = this.supabase
         .from('jobs')
         .select(
-          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_type, budget_range_min, budget_range_max, budget_fixed, hourly_rate, daily_rate, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
           { count: 'exact' }
         );
 
@@ -382,7 +423,7 @@ export class JobService {
       let query = this.supabase
         .from('jobs')
         .select(
-          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_range_min, budget_range_max, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
+          'id, title, description, job_type, service_category, location, coordinates, is_remote, budget_type, budget_range_min, budget_range_max, budget_fixed, hourly_rate, daily_rate, status, special_requirements, contact_email, contact_phone, contact_person_id, response_preferences, timeline_start_date, timeline_end_date, event_id, posted_by_user_id, view_count, application_count, created_at, updated_at',
           { count: 'exact' }
         );
 
@@ -583,6 +624,15 @@ export class JobService {
             id,
             title,
             status
+          ),
+          contractor:users!job_applications_contractor_id_fkey(
+            id,
+            first_name,
+            last_name,
+            company_name,
+            profile_photo_url,
+            average_rating,
+            review_count
           )
         `,
         { count: 'exact' }
@@ -614,8 +664,49 @@ export class JobService {
       const total = count || 0;
       const total_pages = Math.ceil(total / limit);
 
+      // Fetch social links from business_profiles for each contractor
+      const contractorIds = (applications || [])
+        .map((app: any) => app.contractor?.id)
+        .filter(Boolean);
+
+      const socialLinksMap: Record<string, any> = {};
+      if (contractorIds.length > 0) {
+        const { data: businessProfiles } = await this.supabase
+          .from('business_profiles')
+          .select(
+            'user_id, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, tiktok_url'
+          )
+          .in('user_id', contractorIds);
+
+        if (businessProfiles) {
+          for (const bp of businessProfiles) {
+            socialLinksMap[bp.user_id] = bp;
+          }
+        }
+      }
+
+      // Merge social links into contractor data
+      const enrichedApplications = (applications || []).map((app: any) => {
+        if (app.contractor?.id && socialLinksMap[app.contractor.id]) {
+          const bp = socialLinksMap[app.contractor.id];
+          return {
+            ...app,
+            contractor: {
+              ...app.contractor,
+              facebook_url: bp.facebook_url || null,
+              instagram_url: bp.instagram_url || null,
+              linkedin_url: bp.linkedin_url || null,
+              twitter_url: bp.twitter_url || null,
+              youtube_url: bp.youtube_url || null,
+              tiktok_url: bp.tiktok_url || null,
+            },
+          };
+        }
+        return app;
+      });
+
       return {
-        applications: applications || [],
+        applications: enrichedApplications,
         total,
         page,
         limit,

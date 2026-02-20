@@ -974,16 +974,20 @@ export default function ContractorInquiriesList({
                                             : response.responder?.email ||
                                               'Unknown User'}
                                         </span>
-                                        {!isOriginalMessage && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs capitalize"
-                                          >
-                                            {formatResponseType(
-                                              response.response_type || 'reply'
-                                            )}
-                                          </Badge>
-                                        )}
+                                        {!isOriginalMessage &&
+                                          response.response_type &&
+                                          response.response_type !==
+                                            'reply' && (
+                                            <Badge
+                                              variant="outline"
+                                              className="text-xs capitalize"
+                                            >
+                                              {formatResponseType(
+                                                response.response_type ||
+                                                  'reply'
+                                              )}
+                                            </Badge>
+                                          )}
                                       </div>
                                       <div className="flex items-center space-x-2">
                                         <span className="text-xs text-gray-500">

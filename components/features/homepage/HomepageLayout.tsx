@@ -25,6 +25,7 @@ export const HomepageModalContext =
 interface HomepageLayoutProps {
   children: React.ReactNode;
   className?: string;
+  loginRedirectOnSuccess?: boolean;
 }
 
 // Isolated component for useSearchParams - needs Suspense boundary
@@ -115,6 +116,7 @@ function SearchParamsHandler({
 export function HomepageLayout({
   children,
   className = '',
+  loginRedirectOnSuccess = true,
 }: HomepageLayoutProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -170,6 +172,7 @@ export function HomepageLayout({
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
+          redirectOnSuccess={loginRedirectOnSuccess}
           onSignUpClick={() => {
             setIsLoginModalOpen(false);
             setIsRegisterModalOpen(true);

@@ -448,8 +448,8 @@ export function ConversationDetailPanel({
                       } ${
                         !isOriginalMessage
                           ? isCurrentUser
-                            ? 'ml-auto max-w-[85%]'
-                            : 'mr-auto max-w-[85%]'
+                            ? 'mr-auto max-w-[85%]'
+                            : 'ml-auto max-w-[85%]'
                           : ''
                       }`}
                     >
@@ -483,16 +483,16 @@ export function ConversationDetailPanel({
                               ? `${response.responder.profiles.first_name} ${response.responder.profiles.last_name}`.trim()
                               : response.responder?.email || 'Unknown User'}
                           </span>
-                          {!isOriginalMessage && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs capitalize"
-                            >
-                              {formatResponseType(
-                                response.response_type || 'reply'
-                              )}
-                            </Badge>
-                          )}
+                          {!isOriginalMessage &&
+                            response.response_type &&
+                            response.response_type !== 'reply' && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs capitalize"
+                              >
+                                {formatResponseType(response.response_type)}
+                              </Badge>
+                            )}
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500">

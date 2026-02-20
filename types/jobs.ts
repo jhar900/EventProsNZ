@@ -145,6 +145,12 @@ export interface JobApplicationWithDetails extends JobApplication {
     profile_photo_url?: string;
     avatar_url?: string;
     logo_url?: string;
+    facebook_url?: string | null;
+    instagram_url?: string | null;
+    linkedin_url?: string | null;
+    twitter_url?: string | null;
+    youtube_url?: string | null;
+    tiktok_url?: string | null;
     average_rating: number;
     review_count: number;
   };

@@ -59,14 +59,32 @@ export function JobCard({
   };
 
   const formatBudget = () => {
-    if (job.budget_range_min && job.budget_range_max) {
-      return `$${job.budget_range_min.toLocaleString()} - $${job.budget_range_max.toLocaleString()}`;
-    } else if (job.budget_range_min) {
-      return `From $${job.budget_range_min.toLocaleString()}`;
-    } else if (job.budget_range_max) {
-      return `Up to $${job.budget_range_max.toLocaleString()}`;
+    switch (job.budget_type) {
+      case 'fixed':
+        return job.budget_fixed
+          ? `$${job.budget_fixed.toLocaleString()}`
+          : 'Budget not specified';
+      case 'open':
+        return 'Open to offers';
+      case 'hourly':
+        return job.hourly_rate
+          ? `$${job.hourly_rate.toLocaleString()}/hr`
+          : 'Budget not specified';
+      case 'daily':
+        return job.daily_rate
+          ? `$${job.daily_rate.toLocaleString()}/day`
+          : 'Budget not specified';
+      default: {
+        if (job.budget_range_min && job.budget_range_max) {
+          return `$${job.budget_range_min.toLocaleString()} - $${job.budget_range_max.toLocaleString()}`;
+        } else if (job.budget_range_min) {
+          return `From $${job.budget_range_min.toLocaleString()}`;
+        } else if (job.budget_range_max) {
+          return `Up to $${job.budget_range_max.toLocaleString()}`;
+        }
+        return 'Budget not specified';
+      }
     }
-    return 'Budget not specified';
   };
 
   const formatTimeline = () => {
