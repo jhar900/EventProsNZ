@@ -22,9 +22,21 @@ import {
   Check,
   Send,
   MessageSquare,
+  Info,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import { RESPONSE_TYPES } from '@/types/inquiries';
 import { Inquiry } from '@/types/inquiries';
+
+interface MessageMetadata {
+  type?: string;
+  event_id?: string;
+  contractor_user_id?: string;
+  contractor_message?: string;
+  status?: string;
+  action?: string;
+}
 
 interface MessageResponse {
   id: string;
@@ -33,6 +45,8 @@ interface MessageResponse {
   response_type: string;
   message: string;
   is_template: boolean;
+  is_system?: boolean;
+  metadata?: MessageMetadata | null;
   created_at: string;
   responder?: {
     id: string;
@@ -54,11 +68,13 @@ interface InquiryDetailData {
 interface ConversationDetailPanelProps {
   inquiry: Inquiry | null;
   onResponseSubmitted?: () => void;
+  refreshKey?: number;
 }
 
 export function ConversationDetailPanel({
   inquiry,
   onResponseSubmitted,
+  refreshKey,
 }: ConversationDetailPanelProps) {
   const { user } = useAuth();
   const [detailData, setDetailData] = useState<InquiryDetailData | null>(null);
@@ -73,6 +89,9 @@ export function ConversationDetailPanel({
   const [newResponse, setNewResponse] = useState('');
   const [responseType, setResponseType] = useState<string>('reply');
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
+  const [respondingToInvitation, setRespondingToInvitation] = useState<
+    string | null
+  >(null);
   const scrollableContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,7 +102,7 @@ export function ConversationDetailPanel({
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inquiry?.id]);
+  }, [inquiry?.id, refreshKey]);
 
   useEffect(() => {
     if (!loading && detailData && scrollableContentRef.current) {
@@ -285,6 +304,46 @@ export function ConversationDetailPanel({
     return user?.id && message.responder_id === user.id;
   };
 
+  const handleInvitationResponse = async (
+    messageId: string,
+    action: 'accept' | 'decline'
+  ) => {
+    if (!inquiry || !user?.id) return;
+
+    try {
+      setRespondingToInvitation(messageId);
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'x-user-id': user.id,
+      };
+
+      const response = await fetch(
+        `/api/inquiries/${inquiry.id}/messages/${messageId}/respond-invitation`,
+        {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({ action }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to respond to invitation');
+      }
+
+      await fetchInquiryDetails(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to respond to invitation'
+      );
+    } finally {
+      setRespondingToInvitation(null);
+    }
+  };
+
   const handleSubmitResponse = async () => {
     if (!inquiry || !newResponse.trim()) {
       return;
@@ -432,11 +491,100 @@ export function ConversationDetailPanel({
             {detailData?.responses && detailData.responses.length > 0 ? (
               detailData.responses.map(
                 (response: MessageResponse, index: number) => {
+                  const isSystemMessage =
+                    response.response_type === 'system' || response.is_system;
                   const isOriginalMessage = index === 0;
                   const isEditing = editingMessageId === response.id;
                   const isDeleting = deletingMessageId === response.id;
-                  const canEdit = isUserMessage(response) && !isOriginalMessage;
+                  const canEdit =
+                    isUserMessage(response) &&
+                    !isOriginalMessage &&
+                    !isSystemMessage;
                   const isCurrentUser = isUserMessage(response);
+
+                  if (isSystemMessage) {
+                    const isInvitation =
+                      response.metadata?.type === 'event_invitation';
+                    const invitationStatus = response.metadata?.status;
+                    const isInvitedContractor =
+                      isInvitation &&
+                      response.metadata?.contractor_user_id === user?.id;
+                    const canRespond = isInvitedContractor && !invitationStatus;
+                    const isRespondingThis =
+                      respondingToInvitation === response.id;
+
+                    return (
+                      <div
+                        key={response.id}
+                        className="flex justify-center my-2"
+                      >
+                        <div className="inline-flex flex-col items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-800">
+                          <div className="inline-flex items-center gap-2">
+                            <Info className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                            <span>{response.message}</span>
+                            <span className="text-xs text-amber-500 ml-1">
+                              {formatDate(response.created_at)}
+                            </span>
+                          </div>
+                          {canRespond && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-green-300 text-green-700 hover:bg-green-50"
+                                onClick={() =>
+                                  handleInvitationResponse(
+                                    response.id,
+                                    'accept'
+                                  )
+                                }
+                                disabled={isRespondingThis}
+                              >
+                                {isRespondingThis ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                )}
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                                onClick={() =>
+                                  handleInvitationResponse(
+                                    response.id,
+                                    'decline'
+                                  )
+                                }
+                                disabled={isRespondingThis}
+                              >
+                                {isRespondingThis ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                )}
+                                Decline
+                              </Button>
+                            </div>
+                          )}
+                          {invitationStatus && (
+                            <span
+                              className={`text-xs font-medium ${
+                                invitationStatus === 'accepted'
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              }`}
+                            >
+                              {invitationStatus === 'accepted'
+                                ? 'Accepted'
+                                : 'Declined'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div
@@ -632,11 +780,13 @@ export function ConversationDetailPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(RESPONSE_TYPES).map(type => (
-                  <SelectItem key={type} value={type}>
-                    {formatResponseType(type)}
-                  </SelectItem>
-                ))}
+                {Object.values(RESPONSE_TYPES)
+                  .filter(type => type !== 'system')
+                  .map(type => (
+                    <SelectItem key={type} value={type}>
+                      {formatResponseType(type)}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

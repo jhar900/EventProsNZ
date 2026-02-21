@@ -21,8 +21,23 @@ import {
   Plus,
   CheckCircle,
   Shield,
+  Mail,
+  Check,
+  X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+interface PendingInvitation {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventDate: string | null;
+  eventType: string;
+  managerName: string;
+  enquiryId: string;
+  messageId: string;
+  createdAt: string;
+}
 
 interface DashboardStats {
   eventsCount?: number;
@@ -49,6 +64,11 @@ export default function DashboardPage() {
   const [verificationStatus, setVerificationStatus] =
     useState<VerificationStatus | null>(null);
   const [loadingVerification, setLoadingVerification] = useState(true);
+  const [pendingInvitations, setPendingInvitations] = useState<
+    PendingInvitation[]
+  >([]);
+  const [loadingInvitations, setLoadingInvitations] = useState(true);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDashboardStats = async () => {
@@ -178,6 +198,68 @@ export default function DashboardPage() {
     loadVerificationStatus();
   }, [user?.id, user?.is_verified]);
 
+  // Load pending invitations for contractors
+  useEffect(() => {
+    const loadPendingInvitations = async () => {
+      if (!user?.id || user?.role !== 'contractor') {
+        setLoadingInvitations(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/invitations/pending', {
+          headers: { 'x-user-id': user.id },
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setPendingInvitations(data.invitations || []);
+        }
+      } catch (err) {
+        console.error('Error loading pending invitations:', err);
+      } finally {
+        setLoadingInvitations(false);
+      }
+    };
+
+    loadPendingInvitations();
+  }, [user?.id, user?.role]);
+
+  const handleInvitationResponse = async (
+    invitation: PendingInvitation,
+    action: 'accept' | 'decline'
+  ) => {
+    setRespondingTo(invitation.messageId);
+    try {
+      const response = await fetch(
+        `/api/inquiries/${invitation.enquiryId}/messages/${invitation.messageId}/respond-invitation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user!.id,
+          },
+          credentials: 'include',
+          body: JSON.stringify({ action }),
+        }
+      );
+
+      if (response.ok) {
+        // Remove from the list
+        setPendingInvitations(prev =>
+          prev.filter(inv => inv.messageId !== invitation.messageId)
+        );
+      } else {
+        const data = await response.json();
+        console.error('Failed to respond to invitation:', data.error);
+      }
+    } catch (err) {
+      console.error('Error responding to invitation:', err);
+    } finally {
+      setRespondingTo(null);
+    }
+  };
+
   const getUserName = () => {
     if (!user) return '';
     if (user.profile?.first_name || user.profile?.last_name) {
@@ -281,6 +363,74 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Pending Event Invitations */}
+        {user?.role === 'contractor' &&
+          !loadingInvitations &&
+          pendingInvitations.length > 0 && (
+            <div className="mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <Mail className="h-5 w-5 text-blue-600 mr-2" />
+                  <h3 className="text-sm font-semibold text-blue-900">
+                    Pending Event Invitation
+                    {pendingInvitations.length > 1 ? 's' : ''}
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                    {pendingInvitations.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {pendingInvitations.map(invitation => (
+                    <div
+                      key={invitation.messageId}
+                      className="bg-white rounded-lg border border-blue-100 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {invitation.managerName} has invited you to join{' '}
+                          <span className="font-semibold">
+                            &ldquo;{invitation.eventTitle}&rdquo;
+                          </span>{' '}
+                          as a contractor
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {invitation.eventType}
+                          {invitation.eventDate &&
+                            ` \u00b7 ${new Date(invitation.eventDate).toLocaleDateString()}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-200 text-red-700 hover:bg-red-50"
+                          disabled={respondingTo === invitation.messageId}
+                          onClick={() =>
+                            handleInvitationResponse(invitation, 'decline')
+                          }
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" />
+                          Decline
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          disabled={respondingTo === invitation.messageId}
+                          onClick={() =>
+                            handleInvitationResponse(invitation, 'accept')
+                          }
+                        >
+                          <Check className="h-3.5 w-3.5 mr-1" />
+                          Accept
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Quick Stats */}
         {user && (

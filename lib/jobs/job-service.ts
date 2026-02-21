@@ -290,13 +290,17 @@ export class JobService {
         budget_min,
         budget_max,
         is_remote,
-        status = 'active',
+        status,
         posted_by_user_id,
         page = 1,
         limit = 20,
         sort_by = 'created_at',
         sort_order = 'desc',
       } = filters;
+
+      // Default to 'active' for public browsing, but show all statuses when viewing own jobs
+      const effectiveStatus =
+        status ?? (posted_by_user_id ? undefined : 'active');
 
       const offset = (page - 1) * limit;
 
@@ -328,8 +332,8 @@ export class JobService {
       if (is_remote !== undefined) {
         query = query.eq('is_remote', is_remote);
       }
-      if (status) {
-        query = query.eq('status', status);
+      if (effectiveStatus) {
+        query = query.eq('status', effectiveStatus);
       }
       if (posted_by_user_id) {
         query = query.eq('posted_by_user_id', posted_by_user_id);

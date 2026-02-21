@@ -328,6 +328,8 @@ export async function GET(
       response_type: (msg.response_type || 'reply') as any,
       message: msg.message,
       is_template: false,
+      is_system: msg.is_system || false,
+      metadata: msg.metadata || null,
       created_at: msg.created_at,
       responder: responderMap.get(msg.sender_id) || null,
     }));

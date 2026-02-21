@@ -274,6 +274,83 @@ export async function PUT(
           { status: 500 }
         );
       }
+
+      // Create system messages for removals (best-effort, non-blocking)
+      try {
+        const { data: bp } = await supabaseAdmin
+          .from('business_profiles')
+          .select('id, company_name')
+          .eq('user_id', contractorId)
+          .maybeSingle();
+
+        if (bp) {
+          const { data: contractorProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', contractorId)
+            .maybeSingle();
+
+          const contractorName = contractorProfile
+            ? `${contractorProfile.first_name} ${contractorProfile.last_name}`.trim()
+            : 'a contractor';
+          const companyName = bp.company_name || 'their company';
+
+          // Fetch event manager's name for contractor-facing messages
+          const { data: rmManagerProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          const rmManagerName = rmManagerProfile
+            ? `${rmManagerProfile.first_name} ${rmManagerProfile.last_name}`.trim()
+            : 'the event manager';
+
+          const { data: eventDetails } = await supabaseAdmin
+            .from('events')
+            .select('id, title')
+            .in('id', toRemove);
+
+          const eventTitleMap = new Map(
+            (eventDetails || []).map((e: any) => [e.id, e.title])
+          );
+
+          // Find existing conversation between this user and contractor
+          const { data: existingEnquiry } = await supabaseAdmin
+            .from('enquiries')
+            .select('id')
+            .eq('contractor_id', bp.id)
+            .eq('sender_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingEnquiry) {
+            for (const eventId of toRemove) {
+              const eventTitle = eventTitleMap.get(eventId) || 'Untitled Event';
+
+              await supabaseAdmin.from('enquiry_messages').insert({
+                enquiry_id: existingEnquiry.id,
+                sender_id: user.id,
+                message: `You have removed ${contractorName} from ${companyName} from "${eventTitle}"`,
+                is_read: false,
+                response_type: 'system',
+                is_system: true,
+                metadata: {
+                  type: 'event_removal',
+                  event_id: eventId,
+                  contractor_message: `You have been removed by ${rmManagerName} from "${eventTitle}" as a contractor`,
+                },
+              });
+            }
+          }
+        }
+      } catch (systemMsgError) {
+        console.error(
+          '[SystemMsg] Error creating removal system messages:',
+          systemMsgError
+        );
+      }
     }
 
     // Add new links
@@ -294,6 +371,135 @@ export async function PUT(
         return NextResponse.json(
           { success: false, error: 'Failed to add contractor links' },
           { status: 500 }
+        );
+      }
+
+      // Create system messages in conversation threads (best-effort, non-blocking)
+      try {
+        // contractorId from URL is a users.id — resolve to business_profiles.id
+        const { data: bp } = await supabaseAdmin
+          .from('business_profiles')
+          .select('id, company_name')
+          .eq('user_id', contractorId)
+          .maybeSingle();
+
+        if (!bp) {
+          console.warn(
+            `[SystemMsg] No business profile for user ${contractorId}, skipping system messages`
+          );
+        } else {
+          const bpId = bp.id;
+
+          // Fetch contractor's personal name from profiles
+          const { data: contractorProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', contractorId)
+            .maybeSingle();
+
+          const contractorName = contractorProfile
+            ? `${contractorProfile.first_name} ${contractorProfile.last_name}`.trim()
+            : 'a contractor';
+          const companyName = bp.company_name || 'their company';
+
+          // Fetch event manager's name for contractor-facing messages
+          const { data: managerProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          const managerName = managerProfile
+            ? `${managerProfile.first_name} ${managerProfile.last_name}`.trim()
+            : 'the event manager';
+
+          // Fetch event titles for the newly linked events
+          const { data: eventDetails } = await supabaseAdmin
+            .from('events')
+            .select('id, title')
+            .in('id', toAdd);
+
+          const eventTitleMap = new Map(
+            (eventDetails || []).map((e: any) => [e.id, e.title])
+          );
+
+          // Find any existing conversation between this user and contractor
+          const { data: existingEnquiry } = await supabaseAdmin
+            .from('enquiries')
+            .select('id')
+            .eq('contractor_id', bpId)
+            .eq('sender_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          let enquiryId: string;
+
+          if (existingEnquiry) {
+            enquiryId = existingEnquiry.id;
+          } else {
+            // No conversation exists — create one for the first event being linked
+            const firstEventTitle =
+              eventTitleMap.get(toAdd[0]) || 'Untitled Event';
+            const { data: newEnquiry, error: enquiryError } =
+              await supabaseAdmin
+                .from('enquiries')
+                .insert({
+                  event_id: toAdd[0],
+                  contractor_id: bpId,
+                  sender_id: user.id,
+                  subject: `Team Assignment: ${firstEventTitle}`,
+                  message: `You have invited ${contractorName} from ${companyName} to join "${firstEventTitle}" as a contractor`,
+                  status: 'pending',
+                })
+                .select('id')
+                .single();
+
+            if (enquiryError || !newEnquiry) {
+              console.error(
+                `[SystemMsg] Failed to create enquiry:`,
+                enquiryError
+              );
+            } else {
+              enquiryId = newEnquiry.id;
+            }
+          }
+
+          // Insert system messages into the conversation thread
+          if (enquiryId!) {
+            for (const eventId of toAdd) {
+              const eventTitle = eventTitleMap.get(eventId) || 'Untitled Event';
+
+              const { error: msgError } = await supabaseAdmin
+                .from('enquiry_messages')
+                .insert({
+                  enquiry_id: enquiryId,
+                  sender_id: user.id,
+                  message: `You have invited ${contractorName} from ${companyName} to join "${eventTitle}" as a contractor`,
+                  is_read: false,
+                  response_type: 'system',
+                  is_system: true,
+                  metadata: {
+                    type: 'event_invitation',
+                    event_id: eventId,
+                    contractor_user_id: contractorId,
+                    contractor_message: `You have been invited by ${managerName} to join "${eventTitle}" as a contractor`,
+                  },
+                });
+
+              if (msgError) {
+                console.error(
+                  `[SystemMsg] Failed to insert message for event ${eventId}:`,
+                  msgError
+                );
+              }
+            }
+          }
+        }
+      } catch (systemMsgError) {
+        console.error(
+          '[SystemMsg] Error creating system messages:',
+          systemMsgError
         );
       }
     }

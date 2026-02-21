@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -31,7 +30,6 @@ import {
 import {
   Briefcase,
   Plus,
-  Eye,
   Edit,
   Trash2,
   Users,
@@ -85,41 +83,46 @@ export function EventManagerJobManagement({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showEditJobModal, setShowEditJobModal] = useState(false);
   const [jobToEdit, setJobToEdit] = useState<JobWithDetails | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const fetchUserJobs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/jobs?posted_by_user_id=${userId}&job_type=event_manager&limit=100`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Include cookies for better auth handling
+  const fetchUserJobs = useCallback(
+    async (showLoading = true) => {
+      try {
+        if (showLoading) setLoading(true);
+        const response = await fetch(
+          `/api/jobs?posted_by_user_id=${userId}&job_type=event_manager&limit=100`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Include cookies for better auth handling
+          }
+        );
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch jobs');
         }
-      );
-      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch jobs');
+        setJobs(result.jobs || []);
+        calculateStats(result.jobs || []);
+      } catch (error) {
+        console.error('Fetch user jobs error:', error);
+        setError(
+          error instanceof Error ? error.message : 'Failed to fetch jobs'
+        );
+      } finally {
+        if (showLoading) setLoading(false);
       }
-
-      setJobs(result.jobs || []);
-      calculateStats(result.jobs || []);
-    } catch (error) {
-      console.error('Fetch user jobs error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch jobs');
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+    },
+    [userId]
+  );
 
   useEffect(() => {
     fetchUserJobs();
@@ -302,7 +305,7 @@ export function EventManagerJobManagement({
         throw new Error(result.error || 'Failed to update job status');
       }
 
-      await fetchUserJobs();
+      await fetchUserJobs(false);
     } catch (error) {
       console.error('Update job status error:', error);
       setError(
@@ -385,32 +388,6 @@ export function EventManagerJobManagement({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
-          <p className="text-gray-600">
-            Manage your job postings and applications
-          </p>
-        </div>
-        <Button
-          className="bg-orange-600 hover:bg-orange-700"
-          onClick={() => setShowCreateJobModal(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Job
-        </Button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-            <p className="text-red-800">{error}</p>
-          </div>
-        </div>
-      )}
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -465,207 +442,169 @@ export function EventManagerJobManagement({
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="jobs">My Jobs</TabsTrigger>
-        </TabsList>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+      )}
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Jobs */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Jobs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {jobs.slice(0, 5).map(job => (
-                    <div
-                      key={job.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 line-clamp-1">
-                          {job.title}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {job.application_count || 0} applications •{' '}
-                          {job.view_count || 0} views
-                        </p>
-                      </div>
+      {/* Header + Job Postings */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
+            <p className="text-gray-600">
+              Manage your job postings and applications
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="filled">Filled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => setShowCreateJobModal(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Job
+            </Button>
+          </div>
+        </div>
+        {jobs.length > 0 ? (
+          <div className="space-y-4">
+            {jobs.filter(
+              job => statusFilter === 'all' || job.status === statusFilter
+            ).length === 0 && (
+              <p className="text-gray-500 text-center py-4">
+                No {statusFilter} jobs found
+              </p>
+            )}
+            {jobs
+              .filter(
+                job => statusFilter === 'all' || job.status === statusFilter
+              )
+              .map(job => (
+                <div key={job.id} className="border rounded-lg p-4">
+                  {/* Header: Title + Badge and Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-gray-900">
+                        {job.title}
+                      </h3>
                       <Badge className={getStatusColor(job.status)}>
-                        {job.status.charAt(0).toUpperCase() +
-                          job.status.slice(1)}
+                        {getStatusIcon(job.status)}
+                        <span className="ml-1">
+                          {job.status.charAt(0).toUpperCase() +
+                            job.status.slice(1)}
+                        </span>
                       </Badge>
                     </div>
-                  ))}
-                  {jobs.length === 0 && (
-                    <p className="text-gray-500 text-center py-4">
-                      No jobs posted yet
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => setShowCreateJobModal(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Job
-                  </Button>
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => setActiveTab('jobs')}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View All Jobs
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="jobs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Job Postings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {jobs.length > 0 ? (
-                <div className="space-y-4">
-                  {jobs.map(job => (
-                    <div key={job.id} className="border rounded-lg p-4">
-                      {/* Header: Title + Badge and Actions */}
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900">
-                            {job.title}
-                          </h3>
-                          <Badge className={getStatusColor(job.status)}>
-                            {getStatusIcon(job.status)}
-                            <span className="ml-1">
-                              {job.status.charAt(0).toUpperCase() +
-                                job.status.slice(1)}
-                            </span>
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewApplications(job)}
-                          >
-                            <Users className="h-4 w-4 mr-1" />
-                            Applications ({job.application_count || 0})
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditJob(job)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Select
-                            value={job.status}
-                            onValueChange={value =>
-                              handleJobStatusChange(job.id, value)
-                            }
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="filled">Filled</SelectItem>
-                              <SelectItem value="completed">
-                                Completed
-                              </SelectItem>
-                              <SelectItem value="cancelled">
-                                Cancelled
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteJob(job.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {job.description}
-                      </p>
-
-                      {/* Details - Full width */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {job.timeline_start_date &&
-                            new Date(
-                              job.timeline_start_date
-                            ).toLocaleDateString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          {job.budget_range_min &&
-                            `$${job.budget_range_min.toLocaleString()}`}
-                          {job.budget_range_max &&
-                            ` - $${job.budget_range_max.toLocaleString()}`}
-                        </span>
-                        <span>{job.application_count || 0} applications</span>
-                        <span>{job.view_count || 0} views</span>
-                        <span>
-                          Posted{' '}
-                          {formatDistanceToNow(new Date(job.created_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewApplications(job)}
+                      >
+                        <Users className="h-4 w-4 mr-1" />
+                        Applications ({job.application_count || 0})
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditJob(job)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Select
+                        value={job.status}
+                        onValueChange={value =>
+                          handleJobStatusChange(job.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="filled">Filled</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteJob(job.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No jobs posted yet
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Start by creating your first job posting
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {job.description}
                   </p>
-                  <Button
-                    className="bg-orange-600 hover:bg-orange-700"
-                    onClick={() => setShowCreateJobModal(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Job
-                  </Button>
+
+                  {/* Details - Full width */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {job.timeline_start_date &&
+                        new Date(job.timeline_start_date).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4" />
+                      {job.budget_range_min &&
+                        `$${job.budget_range_min.toLocaleString()}`}
+                      {job.budget_range_max &&
+                        ` - $${job.budget_range_max.toLocaleString()}`}
+                    </span>
+                    <span>{job.application_count || 0} applications</span>
+                    <span>{job.view_count || 0} views</span>
+                    <span>
+                      Posted{' '}
+                      {formatDistanceToNow(new Date(job.created_at), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No jobs posted yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Start by creating your first job posting
+            </p>
+            <Button
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => setShowCreateJobModal(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Job
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Applications Dialog */}
       <Dialog

@@ -44,6 +44,7 @@ interface ContactDetailsPanelProps {
   } | null;
   inquiryStatus?: string;
   inquiryDate?: string;
+  onEventsUpdated?: () => void;
 }
 
 export function ContactDetailsPanel({
@@ -51,6 +52,7 @@ export function ContactDetailsPanel({
   event,
   inquiryStatus,
   inquiryDate,
+  onEventsUpdated,
 }: ContactDetailsPanelProps) {
   const [showAddToEventsModal, setShowAddToEventsModal] = useState(false);
 
@@ -247,6 +249,7 @@ export function ContactDetailsPanel({
       <AddToEventsModal
         isOpen={showAddToEventsModal}
         onClose={() => setShowAddToEventsModal(false)}
+        onSave={onEventsUpdated}
         contractorId={contractor.id}
         contractorName={contractorName}
       />

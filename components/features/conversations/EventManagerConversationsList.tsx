@@ -58,6 +58,7 @@ export default function EventManagerConversationsList({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationWithRelations | null>(null);
+  const [conversationRefreshKey, setConversationRefreshKey] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -391,6 +392,10 @@ export default function EventManagerConversationsList({
                   event={selectedConversation.event ?? null}
                   inquiryStatus={selectedConversation.status}
                   inquiryDate={selectedConversation.created_at}
+                  onEventsUpdated={() => {
+                    setConversationRefreshKey(k => k + 1);
+                    fetchConversations(true);
+                  }}
                 />
               )}
             </Card>
@@ -400,6 +405,7 @@ export default function EventManagerConversationsList({
               <ConversationDetailPanel
                 inquiry={selectedConversation}
                 onResponseSubmitted={handleResponseSubmitted}
+                refreshKey={conversationRefreshKey}
               />
             </Card>
           </div>

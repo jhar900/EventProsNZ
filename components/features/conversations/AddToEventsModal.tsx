@@ -25,6 +25,7 @@ interface Event {
 interface AddToEventsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave?: () => void;
   contractorId: string;
   contractorName: string;
 }
@@ -32,6 +33,7 @@ interface AddToEventsModalProps {
 export function AddToEventsModal({
   isOpen,
   onClose,
+  onSave,
   contractorId,
   contractorName,
 }: AddToEventsModalProps) {
@@ -114,6 +116,7 @@ export function AddToEventsModal({
         throw new Error(data.error || 'Failed to update events');
       }
 
+      onSave?.();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes');

@@ -42,19 +42,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify user is an event manager
-    let userRole: string | undefined = (user as any).role;
+    // Always fetch role from the users table - don't use auth JWT role which is just "authenticated"
+    const { data: roleData } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    if (!userRole) {
-      const { data: userData } = await supabaseAdmin
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userData) {
-        userRole = userData.role;
-      }
-    }
+    const userRole = roleData?.role;
 
     if (userRole !== 'event_manager') {
       return NextResponse.json(

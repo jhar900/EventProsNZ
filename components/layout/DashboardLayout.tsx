@@ -186,6 +186,7 @@ export default function DashboardLayout({
       case 'contractor':
         return [
           ...baseItems,
+          { href: '/contractor/events', label: 'My Events', icon: Calendar },
           { href: '/inquiries', label: 'Inquiries', icon: MessageSquare },
           { href: '/jobs', label: 'Jobs', icon: Briefcase },
         ];

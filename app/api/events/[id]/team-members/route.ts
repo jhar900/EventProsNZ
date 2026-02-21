@@ -308,10 +308,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch event to verify ownership
+    // Fetch event to verify ownership (include title for system messages)
     const { data: event, error: eventError } = await supabaseAdmin
       .from('events')
-      .select('user_id')
+      .select('user_id, title')
       .eq('id', eventId)
       .single();
 
@@ -472,6 +472,136 @@ export async function POST(
           hint: insertError.hint,
         },
         { status: 500 }
+      );
+    }
+
+    // Create system messages in conversation threads (best-effort, non-blocking)
+    try {
+      console.log(
+        '[SystemMsg] Starting for newTeamMemberIds:',
+        newTeamMemberIds
+      );
+
+      // Resolve team_members.id → team_members.team_member_id (users.id) and role
+      const { data: tmDetails, error: tmError } = await supabaseAdmin
+        .from('team_members')
+        .select('id, team_member_id, role')
+        .in('id', newTeamMemberIds);
+
+      console.log('[SystemMsg] tmDetails:', tmDetails, 'error:', tmError);
+
+      if (tmDetails && tmDetails.length > 0) {
+        const contractorUserIds = tmDetails.map(tm => tm.team_member_id);
+
+        // Batch lookup: users.id → business_profiles.id
+        const { data: businessProfiles, error: bpError } = await supabaseAdmin
+          .from('business_profiles')
+          .select('id, user_id')
+          .in('user_id', contractorUserIds);
+
+        console.log(
+          '[SystemMsg] businessProfiles:',
+          businessProfiles,
+          'error:',
+          bpError
+        );
+
+        const userToBpId = new Map(
+          (businessProfiles || []).map(bp => [bp.user_id, bp.id])
+        );
+
+        for (const tm of tmDetails) {
+          const bpId = userToBpId.get(tm.team_member_id);
+          if (!bpId) {
+            console.warn(
+              `[SystemMsg] No business profile for user ${tm.team_member_id}, skipping`
+            );
+            continue;
+          }
+
+          console.log(
+            `[SystemMsg] Processing tm ${tm.id}, bpId: ${bpId}, eventId: ${eventId}`
+          );
+
+          // Find any existing conversation between this user and contractor
+          const { data: existingEnquiry, error: eqError } = await supabaseAdmin
+            .from('enquiries')
+            .select('id')
+            .eq('contractor_id', bpId)
+            .eq('sender_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          console.log(
+            '[SystemMsg] existingEnquiry:',
+            existingEnquiry,
+            'error:',
+            eqError
+          );
+
+          let enquiryId: string;
+
+          if (existingEnquiry) {
+            enquiryId = existingEnquiry.id;
+          } else {
+            const { data: newEnquiry, error: enquiryError } =
+              await supabaseAdmin
+                .from('enquiries')
+                .insert({
+                  event_id: eventId,
+                  contractor_id: bpId,
+                  sender_id: user.id,
+                  subject: `Team Assignment: ${event.title}`,
+                  message: `You have been added to "${event.title}" as ${tm.role}.`,
+                  status: 'pending',
+                })
+                .select('id')
+                .single();
+
+            console.log(
+              '[SystemMsg] newEnquiry:',
+              newEnquiry,
+              'error:',
+              enquiryError
+            );
+
+            if (enquiryError || !newEnquiry) {
+              console.error(
+                `[SystemMsg] Failed to create enquiry for tm ${tm.id}:`,
+                enquiryError
+              );
+              continue;
+            }
+            enquiryId = newEnquiry.id;
+          }
+
+          // Insert system message into the conversation thread
+          const { error: msgError } = await supabaseAdmin
+            .from('enquiry_messages')
+            .insert({
+              enquiry_id: enquiryId,
+              sender_id: user.id,
+              message: `You have been added to "${event.title}" as ${tm.role}.`,
+              is_read: false,
+              response_type: 'system',
+              is_system: true,
+            });
+
+          console.log('[SystemMsg] message insert error:', msgError);
+
+          if (msgError) {
+            console.error(
+              `Failed to create system message for team member ${tm.id}:`,
+              msgError
+            );
+          }
+        }
+      }
+    } catch (systemMsgError) {
+      console.error(
+        'Error creating system messages for team members:',
+        systemMsgError
       );
     }
 
