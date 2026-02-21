@@ -104,10 +104,7 @@ export default function PlatformSettingsPage() {
                   </TabsContent>
 
                   <TabsContent value="email" className="mt-6">
-                    <AdminEmailSettings
-                      onSuccess={() => {}}
-                      onError={() => {}}
-                    />
+                    <AdminEmailSettings />
                   </TabsContent>
 
                   <TabsContent value="appearance" className="mt-6">
