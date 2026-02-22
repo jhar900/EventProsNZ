@@ -19,6 +19,7 @@ export async function GET(
     } = await supabase.auth.getSession();
 
     let user = session?.user;
+    let authSource = session?.user ? 'session' : 'none';
 
     // Fallback: Try to get user ID from header
     if (!user) {
@@ -36,6 +37,7 @@ export async function GET(
             email: userData.email || '',
             role: userData.role,
           } as any;
+          authSource = 'x-user-id-header';
         }
       }
     }
@@ -54,6 +56,17 @@ export async function GET(
     if (eventError || !event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
+
+    // DEBUG: Log auth comparison values (temporary)
+    console.log('[Tasks Auth Debug]', {
+      authSource,
+      userId: user.id,
+      userRole: (user as any).role,
+      eventUserId: event.user_id,
+      eventId,
+      ownershipMatch: event.user_id === user.id,
+      headerUserId: request.headers.get('x-user-id'),
+    });
 
     // Check if user is admin
     if ((user as any).role === 'admin') {
