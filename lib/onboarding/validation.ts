@@ -24,7 +24,7 @@ export const personalInfoSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   phone: phoneSchema,
-  address: addressSchema,
+  address: addressSchema.optional().or(z.literal('')),
   linkedin_url: z
     .string()
     .url('Please enter a valid LinkedIn URL')

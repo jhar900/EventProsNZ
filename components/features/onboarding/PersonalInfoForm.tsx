@@ -178,7 +178,7 @@ export function PersonalInfoForm({
             htmlFor="address"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Address *
+            Address (Optional)
           </label>
           <AddressAutocomplete
             value={address}
