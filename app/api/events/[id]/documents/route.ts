@@ -11,32 +11,49 @@ export async function GET(
 ) {
   try {
     const { id: eventId } = params;
-    const { supabase } = createClient(request);
 
-    // Get current user
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Get user - prioritize x-user-id header, fall back to cookie session
+    let user: any = null;
+    const userIdFromHeader = request.headers.get('x-user-id');
 
-    let user = session?.user;
+    if (userIdFromHeader) {
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role')
+        .eq('id', userIdFromHeader)
+        .single();
 
-    // Fallback: Try to get user ID from header
+      if (userData) {
+        user = {
+          id: userData.id,
+          email: userData.email || '',
+          role: userData.role,
+        };
+      }
+    }
+
     if (!user) {
-      const userIdFromHeader = request.headers.get('x-user-id');
-      if (userIdFromHeader) {
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
         const { data: userData } = await supabaseAdmin
           .from('users')
           .select('id, email, role')
-          .eq('id', userIdFromHeader)
+          .eq('id', session.user.id)
           .single();
-
-        if (userData) {
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
-        }
+        user = userData
+          ? {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            }
+          : {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'authenticated',
+            };
       }
     }
 

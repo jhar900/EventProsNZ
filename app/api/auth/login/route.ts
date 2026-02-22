@@ -338,9 +338,22 @@ export async function POST(request: NextRequest) {
                 refresh_token: authData.session.refresh_token,
               });
 
+              // Clear stale Supabase auth cookies before setting new session
               const isLocalhost = request.headers
                 .get('host')
                 ?.includes('localhost');
+              request.cookies.getAll().forEach(cookie => {
+                if (
+                  cookie.name.includes('auth-token') ||
+                  cookie.name.includes('sb-')
+                ) {
+                  jsonResponse.cookies.set(cookie.name, '', {
+                    path: '/',
+                    maxAge: 0,
+                  });
+                }
+              });
+
               trackedCookies.forEach(({ name, value, options }) => {
                 const cookieOptions = {
                   path: options.path || '/',
@@ -440,10 +453,23 @@ export async function POST(request: NextRequest) {
               refresh_token: authData.session.refresh_token,
             });
 
-            // Now apply all tracked cookies to the JSON response
+            // Clear stale Supabase auth cookies before setting new session
             const isLocalhost = request.headers
               .get('host')
               ?.includes('localhost');
+            request.cookies.getAll().forEach(cookie => {
+              if (
+                cookie.name.includes('auth-token') ||
+                cookie.name.includes('sb-')
+              ) {
+                jsonResponse.cookies.set(cookie.name, '', {
+                  path: '/',
+                  maxAge: 0,
+                });
+              }
+            });
+
+            // Now apply all tracked cookies to the JSON response
             trackedCookies.forEach(({ name, value, options }) => {
               const cookieOptions = {
                 path: options.path || '/',
@@ -561,8 +587,22 @@ export async function POST(request: NextRequest) {
           refresh_token: authData.session.refresh_token,
         });
 
-        // Now apply all tracked cookies to the JSON response
+        // Clear stale Supabase auth cookies before setting new session
+        // Prevents leftover chunked cookies from previous sessions
         const isLocalhost = request.headers.get('host')?.includes('localhost');
+        request.cookies.getAll().forEach(cookie => {
+          if (
+            cookie.name.includes('auth-token') ||
+            cookie.name.includes('sb-')
+          ) {
+            jsonResponse.cookies.set(cookie.name, '', {
+              path: '/',
+              maxAge: 0,
+            });
+          }
+        });
+
+        // Now apply all tracked cookies to the JSON response
         trackedCookies.forEach(({ name, value, options }) => {
           const cookieOptions = {
             path: options.path || '/',

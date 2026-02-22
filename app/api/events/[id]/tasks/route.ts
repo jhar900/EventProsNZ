@@ -11,34 +11,50 @@ export async function GET(
 ) {
   try {
     const { id: eventId } = params;
-    const { supabase } = createClient(request);
 
-    // Get current user
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Get user - prioritize x-user-id header (matches client session),
+    // fall back to cookie session
+    let user: any = null;
+    const userIdFromHeader = request.headers.get('x-user-id');
 
-    let user = session?.user;
-    let authSource = session?.user ? 'session' : 'none';
+    if (userIdFromHeader) {
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role')
+        .eq('id', userIdFromHeader)
+        .single();
 
-    // Fallback: Try to get user ID from header
+      if (userData) {
+        user = {
+          id: userData.id,
+          email: userData.email || '',
+          role: userData.role,
+        };
+      }
+    }
+
     if (!user) {
-      const userIdFromHeader = request.headers.get('x-user-id');
-      if (userIdFromHeader) {
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
         const { data: userData } = await supabaseAdmin
           .from('users')
           .select('id, email, role')
-          .eq('id', userIdFromHeader)
+          .eq('id', session.user.id)
           .single();
-
-        if (userData) {
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
-          authSource = 'x-user-id-header';
-        }
+        user = userData
+          ? {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            }
+          : {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'authenticated',
+            };
       }
     }
 
@@ -56,17 +72,6 @@ export async function GET(
     if (eventError || !event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
-
-    // DEBUG: Log auth comparison values (temporary)
-    console.log('[Tasks Auth Debug]', {
-      authSource,
-      userId: user.id,
-      userRole: (user as any).role,
-      eventUserId: event.user_id,
-      eventId,
-      ownershipMatch: event.user_id === user.id,
-      headerUserId: request.headers.get('x-user-id'),
-    });
 
     // Check if user is admin
     if ((user as any).role === 'admin') {
@@ -250,30 +255,47 @@ export async function POST(
       );
     }
 
-    // Get current user
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Get user - prioritize x-user-id header, fall back to cookie session
+    let user: any = null;
+    const userIdFromHeader = request.headers.get('x-user-id');
 
-    let user = session?.user;
+    if (userIdFromHeader) {
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('id, email, role')
+        .eq('id', userIdFromHeader)
+        .single();
 
-    // Fallback: Try to get user ID from header
+      if (userData) {
+        user = {
+          id: userData.id,
+          email: userData.email || '',
+          role: userData.role,
+        };
+      }
+    }
+
     if (!user) {
-      const userIdFromHeader = request.headers.get('x-user-id');
-      if (userIdFromHeader) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
         const { data: userData } = await supabaseAdmin
           .from('users')
           .select('id, email, role')
-          .eq('id', userIdFromHeader)
+          .eq('id', session.user.id)
           .single();
-
-        if (userData) {
-          user = {
-            id: userData.id,
-            email: userData.email || '',
-            role: userData.role,
-          } as any;
-        }
+        user = userData
+          ? {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            }
+          : {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'authenticated',
+            };
       }
     }
 
@@ -293,7 +315,7 @@ export async function POST(
     }
 
     // Check if user can modify the event (owner, admin, or team member)
-    if (event.user_id !== user.id && (user as any).role !== 'admin') {
+    if (event.user_id !== user.id && user.role !== 'admin') {
       // Check if user is a team member of this event (including invited status)
       const { data: teamMemberRecords } = await supabaseAdmin
         .from('team_members')

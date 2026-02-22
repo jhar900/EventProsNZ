@@ -11,35 +11,16 @@ export async function GET(
 ) {
   try {
     const { id: eventId } = params;
-    const { supabase } = createClient(request);
 
+    // Get user - prioritize x-user-id header, fall back to cookie session
     let user: any = null;
-    let cookieUserId: string | null = null;
+    const userIdFromHeader = request.headers.get('x-user-id');
 
-    // Get x-user-id header (if provided)
-    const userIdFromHeader =
-      request.headers.get('x-user-id') ||
-      request.headers.get('X-User-Id') ||
-      request.headers.get('X-USER-ID');
-
-    // STEP 1: Check cookie-based auth first
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (session?.user) {
-      cookieUserId = session.user.id;
-    }
-
-    // STEP 2: Determine which user ID to use
-    // Priority: cookie session (authoritative) > header (fallback for server-to-server)
-    const effectiveUserId = cookieUserId || userIdFromHeader;
-
-    if (effectiveUserId) {
+    if (userIdFromHeader) {
       const { data: userData } = await supabaseAdmin
         .from('users')
         .select('id, email, role')
-        .eq('id', effectiveUserId)
+        .eq('id', userIdFromHeader)
         .single();
 
       if (userData) {
@@ -48,6 +29,31 @@ export async function GET(
           email: userData.email || '',
           role: userData.role,
         };
+      }
+    }
+
+    if (!user) {
+      const { supabase } = createClient(request);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: userData } = await supabaseAdmin
+          .from('users')
+          .select('id, email, role')
+          .eq('id', session.user.id)
+          .single();
+        user = userData
+          ? {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            }
+          : {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'authenticated',
+            };
       }
     }
 
@@ -266,33 +272,15 @@ export async function POST(
       );
     }
 
+    // Get user - prioritize x-user-id header, fall back to cookie session
     let user: any = null;
-    let cookieUserId: string | null = null;
+    const userIdFromHeader = request.headers.get('x-user-id');
 
-    // Get x-user-id header (if provided)
-    const userIdFromHeader =
-      request.headers.get('x-user-id') ||
-      request.headers.get('X-User-Id') ||
-      request.headers.get('X-USER-ID');
-
-    // STEP 1: Check cookie-based auth first
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (session?.user) {
-      cookieUserId = session.user.id;
-    }
-
-    // STEP 2: Determine which user ID to use
-    // Priority: cookie session (authoritative) > header (fallback for server-to-server)
-    const effectiveUserId = cookieUserId || userIdFromHeader;
-
-    if (effectiveUserId) {
+    if (userIdFromHeader) {
       const { data: userData } = await supabaseAdmin
         .from('users')
         .select('id, email, role')
-        .eq('id', effectiveUserId)
+        .eq('id', userIdFromHeader)
         .single();
 
       if (userData) {
@@ -301,6 +289,30 @@ export async function POST(
           email: userData.email || '',
           role: userData.role,
         };
+      }
+    }
+
+    if (!user) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: userData } = await supabaseAdmin
+          .from('users')
+          .select('id, email, role')
+          .eq('id', session.user.id)
+          .single();
+        user = userData
+          ? {
+              id: userData.id,
+              email: userData.email || '',
+              role: userData.role,
+            }
+          : {
+              id: session.user.id,
+              email: session.user.email || '',
+              role: 'authenticated',
+            };
       }
     }
 
