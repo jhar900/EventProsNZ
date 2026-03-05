@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { adminFetch } from '@/lib/adminFetch';
 
 const securitySettingsSchema = z.object({
   password_min_length: z.number().min(6).max(50),
@@ -46,11 +47,7 @@ export default function AdminSecuritySettings({
 
   const loadSettings = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/settings/security', {
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-      });
+      const response = await adminFetch('/api/admin/settings/security');
       const result = await response.json();
 
       if (response.ok) {
@@ -74,11 +71,10 @@ export default function AdminSecuritySettings({
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/settings/security', {
+      const response = await adminFetch('/api/admin/settings/security', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
         body: JSON.stringify(data),
       });

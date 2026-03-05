@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface EmailLog {
   id: string;
@@ -95,11 +96,8 @@ export default function EmailLogTab() {
         params.append('date_to', filters.date_to);
       }
 
-      const adminToken = 'admin-secure-token-2024-eventpros';
-      const response = await fetch(`/api/admin/emails/logs?${params}`, {
-        credentials: 'include',
+      const response = await adminFetch(`/api/admin/emails/logs?${params}`, {
         headers: {
-          'x-admin-token': adminToken,
           'Content-Type': 'application/json',
         },
       });

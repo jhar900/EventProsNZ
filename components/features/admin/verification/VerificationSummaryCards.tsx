@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, CheckCircle, XCircle, UserPlus, Loader2 } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface StatusCounts {
   onboarding: number;
@@ -45,12 +46,9 @@ export function VerificationSummaryCards({
       // Fetch counts for each status in parallel
       const [onboardingRes, pendingRes, approvedRes, rejectedRes] =
         await Promise.all([
-          fetch('/api/admin/verification/queue?status=onboarding&limit=1', {
-            credentials: 'include', // Include cookies for authentication
-            headers: {
-              'x-admin-token': 'admin-secure-token-2024-eventpros',
-            },
-          }).then(res => {
+          adminFetch(
+            '/api/admin/verification/queue?status=onboarding&limit=1'
+          ).then(res => {
             console.log('[VerificationSummaryCards] Onboarding response:', {
               status: res.status,
               statusText: res.statusText,
@@ -58,12 +56,9 @@ export function VerificationSummaryCards({
             });
             return res;
           }),
-          fetch('/api/admin/verification/queue?status=pending&limit=1', {
-            credentials: 'include', // Include cookies for authentication
-            headers: {
-              'x-admin-token': 'admin-secure-token-2024-eventpros',
-            },
-          }).then(res => {
+          adminFetch(
+            '/api/admin/verification/queue?status=pending&limit=1'
+          ).then(res => {
             console.log('[VerificationSummaryCards] Pending response:', {
               status: res.status,
               statusText: res.statusText,
@@ -71,12 +66,9 @@ export function VerificationSummaryCards({
             });
             return res;
           }),
-          fetch('/api/admin/verification/queue?status=approved&limit=1', {
-            credentials: 'include', // Include cookies for authentication
-            headers: {
-              'x-admin-token': 'admin-secure-token-2024-eventpros',
-            },
-          }).then(res => {
+          adminFetch(
+            '/api/admin/verification/queue?status=approved&limit=1'
+          ).then(res => {
             console.log('[VerificationSummaryCards] Approved response:', {
               status: res.status,
               statusText: res.statusText,
@@ -84,12 +76,9 @@ export function VerificationSummaryCards({
             });
             return res;
           }),
-          fetch('/api/admin/verification/queue?status=rejected&limit=1', {
-            credentials: 'include', // Include cookies for authentication
-            headers: {
-              'x-admin-token': 'admin-secure-token-2024-eventpros',
-            },
-          }).then(res => {
+          adminFetch(
+            '/api/admin/verification/queue?status=rejected&limit=1'
+          ).then(res => {
             console.log('[VerificationSummaryCards] Rejected response:', {
               status: res.status,
               statusText: res.statusText,

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import {
   validateAdminAccess,
@@ -10,53 +9,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // SECURITY: Check for admin access token in headers
-    // This provides basic security while maintaining functionality
-    const adminToken = request.headers.get('x-admin-token');
-
-    // Check against both environment variable and hardcoded fallback
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-
-    if (adminToken === expectedToken) {
-      // Valid admin token - check if admin users exist
-      const { data: adminUsers, error: adminError } = await supabaseAdmin
-        .from('users')
-        .select('id, email, role, is_verified, last_login')
-        .eq('role', 'admin')
-        .limit(1);
-
-      if (adminUsers && adminUsers.length > 0 && !adminError) {
-        // Grant admin access using the first admin user
-        const adminUser = {
-          id: adminUsers[0].id,
-          role: adminUsers[0].role,
-          status: 'active',
-          is_verified: adminUsers[0].is_verified,
-          last_login: adminUsers[0].last_login,
-        };
-
-        return await processAdminUsersRequest(
-          request,
-          supabaseAdmin,
-          adminUser
-        );
-      }
-    }
-
-    // Fallback: Try normal authentication
     const authResult = await validateAdminAccess(request);
     if (!authResult.success) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
-
     const { supabase, user } = authResult;
-    const dbClient = supabase || supabaseAdmin;
 
-    return await processAdminUsersRequest(request, dbClient, user);
+    return await processAdminUsersRequest(request, supabase, user);
   } catch (error) {
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -311,35 +273,31 @@ async function processAdminUsersRequest(
       };
     });
 
-    // Log admin search action (skip if no supabase client available)
-    // Skip logging for admin token bypass to avoid any potential filtering
+    // Log admin search action
     try {
-      const { supabase } = createClient(request);
-      if (supabase && !request.headers.get('x-admin-token')) {
-        await logAdminAction(
-          supabase,
-          user.id,
-          'search_users',
-          {
-            filters: {
-              role,
-              status,
-              verification,
-              subscription,
-              location,
-              company,
-              lastLogin,
-              dateFrom,
-              dateTo,
-              search,
-              sortBy,
-              sortOrder,
-            },
-            result_count: count || 0,
+      await logAdminAction(
+        supabaseAdmin,
+        user.id,
+        'search_users',
+        {
+          filters: {
+            role,
+            status,
+            verification,
+            subscription,
+            location,
+            company,
+            lastLogin,
+            dateFrom,
+            dateTo,
+            search,
+            sortBy,
+            sortOrder,
           },
-          request
-        );
-      }
+          result_count: count || 0,
+        },
+        request
+      );
     } catch (logError) {
       // Ignore logging errors
     }

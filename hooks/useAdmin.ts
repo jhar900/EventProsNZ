@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface AdminUser {
   id: string;
@@ -172,7 +173,7 @@ export function useAdmin() {
         total: number;
         limit: number;
         offset: number;
-      }>(() => fetch(`/api/admin/users?${params}`));
+      }>(() => adminFetch(`/api/admin/users?${params}`));
     },
     [handleRequest]
   );
@@ -180,7 +181,7 @@ export function useAdmin() {
   const updateUserStatus = useCallback(
     async (userId: string, status: string) => {
       return handleRequest<{ success: boolean; user: AdminUser }>(() =>
-        fetch(`/api/admin/users/${userId}/status`, {
+        adminFetch(`/api/admin/users/${userId}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status }),
@@ -193,7 +194,7 @@ export function useAdmin() {
   const suspendUser = useCallback(
     async (userId: string) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch(`/api/admin/users/${userId}/suspend`, {
+        adminFetch(`/api/admin/users/${userId}/suspend`, {
           method: 'PUT',
         })
       );
@@ -204,7 +205,7 @@ export function useAdmin() {
   const activateUser = useCallback(
     async (userId: string) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch(`/api/admin/users/${userId}/activate`, {
+        adminFetch(`/api/admin/users/${userId}/activate`, {
           method: 'PUT',
         })
       );
@@ -215,7 +216,7 @@ export function useAdmin() {
   const verifyUser = useCallback(
     async (userId: string) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch(`/api/admin/users/${userId}/verify`, {
+        adminFetch(`/api/admin/users/${userId}/verify`, {
           method: 'PUT',
         })
       );
@@ -243,7 +244,7 @@ export function useAdmin() {
       return handleRequest<{
         verifications: VerificationItem[];
         total: number;
-      }>(() => fetch(`/api/admin/verification/queue?${params}`));
+      }>(() => adminFetch(`/api/admin/verification/queue?${params}`));
     },
     [handleRequest]
   );
@@ -254,7 +255,7 @@ export function useAdmin() {
         success: boolean;
         verification: VerificationItem;
       }>(() =>
-        fetch(`/api/admin/verification/${verificationId}/approve`, {
+        adminFetch(`/api/admin/verification/${verificationId}/approve`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ reason }),
@@ -270,7 +271,7 @@ export function useAdmin() {
         success: boolean;
         verification: VerificationItem;
       }>(() =>
-        fetch(`/api/admin/verification/${verificationId}/reject`, {
+        adminFetch(`/api/admin/verification/${verificationId}/reject`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ reason, feedback }),
@@ -292,7 +293,7 @@ export function useAdmin() {
         trends: any;
         period: string;
         dateRange: { from: string; to: string };
-      }>(() => fetch(`/api/admin/analytics?${params}`));
+      }>(() => adminFetch(`/api/admin/analytics?${params}`));
     },
     [handleRequest]
   );
@@ -300,14 +301,14 @@ export function useAdmin() {
   // System Health
   const fetchSystemHealth = useCallback(async () => {
     return handleRequest<{ health: SystemHealth }>(() =>
-      fetch('/api/admin/system?type=health')
+      adminFetch('/api/admin/system?type=health')
     );
   }, [handleRequest]);
 
   const fetchSystemPerformance = useCallback(
     async (period: string = '24h') => {
       return handleRequest<{ performance: any }>(() =>
-        fetch(`/api/admin/system?type=performance&period=${period}`)
+        adminFetch(`/api/admin/system?type=performance&period=${period}`)
       );
     },
     [handleRequest]
@@ -339,7 +340,7 @@ export function useAdmin() {
         offset: number;
         summary: any;
         suspiciousActivities: any[];
-      }>(() => fetch(`/api/admin/activity?${params}`));
+      }>(() => adminFetch(`/api/admin/activity?${params}`));
     },
     [handleRequest]
   );
@@ -367,7 +368,7 @@ export function useAdmin() {
         limit: number;
         offset: number;
         summary: any;
-      }>(() => fetch(`/api/admin/content?${params}`));
+      }>(() => adminFetch(`/api/admin/content?${params}`));
     },
     [handleRequest]
   );
@@ -381,7 +382,7 @@ export function useAdmin() {
       contentType?: string
     ) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch('/api/admin/content', {
+        adminFetch('/api/admin/content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -420,7 +421,7 @@ export function useAdmin() {
         limit: number;
         offset: number;
         summary: any;
-      }>(() => fetch(`/api/admin/alerts?${params}`));
+      }>(() => adminFetch(`/api/admin/alerts?${params}`));
     },
     [handleRequest]
   );
@@ -428,7 +429,7 @@ export function useAdmin() {
   const resolveAlert = useCallback(
     async (alertId: string, resolution?: string) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch('/api/admin/alerts', {
+        adminFetch('/api/admin/alerts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'resolve', alertId, resolution }),
@@ -441,7 +442,7 @@ export function useAdmin() {
   const dismissAlert = useCallback(
     async (alertId: string) => {
       return handleRequest<{ success: boolean }>(() =>
-        fetch('/api/admin/alerts', {
+        adminFetch('/api/admin/alerts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'dismiss', alertId }),
@@ -459,7 +460,7 @@ export function useAdmin() {
       details?: any
     ) => {
       return handleRequest<{ alert: SystemAlert }>(() =>
-        fetch('/api/admin/alerts', {
+        adminFetch('/api/admin/alerts', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ alertType, severity, message, details }),
@@ -481,7 +482,9 @@ export function useAdmin() {
       if (dateFrom) params.append('date_from', dateFrom);
       if (dateTo) params.append('date_to', dateTo);
 
-      return handleRequest<Blob>(() => fetch(`/api/admin/reports?${params}`));
+      return handleRequest<Blob>(() =>
+        adminFetch(`/api/admin/reports?${params}`)
+      );
     },
     [handleRequest]
   );

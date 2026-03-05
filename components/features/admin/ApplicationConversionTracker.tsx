@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -114,8 +115,8 @@ export default function ApplicationConversionTracker() {
     try {
       setIsLoading(true);
       const [metricsResponse, funnelResponse] = await Promise.all([
-        fetch(`/api/admin/jobs/conversion-metrics?period=${timeRange}`),
-        fetch('/api/admin/jobs/conversion-funnel'),
+        adminFetch(`/api/admin/jobs/conversion-metrics?period=${timeRange}`),
+        adminFetch('/api/admin/jobs/conversion-funnel'),
       ]);
 
       if (metricsResponse.ok) {
@@ -140,7 +141,7 @@ export default function ApplicationConversionTracker() {
 
   const exportConversionReport = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/jobs/reports?type=conversion&format=pdf'
       );
       if (response.ok) {

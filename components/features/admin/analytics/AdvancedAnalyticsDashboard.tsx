@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -107,7 +108,7 @@ export default function AdvancedAnalyticsDashboard({
 
   const handleExport = async (options: any) => {
     try {
-      const response = await fetch('/api/admin/analytics/export', {
+      const response = await adminFetch('/api/admin/analytics/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(options),

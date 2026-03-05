@@ -19,8 +19,7 @@ export async function GET(
     const { userId } = params;
 
     // Use admin client to bypass RLS for fetching user details
-    // In development mode, authResult.supabase might be null, so use supabaseAdmin
-    const adminSupabase = authResult.supabase || supabaseAdmin;
+    const adminSupabase = authResult.supabase;
 
     // Get user details with profile and business profile
     const { data: userDetails, error: userDetailsError } = await adminSupabase
@@ -79,46 +78,14 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // SECURITY: Check for admin access token in headers
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-
-    let supabase: any;
-    let user: any;
-
-    if (adminToken === expectedToken) {
-      // Valid admin token - use admin client and get first admin user
-      supabase = supabaseAdmin;
-      const { data: adminUsers, error: adminError } = await supabaseAdmin
-        .from('users')
-        .select('id, email, role')
-        .eq('role', 'admin')
-        .limit(1);
-
-      if (adminUsers && adminUsers.length > 0 && !adminError) {
-        user = {
-          id: adminUsers[0].id,
-          role: adminUsers[0].role,
-        };
-      } else {
-        return NextResponse.json(
-          { error: 'Unauthorized - No admin users found' },
-          { status: 401 }
-        );
-      }
-    } else {
-      // Fallback: Try normal authentication
-      const authResult = await validateAdminAccess(request);
-      if (!authResult.success) {
-        return (
-          authResult.response ||
-          NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        );
-      }
-      supabase = authResult.supabase || supabaseAdmin;
-      user = authResult.user;
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
     }
+    const { supabase, user } = authResult;
 
     const { userId } = params;
     const body = await request.json();
@@ -136,10 +103,7 @@ export async function PUT(
     if (status) updateData.status = status;
     updateData.updated_at = new Date().toISOString();
 
-    // Use admin client to bypass RLS for updating user details
-    const adminSupabase = supabase || supabaseAdmin;
-
-    const { data: updatedUser, error: updateError } = await adminSupabase
+    const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update(updateData)
       .eq('id', userId)
@@ -153,22 +117,20 @@ export async function PUT(
       );
     }
 
-    // Log admin action (only if we have a supabase client)
-    if (supabase) {
-      await supabase.from('activity_logs').insert({
-        user_id: user.id,
-        action: 'admin_update_user',
-        details: {
-          target_user_id: userId,
-          changes: updateData,
-          admin_user_id: user.id,
-        },
-        ip_address:
-          request.headers.get('x-forwarded-for') ||
-          request.headers.get('x-real-ip'),
-        user_agent: request.headers.get('user-agent'),
-      });
-    }
+    // Log admin action
+    await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'admin_update_user',
+      details: {
+        target_user_id: userId,
+        changes: updateData,
+        admin_user_id: user.id,
+      },
+      ip_address:
+        request.headers.get('x-forwarded-for') ||
+        request.headers.get('x-real-ip'),
+      user_agent: request.headers.get('user-agent'),
+    });
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {

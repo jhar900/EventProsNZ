@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
-import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { z } from 'zod';
 
@@ -28,7 +26,7 @@ export async function GET(
     }
 
     const { userId } = params;
-    const adminSupabase = authResult.supabase || supabaseAdmin;
+    const adminSupabase = authResult.supabase;
 
     // Get business profile for this user
     const { data: businessProfile, error: businessProfileError } =
@@ -80,7 +78,7 @@ export async function PUT(
     }
 
     const { userId } = params;
-    const adminSupabase = authResult.supabase || supabaseAdmin;
+    const adminSupabase = authResult.supabase;
     const body = await request.json();
 
     const validatedData = updateBusinessProfileSchema.parse(body);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -129,7 +130,7 @@ export default function ExportManager({
 
   const loadExportJobs = async () => {
     try {
-      const response = await fetch('/api/admin/analytics/export/jobs');
+      const response = await adminFetch('/api/admin/analytics/export/jobs');
       if (response.ok) {
         const jobs = await response.json();
         setExportJobs(jobs);
@@ -154,7 +155,7 @@ export default function ExportManager({
 
   const downloadFile = async (jobId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/analytics/export/download/${jobId}`
       );
       if (response.ok) {

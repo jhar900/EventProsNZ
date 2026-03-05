@@ -23,6 +23,7 @@ import { SubscriptionEmails } from '@/components/features/email/SubscriptionEmai
 import { PlatformAnnouncementEmails } from '@/components/features/email/PlatformAnnouncementEmails';
 import { EmailDeliveryTracker } from '@/components/features/email/EmailDeliveryTracker';
 import EmailLogTab from '@/components/features/admin/emails/EmailLogTab';
+import { adminFetch } from '@/lib/adminFetch';
 
 export default function EmailsPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -39,14 +40,14 @@ export default function EmailsPage() {
   const loadEmailCount = async () => {
     try {
       setIsLoadingCount(true);
-      const adminToken = 'admin-secure-token-2024-eventpros';
-      const response = await fetch('/api/admin/emails/logs?page=1&limit=1', {
-        credentials: 'include',
-        headers: {
-          'x-admin-token': adminToken,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await adminFetch(
+        '/api/admin/emails/logs?page=1&limit=1',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();

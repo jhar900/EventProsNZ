@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -106,7 +107,7 @@ export default function AdminAnalyticsDashboard() {
   const loadAnalytics = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/jobs/analytics?period=${timeRange}`
       );
       if (response.ok) {
@@ -126,7 +127,7 @@ export default function AdminAnalyticsDashboard() {
 
   const exportReport = async () => {
     try {
-      const response = await fetch('/api/admin/jobs/reports?format=pdf');
+      const response = await adminFetch('/api/admin/jobs/reports?format=pdf');
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

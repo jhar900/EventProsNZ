@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface Contractor {
   id: string;
@@ -44,7 +45,7 @@ export function ContractorApprovalList() {
   const loadContractors = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/contractors');
+      const response = await adminFetch('/api/admin/contractors');
 
       if (response.ok) {
         const data = await response.json();
@@ -55,7 +56,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while loading contractors');
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -63,7 +64,7 @@ export function ContractorApprovalList() {
   const handleApprove = async (contractorId: string) => {
     setActionLoading(contractorId);
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/contractors/${contractorId}/approve`,
         {
           method: 'POST',
@@ -82,7 +83,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while approving contractor');
-      } finally {
+    } finally {
       setActionLoading(null);
     }
   };
@@ -90,7 +91,7 @@ export function ContractorApprovalList() {
   const handleReject = async (contractorId: string, reason: string) => {
     setActionLoading(contractorId);
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/contractors/${contractorId}/reject`,
         {
           method: 'POST',
@@ -109,7 +110,7 @@ export function ContractorApprovalList() {
       }
     } catch (err) {
       setError('An error occurred while rejecting contractor');
-      } finally {
+    } finally {
       setActionLoading(null);
     }
   };

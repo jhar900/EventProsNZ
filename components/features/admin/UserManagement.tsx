@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import DataTable, { StatusBadge, DateCell, EmailCell } from './DataTable';
 import { UserProfileModal } from './UserProfileModal';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface User {
   id: string;
@@ -110,11 +111,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`/api/admin/users?${params}`, {
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-      });
+      const response = await adminFetch(`/api/admin/users?${params}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -150,14 +147,16 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
           ? 'POST'
           : 'PUT';
 
-      const response = await fetch(`/api/admin/users/${userId}/${action}`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros', // Same token as users list
-        },
-        body: data ? JSON.stringify(data) : undefined,
-      });
+      const response = await adminFetch(
+        `/api/admin/users/${userId}/${action}`,
+        {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: data ? JSON.stringify(data) : undefined,
+        }
+      );
 
       if (response.ok) {
         await loadUsers();
@@ -184,11 +183,10 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+      const response = await adminFetch(`/api/admin/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
         body: JSON.stringify(updateForm),
       });

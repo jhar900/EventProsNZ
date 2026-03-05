@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
@@ -7,52 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // SECURITY: Check for admin access token in headers
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-
-    let supabase: any;
-    let user: any;
-
-    if (adminToken === expectedToken) {
-      // Valid admin token - use admin client and get first admin user
-      supabase = supabaseAdmin;
-      const { data: adminUsers, error: adminError } = await supabaseAdmin
-        .from('users')
-        .select('id, email, role')
-        .eq('role', 'admin')
-        .limit(1);
-
-      if (adminUsers && adminUsers.length > 0 && !adminError) {
-        user = {
-          id: adminUsers[0].id,
-          role: adminUsers[0].role,
-        };
-      } else {
-        return NextResponse.json(
-          { error: 'Unauthorized - No admin users found' },
-          { status: 401 }
-        );
-      }
-    } else {
-      // Fallback: Try normal authentication
-      const authResult = await validateAdminAccess(request);
-      if (!authResult.success) {
-        return NextResponse.json(
-          { error: 'Unauthorized - Admin access required' },
-          { status: 401 }
-        );
-      }
-      supabase = authResult.supabase || supabaseAdmin;
-      user = authResult.user;
-    }
-
-    // Verify user is admin
-    if (user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
 

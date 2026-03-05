@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Users,
   CheckCircle,
@@ -52,14 +53,8 @@ export function VerificationAnalytics({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/admin/verification/analytics?period=${period}`,
-        {
-          credentials: 'include', // Include cookies for authentication
-          headers: {
-            'x-admin-token': 'admin-secure-token-2024-eventpros',
-          },
-        }
+      const response = await adminFetch(
+        `/api/admin/verification/analytics?period=${period}`
       );
 
       if (response.ok) {

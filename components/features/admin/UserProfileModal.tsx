@@ -29,6 +29,7 @@ import BusinessProfileForm from '@/components/features/user/BusinessProfileForm'
 import { ServicesEditor } from '@/components/features/profile/ServicesEditor';
 import { PortfolioManager } from '@/components/features/profile/PortfolioManager';
 import { ProfilePreview } from '@/components/features/profile/ProfilePreview';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface UserProfileModalProps {
   userId: string | null;
@@ -104,9 +105,7 @@ export function UserProfileModal({
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        credentials: 'include',
-      });
+      const response = await adminFetch(`/api/admin/users/${userId}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

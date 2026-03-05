@@ -12,6 +12,26 @@ import { StatisticsSection } from './StatisticsSection';
 import { NZPrideSection } from './NZPrideSection';
 import { HomepageFooter } from './HomepageFooter';
 import { HomepageLayout, HomepageModalContext } from './HomepageLayout';
+import { useScrollFadeIn } from '@/hooks/useScrollFadeIn';
+
+function ScrollFadeIn({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const { ref, isVisible } = useScrollFadeIn();
+  return (
+    <div
+      ref={ref}
+      className={`scroll-fade-in${isVisible ? ' visible' : ''}`}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface HomepageProps {
   className?: string;
@@ -54,13 +74,19 @@ export function Homepage({ className = '' }: HomepageProps) {
         {/* <TestimonialsSection /> */}
 
         {/* Interactive Map Section */}
-        <InteractiveMapSection />
+        <ScrollFadeIn>
+          <InteractiveMapSection />
+        </ScrollFadeIn>
 
         {/* Service Categories Section */}
-        <ServiceCategoriesSection />
+        <ScrollFadeIn>
+          <ServiceCategoriesSection />
+        </ScrollFadeIn>
 
         {/* How It Works Section */}
-        <HowItWorksSection />
+        <ScrollFadeIn>
+          <HowItWorksSection />
+        </ScrollFadeIn>
 
         {/* Featured Contractors Section - Hidden */}
         {/* <FeaturedContractorsSection /> */}
@@ -69,7 +95,9 @@ export function Homepage({ className = '' }: HomepageProps) {
         {/* <StatisticsSection /> */}
 
         {/* New Zealand Pride Section */}
-        <NZPrideSection />
+        <ScrollFadeIn>
+          <NZPrideSection />
+        </ScrollFadeIn>
       </main>
 
       {/* Footer */}

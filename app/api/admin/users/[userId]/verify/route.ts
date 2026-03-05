@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
-import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export async function POST(
@@ -8,50 +6,17 @@ export async function POST(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // SECURITY: Check for admin access token in headers (same as users list endpoint)
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-
-    let supabase: any;
-    let adminUser: any;
-
-    if (adminToken === expectedToken) {
-      // Valid admin token - use admin client
-      const { data: adminUsers, error: adminError } = await supabaseAdmin
-        .from('users')
-        .select('id, email, role, is_verified, last_login')
-        .eq('role', 'admin')
-        .limit(1);
-
-      if (adminUsers && adminUsers.length > 0 && !adminError) {
-        supabase = supabaseAdmin;
-        adminUser = {
-          id: adminUsers[0].id,
-          role: adminUsers[0].role,
-        };
-      } else {
-        return NextResponse.json(
-          { error: 'No admin users found' },
-          { status: 403 }
-        );
-      }
-    } else {
-      // Fallback: Try normal authentication
-      const authResult = await validateAdminAccess(request);
-      if (!authResult.success) {
-        return NextResponse.json(
-          { error: 'Unauthorized - Admin access required' },
-          { status: 401 }
-        );
-      }
-      supabase = authResult.supabase || supabaseAdmin;
-      adminUser = authResult.user;
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
     }
+    const { supabase, user: adminUser } = authResult;
 
     const { userId } = params;
 
-    // Verify the user
     const { data: verifiedUser, error: verifyError } = await supabase
       .from('users')
       .update({
@@ -69,7 +34,6 @@ export async function POST(
       );
     }
 
-    // Log admin action
     await supabase.from('activity_logs').insert({
       user_id: adminUser.id,
       action: 'admin_verify_user',

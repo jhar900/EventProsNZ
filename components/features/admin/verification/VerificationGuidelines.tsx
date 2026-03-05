@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { adminFetch } from '@/lib/adminFetch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -92,17 +93,15 @@ export function VerificationGuidelines({
   const handleSave = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/verification/criteria', {
+      const response = await adminFetch('/api/admin/verification/criteria', {
         method: editingId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
         body: JSON.stringify({
           id: editingId,
           ...formData,
         }),
-        credentials: 'include', // Include cookies for authentication
       });
 
       const data = await response.json();
@@ -127,13 +126,12 @@ export function VerificationGuidelines({
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/verification/criteria/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-        credentials: 'include', // Include cookies for authentication
-      });
+      const response = await adminFetch(
+        `/api/admin/verification/criteria/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (response.ok) {
         setCriteria(prev => prev.filter(c => c.id !== id));

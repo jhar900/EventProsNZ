@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EmailEditModal } from './EmailEditModal';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface WelcomeEmail {
   id: string;
@@ -85,17 +86,8 @@ export function WelcomeEmailSeries({
     const loadEmails = async () => {
       try {
         setLoading(true);
-        const adminToken =
-          process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-          'admin-secure-token-2024-eventpros';
 
-        const response = await fetch('/api/admin/welcome-email-series', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await adminFetch('/api/admin/welcome-email-series');
 
         if (response.ok) {
           const data = await response.json();
@@ -215,10 +207,6 @@ export function WelcomeEmailSeries({
     );
 
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       // Use email.id as email_key (since we set id to email_key when loading from DB)
       // For mock data, templateId contains the email_key
       const emailKey =
@@ -229,11 +217,9 @@ export function WelcomeEmailSeries({
           ? email.id // It's an email_key like 'welcome-1'
           : email.templateId; // Fallback to templateId for mock data
 
-      const response = await fetch('/api/admin/welcome-email-series', {
+      const response = await adminFetch('/api/admin/welcome-email-series', {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
-          'x-admin-token': adminToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -290,9 +276,6 @@ export function WelcomeEmailSeries({
 
     try {
       // Fetch template from API
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
 
       // Check if templateId is a valid UUID
       const isValidUUID =
@@ -304,12 +287,10 @@ export function WelcomeEmailSeries({
 
       if (isValidUUID) {
         // Try to fetch by UUID
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${email.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -323,13 +304,14 @@ export function WelcomeEmailSeries({
 
       // If not found by UUID or not a UUID, try to find by name
       if (!template) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -451,9 +433,6 @@ export function WelcomeEmailSeries({
 
     try {
       // Fetch template from API
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
 
       // Check if templateId is a valid UUID
       const isValidUUID =
@@ -465,12 +444,10 @@ export function WelcomeEmailSeries({
 
       if (isValidUUID) {
         // Try to fetch by UUID
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${email.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -484,13 +461,14 @@ export function WelcomeEmailSeries({
 
       // If not found by UUID or not a UUID, try to find by name
       if (!template) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -610,10 +588,6 @@ export function WelcomeEmailSeries({
     if (!editingEmail) return;
 
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       // Generate slug from email name
       const baseSlug = editingEmail.name
         .toLowerCase()
@@ -661,12 +635,10 @@ export function WelcomeEmailSeries({
 
       if (isValidUUID) {
         // Try to fetch by UUID
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${editingEmail.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -679,13 +651,14 @@ export function WelcomeEmailSeries({
 
       // If not found by UUID, try to find by name or slug
       if (!existingTemplate) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -714,13 +687,11 @@ export function WelcomeEmailSeries({
 
       if (existingTemplate) {
         // Update existing template
-        const updateResponse = await fetch(
+        const updateResponse = await adminFetch(
           `/api/admin/email-templates/${existingTemplate.id}`,
           {
             method: 'PUT',
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -743,11 +714,9 @@ export function WelcomeEmailSeries({
         templateId = existingTemplate.id;
       } else {
         // Create new template
-        const createResponse = await fetch('/api/admin/email-templates', {
+        const createResponse = await adminFetch('/api/admin/email-templates', {
           method: 'POST',
-          credentials: 'include',
           headers: {
-            'x-admin-token': adminToken,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -788,13 +757,11 @@ export function WelcomeEmailSeries({
           ? editingEmail.id
           : editingEmail.templateId;
 
-      const seriesUpdateResponse = await fetch(
+      const seriesUpdateResponse = await adminFetch(
         '/api/admin/welcome-email-series',
         {
           method: 'PATCH',
-          credentials: 'include',
           headers: {
-            'x-admin-token': adminToken,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -849,10 +816,6 @@ export function WelcomeEmailSeries({
 
     // Fetch template for test email
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       // Check if templateId is a valid UUID
       const isValidUUID =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -863,12 +826,10 @@ export function WelcomeEmailSeries({
 
       if (isValidUUID) {
         // Try to fetch by UUID
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${email.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -882,13 +843,14 @@ export function WelcomeEmailSeries({
 
       // If not found by UUID or not a UUID, try to find by name
       if (!template) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -976,10 +938,6 @@ export function WelcomeEmailSeries({
     setTestEmailStatus({ status: 'idle', message: 'Sending test email...' });
 
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       // Prepare email content
       let subject = testEmail.subject;
       let htmlContent = '';
@@ -999,13 +957,11 @@ export function WelcomeEmailSeries({
         textContent = `${testEmail.name}\n\n${testEmail.subject}\n\nThis is a test email.`;
       }
 
-      const response = await fetch('/api/email/test', {
+      const response = await adminFetch('/api/email/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': adminToken,
         },
-        credentials: 'include',
         body: JSON.stringify({
           subject,
           htmlContent,

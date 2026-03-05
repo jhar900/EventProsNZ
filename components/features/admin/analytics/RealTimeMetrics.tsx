@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -59,7 +60,7 @@ export default function RealTimeMetrics() {
   const loadMetrics = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/analytics/metrics');
+      const response = await adminFetch('/api/admin/analytics/metrics');
       if (response.ok) {
         const metricsData = await response.json();
         setData(metricsData);

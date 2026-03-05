@@ -52,6 +52,7 @@ import {
   Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface RoadmapMilestone {
   id: string;
@@ -109,7 +110,7 @@ export default function RoadmapIntegration() {
 
   const fetchMilestones = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/roadmap');
+      const response = await adminFetch('/api/admin/feature-requests/roadmap');
       const data = await response.json();
 
       if (!response.ok) {
@@ -129,7 +130,7 @@ export default function RoadmapIntegration() {
 
   const fetchFeatureRequests = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests?status=planned,in_development'
       );
       const data = await response.json();
@@ -146,7 +147,7 @@ export default function RoadmapIntegration() {
 
   const handleCreateMilestone = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/roadmap', {
+      const response = await adminFetch('/api/admin/feature-requests/roadmap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +180,7 @@ export default function RoadmapIntegration() {
     updates: Partial<RoadmapMilestone>
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/roadmap/${milestoneId}`,
         {
           method: 'PUT',
@@ -205,7 +206,7 @@ export default function RoadmapIntegration() {
 
   const handleDeleteMilestone = async (milestoneId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/roadmap/${milestoneId}`,
         {
           method: 'DELETE',
@@ -230,7 +231,7 @@ export default function RoadmapIntegration() {
     featureRequestId: string
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/roadmap/${milestoneId}/feature-requests`,
         {
           method: 'POST',
@@ -259,7 +260,7 @@ export default function RoadmapIntegration() {
     featureRequestId: string
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/roadmap/${milestoneId}/feature-requests/${featureRequestId}`,
         {
           method: 'DELETE',

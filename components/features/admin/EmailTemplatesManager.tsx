@@ -8,6 +8,7 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircle, AlertCircle } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 import EmailEditor from './EmailEditor';
 
 interface EmailTemplate {
@@ -69,9 +70,7 @@ export default function EmailTemplatesManager() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/admin/email-templates', {
-        credentials: 'include',
-      });
+      const response = await adminFetch('/api/admin/email-templates');
 
       if (!response.ok) {
         throw new Error('Failed to load email templates');
@@ -99,10 +98,9 @@ export default function EmailTemplatesManager() {
 
     try {
       setError(null);
-      const response = await fetch('/api/admin/email-templates', {
+      const response = await adminFetch('/api/admin/email-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(newTemplate),
       });
 

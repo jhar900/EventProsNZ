@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { adminFetch } from '@/lib/adminFetch';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -87,19 +88,13 @@ export function VerificationQueue({ onUserSelect }: VerificationQueueProps) {
           .map(c => c.split('=')[0].trim()),
       });
 
-      const adminToken = 'admin-secure-token-2024-eventpros';
-      console.log('[VerificationQueue] Making request with token:', {
+      console.log('[VerificationQueue] Making request:', {
         url: `/api/admin/verification/queue?${params}`,
-        hasToken: !!adminToken,
-        tokenLength: adminToken.length,
       });
 
-      const response = await fetch(`/api/admin/verification/queue?${params}`, {
-        credentials: 'include', // Include cookies for authentication
-        headers: {
-          'x-admin-token': adminToken,
-        },
-      });
+      const response = await adminFetch(
+        `/api/admin/verification/queue?${params}`
+      );
 
       console.log('[VerificationQueue] Response:', {
         status: response.status,

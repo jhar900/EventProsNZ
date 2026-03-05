@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { adminFetch } from '@/lib/adminFetch';
 
 const systemSettingsSchema = z.object({
   site_name: z
@@ -46,11 +47,7 @@ export default function AdminSystemSettings({
 
   const loadSettings = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/settings/system', {
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-      });
+      const response = await adminFetch('/api/admin/settings/system');
       const result = await response.json();
 
       if (response.ok) {
@@ -74,11 +71,10 @@ export default function AdminSystemSettings({
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/settings/system', {
+      const response = await adminFetch('/api/admin/settings/system', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
         },
         body: JSON.stringify(data),
       });
@@ -337,9 +333,7 @@ function ServiceCategoriesManager() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/service-categories', {
-        credentials: 'include',
-      });
+      const response = await adminFetch('/api/admin/service-categories');
       const result = await response.json();
 
       if (response.ok) {
@@ -367,10 +361,9 @@ function ServiceCategoriesManager() {
     }
 
     try {
-      const response = await fetch('/api/admin/service-categories', {
+      const response = await adminFetch('/api/admin/service-categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(newCategory),
       });
 
@@ -392,10 +385,9 @@ function ServiceCategoriesManager() {
 
   const handleUpdate = async (id: string) => {
     try {
-      const response = await fetch('/api/admin/service-categories', {
+      const response = await adminFetch('/api/admin/service-categories', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ id, ...editCategory }),
       });
 

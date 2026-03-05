@@ -54,6 +54,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface Announcement {
   id: string;
@@ -144,7 +145,9 @@ export default function CommunityCommunication() {
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/announcements');
+      const response = await adminFetch(
+        '/api/admin/feature-requests/announcements'
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -162,7 +165,9 @@ export default function CommunityCommunication() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/notifications');
+      const response = await adminFetch(
+        '/api/admin/feature-requests/notifications'
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -177,7 +182,7 @@ export default function CommunityCommunication() {
 
   const handleCreateAnnouncement = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests/announcements',
         {
           method: 'POST',
@@ -210,7 +215,7 @@ export default function CommunityCommunication() {
 
   const handleSendAnnouncement = async (announcementId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/announcements/${announcementId}/send`,
         {
           method: 'POST',
@@ -232,7 +237,7 @@ export default function CommunityCommunication() {
 
   const handleDeleteAnnouncement = async (announcementId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/announcements/${announcementId}`,
         {
           method: 'DELETE',
@@ -254,7 +259,7 @@ export default function CommunityCommunication() {
 
   const handleSendStatusUpdate = async (notificationId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/notifications/${notificationId}/send`,
         {
           method: 'POST',

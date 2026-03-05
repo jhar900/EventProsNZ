@@ -43,6 +43,7 @@ import {
   Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface FeatureRequest {
   id: string;
@@ -101,7 +102,7 @@ export default function RequestPrioritization() {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests?status=submitted,planned'
       );
       const data = await response.json();
@@ -186,7 +187,7 @@ export default function RequestPrioritization() {
     newPriority: string
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/${requestId}/priority`,
         {
           method: 'PUT',
@@ -217,7 +218,7 @@ export default function RequestPrioritization() {
     }
 
     try {
-      const response = await fetch('/api/admin/feature-requests/bulk', {
+      const response = await adminFetch('/api/admin/feature-requests/bulk', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

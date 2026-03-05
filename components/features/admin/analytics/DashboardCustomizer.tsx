@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -206,7 +207,9 @@ export default function DashboardCustomizer({
 
   const loadSavedLayouts = async () => {
     try {
-      const response = await fetch('/api/admin/analytics/dashboard/layouts');
+      const response = await adminFetch(
+        '/api/admin/analytics/dashboard/layouts'
+      );
       if (response.ok) {
         const layouts = await response.json();
         setSavedLayouts(layouts);
@@ -309,11 +312,14 @@ export default function DashboardCustomizer({
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/analytics/dashboard/layouts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(layout),
-      });
+      const response = await adminFetch(
+        '/api/admin/analytics/dashboard/layouts',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(layout),
+        }
+      );
 
       if (response.ok) {
         const savedLayout = await response.json();

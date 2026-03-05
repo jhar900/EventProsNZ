@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface VerificationItem {
   id: string;
@@ -152,7 +153,9 @@ export function useVerification(): UseVerificationReturn {
         if (filters.limit) params.append('limit', filters.limit.toString());
         if (filters.offset) params.append('offset', filters.offset.toString());
 
-        const response = await fetch(`/api/admin/verification/queue?${params}`);
+        const response = await adminFetch(
+          `/api/admin/verification/queue?${params}`
+        );
         const data = await response.json();
 
         if (response.ok) {
@@ -163,7 +166,7 @@ export function useVerification(): UseVerificationReturn {
         }
       } catch (err) {
         setError('An unexpected error occurred');
-        } finally {
+      } finally {
         setLoading(false);
       }
     },
@@ -173,7 +176,7 @@ export function useVerification(): UseVerificationReturn {
   const approveUser = useCallback(
     async (userId: string, reason?: string): Promise<boolean> => {
       try {
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/verification/${userId}/approve`,
           {
             method: 'POST',
@@ -217,7 +220,7 @@ export function useVerification(): UseVerificationReturn {
       feedback?: string
     ): Promise<boolean> => {
       try {
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/verification/${userId}/reject`,
           {
             method: 'POST',
@@ -256,7 +259,7 @@ export function useVerification(): UseVerificationReturn {
 
   const resubmitUser = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/verification/${userId}/resubmit`,
         {
           method: 'POST',
@@ -294,7 +297,7 @@ export function useVerification(): UseVerificationReturn {
     setAnalyticsLoading(true);
 
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/verification/analytics?period=${period}`
       );
       const data = await response.json();
@@ -303,9 +306,9 @@ export function useVerification(): UseVerificationReturn {
         setMetrics(data.metrics);
         setTrends(data.trends);
       } else {
-        }
+      }
     } catch (err) {
-      } finally {
+    } finally {
       setAnalyticsLoading(false);
     }
   }, []);
@@ -314,15 +317,17 @@ export function useVerification(): UseVerificationReturn {
     setNotificationsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/verification/notifications');
+      const response = await adminFetch(
+        '/api/admin/verification/notifications'
+      );
       const data = await response.json();
 
       if (response.ok) {
         setNotifications(data.notifications);
       } else {
-        }
+      }
     } catch (err) {
-      } finally {
+    } finally {
       setNotificationsLoading(false);
     }
   }, []);
@@ -330,11 +335,14 @@ export function useVerification(): UseVerificationReturn {
   const markNotificationRead = useCallback(
     async (notificationIds: string[]) => {
       try {
-        const response = await fetch('/api/admin/verification/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ notification_ids: notificationIds }),
-        });
+        const response = await adminFetch(
+          '/api/admin/verification/notifications',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notification_ids: notificationIds }),
+          }
+        );
 
         if (response.ok) {
           setNotifications(prev =>
@@ -349,8 +357,7 @@ export function useVerification(): UseVerificationReturn {
             )
           );
         }
-      } catch (err) {
-        }
+      } catch (err) {}
     },
     []
   );

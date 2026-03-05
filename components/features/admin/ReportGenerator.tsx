@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -113,7 +114,7 @@ export default function ReportGenerator() {
   const loadReportData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/jobs/reports');
+      const response = await adminFetch('/api/admin/jobs/reports');
       if (response.ok) {
         const reportData = await response.json();
         setData(reportData);
@@ -132,7 +133,7 @@ export default function ReportGenerator() {
   const generateReport = async (templateId: string) => {
     try {
       setIsGenerating(true);
-      const response = await fetch(`/api/admin/jobs/reports/generate`, {
+      const response = await adminFetch(`/api/admin/jobs/reports/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +153,7 @@ export default function ReportGenerator() {
 
   const createTemplate = async () => {
     try {
-      const response = await fetch('/api/admin/jobs/reports/templates', {
+      const response = await adminFetch('/api/admin/jobs/reports/templates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ export default function ReportGenerator() {
 
   const downloadReport = async (generationId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/jobs/reports/${generationId}/download`
       );
       if (response.ok) {

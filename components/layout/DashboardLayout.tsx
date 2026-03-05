@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import OnboardingGuard from '@/components/features/auth/OnboardingGuard';
 import { SuspensionNotice } from '@/components/features/dashboard/SuspensionNotice';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   LayoutDashboard,
   Calendar,
@@ -62,9 +63,9 @@ export default function DashboardLayout({
     if (user?.role === 'admin') {
       const fetchSubmittedCount = async () => {
         try {
-          const response = await fetch('/api/admin/feature-requests/count', {
-            credentials: 'include',
-          });
+          const response = await adminFetch(
+            '/api/admin/feature-requests/count'
+          );
           if (response.ok) {
             const data = await response.json();
             setSubmittedCount(data.count || 0);
@@ -96,14 +97,8 @@ export default function DashboardLayout({
     if (user?.role === 'admin') {
       const fetchPendingVerificationCount = async () => {
         try {
-          const response = await fetch(
-            '/api/admin/verification/queue?status=pending&limit=1',
-            {
-              credentials: 'include',
-              headers: {
-                'x-admin-token': 'admin-secure-token-2024-eventpros',
-              },
-            }
+          const response = await adminFetch(
+            '/api/admin/verification/queue?status=pending&limit=1'
           );
           if (response.ok) {
             const data = await response.json();

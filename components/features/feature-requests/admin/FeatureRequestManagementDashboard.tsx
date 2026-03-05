@@ -56,6 +56,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface FeatureRequest {
   id: string;
@@ -136,7 +137,9 @@ export default function FeatureRequestManagementDashboard({
         sort_order: sortOrder,
       });
 
-      const response = await fetch(`/api/admin/feature-requests?${params}`);
+      const response = await adminFetch(
+        `/api/admin/feature-requests?${params}`
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -155,7 +158,9 @@ export default function FeatureRequestManagementDashboard({
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/analytics');
+      const response = await adminFetch(
+        '/api/admin/feature-requests/analytics'
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -168,7 +173,7 @@ export default function FeatureRequestManagementDashboard({
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/${requestId}/status`,
         {
           method: 'PUT',
@@ -199,7 +204,7 @@ export default function FeatureRequestManagementDashboard({
     newPriority: string
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/${requestId}/priority`,
         {
           method: 'PUT',
@@ -230,7 +235,7 @@ export default function FeatureRequestManagementDashboard({
     }
 
     try {
-      const response = await fetch('/api/admin/feature-requests/bulk', {
+      const response = await adminFetch('/api/admin/feature-requests/bulk', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

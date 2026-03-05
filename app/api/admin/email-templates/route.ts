@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { z } from 'zod';
 
@@ -20,64 +20,14 @@ const emailTemplateSchema = z.object({
 // GET /api/admin/email-templates - Get all email templates
 export async function GET(request: NextRequest) {
   try {
-    // Check for admin token header first (development bypass)
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-    const isDevelopment =
-      process.env.NODE_ENV === 'development' ||
-      process.env.VERCEL_ENV === 'development' ||
-      request.url.includes('localhost');
-
-    let user: any;
-
-    // If admin token is provided and matches, or we're in development, allow access
-    if (adminToken === expectedToken || isDevelopment) {
-      // In development, try to get user but don't fail if not found
-      const { supabase } = createClient(request);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      user = session?.user;
-    } else {
-      // Normal authentication flow
-      const { supabase } = createClient(request);
-
-      // Try to get user from session first (better cookie handling)
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        user = session.user;
-      } else {
-        // Fallback to getUser (reads from cookies)
-        const {
-          data: { user: getUserUser },
-          error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError || !getUserUser) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-        user = getUserUser;
-      }
-
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-
-      // Check if user is admin
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userError || userData?.role !== 'admin') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
     }
+    const user = authResult.user;
 
     // Get all templates (admins can see all, including inactive)
     const { data: templates, error } = await supabaseAdmin
@@ -106,64 +56,14 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/email-templates - Create a new email template
 export async function POST(request: NextRequest) {
   try {
-    // Check for admin token header first (development bypass)
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-    const isDevelopment =
-      process.env.NODE_ENV === 'development' ||
-      process.env.VERCEL_ENV === 'development' ||
-      request.url.includes('localhost');
-
-    let user: any;
-
-    // If admin token is provided and matches, or we're in development, allow access
-    if (adminToken === expectedToken || isDevelopment) {
-      // In development, try to get user but don't fail if not found
-      const { supabase } = createClient(request);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      user = session?.user;
-    } else {
-      // Normal authentication flow
-      const { supabase } = createClient(request);
-
-      // Try to get user from session first (better cookie handling)
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        user = session.user;
-      } else {
-        // Fallback to getUser (reads from cookies)
-        const {
-          data: { user: getUserUser },
-          error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError || !getUserUser) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-        user = getUserUser;
-      }
-
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-
-      // Check if user is admin
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userError || userData?.role !== 'admin') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
     }
+    const user = authResult.user;
 
     const body = await request.json();
     const validatedData = emailTemplateSchema.parse(body);

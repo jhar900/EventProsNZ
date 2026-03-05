@@ -15,6 +15,7 @@ import {
   Pause,
 } from 'lucide-react';
 import { EmailEditModal } from './EmailEditModal';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface SubscriptionEmail {
   id: string;
@@ -185,10 +186,6 @@ export function SubscriptionEmails({
     });
 
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       const isValidUUID =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           email.templateId
@@ -197,12 +194,10 @@ export function SubscriptionEmails({
       let template = null;
 
       if (isValidUUID) {
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${email.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -214,13 +209,14 @@ export function SubscriptionEmails({
       }
 
       if (!template) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -263,10 +259,6 @@ export function SubscriptionEmails({
     if (!editingEmail) return;
 
     try {
-      const adminToken =
-        process.env.NEXT_PUBLIC_ADMIN_ACCESS_TOKEN ||
-        'admin-secure-token-2024-eventpros';
-
       const baseSlug = editingEmail.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -306,12 +298,10 @@ export function SubscriptionEmails({
         );
 
       if (isValidUUID) {
-        const response = await fetch(
+        const response = await adminFetch(
           `/api/admin/email-templates/${editingEmail.templateId}`,
           {
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
           }
@@ -323,13 +313,14 @@ export function SubscriptionEmails({
       }
 
       if (!existingTemplate) {
-        const allTemplatesResponse = await fetch('/api/admin/email-templates', {
-          credentials: 'include',
-          headers: {
-            'x-admin-token': adminToken,
-            'Content-Type': 'application/json',
-          },
-        });
+        const allTemplatesResponse = await adminFetch(
+          '/api/admin/email-templates',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (allTemplatesResponse.ok) {
           const allTemplatesData = await allTemplatesResponse.json();
@@ -353,13 +344,11 @@ export function SubscriptionEmails({
       let templateId = editingEmail.templateId;
 
       if (existingTemplate) {
-        const updateResponse = await fetch(
+        const updateResponse = await adminFetch(
           `/api/admin/email-templates/${existingTemplate.id}`,
           {
             method: 'PUT',
-            credentials: 'include',
             headers: {
-              'x-admin-token': adminToken,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -381,11 +370,9 @@ export function SubscriptionEmails({
 
         templateId = existingTemplate.id;
       } else {
-        const createResponse = await fetch('/api/admin/email-templates', {
+        const createResponse = await adminFetch('/api/admin/email-templates', {
           method: 'POST',
-          credentials: 'include',
           headers: {
-            'x-admin-token': adminToken,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

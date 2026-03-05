@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -98,7 +99,7 @@ export function LegalContentManager({
 
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/legal/update', {
+      const response = await adminFetch('/api/admin/legal/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

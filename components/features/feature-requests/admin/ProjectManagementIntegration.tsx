@@ -57,6 +57,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface ProjectTask {
   id: string;
@@ -137,7 +138,9 @@ export default function ProjectManagementIntegration() {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/project-tasks');
+      const response = await adminFetch(
+        '/api/admin/feature-requests/project-tasks'
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -155,7 +158,7 @@ export default function ProjectManagementIntegration() {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/projects');
+      const response = await adminFetch('/api/admin/feature-requests/projects');
       const data = await response.json();
 
       if (!response.ok) {
@@ -170,7 +173,7 @@ export default function ProjectManagementIntegration() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests/integration-settings'
       );
       const data = await response.json();
@@ -187,7 +190,7 @@ export default function ProjectManagementIntegration() {
 
   const handleCreateTask = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests/project-tasks',
         {
           method: 'POST',
@@ -226,7 +229,7 @@ export default function ProjectManagementIntegration() {
     updates: Partial<ProjectTask>
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/project-tasks/${taskId}`,
         {
           method: 'PUT',
@@ -252,7 +255,7 @@ export default function ProjectManagementIntegration() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/feature-requests/project-tasks/${taskId}`,
         {
           method: 'DELETE',
@@ -274,9 +277,12 @@ export default function ProjectManagementIntegration() {
 
   const handleSyncTasks = async () => {
     try {
-      const response = await fetch('/api/admin/feature-requests/sync-tasks', {
-        method: 'POST',
-      });
+      const response = await adminFetch(
+        '/api/admin/feature-requests/sync-tasks',
+        {
+          method: 'POST',
+        }
+      );
 
       if (response.ok) {
         toast.success('Tasks synchronized successfully');
@@ -295,7 +301,7 @@ export default function ProjectManagementIntegration() {
     newSettings: Partial<IntegrationSettings>
   ) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/feature-requests/integration-settings',
         {
           method: 'PUT',

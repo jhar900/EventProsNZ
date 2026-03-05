@@ -1,58 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export const POST = async (request: NextRequest) => {
   try {
-    // Check for admin token header first (development bypass)
-    const adminToken = request.headers.get('x-admin-token');
-    const expectedToken =
-      process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros';
-    const isDevelopment =
-      process.env.NODE_ENV === 'development' ||
-      process.env.VERCEL_ENV === 'development' ||
-      request.url.includes('localhost');
-
-    let user: any;
-
-    // If admin token is provided and matches, or we're in development, allow access
-    if (adminToken === expectedToken || isDevelopment) {
-      // In development, try to get user but don't fail if not found
-      const { supabase } = createClient(request);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      user = session?.user;
-    } else {
-      // Normal authentication flow
-      const { supabase } = createClient(request);
-
-      // Try to get user from session first (better cookie handling)
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        user = session.user;
-      } else {
-        // Fallback to getUser (reads from cookies)
-        const {
-          data: { user: getUserUser },
-          error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError || !getUserUser) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-        user = getUserUser;
-      }
-
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    const authResult = await validateAdminAccess(request);
+    if (!authResult.success) {
+      return (
+        authResult.response ||
+        NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      );
     }
+    const user = authResult.user;
 
     const body = await request.json();
     const {

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { adminFetch } from '@/lib/adminFetch';
 import { Badge } from '@/components/ui/badge';
 import {
   Bell,
@@ -48,12 +49,9 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/verification/notifications', {
-        credentials: 'include', // Include cookies for authentication
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-      });
+      const response = await adminFetch(
+        '/api/admin/verification/notifications'
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -76,15 +74,16 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   const markAsRead = async (notificationIds: string[]) => {
     try {
-      const response = await fetch('/api/admin/verification/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-        body: JSON.stringify({ notification_ids: notificationIds }),
-        credentials: 'include', // Include cookies for authentication
-      });
+      const response = await adminFetch(
+        '/api/admin/verification/notifications',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ notification_ids: notificationIds }),
+        }
+      );
 
       if (response.ok) {
         setNotifications(prev =>

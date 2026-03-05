@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -95,7 +96,7 @@ export default function JobModerationDashboard() {
   const loadJobs = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/jobs/moderation');
+      const response = await adminFetch('/api/admin/jobs/moderation');
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -162,7 +163,7 @@ export default function JobModerationDashboard() {
   const moderateJob = async (jobId: string, action: 'approve' | 'reject') => {
     try {
       setIsModerating(true);
-      const response = await fetch(`/api/admin/jobs/${jobId}/moderate`, {
+      const response = await adminFetch(`/api/admin/jobs/${jobId}/moderate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

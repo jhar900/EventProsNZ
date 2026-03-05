@@ -121,3 +121,25 @@ button[class*='rdp-nav_button'] {
 .mapbox-popup-enhanced .mapboxgl-popup-content {
   padding: 16px !important;
 }
+
+/* Scroll fade-in animations */
+.scroll-fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+}
+
+.scroll-fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-fade-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

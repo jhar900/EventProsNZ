@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 import EmailTemplatesManager from './EmailTemplatesManager';
 
 export default function AdminEmailSettings() {
@@ -23,11 +24,9 @@ export default function AdminEmailSettings() {
     setTestEmailStatus({ status: 'sending', message: 'Sending test email...' });
 
     try {
-      const response = await fetch('/api/admin/settings/email/test', {
+      const response = await adminFetch('/api/admin/settings/email/test', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: testEmailAddress }),
       });
 

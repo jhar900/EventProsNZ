@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -93,7 +94,7 @@ export default function AdvancedUserManagement() {
   useEffect(() => {
     const loadSavedSearches = async () => {
       try {
-        const response = await fetch('/api/admin/users/saved-searches');
+        const response = await adminFetch('/api/admin/users/saved-searches');
         if (response.ok) {
           const data = await response.json();
           setSavedSearches(data.searches || []);
@@ -123,7 +124,7 @@ export default function AdvancedUserManagement() {
         }
       });
 
-      const response = await fetch(`/api/admin/users?${params}`);
+      const response = await adminFetch(`/api/admin/users?${params}`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
@@ -137,7 +138,7 @@ export default function AdvancedUserManagement() {
 
   const handleSaveSearch = async (search: SavedSearch) => {
     try {
-      const response = await fetch('/api/admin/users/saved-searches', {
+      const response = await adminFetch('/api/admin/users/saved-searches', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ export default function AdvancedUserManagement() {
   ) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/users/bulk', {
+      const response = await adminFetch('/api/admin/users/bulk', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -7,21 +7,17 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await validateAdminAccess(request);
 
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json({
-      success: authResult.success,
-      hasToken: !!request.headers.get('x-admin-token'),
-      tokenValue: request.headers.get('x-admin-token'),
-      expectedToken:
-        process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros',
-      tokensMatch:
-        request.headers.get('x-admin-token') ===
-        (process.env.ADMIN_ACCESS_TOKEN || 'admin-secure-token-2024-eventpros'),
+      success: true,
       userId: authResult.user?.id,
-      error: authResult.response
-        ? await authResult.response
-            .json()
-            .catch(() => ({ error: 'Unknown error' }))
-        : null,
+      role: authResult.user?.role,
     });
   } catch (error) {
     return NextResponse.json(

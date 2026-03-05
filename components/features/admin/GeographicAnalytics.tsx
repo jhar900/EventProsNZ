@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -119,10 +120,10 @@ export default function GeographicAnalytics() {
     try {
       setIsLoading(true);
       const [dataResponse, metricsResponse] = await Promise.all([
-        fetch(
+        adminFetch(
           `/api/admin/jobs/geographic?period=${timeRange}&region=${selectedRegion}`
         ),
-        fetch('/api/admin/jobs/geographic/metrics'),
+        adminFetch('/api/admin/jobs/geographic/metrics'),
       ]);
 
       if (dataResponse.ok) {
@@ -147,7 +148,7 @@ export default function GeographicAnalytics() {
 
   const exportGeographicReport = async () => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         '/api/admin/jobs/reports?type=geographic&format=pdf'
       );
       if (response.ok) {

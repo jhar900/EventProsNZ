@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -153,9 +154,11 @@ export default function UserSatisfactionTracker() {
       setIsLoading(true);
       const [dataResponse, metricsResponse, campaignsResponse] =
         await Promise.all([
-          fetch(`/api/admin/users/satisfaction?timeRange=${filters.timeRange}`),
-          fetch('/api/admin/users/satisfaction/metrics'),
-          fetch('/api/admin/users/satisfaction/campaigns'),
+          adminFetch(
+            `/api/admin/users/satisfaction?timeRange=${filters.timeRange}`
+          ),
+          adminFetch('/api/admin/users/satisfaction/metrics'),
+          adminFetch('/api/admin/users/satisfaction/campaigns'),
         ]);
 
       if (dataResponse.ok) {
@@ -215,7 +218,7 @@ export default function UserSatisfactionTracker() {
 
   const sendSurvey = async (campaignId: string) => {
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/users/satisfaction/campaigns/${campaignId}/send`,
         {
           method: 'POST',
@@ -232,13 +235,16 @@ export default function UserSatisfactionTracker() {
 
   const createSurveyCampaign = async () => {
     try {
-      const response = await fetch('/api/admin/users/satisfaction/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newSurvey),
-      });
+      const response = await adminFetch(
+        '/api/admin/users/satisfaction/campaigns',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newSurvey),
+        }
+      );
 
       if (response.ok) {
         await loadSatisfactionData();

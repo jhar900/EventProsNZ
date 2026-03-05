@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/adminFetch';
 import {
   Card,
   CardContent,
@@ -286,14 +287,11 @@ export function EmailTemplateCustomizer({
     setTestEmailStatus({ status: 'idle', message: 'Sending test email...' });
 
     try {
-      const adminToken = 'admin-secure-token-2024-eventpros';
-      const response = await fetch('/api/email/test', {
+      const response = await adminFetch('/api/email/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': adminToken,
         },
-        credentials: 'include',
         body: JSON.stringify({
           // Send template content directly for mock templates
           subject: testEmailTemplate.subject,

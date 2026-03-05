@@ -10,6 +10,7 @@ import { VerificationAnalytics } from '@/components/features/admin/verification/
 import { VerificationSummaryCards } from '@/components/features/admin/verification/VerificationSummaryCards';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Users } from 'lucide-react';
+import { adminFetch } from '@/lib/adminFetch';
 
 interface User {
   id: string;
@@ -65,12 +66,7 @@ export default function VerificationPage() {
     setVerificationLog([]);
 
     try {
-      const response = await fetch(`/api/admin/verification/${user.id}`, {
-        credentials: 'include', // Include cookies for authentication
-        headers: {
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-      });
+      const response = await adminFetch(`/api/admin/verification/${user.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.user) {
@@ -103,16 +99,14 @@ export default function VerificationPage() {
   const handleApprove = async (userId: string, reason?: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/verification/${userId}/approve`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-token': 'admin-secure-token-2024-eventpros',
           },
           body: JSON.stringify({ reason }),
-          credentials: 'include', // Include cookies for authentication
         }
       );
 
@@ -139,15 +133,16 @@ export default function VerificationPage() {
   ) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/admin/verification/${userId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': 'admin-secure-token-2024-eventpros',
-        },
-        body: JSON.stringify({ reason, feedback }),
-        credentials: 'include', // Include cookies for authentication
-      });
+      const response = await adminFetch(
+        `/api/admin/verification/${userId}/reject`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ reason, feedback }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -171,14 +166,10 @@ export default function VerificationPage() {
   const handleResubmit = async (userId: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/verification/${userId}/resubmit`,
         {
           method: 'POST',
-          headers: {
-            'x-admin-token': 'admin-secure-token-2024-eventpros',
-          },
-          credentials: 'include', // Include cookies for authentication
         }
       );
 
@@ -201,16 +192,14 @@ export default function VerificationPage() {
   const handleUnapprove = async (userId: string, reason?: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(
+      const response = await adminFetch(
         `/api/admin/verification/${userId}/unapprove`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-token': 'admin-secure-token-2024-eventpros',
           },
           body: JSON.stringify({ reason }),
-          credentials: 'include', // Include cookies for authentication
         }
       );
 
