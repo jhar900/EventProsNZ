@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { validateAdminAccess } from '@/lib/middleware/admin-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
@@ -18,11 +20,8 @@ export async function GET(
 
     const { userId } = params;
 
-    // Use admin client to bypass RLS for fetching user details
-    const adminSupabase = authResult.supabase;
-
     // Get user details with profile and business profile
-    const { data: userDetails, error: userDetailsError } = await adminSupabase
+    const { data: userDetails, error: userDetailsError } = await supabaseAdmin
       .from('users')
       .select(
         `
@@ -58,9 +57,15 @@ export async function GET(
       .single();
 
     if (userDetailsError) {
+      console.error('[Admin User GET] Supabase error:', userDetailsError);
+      const isNotFound = userDetailsError.code === 'PGRST116';
       return NextResponse.json(
-        { error: 'User not found', details: userDetailsError.message },
-        { status: 404 }
+        {
+          error: isNotFound ? 'User not found' : 'Failed to fetch user',
+          details: userDetailsError.message,
+          code: userDetailsError.code,
+        },
+        { status: isNotFound ? 404 : 500 }
       );
     }
 
@@ -85,7 +90,7 @@ export async function PUT(
         NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       );
     }
-    const { supabase, user } = authResult;
+    const user = authResult.user!;
 
     const { userId } = params;
     const body = await request.json();
@@ -103,7 +108,7 @@ export async function PUT(
     if (status) updateData.status = status;
     updateData.updated_at = new Date().toISOString();
 
-    const { data: updatedUser, error: updateError } = await supabase
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update(updateData)
       .eq('id', userId)
@@ -118,7 +123,7 @@ export async function PUT(
     }
 
     // Log admin action
-    await supabase.from('activity_logs').insert({
+    await supabaseAdmin.from('activity_logs').insert({
       user_id: user.id,
       action: 'admin_update_user',
       details: {
