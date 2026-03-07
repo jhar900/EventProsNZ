@@ -27,6 +27,7 @@ import {
   ChevronRight,
   UserCheck,
   Mail,
+  HelpCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -164,6 +165,7 @@ export default function DashboardLayout({
             label: 'Platform Settings',
             icon: Globe,
           },
+          { href: '/admin/faq', label: 'FAQ Management', icon: HelpCircle },
           { href: '/admin/settings', label: 'Settings', icon: Settings },
         ];
       case 'event_manager':
@@ -188,6 +190,11 @@ export default function DashboardLayout({
       default:
         return baseItems;
     }
+  };
+
+  const getFaqItem = (): SidebarItem | null => {
+    if (!user || user.role === 'admin') return null;
+    return { href: '/dashboard/faq', label: 'FAQs', icon: HelpCircle };
   };
 
   const getFeatureRequestItem = (): SidebarItem | null => {
@@ -283,6 +290,7 @@ export default function DashboardLayout({
                 const hasChildren = item.children && item.children.length > 0;
                 const isExpanded = expandedItems.has(item.href);
                 // Check if current path matches this nav item or any of its children
+                const faqItem = getFaqItem();
                 const isActive =
                   pathname === item.href ||
                   (item.href !== '/' &&
@@ -293,6 +301,12 @@ export default function DashboardLayout({
                         otherItem.href !== item.href &&
                         pathname.startsWith(otherItem.href + '/') &&
                         otherItem.href.startsWith(item.href + '/')
+                    ) &&
+                    // Don't match if the FAQ item is a more specific match
+                    !(
+                      faqItem &&
+                      pathname.startsWith(faqItem.href) &&
+                      faqItem.href.startsWith(item.href + '/')
                     )) ||
                   (hasChildren &&
                     item.children?.some(
@@ -440,6 +454,45 @@ export default function DashboardLayout({
               })}
             </ul>
 
+            {/* FAQ - above Feature Requests */}
+            {getFaqItem() &&
+              (() => {
+                const faqItem = getFaqItem()!;
+                const Icon = faqItem.icon;
+                const isActive =
+                  pathname === faqItem.href ||
+                  pathname.startsWith(faqItem.href + '/');
+
+                return (
+                  <div className="mt-auto pt-2 flex items-center">
+                    {disableNavigation ? (
+                      <div className="flex items-center px-3 py-2 rounded-md text-gray-400 cursor-not-allowed w-full">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-5 w-5" />
+                          <span>{faqItem.label}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        href={faqItem.href}
+                        prefetch={true}
+                        className={`flex items-center px-3 py-2 rounded-md transition-colors duration-200 w-full ${
+                          isActive
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'text-gray-700 hover:text-primary hover:bg-gray-100'
+                        }`}
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-5 w-5" />
+                          <span>{faqItem.label}</span>
+                        </div>
+                      </Link>
+                    )}
+                  </div>
+                );
+              })()}
+
             {/* Feature Requests - at bottom of nav */}
             {getFeatureRequestItem() &&
               (() => {
@@ -450,7 +503,7 @@ export default function DashboardLayout({
                   pathname.startsWith(featureItem.href + '/');
 
                 return (
-                  <div className="mt-auto py-2 border-gray-200 flex items-center">
+                  <div className="py-2 border-gray-200 flex items-center">
                     {disableNavigation ? (
                       <div className="flex items-center justify-between px-3 py-2 rounded-md text-gray-400 cursor-not-allowed w-full">
                         <div className="flex items-center space-x-3 flex-1">

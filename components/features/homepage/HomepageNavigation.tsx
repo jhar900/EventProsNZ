@@ -34,6 +34,7 @@ export function HomepageNavigation({
   const navigationLinks = [
     { name: 'Contractors', href: '/contractors' },
     { name: 'Jobs', href: '/jobs' },
+    { name: 'FAQs', href: '/faq' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
   ];

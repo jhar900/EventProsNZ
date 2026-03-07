@@ -38,6 +38,7 @@ export default function NavigationHeader({ className }: NavigationHeaderProps) {
     if (!user) {
       return [
         { href: '/', label: 'Home', icon: Home },
+        { href: '/faq', label: 'FAQs', icon: null },
         { href: '/about', label: 'About', icon: null },
         { href: '/pricing', label: 'Pricing', icon: null },
         { href: '/contact', label: 'Contact', icon: null },

@@ -30,6 +30,7 @@ export function HomepageFooter({ className = '' }: HomepageFooterProps) {
       { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
       { name: 'Contractors', href: '/contractors' },
       { name: 'Jobs', href: '/jobs' },
+      { name: 'FAQs', href: '/faq' },
       { name: 'About', href: '/about' },
       { name: 'Contact', href: '/contact' },
     ],
