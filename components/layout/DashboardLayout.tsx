@@ -166,6 +166,11 @@ export default function DashboardLayout({
             icon: Globe,
           },
           { href: '/admin/faq', label: 'FAQ Management', icon: HelpCircle },
+          {
+            href: '/admin/onboarding',
+            label: 'Onboarding Preview',
+            icon: FileText,
+          },
           { href: '/admin/settings', label: 'Settings', icon: Settings },
         ];
       case 'event_manager':

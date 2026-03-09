@@ -6,10 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useOnboardingPreview } from '@/components/features/onboarding/PreviewContext';
 
 const publicitySchema = z.object({
   community_goals: z.string().optional(),
   questions: z.string().optional(),
+  show_on_homepage_map: z.boolean().default(false),
 });
 
 type PublicityFormData = z.infer<typeof publicitySchema>;
@@ -28,6 +30,7 @@ export function PublicityForm({
   isSubmitting,
 }: PublicityFormProps) {
   const { user } = useAuth();
+  const { isPreview } = useOnboardingPreview();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -35,13 +38,18 @@ export function PublicityForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<PublicityFormData>({
     resolver: zodResolver(publicitySchema),
     defaultValues: {
       community_goals: '',
       questions: '',
+      show_on_homepage_map: false,
     },
   });
+
+  const showOnHomepageMap = watch('show_on_homepage_map');
 
   // Load existing publicity data when component mounts
   useEffect(() => {
@@ -65,6 +73,7 @@ export function PublicityForm({
             reset({
               community_goals: publicityData.community_goals || '',
               questions: publicityData.questions || '',
+              show_on_homepage_map: publicityData.show_on_homepage_map ?? false,
             });
           }
         }
@@ -78,6 +87,11 @@ export function PublicityForm({
   }, [user?.id, reset]);
 
   const onFormSubmit = async (data: PublicityFormData) => {
+    if (isPreview) {
+      onComplete();
+      return;
+    }
+
     setError(null);
 
     // Check if user is authenticated before submitting
@@ -94,7 +108,10 @@ export function PublicityForm({
           'x-user-id': user.id, // Send user ID in header - same as other steps
         },
         credentials: 'include', // Include cookies in the request
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          publish_to_contractors: true,
+        }),
       });
 
       if (response.ok) {
@@ -137,11 +154,83 @@ export function PublicityForm({
             looking for event contractors and service providers. Your business
             information may also be displayed on the home page of Event Pros NZ.
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 mb-4">
             Please note, you will be able to edit your information, change the
             publicity settings and remove your public business profile page from
             your login portal at any time you wish.
           </p>
+
+          <div className="space-y-3 mt-4">
+            {/* Card 1: Publish to Contractors Database — always on, locked */}
+            <div className="relative border-2 border-orange-500 bg-orange-50 shadow-md rounded-lg p-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 mt-1">
+                  <input
+                    type="checkbox"
+                    checked
+                    readOnly
+                    disabled
+                    className="h-6 w-6 text-orange-600 border-gray-300 rounded opacity-100 cursor-not-allowed"
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900">
+                    Publish My Business Profile Page
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    This will add your business to the Event Pros NZ searchable
+                    database making your business visible to site visitors and
+                    event managers searching for contractors.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Show on Homepage Map — user choice */}
+            <div
+              className={`relative border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                showOnHomepageMap
+                  ? 'border-orange-500 bg-orange-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              onClick={() =>
+                setValue('show_on_homepage_map', !showOnHomepageMap)
+              }
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 mt-1">
+                  <input
+                    {...register('show_on_homepage_map')}
+                    type="checkbox"
+                    id="show_on_homepage_map"
+                    className="h-6 w-6 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
+                    onClick={e => e.stopPropagation()}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor="show_on_homepage_map"
+                    className="text-base font-semibold text-gray-900 cursor-pointer block"
+                  >
+                    Publish My Business Address
+                  </label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    This will add your address to your business profile page as
+                    well as a pin of your business address to the map on the
+                    Event Pros NZ homepage.
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    We don&apos;t recommend ticking this if you work from home,
+                    remotely or only have a PO Box address.{' '}
+                    <span className="font-medium italic">
+                      However, if you have an office that you operate your
+                      business from, this will give your business more exposure!
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -108,7 +108,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
         limit: pagination.limit.toString(),
         ...(filters.role !== 'all' && { role: filters.role }),
         ...(filters.status !== 'all' && { status: filters.status }),
-        ...(filters.search && { search: filters.search }),
+        // search is handled client-side; do not pass to API
       });
 
       const response = await adminFetch(`/api/admin/users?${params}`);
@@ -127,9 +127,30 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
     }
   };
 
+  // Client-side search filter — does not trigger an API call
+  const filteredUsers = useMemo(() => {
+    if (!filters.search) return users;
+    const term = filters.search.toLowerCase();
+    return users.filter(user => {
+      const fullName =
+        `${user.profiles?.first_name || ''} ${user.profiles?.last_name || ''}`.toLowerCase();
+      const email = user.email.toLowerCase();
+      const company = (
+        user.business_profiles?.company_name || ''
+      ).toLowerCase();
+      return (
+        email.includes(term) ||
+        fullName.includes(term) ||
+        company.includes(term)
+      );
+    });
+  }, [users, filters.search]);
+
   useEffect(() => {
     loadUsers();
-  }, [pagination.page, pagination.limit, filters]);
+    // Re-fetch only when role/status filters or pagination change — search is client-side
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.limit, filters.role, filters.status]);
 
   const handleUserAction = async (
     userId: string,
@@ -539,7 +560,7 @@ export default function UserManagement({ onUserUpdate }: UserManagementProps) {
       <Card>
         <CardContent className="p-0">
           <DataTable
-            data={users}
+            data={filteredUsers}
             columns={columns}
             loading={loading}
             pagination={{

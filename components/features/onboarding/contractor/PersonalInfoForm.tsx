@@ -9,12 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Upload, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { useOnboardingPreview } from '@/components/features/onboarding/PreviewContext';
 
 const personalInfoSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().min(8, 'Phone number must be at least 8 characters'),
-  address: z.string().min(5, 'Address is required'),
+  address: z.string().optional(),
   profile_photo_url: z.string().min(1, 'Profile photo is required'),
 });
 
@@ -30,6 +31,7 @@ export function PersonalInfoForm({
   onNext,
 }: PersonalInfoFormProps) {
   const { user } = useAuth();
+  const { isPreview } = useOnboardingPreview();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -186,6 +188,12 @@ export function PersonalInfoForm({
   };
 
   const onSubmit = async (data: PersonalInfoFormData) => {
+    if (isPreview) {
+      onComplete();
+      onNext();
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -375,7 +383,7 @@ export function PersonalInfoForm({
             htmlFor="address"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Address *
+            Address
           </label>
           <AddressAutocomplete
             value={watch('address') || ''}

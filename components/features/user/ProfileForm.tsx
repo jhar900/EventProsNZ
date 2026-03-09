@@ -39,12 +39,14 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
   userId?: string | null; // Optional: for admin viewing other users
+  userEmail?: string | null; // Optional: email to display (for admin viewing other users)
   onSuccess?: (profile: any) => void;
   onError?: (error: string) => void;
 }
 
 export default function ProfileForm({
   userId: propUserId,
+  userEmail: propUserEmail,
   onSuccess,
   onError,
 }: ProfileFormProps) {
@@ -308,7 +310,7 @@ export default function ProfileForm({
                 <input
                   type="email"
                   id="email"
-                  value={user?.email || ''}
+                  value={propUserEmail ?? user?.email ?? ''}
                   disabled
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm"
                   readOnly

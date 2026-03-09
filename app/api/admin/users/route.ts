@@ -161,11 +161,10 @@ async function processAdminUsersRequest(
       query = query.lte('created_at', dateTo);
     }
 
-    // Apply search
+    // Apply search - only filter by email server-side.
+    // Name and company filtering is handled client-side in the component.
     if (search) {
-      query = query.or(
-        `email.ilike.%${search}%,profiles.first_name.ilike.%${search}%,profiles.last_name.ilike.%${search}%,business_profiles.company_name.ilike.%${search}%`
-      );
+      query = query.ilike('email', `%${search}%`);
     }
 
     // Apply sorting

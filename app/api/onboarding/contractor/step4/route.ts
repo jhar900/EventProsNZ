@@ -5,6 +5,8 @@ import { z } from 'zod';
 const step4Schema = z.object({
   community_goals: z.string().optional(),
   questions: z.string().optional(),
+  publish_to_contractors: z.boolean().optional(),
+  show_on_homepage_map: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -55,6 +57,8 @@ export async function POST(request: NextRequest) {
     // Update business profile with publicity information
     const updateData: any = {
       updated_at: new Date().toISOString(),
+      is_published: true, // Always publish on onboarding completion
+      publish_address: validatedData.show_on_homepage_map ?? false,
     };
 
     if (validatedData.community_goals) {

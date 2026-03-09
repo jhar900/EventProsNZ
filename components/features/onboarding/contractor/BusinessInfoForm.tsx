@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Upload, Building2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { useAuth } from '@/hooks/useAuth';
+import { useOnboardingPreview } from '@/components/features/onboarding/PreviewContext';
 
 const NZ_REGIONS = [
   'Auckland',
@@ -73,6 +74,7 @@ export function BusinessInfoForm({
   onPrevious,
 }: BusinessInfoFormProps) {
   const { user } = useAuth();
+  const { isPreview } = useOnboardingPreview();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -533,6 +535,12 @@ export function BusinessInfoForm({
   };
 
   const onSubmit = async (data: BusinessInfoFormData) => {
+    if (isPreview) {
+      onComplete();
+      onNext();
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 

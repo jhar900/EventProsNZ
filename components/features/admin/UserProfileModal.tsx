@@ -234,6 +234,7 @@ export function UserProfileModal({
                   />
                   <ProfileForm
                     userId={userId}
+                    userEmail={userData?.email}
                     onSuccess={() => {
                       setSaveSuccess(true);
                       setTimeout(() => setSaveSuccess(false), 3000);
