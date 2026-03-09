@@ -186,6 +186,8 @@ export function ContractorProfileDisplay({
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const [lightboxMediaIndex, setLightboxMediaIndex] = React.useState(0);
 
+  const [visiblePortfolioCount, setVisiblePortfolioCount] = React.useState(6);
+
   // Flatten all media items (images and videos) from all portfolio items
   const allMediaItems = React.useMemo(() => {
     if (!contractor.portfolio) return [];
@@ -646,34 +648,75 @@ export function ContractorProfileDisplay({
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Services Offered
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {contractor.services.map((service: Service) => (
-                      <Card
-                        key={service.id}
-                        className="p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium text-gray-900">
-                            {service.serviceType}
-                          </h3>
-                          <span className="text-orange-600 font-medium text-sm">
-                            {formatPrice(service)}
-                          </span>
-                        </div>
-                        {service.description && (
-                          <p className="text-gray-600 text-sm mb-2">
-                            {service.description}
-                          </p>
-                        )}
-                        {service.availability && (
-                          <div className="flex items-center text-sm text-gray-500">
-                            <ClockIcon className="h-4 w-4 mr-1" />
-                            <span>{service.availability}</span>
+                  {contractor.services.length <= 3 ? (
+                    <div
+                      className={`grid gap-4 ${
+                        contractor.services.length === 1
+                          ? 'grid-cols-3'
+                          : contractor.services.length === 2
+                            ? 'grid-cols-2'
+                            : 'grid-cols-3'
+                      }`}
+                    >
+                      {contractor.services.map((service: Service) => (
+                        <Card
+                          key={service.id}
+                          className={`p-4 hover:shadow-md transition-shadow${contractor.services.length === 1 ? ' col-span-2' : ''}`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-medium text-gray-900">
+                              {service.serviceType}
+                            </h3>
+                            <span className="text-orange-600 font-medium text-sm">
+                              {formatPrice(service)}
+                            </span>
                           </div>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
+                          {service.description && (
+                            <p className="text-gray-600 text-sm mb-2">
+                              {service.description}
+                            </p>
+                          )}
+                          {service.availability && (
+                            <div className="flex items-center text-sm text-gray-500">
+                              <ClockIcon className="h-4 w-4 mr-1" />
+                              <span>{service.availability}</span>
+                            </div>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2">
+                      {contractor.services.map((service: Service) => (
+                        <div
+                          key={service.id}
+                          className="flex-none w-[calc(33.333%-6px)] snap-start"
+                        >
+                          <Card className="p-4 hover:shadow-md transition-shadow h-full">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-medium text-gray-900">
+                                {service.serviceType}
+                              </h3>
+                              <span className="text-orange-600 font-medium text-sm">
+                                {formatPrice(service)}
+                              </span>
+                            </div>
+                            {service.description && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                {service.description}
+                              </p>
+                            )}
+                            {service.availability && (
+                              <div className="flex items-center text-sm text-gray-500">
+                                <ClockIcon className="h-4 w-4 mr-1" />
+                                <span>{service.availability}</span>
+                              </div>
+                            )}
+                          </Card>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -684,8 +727,9 @@ export function ContractorProfileDisplay({
                     Portfolio
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {contractor.portfolio.map(
-                      (item: PortfolioItem, index: number) => (
+                    {contractor.portfolio
+                      .slice(0, visiblePortfolioCount)
+                      .map((item: PortfolioItem, index: number) => (
                         <div
                           key={item.id}
                           className="border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -734,9 +778,20 @@ export function ContractorProfileDisplay({
                             )}
                           </div>
                         </div>
-                      )
-                    )}
+                      ))}
                   </div>
+                  {visiblePortfolioCount < contractor.portfolio.length && (
+                    <div className="mt-4 text-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setVisiblePortfolioCount(c => c + 3)}
+                      >
+                        Show more items (
+                        {contractor.portfolio.length - visiblePortfolioCount}{' '}
+                        remaining)
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
