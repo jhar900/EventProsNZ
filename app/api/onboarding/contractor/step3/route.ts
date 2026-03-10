@@ -83,14 +83,18 @@ export async function POST(request: NextRequest) {
 
     const businessProfileId = businessProfile.id;
 
-    // Delete existing services for this business profile
-    await supabase
-      .from('services')
-      .delete()
-      .eq('business_profile_id', businessProfileId);
-
-    // Only insert services if there are any
+    // Only manage services if any were explicitly provided.
+    // When called from the step "Continue" button with an empty array,
+    // we skip delete/insert entirely so existing services are preserved.
     let insertedServices = [];
+    if (services.length > 0) {
+      // Delete existing services and replace with the new set
+      await supabase
+        .from('services')
+        .delete()
+        .eq('business_profile_id', businessProfileId);
+    }
+
     if (services.length > 0) {
       // Filter out services without a service_name or service_type (incomplete services)
       const validServices = services.filter(

@@ -51,11 +51,11 @@ const businessInfoSchema = z.object({
     .url('Company logo must be a valid URL'),
   social_links: z
     .object({
-      website: z.string().url().optional().or(z.literal('')),
-      facebook: z.string().url().optional().or(z.literal('')),
-      instagram: z.string().url().optional().or(z.literal('')),
-      linkedin: z.string().url().optional().or(z.literal('')),
-      twitter: z.string().url().optional().or(z.literal('')),
+      website: z.string().optional().or(z.literal('')),
+      facebook: z.string().optional().or(z.literal('')),
+      instagram: z.string().optional().or(z.literal('')),
+      linkedin: z.string().optional().or(z.literal('')),
+      twitter: z.string().optional().or(z.literal('')),
     })
     .optional(),
 });
@@ -572,6 +572,23 @@ export function BusinessInfoForm({
           ? data.logo_url
           : undefined,
     };
+
+    // Normalize social link URLs - prepend https:// if user omitted the protocol
+    const normalizeUrl = (url: string | undefined) => {
+      if (!url || url.trim() === '') return url;
+      const trimmed = url.trim();
+      if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
+      return trimmed;
+    };
+    if (cleanedData.social_links) {
+      cleanedData.social_links = {
+        website: normalizeUrl(cleanedData.social_links.website),
+        facebook: normalizeUrl(cleanedData.social_links.facebook),
+        instagram: normalizeUrl(cleanedData.social_links.instagram),
+        linkedin: normalizeUrl(cleanedData.social_links.linkedin),
+        twitter: normalizeUrl(cleanedData.social_links.twitter),
+      };
+    }
 
     // Update data with selected service areas and categories
     const formData = {

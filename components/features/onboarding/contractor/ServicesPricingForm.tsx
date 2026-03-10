@@ -282,9 +282,44 @@ export function ServicesPricingForm({
     }
   };
 
-  const handleContinue = () => {
-    onComplete();
-    onNext();
+  const handleContinue = async () => {
+    if (isPreview) {
+      onComplete();
+      onNext();
+      return;
+    }
+
+    if (!user?.id) {
+      setError('You must be logged in');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/onboarding/contractor/step3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ services: [] }),
+      });
+
+      if (res.ok) {
+        onComplete();
+        onNext();
+      } else {
+        const errData = await res.json();
+        setError(errData.error || 'Failed to complete step 3');
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatPrice = (service: Service) => {

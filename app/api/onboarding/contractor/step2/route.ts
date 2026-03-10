@@ -16,11 +16,11 @@ const step2Schema = z.object({
   logo_url: z.string().url().min(1, 'Company logo is required'),
   social_links: z
     .object({
-      website: z.string().url().optional().or(z.literal('')),
-      facebook: z.string().url().optional().or(z.literal('')),
-      instagram: z.string().url().optional().or(z.literal('')),
-      linkedin: z.string().url().optional().or(z.literal('')),
-      twitter: z.string().url().optional().or(z.literal('')),
+      website: z.string().optional().or(z.literal('')),
+      facebook: z.string().optional().or(z.literal('')),
+      instagram: z.string().optional().or(z.literal('')),
+      linkedin: z.string().optional().or(z.literal('')),
+      twitter: z.string().optional().or(z.literal('')),
     })
     .optional(),
 });
