@@ -57,6 +57,30 @@ export function ContractorOnboardingWizard({
       const currentPath = window.location.pathname;
       if (currentPath.startsWith('/onboarding')) {
         setHasRedirected(true);
+        // Update localStorage cache so OnboardingGuard doesn't redirect back
+        try {
+          localStorage.setItem(
+            'profile_completion_status',
+            JSON.stringify({
+              isComplete: true,
+              completionPercentage: 100,
+              missingFields: [],
+              requirements: {
+                personalInfo: true,
+                contactInfo: true,
+                businessInfo: true,
+                profilePhoto: true,
+              },
+              timestamp: Date.now(),
+            })
+          );
+          localStorage.setItem(
+            'onboarding_just_completed',
+            Date.now().toString()
+          );
+        } catch (e) {
+          // Ignore storage errors
+        }
         // Small delay to prevent rapid redirects during status updates
         const timeoutId = setTimeout(() => {
           router.replace('/dashboard');
@@ -94,10 +118,31 @@ export function ContractorOnboardingWizard({
     try {
       const success = await submitForApproval();
       if (success) {
-        // Redirect to dashboard after successful submission
+        // Update localStorage cache so OnboardingGuard doesn't redirect back
+        try {
+          localStorage.setItem(
+            'profile_completion_status',
+            JSON.stringify({
+              isComplete: true,
+              completionPercentage: 100,
+              missingFields: [],
+              requirements: {
+                personalInfo: true,
+                contactInfo: true,
+                businessInfo: true,
+                profilePhoto: true,
+              },
+              timestamp: Date.now(),
+            })
+          );
+          localStorage.setItem(
+            'onboarding_just_completed',
+            Date.now().toString()
+          );
+        } catch (e) {
+          // Ignore storage errors
+        }
         router.push('/dashboard');
-      } else {
-        // Handle error - show toast or error message
       }
     } catch (error) {
       // Handle error - show toast or error message
